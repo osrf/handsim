@@ -1,0 +1,12 @@
+# This file setup gazebo and gazebo plugin environment variables needed by
+# gazebo for haptix_gazebo_plugins
+
+# Add our top-level directory to GAZEBO_RESOURCE_PATH so that its
+# worlds/* media/materials/* stuff can be found.
+export GAZEBO_RESOURCE_PATH=@CMAKE_INSTALL_PREFIX@/share/@PROJECT_NAME@:$GAZEBO_RESOURCE_PATH
+
+# Add the directories containing our Gazebo plugins to GAZEBO_PLUGIN_PATH.
+export GAZEBO_PLUGIN_PATH=@CMAKE_INSTALL_PREFIX@/@CMAKE_INSTALL_LIBDIR@/@PROJECT_NAME@:$GAZEBO_PLUGIN_PATH
+
+# apl_description is installed in ${CMAKE_INSTALL_PREFIX}/share/apl_description
+export GAZEBO_MODEL_PATH=@CMAKE_INSTALL_PREFIX@/share/gazebo_models:$GAZEBO_MODEL_PATH

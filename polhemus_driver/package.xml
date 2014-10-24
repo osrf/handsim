@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<package>
+  <name>polhemus_driver</name>
+  <version>0.0.1</version>
+  <description>The polhemus_driver package</description>
+  <maintainer email="gerkey@osrfoundation.org">Brian Gerkey</maintainer>
+  <license>Apache 2.0</license>
+  <url type="website">http://gazebosim.org/wiki/handsim</url>
+  <buildtool_depend>catkin</buildtool_depend>
+</package>
