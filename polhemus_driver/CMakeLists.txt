@@ -38,3 +38,10 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
 )
 
+string (TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
+set(PKG_NAME ${PROJECT_NAME})
+set(cmake_conf_file "cmake/polhemus_driver-config.cmake")
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/${cmake_conf_file}.in" "${CMAKE_CURRENT_BINARY_DIR}/${cmake_conf_file}" @ONLY)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${cmake_conf_file}
+        DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME_LOWER}
+        COMPONENT cmake)

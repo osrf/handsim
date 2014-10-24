@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(haptix_gazebo_plugins)
 
+# for catkin_make
+find_package(catkin) # REQUIRED COMPONENTS nothing)
+catkin_package(
+  INCLUDE_DIRS include
+  # LIBRARIES HaptixControlPlugin
+)
+
 # customize for haptix control plugin
 find_package(gazebo REQUIRED)
 find_package(polhemus_driver REQUIRED)
