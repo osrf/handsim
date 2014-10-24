@@ -6,8 +6,8 @@ To compile, first install gazebo from haptix branch, ign-transport and haptix_co
 mkdir ~/catkin_ws
 mkdir ~/catkin_ws/src
 cd ~/catkin_ws/src
-hg clone http://bitbucket.org/osrf/handsim
-hg clone http://bitbucket.org/osrf/[haptix_model]
+hg clone https://bitbucket.org/osrf/handsim
+hg clone https://bitbucket.org/osrf/[haptix_model]
 cd ~/catkin
 source /opt/ros/indigo/setup.bash
 catkin_make install
