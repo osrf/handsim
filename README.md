@@ -16,7 +16,5 @@ to run:
 ~~~
 cd ~/catkin_ws
 source install/share/haptix_gazebo_plugins/setup.sh
-
 gazebo --verbose worlds/arat_test.world
 ~~~
-
