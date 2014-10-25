@@ -62,15 +62,18 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->world->EnablePhysicsEngine(true);
 
   // start a transport node for polhemus head pose view point control
-  this->gazebonode =
+  this->gazeboNode =
     gazebo::transport::NodePtr(new gazebo::transport::Node());
   fprintf(stderr, "world name: [%s]\n", this->world->GetName().c_str());
-  this->gazebonode->Init(this->world->GetName());
+  this->gazeboNode->Init(this->world->GetName());
   this->polhemusJoyPub =
-    this->gazebonode->Advertise<gazebo::msgs::Pose>("~/polhemus/joy");
+    this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/polhemus/joy");
   this->keySub =
-    this->gazebonode->Subscribe("~/qtKeyEvent",
+    this->gazeboNode->Subscribe("~/qtKeyEvent",
       &HaptixControlPlugin::OnKey, this);
+  this->joySub =
+    this->gazeboNode->Subscribe("~/user_camera/joy_twist",
+      &HaptixControlPlugin::OnJoy, this);
 
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
@@ -404,118 +407,44 @@ bool HaptixControlPlugin::LoadSpacenav()
 // Play the trajectory, update states
 void HaptixControlPlugin::UpdateSpacenav(double _dt)
 {
-  // Sleep when the queue is empty.
-  // If the queue is empty 30 times in a row output zeros.
-  // Output changes each time a button event happens, or when a motion
-  // event happens and the queue is empty.
-  // this->spnState.header.stamp = ros::Time().now();
-  switch (spnav_poll_event(&(this->sev)))
+  if (!this->newJoystickMessage)
   {
-    case 0:
-      this->queue_empty = true;
-      if (++this->no_motion_count > this->static_count_threshold)
-      {
-        if ( zero_when_static ||
-            ( fabs(this->spnPosOffset.x) < this->static_trans_deadband &&
-              fabs(this->spnPosOffset.y) < this->static_trans_deadband &&
-              fabs(this->spnPosOffset.z) < this->static_trans_deadband)
-           )
-        {
-          this->spnPosOffset.x = this->spnPosOffset.y
-                               = this->spnPosOffset.z = 0;
-        }
-
-        if ( this->zero_when_static ||
-            ( fabs(this->spnRotOffset.x) < this->static_rot_deadband &&
-              fabs(this->spnRotOffset.y) < this->static_rot_deadband &&
-              fabs(this->spnRotOffset.z) < this->static_rot_deadband )
-           )
-        {
-          this->spnRotOffset.x = this->spnRotOffset.y
-                               = this->spnRotOffset.z = 0;
-        }
-
-        this->no_motion_count = 0;
-        this->motion_stale = true;
-      }
-      break;
-
-    case SPNAV_EVENT_MOTION:
-      this->spnPosOffset.x = this->sev.motion.z;
-      this->spnPosOffset.y = -this->sev.motion.x;
-      this->spnPosOffset.z = this->sev.motion.y;
-
-      this->spnRotOffset.x = this->sev.motion.rz;
-      this->spnRotOffset.y = -this->sev.motion.rx;
-      this->spnRotOffset.z = this->sev.motion.ry;
-
-      this->motion_stale = true;
-      break;
-
-    case SPNAV_EVENT_BUTTON:
-      // printf("type, press, bnum = <%d, %d, %d>\n", this->sev.button.type,
-      //   this->sev.button.press, this->sev.button.bnum);
-      this->spnState.buttons[this->sev.button.bnum] = this->sev.button.press;
-
-      joy_stale = true;
-      break;
-
-    default:
-      printf("Unknown message type in spacenav. This should never happen.");
-      break;
+    return;
   }
 
-  if (motion_stale && (queue_empty || joy_stale))
+  msgs::Joystick joy;
   {
-    // offset_pub.publish(this->spnPosOffset);
-    // rot_pub.publish(this->spnRotOffset);
-
-    // twist_msg.linear = this->spnPosOffset;
-    // twist_msg.angular = this->spnRotOffset;
-    // twist_pub.publish(twist_msg);
-
-    this->spnState.axes[0] = this->spnPosOffset.x / SPNAV_FULL_SCALE;
-    this->spnState.axes[1] = this->spnPosOffset.y / SPNAV_FULL_SCALE;
-    this->spnState.axes[2] = this->spnPosOffset.z / SPNAV_FULL_SCALE;
-    this->spnState.axes[3] = this->spnRotOffset.x / SPNAV_FULL_SCALE;
-    this->spnState.axes[4] = this->spnRotOffset.y / SPNAV_FULL_SCALE;
-    this->spnState.axes[5] = this->spnRotOffset.z / SPNAV_FULL_SCALE;
-
-    this->no_motion_count = 0;
-    this->motion_stale = false;
-    this->joy_stale = true;
+    boost::mutex::scoped_lock lock(this->joystickMessageMutex);
+    joy = this->latestJoystickMessage;
+    this->newJoystickMessage = false;
   }
 
-  if (this->joy_stale)
+  math::Vector3 posRate, rotRate;
+
+  if (joy.has_translation())
   {
-    // update target pose
-    // joy_pub.publish(this->spnState);
+    posRate = msgs::Convert(joy.translation());
+  }
 
-    double posScale = 2.0;
-    // negative signs hacks because +x is into the screen
-    math::Vector3 posRate(-this->spnState.axes[0],
-                          -this->spnState.axes[1],
-                          this->spnState.axes[2]);
-    {
-      boost::mutex::scoped_lock lock(this->baseLinkMutex);
-      this->targetBaseLinkPose.pos = this->targetBaseLinkPose.pos
-        + _dt * posScale * posRate;
+  if (joy.has_rotation())
+  {
+    rotRate = msgs::Convert(joy.rotation());
+  }
 
-      double rotScale = 1.0;
-      // negative signs, etc are hacks because +x is into the screen
-      math::Vector3 rotRate(this->spnState.axes[4],
-                            -this->spnState.axes[3],
-                            this->spnState.axes[5]);
+  const double posScale = 2.0;
+  const double rotScale = 1.0;
+  {
+    boost::mutex::scoped_lock lock(this->baseLinkMutex);
+    this->targetBaseLinkPose.pos += _dt * posScale * posRate;
 
-      // rotate
-      math::Vector3 euler = this->targetBaseLinkPose.rot.GetAsEuler();
-      math::Quaternion rotOffset =
-        this->initialBaseLinkPose.rot.GetInverse() *
-        this->targetBaseLinkPose.rot;
-      rotRate = rotOffset.RotateVectorReverse(rotRate);
-      euler = euler + _dt * rotScale * rotRate;
-      this->targetBaseLinkPose.rot.SetFromEuler(euler);
-    }
+    // rotate
+    math::Vector3 euler = this->targetBaseLinkPose.rot.GetAsEuler();
+    math::Quaternion rotOffset =
+      this->initialBaseLinkPose.rot.GetInverse() *
+      this->targetBaseLinkPose.rot;
+    rotRate = rotOffset.RotateVectorReverse(rotRate);
+    euler = euler + _dt * rotScale * rotRate;
+    this->targetBaseLinkPose.rot.SetFromEuler(euler);
   }
 }
 
@@ -799,6 +728,14 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   _rep = this->robotState;
 
   _result = true;
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
+{
+  boost::mutex::scoped_lock lock(this->joystickMessageMutex);
+  this->latestJoystickMessage = _msg;
+  this->newJoystickMessage = true;
 }
 
 //////////////////////////////////////////////////
