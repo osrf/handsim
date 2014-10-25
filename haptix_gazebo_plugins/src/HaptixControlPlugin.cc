@@ -215,12 +215,14 @@ void HaptixControlPlugin::LoadHandControl()
     // get next sdf
     pid = pid->GetNextElement("pid");
   }
+  std::cerr << "done with pid.\nget motors.\n";
 
   // Get motor names and insert id/name pair into map
   sdf::ElementPtr motor = this->sdf->GetElement("motor");
   while (motor)
   {
     motor->GetAttribute("id")->Get(id);
+    std::cerr << "getting motor [" << id << "]\n";
     this->motorNames[id] = motor->Get<std::string>();
 
     /// \TODO: assume id in order
@@ -229,12 +231,14 @@ void HaptixControlPlugin::LoadHandControl()
     // get next sdf
     motor = motor->GetNextElement("motor");
   }
+  std::cerr << "done with motors.\nget contact sensors.\n";
 
   // Get contact sensor names and insert id/name pair into map
   sdf::ElementPtr contactSensor = this->sdf->GetElement("contactSensor");
   while (contactSensor)
   {
     contactSensor->GetAttribute("id")->Get(id);
+    std::cerr << "getting contactSensor [" << id << "]\n";
     this->contactSensorNames[id] = contactSensor->Get<std::string>();
 
     // get sensor from gazebo
@@ -257,6 +261,7 @@ void HaptixControlPlugin::LoadHandControl()
     // get next sdf
     contactSensor = contactSensor->GetNextElement("contactSensor");
   }
+  std::cerr << "done with contact sensors.\nget imu sensors.\n";
 
   // Get imuSensor names and insert id/name pair into map
   sdf::ElementPtr imuSensor = this->sdf->GetElement("imuSensor");
@@ -264,6 +269,7 @@ void HaptixControlPlugin::LoadHandControl()
   {
     imuSensor->GetAttribute("id")->Get(id);
     this->imuSensorNames[id] = imuSensor->Get<std::string>();
+    std::cerr << "getting imuSensor [" << id << "]\n";
 
     // get sensor from gazebo
     sensors::SensorManager *mgr = sensors::SensorManager::Instance();
@@ -309,12 +315,10 @@ void HaptixControlPlugin::LoadHandControl()
     //           i, this->jointNames[i].c_str());
   }
 
-  const int num_contact_sensors = 0;  /// \TODO: fix me, add sdf
-  for (int i = 0; i < num_contact_sensors; ++i)
+  for (int i = 0; i < this->contactSensors.size(); ++i)
     this->robotState.add_contact(0);
 
-  const int num_imu_sensors = 0;  /// \TODO: fix me, add sdf
-  for (int i = 0; i < num_imu_sensors; ++i)
+  for (int i = 0; i < imuSensors.size(); ++i)
   {
     haptix::comm::msgs::imu *linacc = this->robotState.add_imu_linacc();
     linacc->set_x(0);
