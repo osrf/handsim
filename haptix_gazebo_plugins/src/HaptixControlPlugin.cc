@@ -17,14 +17,6 @@
 
 #include "haptix_gazebo_plugins/HaptixControlPlugin.hh"
 
-// for spacenav
-#include <stdio.h>
-#include <iostream>
-
-// Used to scale joystick output to be in [-1, 1].
-// Estimated from data, and not necessarily correct.
-#define SPNAV_FULL_SCALE (512.0)
-
 namespace gazebo
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +39,6 @@ HaptixControlPlugin::~HaptixControlPlugin()
 {
   this->polhemusThread.join();
   event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
-  spnav_close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,9 +147,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
       boost::bind(&HaptixControlPlugin::UpdatePolhemus, this));
   else
     std::cerr << "No usable polhemus setup detected.\n";
-
-  // check for spacenav
-  this->haveSpacenav = this->LoadSpacenav();
 
   this->haveKeyboard = false;
 
@@ -361,48 +349,6 @@ bool HaptixControlPlugin::LoadKeyboard()
   return false;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Open spacenav
-bool HaptixControlPlugin::LoadSpacenav()
-{
-  if (spnav_open() == -1)
-  {
-    printf("Could not open the space navigator device."
-           " Did you remember to run spacenavd (as root)?");
-
-    std::cout << "no spacenav\n\n\n";
-    return false;
-  }
-
-  // Parameters
-  // The number of polls needed to be done before the device is considered
-  // "static"
-  this->static_count_threshold = 30;
-
-  // If true, the node will zero the output when the device is "static"
-  this->zero_when_static = true;
-
-  // If the device is considered "static" and each trans, rot component is
-  // below the deadband, it will output zeros in either rotation, translation,
-  // or both
-  this->static_trans_deadband = 50;
-  this->static_rot_deadband = 50;
-
-  this->spnState.axes.resize(6);
-  this->spnState.buttons.resize(2);
-
-  this->no_motion_count = 0;
-  this->motion_stale = false;
-
-  this->joy_stale = false;
-  this->queue_empty = false;
-
-  std::cout << "have spacenav\n\n\n";
-  return true;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Play the trajectory, update states
 void HaptixControlPlugin::UpdateSpacenav(double _dt)
@@ -432,19 +378,12 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   }
 
   const double posScale = 2.0;
-  const double rotScale = 1.0;
+  const double rotScale = 5.0;
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     this->targetBaseLinkPose.pos += _dt * posScale * posRate;
-
-    // rotate
-    math::Vector3 euler = this->targetBaseLinkPose.rot.GetAsEuler();
-    math::Quaternion rotOffset =
-      this->initialBaseLinkPose.rot.GetInverse() *
-      this->targetBaseLinkPose.rot;
-    rotRate = rotOffset.RotateVectorReverse(rotRate);
-    euler = euler + _dt * rotScale * rotRate;
-    this->targetBaseLinkPose.rot.SetFromEuler(euler);
+    this->targetBaseLinkPose.rot =
+      this->targetBaseLinkPose.rot.Integrate(rotScale * rotRate, _dt);
   }
 }
 
@@ -621,9 +560,8 @@ void HaptixControlPlugin::UpdateStates()
   double dt = (curTime - this->lastTime).Double();
   if (dt > 0)
   {
-    // update target pose if using spacenav
-    if (this->haveSpacenav)
-      this->UpdateSpacenav(dt);
+    // update target pose with spacenav
+    this->UpdateSpacenav(dt);
 
     if (this->haveKeyboard)
       this->UpdateKeyboard(dt);
@@ -734,7 +672,7 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->joystickMessageMutex);
-  this->latestJoystickMessage = _msg;
+  this->latestJoystickMessage = *_msg;
   this->newJoystickMessage = true;
 }
 
