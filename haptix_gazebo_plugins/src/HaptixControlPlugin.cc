@@ -333,13 +333,7 @@ void HaptixControlPlugin::LoadHandControl()
 void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
                      const msgs::Pose &_pose)
 {
-  
-  math::Pose inputPose(math::Vector3(_pose.position().x(), _pose.position().y(),
-                       _pose.position().z()),
-                       math::Quaternion(_pose.orientation().w(),
-                       _pose.orientation().x(),
-                       _pose.orientation().y(),
-                       _pose.orientation().z()));
+  math::Pose inputPose(msgs::Convert(_pose));
 
   this->keyboardPose = inputPose*this->keyboardPose;
 

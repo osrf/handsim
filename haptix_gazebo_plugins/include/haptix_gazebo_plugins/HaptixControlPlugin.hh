@@ -212,28 +212,9 @@ namespace gazebo
     private: math::Vector3 spnRotOffset;
 
     // keyboard params and methods
-
-    /// \brief Initialize parameters for keyboard teleop
-    /// \return Whether or not keyboard teleop initialization was successful
     private: bool LoadKeyboard();
-
-    /// \brief Update the state of the arm based on keyboard input.
-    /// \param[in] _dt Timestep between updates
     private: void UpdateKeyboard(double _dt);
-
-    /// \brief Callback to set the saved keyboard pose based on user input.
-    /// \param[in] _pose The input pose.
-    private: void SetKeyboardPose(const std::string &/*_topic*/,
-                                  const msgs::Pose &_pose);
-
-    /// \brief True if keyboard teleop is enabled, false otherwise.
     private: bool haveKeyboard;
-
-    /// \brief The pose commanded by user input.
-    math::Pose keyboardPose;
-
-    /// \brief True if keyboardPose is old data that has already been consumed
-    bool staleKeyboardPose;
 
     class SpnState
     {
