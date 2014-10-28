@@ -252,8 +252,10 @@ void HaptixControlPlugin::LoadHandControl()
     for (j = 0; j < this->jointNames.size(); ++j)
     {
       if (this->jointNames[j] == this->motorInfos[id].jointName)
-      this->motorInfos[id].index = j;
-      break;
+      {
+        this->motorInfos[id].index = j;
+        break;
+      }
     }
 
     // get coupled joints
@@ -273,8 +275,10 @@ void HaptixControlPlugin::LoadHandControl()
         for (k = 0; k < this->jointNames.size(); ++k)
         {
           if (this->jointNames[k] == jointSDF->Get<std::string>())
-          g.index = k;
-          break;
+          {
+            g.index = k;
+            break;
+          }
         }
         g.offset = offsetSDF->Get<double>();
         g.multiplier = multiplierSDF->Get<double>();
@@ -713,10 +717,12 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   for(unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     unsigned int m = this->motorInfos[i].index;
+    // gzerr << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
     this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
     this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
-    this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
-    this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+    /// \TODO: fix
+    // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
+    // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
     // coupling through <gearbox> params
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
@@ -729,8 +735,9 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
         (this->robotCommand.ref_vel(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
-      this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
-      this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+      /// \TODO: fix
+      // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
+      // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
 
