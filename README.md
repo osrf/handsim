@@ -31,6 +31,7 @@ First create the workspace folder and clone the source repositories:
 export WS=$HOME/ws/handsim
 mkdir -p ${WS}/src
 cd ${WS}/src
+git clone https://github.com/ros/catkin.git
 hg clone https://bitbucket.org/ignitionrobotics/ign-transport
 hg clone https://bitbucket.org/osrf/haptix_comm
 hg clone https://bitbucket.org/osrf/gazebo
@@ -51,11 +52,10 @@ cd ${WS}/src/gazebo
 hg up haptix
 ~~~
 
-Then source the indigo setup script and do an isolated install build:
+Then do an isolated catkin install build:
 ~~~
-. /opt/ros/indigo/setup.bash
 cd ${WS}
-catkin_make_isolated --install
+./src/catkin/bin/catkin_make_isolated --install
 ~~~
 
 To run:
