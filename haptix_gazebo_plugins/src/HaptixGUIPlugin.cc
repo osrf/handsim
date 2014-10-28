@@ -19,7 +19,7 @@
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/rendering/FPSViewController.hh>
-#include "HaptixGUIPlugin.hh"
+#include "haptix_gazebo_plugins/HaptixGUIPlugin.hh"
 
 using namespace gazebo;
 
@@ -654,20 +654,38 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
       return false;
     }
     float inc = this->armCommands[key].increment;
+
     float pose_inc_args[6] = {0, 0, 0, 0, 0, 0};
     pose_inc_args[index] = inc;
-    gazebo::math::Quaternion quat(pose_inc_args[3],
-                                 pose_inc_args[4], pose_inc_args[5]);
+    gazebo::math::Pose increment(gazebo::math::Vector3(pose_inc_args[0],
+                                   pose_inc_args[1], pose_inc_args[2]),
+                                 gazebo::math::Quaternion(pose_inc_args[3],
+                                   pose_inc_args[4], pose_inc_args[5]));
+
+    gazebo::math::Quaternion cameraRot =
+                                gui::get_active_camera()->GetWorldRotation();
+    if (index < 3)
+    {
+      increment.pos = cameraRot.RotateVector(increment.pos);
+    }
+    else
+    {
+      std::cout << "Increment.rot: " << increment.rot.GetAsEuler() << std::endl;
+      std::cout << "camera rot: " << cameraRot.GetAsEuler() << std::endl;
+      increment.rot = increment.rot*cameraRot;
+      std::cout << "rotation after multiplication " << increment.rot.GetAsEuler() << std::endl;
+    }
+
     gazebo::msgs::Pose msg;
     gazebo::msgs::Vector3d* vec_msg = msg.mutable_position();
-    vec_msg->set_x(pose_inc_args[0]);
-    vec_msg->set_y(pose_inc_args[1]);
-    vec_msg->set_z(pose_inc_args[2]);
+    vec_msg->set_x(increment.pos.x);
+    vec_msg->set_y(increment.pos.y);
+    vec_msg->set_z(increment.pos.z);
     gazebo::msgs::Quaternion* quat_msg = msg.mutable_orientation();
-    quat_msg->set_x(quat.x);
-    quat_msg->set_y(quat.y);
-    quat_msg->set_z(quat.z);
-    quat_msg->set_w(quat.w);
+    quat_msg->set_x(increment.rot.x);
+    quat_msg->set_y(increment.rot.y);
+    quat_msg->set_z(increment.rot.z);
+    quat_msg->set_w(increment.rot.w);
 
     ignNode->Publish("/haptix/arm_pose_inc", msg);
     return true;

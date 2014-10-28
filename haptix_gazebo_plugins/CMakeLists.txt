@@ -37,7 +37,7 @@ link_directories(
   ${polhemus_driver_LIBRARY_DIRS}
 )
 
-QT4_WRAP_CPP(HaptixGUIPlugin_MOC src/HaptixGUIPlugin.hh)
+QT4_WRAP_CPP(HaptixGUIPlugin_MOC include/haptix_gazebo_plugins/HaptixGUIPlugin.hh)
 add_library(HaptixGUIPlugin SHARED ${HaptixGUIPlugin_MOC}
             src/HaptixGUIPlugin.cc)
 
