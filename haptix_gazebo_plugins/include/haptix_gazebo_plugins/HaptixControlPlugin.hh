@@ -192,6 +192,12 @@ namespace gazebo
       /// motor position and motor velocities, use gear_ratio to
       /// compute simulation joint torques.
       public: double gearRatio;
+
+      /// \brief: index of joint controlled by this motor
+      public: unsigned int index;
+
+      /// \brief: index of coupled joints
+      public: std::vector<unsigned int> jointIndex;
     };
     private: std::map<unsigned int, MotorInfo> motorInfos;
 

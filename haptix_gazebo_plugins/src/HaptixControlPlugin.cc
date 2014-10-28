@@ -245,25 +245,40 @@ void HaptixControlPlugin::LoadHandControl()
     this->motorInfos[id].gearRatio = gearRatioSDF->Get<double>();
     gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
 
-    // get next sdf
-    motorSDF = motorSDF->GetNextElement("motor");
-  }
-
-  // setup motor JointPtr's for motor controlled joints
-  /// \TODO: this assumes id's for motor are consecutive, starting with 0
-  this->motors.resize(this->motorInfos.size());
-  for (unsigned int i = 0; i < this->motors.size(); ++i)
-  {
-    /// this should return index of the joint in this->joints
-    // find index of this->jointNames that matches motorInfos[id].jointName.
+    // this should return index of the joint in this->joints
+    // where this->jointNames matches motorInfos[id].jointName.
     /// \TODO: there must be a faster way of doing this?
     unsigned int j;
     for (j = 0; j < this->jointNames.size(); ++j)
     {
-      if (this->jointNames[j] == this->motorInfos[i].jointName)
-      this->motors[i] = j;
+      if (this->jointNames[j] == this->motorInfos[id].jointName)
+      this->motorInfos[id].index = j;
       break;
     }
+
+    // get coupled joints
+    if (motorSDF->HasElement("gearbox"))
+    {
+      sdf::ElementPtr gearboxSDF = motorSDF->GetElement("gearbox");
+      while (gearboxSDF)
+      {
+        // get joint, offset and multiplier
+        sdf::ElementPtr jointSDF = gearboxSDF->GetElement("joint");
+        sdf::ElementPtr offsetSDF = gearboxSDF->GetElement("offset");
+        sdf::ElementPtr multiplierSDF = gearboxSDF->GetElement("multiplier");
+
+        gearboxSDF = gearboxSDF->GetNextElement("gearbox");
+      }
+    }
+
+
+    // get next sdf
+    motorSDF = motorSDF->GetNextElement("motor");
+  }
+
+  /// \TODO: this assumes id's for motor are consecutive, starting with 0
+  for (unsigned int i = 0; i < this->motors.size(); ++i)
+  {
   }
 
   // Get contact sensor names and insert id/name pair into map
