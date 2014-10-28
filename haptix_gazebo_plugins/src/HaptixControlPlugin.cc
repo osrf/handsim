@@ -717,7 +717,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   for(unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     unsigned int m = this->motorInfos[i].index;
-    // gzerr << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
+    // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
     this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
     this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
     /// \TODO: fix
@@ -726,18 +726,19 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     // coupling through <gearbox> params
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
-      m = this->motorInfos[i].gearboxes[j].index;
-      this->simRobotCommand[m].ref_pos =
+      unsigned int n = this->motorInfos[i].gearboxes[j].index;
+      // gzdbg << " " << n << " : " << this->simRobotCommand[n].ref_pos << "\n";
+      this->simRobotCommand[n].ref_pos =
         (this->robotCommand.ref_pos(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
-      this->simRobotCommand[m].ref_vel =
+      this->simRobotCommand[n].ref_vel =
         (this->robotCommand.ref_vel(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
       /// \TODO: fix
-      // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
-      // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+      // this->simRobotCommand[n].gain_pos = this->robotCommand.gain_pos(i);
+      // this->simRobotCommand[n].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
 
@@ -908,11 +909,12 @@ void HaptixControlPlugin::HaptixGetDeviceInfoCallback(
   _rep.set_ncontactsensor(this->contactSensors.size());
   _rep.set_nimu(this->imuSensors.size());
 
-  for (unsigned int i = 0; i < this->joints.size(); ++i)
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     haptix::comm::msgs::hxJointAngle *joint = _rep.add_limit();
-    joint->set_minimum(this->joints[i]->GetLowerLimit(0).Radian());
-    joint->set_maximum(this->joints[i]->GetUpperLimit(0).Radian());
+    unsigned int m = this->motorInfos[i].index;
+    joint->set_minimum(this->joints[m]->GetLowerLimit(0).Radian());
+    joint->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
   }
 
   _result = true;
