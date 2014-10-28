@@ -103,8 +103,8 @@ namespace gazebo
     /// \brief Load the controller
     public: void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
 
-    /// \brief Update the controller
-    private: void UpdateStates();
+    /// \brief Gazebo loop: Update the controller on every simulation tick.
+    private: void GazeboUpdateStates();
 
     private: physics::WorldPtr world;
     private: physics::ModelPtr model;
@@ -156,43 +156,79 @@ namespace gazebo
     // transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    // control the hand
     private: void GetRobotStateFromSim();
+
+    /// \brief: Update joint PIDs in simulation on every tick
     private: void UpdateHandControl(double _dt);
 
-    // state and command messages
+    /// \brief: state and command messages
     private: haptix::comm::msgs::hxSensor robotState;
     private: haptix::comm::msgs::hxCommand robotCommand;
+    public: class SimRobotCommand
+    {
+      public: double ref_pos;
+      public: double ref_vel;
+      public: double gain_pos;
+      public: double gain_vel;
+    };
+    /// \brief: commanding all the joints in robot, and map
+    /// robotCommand motor joints to a subset of the joints here.
+    private: std::vector<SimRobotCommand> simRobotCommand;
 
-    // joint names matching those of gazebo model
+    /// \brief: joint names matching those of gazebo model
     private: std::map<unsigned int, std::string> jointNames;
     private: std::vector<physics::JointPtr> joints;
 
-    /// \TODO: fixme, implement motors, 
-    private: std::map<unsigned int, std::string> motorNames;
-    private: std::vector<physics::JointPtr> motors;
+    /// \brief: class containing info on motors
+    public: class MotorInfo
+    {
+      /// \brief: motor name
+      public: std::string name;
+      /// \brief: joint name associated with each motor
+      public: std::string jointName;
+
+      /// \brief: gear_ratio = motor_angle / joint_angle
+      /// assuming the _hxCommand::ref_pos and _hxCommand::ref_vel are
+      /// motor position and motor velocities, use gear_ratio to
+      /// compute simulation joint torques.
+      public: double gearRatio;
+    };
+    private: std::map<unsigned int, MotorInfo> motorInfos;
+
+    /// \brief: list of gazebo joints that corresponds to each motor
+    private: std::vector<unsigned int> motors;
+
+    /// \brief: contact sensor names
     private: std::map<unsigned int, std::string> contactSensorNames;
+
+    /// \brief: gazebo contact sensors
     private: std::vector<sensors::ContactSensorPtr> contactSensors;
+
+    /// \brief: imu sensor names
     private: std::map<unsigned int, std::string> imuSensorNames;
+
+    /// \brief: gazebo imu sensors
     private: std::vector<sensors::ImuSensorPtr> imuSensors;
 
-    // internal controllers for holding hand pose
+    /// \brief: internal PIDs for holding all actuated joints in gazebo
     private: std::vector<common::PID> pids;
 
-    // using ignition transport and haptix comm
+    /// \brief: ignition transport node for talking to haptix comm
     private: ignition::transport::Node ignNode;
 
+    /// \brief: Provide device info through haptix_comm
     private: void HaptixGetDeviceInfoCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxDevice &_req,
       haptix::comm::msgs::hxDevice &_rep, bool &_result);
 
+    /// \brief: Simulation responder to team controller client nodes
     private: void HaptixUpdateCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxCommand &_req,
       haptix::comm::msgs::hxSensor &_rep, bool &_result);
 
-    // initialize gazebo controllers
+    /// \brief: initialize gazebo controllers
     private: void LoadHandControl();
 
     // spacenav params
@@ -210,18 +246,18 @@ namespace gazebo
     private: bool queue_empty;
     private: math::Vector3 spnPosOffset;
     private: math::Vector3 spnRotOffset;
-
-    // keyboard params and methods
-    private: bool LoadKeyboard();
-    private: void UpdateKeyboard(double _dt);
-    private: bool haveKeyboard;
-
     class SpnState
     {
       public: std::vector<int> buttons;
       public: std::vector<double> axes;
     };
     private: SpnState spnState;
+
+    // keyboard params and methods
+    private: bool LoadKeyboard();
+    private: void UpdateKeyboard(double _dt);
+    private: bool haveKeyboard;
+
     private: boost::mutex updateMutex;
     private: boost::mutex baseLinkMutex;
     private: sdf::ElementPtr sdf;

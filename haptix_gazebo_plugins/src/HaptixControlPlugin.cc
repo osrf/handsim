@@ -152,7 +152,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->polhemusThread = boost::thread(
       boost::bind(&HaptixControlPlugin::UpdatePolhemus, this));
   else
-    std::cerr << "No usable polhemus setup detected.\n";
+    gzwarn << "No usable polhemus setup detected.\n";
 
   // check for spacenav
   this->haveSpacenav = this->LoadSpacenav();
@@ -167,7 +167,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-      boost::bind(&HaptixControlPlugin::UpdateStates, this));
+      boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
 
   // base joint damping
   const double baseJointDamping = 0.01;
@@ -189,21 +189,28 @@ void HaptixControlPlugin::LoadHandControl()
   {
     joint->GetAttribute("id")->Get(id);
     this->jointNames[id] = joint->Get<std::string>();
-    /// \TODO: assume id in order
-    this->joints.push_back(this->model->GetJoint(this->jointNames[id]));
-
     // get next sdf
+    gzdbg << "getting joint name [" << this->jointNames[id] << "]\n";
     joint = joint->GetNextElement("joint");
+  }
+
+  // Get pointers to joints
+  this->joints.resize(this->jointNames.size());
+  for (unsigned int i = 0; i < this->joints.size(); ++i)
+  {
+    /// \TODO: this assumes id's for joints are consecutive, starting with 0
+    this->joints[i] = this->model->GetJoint(this->jointNames[i]);
+    gzdbg << "got gazebo joint [" << this->joints[i]->GetName() << "]\n";
   }
 
   // Get pid gains and insert into pid
   this->pids.resize(this->joints.size());
   sdf::ElementPtr pid = this->sdf->GetElement("pid");
-  std::cerr << "getting pid\n";
+  gzdbg << "getting pid\n";
   while (pid)
   {
     pid->GetAttribute("id")->Get(id);
-    std::cerr << "getting pid [" << id << "]\n";
+    gzdbg << "getting pid [" << id << "]\n";
     double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
     pid->GetAttribute("p")->Get(pVal);
     pid->GetAttribute("i")->Get(iVal);
@@ -215,30 +222,56 @@ void HaptixControlPlugin::LoadHandControl()
     // get next sdf
     pid = pid->GetNextElement("pid");
   }
-  std::cerr << "done with pid.\nget motors.\n";
 
-  // Get motor names and insert id/name pair into map
-  sdf::ElementPtr motor = this->sdf->GetElement("motor");
-  while (motor)
+  // Get motor names and insert id/name pair into MotorInfo map
+  sdf::ElementPtr motorSDF = this->sdf->GetElement("motor");
+  while (motorSDF)
   {
-    motor->GetAttribute("id")->Get(id);
-    std::cerr << "getting motor [" << id << "]\n";
-    this->motorNames[id] = motor->Get<std::string>();
+    std::string motorName;
+    motorSDF->GetAttribute("id")->Get(id);
+    motorSDF->GetAttribute("name")->Get(motorName);
+    gzdbg << "getting motor [" << id << "]: [" << motorName << "]\n";
+    this->motorInfos[id].name = motorName;
 
-    /// \TODO: assume id in order
-    this->motors.push_back(this->model->GetJoint(this->motorNames[id]));
+    // get joint name associated with this motor
+    sdf::ElementPtr poweredMotorJointSDF =
+      motorSDF->GetElement("powered_motor_joint");
+    this->motorInfos[id].jointName = poweredMotorJointSDF->Get<std::string>();
+    gzdbg << "  joint [" << this->motorInfos[id].jointName << "]\n";
+
+    // get gear ratio associated with this motor
+    sdf::ElementPtr gearRatioSDF =
+      motorSDF->GetElement("gear_ratio");
+    this->motorInfos[id].gearRatio = gearRatioSDF->Get<double>();
+    gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
 
     // get next sdf
-    motor = motor->GetNextElement("motor");
+    motorSDF = motorSDF->GetNextElement("motor");
   }
-  std::cerr << "done with motors.\nget contact sensors.\n";
+
+  // setup motor JointPtr's for motor controlled joints
+  /// \TODO: this assumes id's for motor are consecutive, starting with 0
+  this->motors.resize(this->motorInfos.size());
+  for (unsigned int i = 0; i < this->motors.size(); ++i)
+  {
+    /// this should return index of the joint in this->joints
+    // find index of this->jointNames that matches motorInfos[id].jointName.
+    /// \TODO: there must be a faster way of doing this?
+    unsigned int j;
+    for (j = 0; j < this->jointNames.size(); ++j)
+    {
+      if (this->jointNames[j] == this->motorInfos[i].jointName)
+      this->motors[i] = j;
+      break;
+    }
+  }
 
   // Get contact sensor names and insert id/name pair into map
   sdf::ElementPtr contactSensor = this->sdf->GetElement("contactSensor");
   while (contactSensor)
   {
     contactSensor->GetAttribute("id")->Get(id);
-    std::cerr << "getting contactSensor [" << id << "]\n";
+    gzdbg << "getting contactSensor [" << id << "]\n";
     this->contactSensorNames[id] = contactSensor->Get<std::string>();
 
     // get sensor from gazebo
@@ -261,7 +294,6 @@ void HaptixControlPlugin::LoadHandControl()
     // get next sdf
     contactSensor = contactSensor->GetNextElement("contactSensor");
   }
-  std::cerr << "done with contact sensors.\nget imu sensors.\n";
 
   // Get imuSensor names and insert id/name pair into map
   sdf::ElementPtr imuSensor = this->sdf->GetElement("imuSensor");
@@ -269,7 +301,7 @@ void HaptixControlPlugin::LoadHandControl()
   {
     imuSensor->GetAttribute("id")->Get(id);
     this->imuSensorNames[id] = imuSensor->Get<std::string>();
-    std::cerr << "getting imuSensor [" << id << "]\n";
+    gzdbg << "getting imuSensor [" << id << "]\n";
 
     // get sensor from gazebo
     sensors::SensorManager *mgr = sensors::SensorManager::Instance();
@@ -295,9 +327,18 @@ void HaptixControlPlugin::LoadHandControl()
   // Allocate memory for all the protobuf fields.
   for (unsigned int i = 0; i < this->motors.size(); ++i)
   {
+    // motor states
     this->robotState.add_motor_pos(0);
     this->robotState.add_motor_vel(0);
     this->robotState.add_motor_torque(0);
+
+    // initialize position command.
+    this->robotCommand.add_ref_pos(0.0);
+    this->robotCommand.add_ref_vel(0.0);
+
+    // default position and velocity gains
+    this->robotCommand.add_gain_pos(1.0);
+    this->robotCommand.add_gain_vel(0.0);
   }
 
   for (unsigned int i = 0; i < this->joints.size(); ++i)
@@ -305,8 +346,13 @@ void HaptixControlPlugin::LoadHandControl()
     this->robotState.add_joint_pos(0);
     this->robotState.add_joint_vel(0);
 
-    // initialize position command.
-    this->robotCommand.add_ref_pos(0.0);
+    // internal command of all joints (not just motors)
+    SimRobotCommand c;
+    c.ref_pos = 0.0;
+    c.ref_vel = 0.0;
+    c.gain_pos = 1.0;
+    c.gain_vel = 0.0;
+    this->simRobotCommand.push_back(c);
 
      // get gazebo joint handles
     this->joints[i] = this->model->GetJoint(this->jointNames[i]);
@@ -569,7 +615,7 @@ void HaptixControlPlugin::UpdatePolhemus()
     }
     else
     {
-      std::cerr << "polhemus_get_pose() failed\n";
+      gzerr << "polhemus_get_pose() failed\n";
       /*
       // test reconnect?
       if(!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
@@ -638,17 +684,45 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 //
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
+  // copy command from hxCommand for motors to list of all joints
+  // commanded by this plugin.
+  /// \TODO: account for joint coupling
+  for(unsigned int i = 0; i < this->motors.size(); ++i)
+  {
+    unsigned int m = this->motors[i];
+    this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
+    this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
+    this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
+    this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+  }
+
+  // command all joints
   for(unsigned int i = 0; i < this->joints.size(); ++i)
   {
+    /// \TODO: no need for transmission gear_ratio, since the encoder
+    /// is at the joint end, but implement it anyways?
     double position = this->joints[i]->GetAngle(0).Radian();
-    // double velocity = this->joints[i]->GetVelocity(0);
-    double positionError = position - this->robotCommand.ref_pos(i);
-    double force = this->pids[i].Update(positionError, _dt);
+
+    /// \TODO: no need for transmission gear_ratio, since the encoder
+    /// is at the joint end, but implement it anyways?
+    double velocity = this->joints[i]->GetVelocity(0);
+
+    // compute position and velocity error
+    double errorPos = position - this->simRobotCommand[i].ref_pos;
+    double errorVel = velocity - this->simRobotCommand[i].ref_vel;
+
+    // compute overall error
+    double error = this->simRobotCommand[i].gain_pos * errorPos
+                 + this->simRobotCommand[i].gain_vel * errorVel;
+
+    // compute force needed
+    double force = this->pids[i].Update(error, _dt);
+
     // this->robotState.set_motor_torque(i, force);
     if (this->joints[i])
       this->joints[i]->SetForce(0, force);
     else
-      fprintf(stderr, "joint bad\n");
+      gzerr << "joint [" << this->jointNames[i] << "] bad.\n";
   }
 }
 
@@ -658,36 +732,64 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 {
   for (unsigned int i = 0; i < this->motors.size(); ++i)
   {
-    this->robotState.set_motor_pos(i, i);
-    this->robotState.set_motor_vel(i, i + 1);
-    this->robotState.set_motor_torque(i, i + 2);
+    unsigned int m = motors[i];
+    this->robotState.set_motor_pos(i, this->joints[m]->GetAngle(0).Radian());
+    this->robotState.set_motor_vel(i, this->joints[m]->GetVelocity(0));
+    this->robotState.set_motor_torque(i, this->joints[m]->GetForce(0));
   }
 
   for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
-    this->robotState.set_joint_pos(i, i);
-    this->robotState.set_joint_vel(i, i + 1);
+    this->robotState.set_joint_pos(i, this->joints[i]->GetAngle(0).Radian());
+    this->robotState.set_joint_vel(i, this->joints[i]->GetVelocity(0));
   }
 
   for (unsigned int i = 0; i < this->contactSensors.size(); ++i)
-    this->robotState.set_contact(i, i);
+  {
+    // for now, aggregate forces into a single scalar
+    math::Vector3 contactForce;
+    math::Vector3 contactTorque;
+    msgs::Contacts contacts = this->contactSensors[i]->GetContacts();
+    // contact sensor report contact between pairs of bodies
+    for (unsigned int j = 0; j < contacts.contact().size(); ++j)
+    {
+      msgs::Contact contact = contacts.contact(j);
+      // each contact can have multiple wrenches
+      for (unsigned int k = 0; k < contact.wrench().size(); ++k)
+      {
+        msgs::JointWrench wrench = contact.wrench(k);
+        // sum up all wrenches from body_1
+        // body_2_wrench should be -body_1_wrench?
+        contactForce += msgs::Convert(wrench.body_1_wrench().force());
+        contactTorque += msgs::Convert(wrench.body_1_wrench().torque());
+      }
+    }
+
+    // return summed force
+    double force = contactForce.GetLength();
+
+    // return force
+    this->robotState.set_contact(i, force);
+  }
 
   for (unsigned int i = 0; i < this->imuSensors.size(); ++i)
   {
     haptix::comm::msgs::imu *linacc = this->robotState.mutable_imu_linacc(i);
-    linacc->set_x(i);
-    linacc->set_y(i + 1);
-    linacc->set_z(i + 2);
+    math::Vector3 acc = this->imuSensors[i]->GetLinearAcceleration();
+    math::Vector3 vel = this->imuSensors[i]->GetAngularVelocity();
+    linacc->set_x(acc.x);
+    linacc->set_y(acc.y);
+    linacc->set_z(acc.z);
     haptix::comm::msgs::imu *angvel = this->robotState.mutable_imu_angvel(i);
-    angvel->set_x(i + 3);
-    angvel->set_y(i + 4);
-    angvel->set_z(i + 5);
+    angvel->set_x(vel.x);
+    angvel->set_y(vel.y);
+    angvel->set_z(vel.z);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Play the trajectory, update states
-void HaptixControlPlugin::UpdateStates()
+void HaptixControlPlugin::GazeboUpdateStates()
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
 
@@ -809,19 +911,15 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  // std::cerr << "got key [" << _msg->data()
-  //           << "] press [" << _msg->dbl_data() << "]\n";
   if (_msg->dbl_data() > 0.0)
   {
     // pressed
     this->keyPressed = _msg->data().c_str()[0];
-    // std::cerr << " pressed key [" << this->keyPressed << "]\n";
   }
   else
   {
     // clear
     this->keyPressed = char(0);
-    // std::cerr << " released key [" << this->keyPressed << "]\n";
   }
 
 }
