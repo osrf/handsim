@@ -197,7 +197,14 @@ namespace gazebo
       public: unsigned int index;
 
       /// \brief: index of coupled joints
-      public: std::vector<unsigned int> jointIndex;
+      public: class GearBox
+      {
+        /// \brief: index of joint controlled by this gearbox
+        public: unsigned int index;
+        public: double offset;
+        public: double multiplier;
+      };
+      public: std::vector<GearBox> gearboxes;
     };
     private: std::map<unsigned int, MotorInfo> motorInfos;
 

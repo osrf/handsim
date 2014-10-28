@@ -266,6 +266,19 @@ void HaptixControlPlugin::LoadHandControl()
         sdf::ElementPtr jointSDF = gearboxSDF->GetElement("joint");
         sdf::ElementPtr offsetSDF = gearboxSDF->GetElement("offset");
         sdf::ElementPtr multiplierSDF = gearboxSDF->GetElement("multiplier");
+        MotorInfo::GearBox g;
+
+        // find index in this->joints that matches jointSDF->Get<std::string>();
+        unsigned int k;
+        for (k = 0; k < this->jointNames.size(); ++k)
+        {
+          if (this->jointNames[k] == jointSDF->Get<std::string>())
+          g.index = k;
+          break;
+        }
+        g.offset = offsetSDF->Get<double>();
+        g.multiplier = multiplierSDF->Get<double>();
+        this->motorInfos[id].gearboxes.push_back(g);
 
         gearboxSDF = gearboxSDF->GetNextElement("gearbox");
       }
