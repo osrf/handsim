@@ -215,6 +215,11 @@ namespace gazebo
     private: bool LoadKeyboard();
     private: void UpdateKeyboard(double _dt);
     private: bool haveKeyboard;
+    private: void SetKeyboardPose(const std::string &/*_topic*/,
+                                  const msgs::Pose &_pose);
+
+    math::Pose keyboardPose;
+    bool staleKeyboardPose;
 
     class SpnState
     {

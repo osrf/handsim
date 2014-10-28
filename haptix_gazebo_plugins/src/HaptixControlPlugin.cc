@@ -330,28 +330,30 @@ void HaptixControlPlugin::LoadHandControl()
 ////////////////////////////////////////////////////////////////////////////////
 // Open keyboard commands
 
-//temporary fix
-math::Pose keyboardPose;
-bool staleKeyboardPose;
-void setKeyboardPose(const std::string &/*_topic*/,
+void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
                      const msgs::Pose &_pose)
 {
-  //Add pose to our gazebo::math::Pose3 object
-  keyboardPose.pos.x = keyboardPose.pos.x + _pose.position().x();
-  keyboardPose.pos.y = keyboardPose.pos.y + _pose.position().y();
-  keyboardPose.pos.z = keyboardPose.pos.z + _pose.position().z();
+  
+  math::Pose inputPose(math::Vector3(_pose.position().x(), _pose.position().y(),
+                       _pose.position().z()),
+                       math::Quaternion(_pose.orientation().w(),
+                       _pose.orientation().x(),
+                       _pose.orientation().y(),
+                       _pose.orientation().z()));
 
-  keyboardPose.rot.x = keyboardPose.rot.x + _pose.orientation().x();
-  keyboardPose.rot.y = keyboardPose.rot.y + _pose.orientation().y();
-  keyboardPose.rot.z = keyboardPose.rot.z + _pose.orientation().z();
-  staleKeyboardPose = false;
+  this->keyboardPose = inputPose*this->keyboardPose;
+
+  // Add pose to our keyboardPose object
+
+  this->staleKeyboardPose = false;
 }
 
 bool HaptixControlPlugin::LoadKeyboard()
 {
-  keyboardPose = this->initialBaseLinkPose;
-  staleKeyboardPose = true;
-  if(ignNode.Subscribe("/haptix/arm_pose_inc", setKeyboardPose)){
+  this->keyboardPose = this->initialBaseLinkPose;
+  this->staleKeyboardPose = true;
+  if(ignNode.Subscribe("/haptix/arm_pose_inc",
+      &HaptixControlPlugin::SetKeyboardPose, this)){
     printf("Successfully connected to keyboard node\n");
     return true;
   }
@@ -593,11 +595,11 @@ void HaptixControlPlugin::UpdatePolhemus()
 void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  if(!staleKeyboardPose){
-    this->targetBaseLinkPose = keyboardPose;
-    staleKeyboardPose = true;
+  if(!this->staleKeyboardPose){
+    this->targetBaseLinkPose = this->keyboardPose;
+    this->staleKeyboardPose = true;
   } else {
-    keyboardPose = this->targetBaseLinkPose;
+    this->keyboardPose = this->targetBaseLinkPose;
   }
 }
 
