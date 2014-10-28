@@ -26,6 +26,7 @@ using namespace gazebo;
 // Register this plugin with the simulator
 GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 
+//////////////////////////////////////////////////
 void Grasp::SliderChanged(char key, float inc){
   if (key != this->incKey && key != this->decKey)
   {
@@ -36,32 +37,38 @@ void Grasp::SliderChanged(char key, float inc){
   this->sliderValue = this->sliderValue < 0 ? 0 : this->sliderValue;
   this->sliderValue = this->sliderValue > 1 ? 1 : this->sliderValue;
 }
- 
+
+//////////////////////////////////////////////////
 QTaskButton::QTaskButton()
 {
   connect(this, SIGNAL(clicked()), this, SLOT(OnButton()));
 }
 
+//////////////////////////////////////////////////
 void QTaskButton::SetTaskId(const std::string& task_id)
 {
   this->id = task_id;
 }
 
+//////////////////////////////////////////////////
 void QTaskButton::SetTaskInstructionsDocument(QTextDocument* instr)
 {
   this->instructions = instr;
 }
 
+//////////////////////////////////////////////////
 void QTaskButton::SetIndex(const int i)
 {
   this->index = i;
 }
 
+//////////////////////////////////////////////////
 void QTaskButton::OnButton()
 {
   emit SendTask(this->id, this->instructions, this->index);
 }
 
+//////////////////////////////////////////////////
 DigitalClock::DigitalClock(QWidget *parent) : QLCDNumber(parent)
 {
   setSegmentStyle(Filled);
@@ -81,6 +88,7 @@ DigitalClock::DigitalClock(QWidget *parent) : QLCDNumber(parent)
   //resize(300, 60);
 }
 
+//////////////////////////////////////////////////
 void DigitalClock::ShowTime()
 {
   QString text("00:00:00");
@@ -95,6 +103,7 @@ void DigitalClock::ShowTime()
 }
 
 
+//////////////////////////////////////////////////
 void DigitalClock::StopClock()
 {
   this->running = false;
@@ -158,14 +167,14 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr elem,
 {
   QVBoxLayout *taskLayout = new QVBoxLayout();
   taskLayout->setContentsMargins(0, 0, 0, 0);
-  
+
   QTabWidget *tabWidget = new QTabWidget();
-  
+
   // Populate the tabWidget by parsing out SDF
   this->instructionsView = new QTextEdit();
   this->instructionsView->setReadOnly(true);
   this->instructionsView->setMaximumHeight(handImgY/3);
-   
+
   if(! elem->HasElement("taskGroup") ){
     return;
   }
@@ -180,7 +189,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr elem,
 
     QGroupBox *buttonGroup = new QGroupBox();
     QGridLayout *buttonLayout = new QGridLayout();
-    
+
     int i = 0;
     sdf::ElementPtr task = taskGroup->GetElement("task");
     while(task){
@@ -215,7 +224,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr elem,
       if(icon_path.compare("none") != 0){
         QPixmap icon_picture(QString(paths->FindFileURI(icon_path).c_str()));
         icon_picture = icon_picture.scaled(iconSize[0], iconSize[1]);
-        
+
         taskButton->setIcon(QIcon(icon_picture));
         taskButton->setIconSize(QSize(iconSize[0], iconSize[1]));
         taskButton->setMinimumSize(iconSize[0]+20, iconSize[1]+30);
@@ -315,13 +324,13 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->configFilename = paths->FindFileURI
                                   ("file://config/HaptixGUIPlugin.sdf");
 
-  
+
   std::ifstream fileinput(this->configFilename.c_str());
   std::stringstream inputStream;
   inputStream << fileinput.rdbuf();
   std::string sdfString = inputStream.str();
   fileinput.close();
-  
+
   // Parameters for sensor contact visualization
   sdf::SDF parameters;
   parameters.SetFromString(sdfString);
@@ -373,7 +382,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       "QFrame { background-color : rgba(100, 100, 100, 255); color : white; }");
   mainLayout = new QVBoxLayout();
   this->setPalette(QPalette(QColor(255, 255, 255, 0)));
-  
+
   this->InitializeHandView();
 
   this->InitializeTaskView(elem, paths);
@@ -494,6 +503,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
 
 /////////////////////////////////////////////////
+/////////////////////////////////////////////////
 HaptixGUIPlugin::~HaptixGUIPlugin()
 {
   for (int i = 0; i < instructionsList.size(); i++)
@@ -520,7 +530,7 @@ HaptixGUIPlugin::~HaptixGUIPlugin()
 
   delete startStopButton;
   startStopButton = NULL;
-  
+
   delete digitalClock;
   digitalClock = NULL;
 
@@ -528,17 +538,20 @@ HaptixGUIPlugin::~HaptixGUIPlugin()
   ignNode = NULL;
 }
 
+//////////////////////////////////////////////////
 std::string parseString(const std::string& rawString){
   size_t end_idx = rawString.find("::", 6);
   return rawString.substr(6, end_idx-6);
 }
 
+//////////////////////////////////////////////////
 std::string HaptixGUIPlugin::getTopicName(const std::string& fingerName)
 {
   std::string topicName = this->handSide+fingerName;
   return "~/mpl/"+topicName+"/"+topicName+"_contact_sensor";
 }
 
+//////////////////////////////////////////////////
 void HaptixGUIPlugin::OnFingerContact(ConstContactsPtr &msg){
   // Parse out the finger name
   // Format is: mpl::r<finger name>::r<finger name>_collision
@@ -559,6 +572,7 @@ void HaptixGUIPlugin::OnFingerContact(ConstContactsPtr &msg){
   }
 }
 
+//////////////////////////////////////////////////
 void HaptixGUIPlugin::PreRender()
 {
   // Draw the contacts as empty gray circles
@@ -601,9 +615,9 @@ void HaptixGUIPlugin::PreRender()
 
           colorArray[i] = this->colorMax[i];
         }
-      
+
       QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
-      
+
       this->contactGraphicsItems[fingerName]->setBrush(color);
       this->contactGraphicsItems[fingerName]->setPen(QPen(QColor(0, 0, 0, 0)));
     }
@@ -613,15 +627,16 @@ void HaptixGUIPlugin::PreRender()
 
 const hxAPLMotors mcp_indices[5] = {motor_little_mcp, motor_ring_mcp, motor_middle_mcp, motor_index_mcp, motor_thumb_mcp};
 
+//////////////////////////////////////////////////
 void coupling_v1(_hxCommand* cmd){
   //Version 1 Joint Coupling modeling
-  
+
   //this relies on the ordering of enums, bit messy
   for(int k = 0; k < 5; k++){
     //Check if slider was changeded
-    
+
     hxAPLMotors mcp = mcp_indices[k];
-    
+
     float mcp_commanded = cmd->ref_pos[mcp];
     if(mcp_commanded <= 0){
       if(mcp == motor_thumb_mcp){
@@ -641,6 +656,7 @@ void coupling_v1(_hxCommand* cmd){
   }
 }
 
+//////////////////////////////////////////////////
 // TODO: This function is inefficient. Think of ways to refactor--maybe a more
 // efficient structure for storage/search.
 bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
@@ -709,7 +725,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     std::string name = this->graspCommands[key];
 
     // Increment/decrement slider value corresponding to key
-    grasps[name].SliderChanged(key, this->graspIncrement);  
+    grasps[name].SliderChanged(key, this->graspIncrement);
   }
 
 
@@ -723,17 +739,17 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
       sliderTotal += 1;
     }
   }
-  
+
   hxCommand avgCommand;
   for (int j = 0; j < handDeviceInfo.nmotor; j++)
   {
     avgCommand.ref_pos[j] = 0;
   }
-  
+
   for (std::map<std::string, Grasp>::iterator it = grasps.begin();
        it != grasps.end(); it++)
   {
-    // Get the slider value and interpolate the grasp 
+    // Get the slider value and interpolate the grasp
     float sliderValue = it->second.sliderValue;
 
     std::vector<float> desiredGrasp = it->second.desiredGrasp;
@@ -749,7 +765,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   {
     avgCommand.ref_pos[j] += this->handCommand.ref_pos[j];
   }
- 
+
   if (hx_update(hxGAZEBO, &avgCommand, &handSensor) != hxOK)
   {
     printf("hx_update(): Request error.\n");
@@ -757,8 +773,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   return true;
 }
 
-////////////////////////////////////////////////
-
+//////////////////////////////////////////////////
 void HaptixGUIPlugin::PublishTaskMessage(const std::string& task_name)
 {
   msgs::GzString msg;
@@ -767,6 +782,7 @@ void HaptixGUIPlugin::PublishTaskMessage(const std::string& task_name)
 
 }
 
+//////////////////////////////////////////////////
 void HaptixGUIPlugin::OnResetClicked()
 {
   // Signal to the ArrangePlugin to set up the current task
@@ -774,6 +790,7 @@ void HaptixGUIPlugin::OnResetClicked()
   PublishTaskMessage(this->taskList[currentTaskIndex]);
 }
 
+//////////////////////////////////////////////////
 void HaptixGUIPlugin::OnNextClicked()
 {
   this->currentTaskIndex = (this->currentTaskIndex+1) % this->taskList.size();
@@ -782,7 +799,7 @@ void HaptixGUIPlugin::OnNextClicked()
                                this->instructionsList[this->currentTaskIndex]);
 }
 
-
+//////////////////////////////////////////////////
 void HaptixGUIPlugin::OnStartStopClicked(){
   if(isTestRunning){
     startStopButton->setStyleSheet(startButtonStyle);
@@ -796,6 +813,7 @@ void HaptixGUIPlugin::OnStartStopClicked(){
   isTestRunning = !isTestRunning;
 }
 
+//////////////////////////////////////////////////
 void HaptixGUIPlugin::OnTaskSent(const std::string& id,
                                QTextDocument* instructions, const int index)
 {
