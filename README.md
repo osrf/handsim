@@ -1,7 +1,7 @@
 # HAPTIX Simulator #
 
 ## Installation instructions: using catkin_make ##
-To compile, first install gazebo from haptix branch, ign-transport and haptix_comm from default branch.  Next:
+To compile, first install gazebo from haptix branch, ign-transport and haptix-comm from default branch.  Next:
 
 ~~~
 mkdir -p ~/catkin_ws/src
@@ -33,7 +33,7 @@ mkdir -p ${WS}/src
 cd ${WS}/src
 git clone https://github.com/ros/catkin.git
 hg clone https://bitbucket.org/ignitionrobotics/ign-transport
-hg clone https://bitbucket.org/osrf/haptix_comm
+hg clone https://bitbucket.org/osrf/haptix-comm
 hg clone https://bitbucket.org/osrf/gazebo
 hg clone https://bitbucket.org/osrf/handsim
 hg clone https://bitbucket.org/osrf/[haptix_model]
@@ -42,7 +42,7 @@ hg clone https://bitbucket.org/osrf/[haptix_model]
 Then add `package.xml` files for the plain cmake packages.
 ~~~
 PACKAGE="ign-transport" && curl https://bitbucket.org/scpeters/unix-stuff/raw/master/package_xml/package_${PACKAGE}.xml > ${WS}/src/${PACKAGE}/package.xml
-PACKAGE="haptix_comm" && curl https://bitbucket.org/scpeters/unix-stuff/raw/master/package_xml/package_${PACKAGE}.xml > ${WS}/src/${PACKAGE}/package.xml
+PACKAGE="haptix-comm" && curl https://bitbucket.org/scpeters/unix-stuff/raw/master/package_xml/package_${PACKAGE}.xml > ${WS}/src/${PACKAGE}/package.xml
 PACKAGE="gazebo" && curl https://bitbucket.org/scpeters/unix-stuff/raw/master/package_xml/package_${PACKAGE}.xml > ${WS}/src/${PACKAGE}/package.xml
 ~~~
 
