@@ -289,11 +289,6 @@ void HaptixControlPlugin::LoadHandControl()
     motorSDF = motorSDF->GetNextElement("motor");
   }
 
-  /// \TODO: this assumes id's for motor are consecutive, starting with 0
-  for (unsigned int i = 0; i < this->motors.size(); ++i)
-  {
-  }
-
   // Get contact sensor names and insert id/name pair into map
   sdf::ElementPtr contactSensor = this->sdf->GetElement("contactSensor");
   while (contactSensor)
@@ -353,7 +348,7 @@ void HaptixControlPlugin::LoadHandControl()
   }
 
   // Allocate memory for all the protobuf fields.
-  for (unsigned int i = 0; i < this->motors.size(); ++i)
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     // motor states
     this->robotState.add_motor_pos(0);
@@ -374,7 +369,7 @@ void HaptixControlPlugin::LoadHandControl()
     this->robotState.add_joint_pos(0);
     this->robotState.add_joint_vel(0);
 
-    // internal command of all joints (not just motors)
+    // internal command of all joints controller here (not just motors)
     SimRobotCommand c;
     c.ref_pos = 0.0;
     c.ref_vel = 0.0;
@@ -714,14 +709,29 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
   // copy command from hxCommand for motors to list of all joints
   // commanded by this plugin.
-  /// \TODO: account for joint coupling
-  for(unsigned int i = 0; i < this->motors.size(); ++i)
+  // also account for joint coupling here based on <gearbox> params
+  for(unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    unsigned int m = this->motors[i];
+    unsigned int m = this->motorInfos[i].index;
     this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
     this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
     this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
     this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+    // coupling through <gearbox> params
+    for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+    {
+      m = this->motorInfos[i].gearboxes[j].index;
+      this->simRobotCommand[m].ref_pos =
+        (this->robotCommand.ref_pos(i) +
+         this->motorInfos[i].gearboxes[j].offset)
+        * this->motorInfos[i].gearboxes[j].multiplier;
+      this->simRobotCommand[m].ref_vel =
+        (this->robotCommand.ref_vel(i) +
+         this->motorInfos[i].gearboxes[j].offset)
+        * this->motorInfos[i].gearboxes[j].multiplier;
+      this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
+      this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+    }
   }
 
   // command all joints
@@ -758,9 +768,9 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 // Play the trajectory, update states
 void HaptixControlPlugin::GetRobotStateFromSim()
 {
-  for (unsigned int i = 0; i < this->motors.size(); ++i)
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    unsigned int m = motors[i];
+    unsigned int m = motorInfos[i].index;
     this->robotState.set_motor_pos(i, this->joints[m]->GetAngle(0).Radian());
     this->robotState.set_motor_vel(i, this->joints[m]->GetVelocity(0));
     this->robotState.set_motor_torque(i, this->joints[m]->GetForce(0));
@@ -886,7 +896,7 @@ void HaptixControlPlugin::HaptixGetDeviceInfoCallback(
   // if (_service != deviceInfoTopic)
   //   _result = false;
 
-  _rep.set_nmotor(this->motors.size());
+  _rep.set_nmotor(this->motorInfos.size());
   _rep.set_njoint(this->joints.size());
   _rep.set_ncontactsensor(this->contactSensors.size());
   _rep.set_nimu(this->imuSensors.size());
