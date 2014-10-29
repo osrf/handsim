@@ -18,7 +18,6 @@ To run:
 ~~~
 source /usr/share/gazebo/setup.sh
 source ~/catkin_ws/install/share/haptix_gazebo_plugins/setup.sh
-export GAZEBO_MODEL_PATH=${GAZEBO_MODEL_PATH}:[path to your copy of gazebo_models repository]
 gazebo --verbose worlds/arat_test.world
 ~~~
 
@@ -64,7 +63,6 @@ To run:
 . ${WS}/install_isolated/setup.bash
 . ${WS}/install_isolated/share/gazebo/setup.sh
 . ${WS}/install_isolated/share/haptix_gazebo_plugins/setup.sh
-export GAZEBO_MODEL_PATH=${GAZEBO_MODEL_PATH}:[path to your copy of gazebo_models repository]
 gazebo --verbose worlds/arat_test.world
 ~~~
 
