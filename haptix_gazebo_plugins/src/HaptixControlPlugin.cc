@@ -197,6 +197,14 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   const double baseJointDamping = 0.01;
   this->baseJoint->SetParam("erp", 0, 0.0);
   this->baseJoint->SetParam("cfm", 0, baseJointDamping);
+
+  // joyFrameOffset
+  const std::string elemName = "joy_frame";
+  if (this->sdf->HasElement(elemName))
+  {
+    math::Vector3 joyFrameEuler = this->sdf->Get<math::Vector3>(elemName);
+    this->joyFrameOffset.SetFromEuler(joyFrameEuler);
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -486,6 +494,10 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   {
     rotRate = msgs::Convert(joy.rotation());
   }
+
+  // Rotate joystick commands by joyFrameOffset
+  posRate = this->joyFrameOffset.RotateVector(posRate);
+  rotRate = this->joyFrameOffset.RotateVector(rotRate);
 
   const double posScale = 2.0;
   const double rotScale = 5.0;

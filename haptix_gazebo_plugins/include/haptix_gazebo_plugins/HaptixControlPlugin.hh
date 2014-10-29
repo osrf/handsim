@@ -354,6 +354,9 @@ namespace gazebo
     /// \param[in] _dt Time step to integrate over.
     private: void UpdateSpacenav(double _dt);
 
+    /// \brief Rotation offset for joystick commands.
+    private: math::Quaternion joyFrameOffset;
+
     // keyboard params and methods
     private: bool LoadKeyboard();
     private: void UpdateKeyboard(double _dt);
