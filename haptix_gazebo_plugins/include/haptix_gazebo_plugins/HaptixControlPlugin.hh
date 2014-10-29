@@ -270,11 +270,6 @@ namespace gazebo
     private: void UpdateKeyboard(double _dt);
     private: bool haveKeyboard;
 
-    /*class SpnState
-    {
-      public: std::vector<int> buttons;
-      public: std::vector<double> axes;
-    };*/
     private: boost::mutex updateMutex;
     private: boost::mutex baseLinkMutex;
     private: sdf::ElementPtr sdf;
