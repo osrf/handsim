@@ -31,7 +31,7 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->keyPressed = char(0);
+  this->keyPressed = static_cast<char>(0);
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -95,8 +95,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // we should get this from the polhemus sensor, but first approximate
   // it as some constant offset from arm base link.
-  // assuming arm is over the table, and the 
-  this->initialCameraPose = math::Pose(); // + this->baseLink->GetWorldPose();
+  // assuming arm is over the table, and the
+  this->initialCameraPose = math::Pose();  // + this->baseLink->GetWorldPose();
   this->targetCameraPose = this->initialCameraPose;
 
   this->polhemusSourceLink =
@@ -129,16 +129,16 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->rotPid.Init(pGain, 0, 0.0, 0, 0, cmdMax, cmdMin);
 
   this->havePolhemus = false;
-  if(!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
-                                             LIBERTY_HS_PRODUCT_ID,
-                                             LIBERTY_HS_WRITE_ENDPOINT,
-                                             LIBERTY_HS_READ_ENDPOINT)))
+  if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
+                                                  LIBERTY_HS_PRODUCT_ID,
+                                                  LIBERTY_HS_WRITE_ENDPOINT,
+                                                  LIBERTY_HS_READ_ENDPOINT)))
   {
     fprintf(stderr, "Failed to connect to Polhemus\n");
   }
   else
   {
-    if(polhemus_init_comm(this->polhemusConn, 10))
+    if (polhemus_init_comm(this->polhemusConn, 10))
     {
       fprintf(stderr, "Failed to initialize comms with Polhemus\n");
     }
@@ -346,8 +346,9 @@ bool HaptixControlPlugin::LoadKeyboard()
 {
   this->keyboardPose = this->initialBaseLinkPose;
   this->staleKeyboardPose = true;
-  if(ignNode.Subscribe("/haptix/arm_pose_inc",
-      &HaptixControlPlugin::SetKeyboardPose, this)){
+  if (ignNode.Subscribe("/haptix/arm_pose_inc",
+        &HaptixControlPlugin::SetKeyboardPose, this))
+  {
     printf("Successfully connected to keyboard node\n");
     return true;
   }
@@ -411,21 +412,19 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
       this->queue_empty = true;
       if (++this->no_motion_count > this->static_count_threshold)
       {
-        if ( zero_when_static ||
-            ( fabs(this->spnPosOffset.x) < this->static_trans_deadband &&
-              fabs(this->spnPosOffset.y) < this->static_trans_deadband &&
-              fabs(this->spnPosOffset.z) < this->static_trans_deadband)
-           )
+        if (zero_when_static ||
+            (fabs(this->spnPosOffset.x) < this->static_trans_deadband &&
+             fabs(this->spnPosOffset.y) < this->static_trans_deadband &&
+             fabs(this->spnPosOffset.z) < this->static_trans_deadband))
         {
           this->spnPosOffset.x = this->spnPosOffset.y
                                = this->spnPosOffset.z = 0;
         }
 
-        if ( this->zero_when_static ||
-            ( fabs(this->spnRotOffset.x) < this->static_rot_deadband &&
-              fabs(this->spnRotOffset.y) < this->static_rot_deadband &&
-              fabs(this->spnRotOffset.z) < this->static_rot_deadband )
-           )
+        if (this->zero_when_static ||
+            (fabs(this->spnRotOffset.x) < this->static_rot_deadband &&
+             fabs(this->spnRotOffset.y) < this->static_rot_deadband &&
+             fabs(this->spnRotOffset.z) < this->static_rot_deadband))
         {
           this->spnRotOffset.x = this->spnRotOffset.y
                                = this->spnRotOffset.z = 0;
@@ -524,7 +523,7 @@ void HaptixControlPlugin::UpdatePolhemus()
   while (true)
   {
     int numPoses = 8;  // fill with max poses to read, returns actual poses
-    if(!polhemus_get_poses(this->polhemusConn, poses, &numPoses, 100))
+    if (!polhemus_get_poses(this->polhemusConn, poses, &numPoses, 100))
     {
       int armId = 0;  // some number between 0 and numPoses
       if (armId < numPoses)
@@ -547,7 +546,7 @@ void HaptixControlPlugin::UpdatePolhemus()
             + armSensorPose + this->sourceWorldPose;
         }
       }
-      
+
       int headId = 1;
       if (headId < numPoses)
       {
@@ -589,10 +588,13 @@ void HaptixControlPlugin::UpdatePolhemus()
 void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  if(!this->staleKeyboardPose){
+  if (!this->staleKeyboardPose)
+  {
     this->targetBaseLinkPose = this->keyboardPose;
     this->staleKeyboardPose = true;
-  } else {
+  }
+  else
+  {
     this->keyboardPose = this->targetBaseLinkPose;
   }
 }
@@ -630,7 +632,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 //
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
-  for(unsigned int i = 0; i < this->joints.size(); ++i)
+  for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
     double position = this->joints[i]->GetAngle(0).Radian();
     // double velocity = this->joints[i]->GetVelocity(0);
@@ -715,10 +717,10 @@ void HaptixControlPlugin::UpdateStates()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Play the trajectory, update states
-math::Pose HaptixControlPlugin::convertPolhemusToPose(double x, double y, double z,
-  double roll, double pitch, double yaw)
+math::Pose HaptixControlPlugin::convertPolhemusToPose(double x, double y,
+  double z, double roll, double pitch, double yaw)
 {
-  //const double M_PER_INCH = 2.54e-2;
+  // const double M_PER_INCH = 2.54e-2;
   const double M_PER_CM = 1e-2;
   const double RAD_PER_DEG = M_PI/180.0;
   return math::Pose(x*M_PER_CM, y*M_PER_CM, z*M_PER_CM,
@@ -727,7 +729,8 @@ math::Pose HaptixControlPlugin::convertPolhemusToPose(double x, double y, double
 
 ////////////////////////////////////////////////////////////////////////////////
 // Play the trajectory, update states
-math::Pose HaptixControlPlugin::convertPolhemusToPose(const polhemus_pose_t &_pose)
+math::Pose HaptixControlPlugin::convertPolhemusToPose(
+  const polhemus_pose_t &_pose)
 {
   // (-x,y,z,yaw,-pitch,-roll) seems to do the right thing;
   // original
@@ -812,10 +815,9 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
   else
   {
     // clear
-    this->keyPressed = char(0);
+    this->keyPressed = static_cast<char>(0);
     // std::cerr << " released key [" << this->keyPressed << "]\n";
   }
-
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)

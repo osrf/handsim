@@ -168,7 +168,7 @@ namespace gazebo
     private: std::map<unsigned int, std::string> jointNames;
     private: std::vector<physics::JointPtr> joints;
 
-    /// \TODO: fixme, implement motors, 
+    /// \TODO: fixme, implement motors,
     private: std::map<unsigned int, std::string> motorNames;
     private: std::vector<physics::JointPtr> motors;
     private: std::map<unsigned int, std::string> contactSensorNames;
