@@ -116,12 +116,41 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->lastTime = this->world->GetSimTime();
 
   // initialize PID's
-  const double pGain = 10000.0;
-  const double cmdMax = 10000.0;
-  const double cmdMin = -10000.0;
-  this->posPid.Init(pGain, 0, 0.0, 0, 0, cmdMax, cmdMin);
-  this->rotPid.Init(pGain, 0, 0.0, 0, 0, cmdMax, cmdMin);
+  if (this->sdf->HasElement("base_pid_pos"))
+  {
+    sdf::ElementPtr basePidPos = this->sdf->GetElement("base_pid_pos");
+    double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
+    basePidPos->GetAttribute("p")->Get(pVal);
+    basePidPos->GetAttribute("i")->Get(iVal);
+    basePidPos->GetAttribute("d")->Get(dVal);
+    basePidPos->GetAttribute("cmd_max")->Get(cmdMaxVal);
+    basePidPos->GetAttribute("cmd_min")->Get(cmdMinVal);
+    this->posPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+  }
+  else
+  {
+    gzwarn << "no <base_pid_pos> block, using defaults.\n";
+    this->posPid.Init(10000, 0, 0, 0, 0, 10000, -10000);
+  }
 
+  if (this->sdf->HasElement("base_pid_rot"))
+  {
+    sdf::ElementPtr basePidRot = this->sdf->GetElement("base_pid_rot");
+    double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
+    basePidRot->GetAttribute("p")->Get(pVal);
+    basePidRot->GetAttribute("i")->Get(iVal);
+    basePidRot->GetAttribute("d")->Get(dVal);
+    basePidRot->GetAttribute("cmd_max")->Get(cmdMaxVal);
+    basePidRot->GetAttribute("cmd_min")->Get(cmdMinVal);
+    this->rotPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+  }
+  else
+  {
+    gzwarn << "no <base_pid_rot> block, using defaults.\n";
+    this->rotPid.Init(10000, 0, 0, 0, 0, 10000, -10000);
+  }
+
+  // initialize polhemus
   this->havePolhemus = false;
   if(!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
                                              LIBERTY_HS_PRODUCT_ID,
