@@ -513,8 +513,8 @@ void HaptixControlPlugin::UpdatePolhemus()
       {
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
         // std::cout << "arm [" << armSensorPose << "]\n";
-        const char *cKey = "c";
-        if (strcmp(&this->keyPressed, cKey) == 0)
+        const char *calibrationKey = "p";
+        if (strcmp(&this->keyPressed, calibrationKey) == 0)
         {
           // calibration mode, update this->baseLinkToArmSensor
           // withouthis->world->IsPaused())t changing targetBaseLinkPose
