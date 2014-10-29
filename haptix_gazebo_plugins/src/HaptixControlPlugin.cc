@@ -635,7 +635,7 @@ void HaptixControlPlugin::HaptixGetDeviceInfoCallback(
 }
 
 //////////////////////////////////////////////////
-/// using haptix_comm service callback
+/// using haptix-comm service callback
 void HaptixControlPlugin::HaptixUpdateCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxCommand &_req,

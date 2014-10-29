@@ -11,14 +11,14 @@ catkin_package(
 # customize for haptix control plugin
 find_package(gazebo REQUIRED)
 find_package(polhemus_driver REQUIRED)
-find_package(haptix_comm REQUIRED)
+find_package(haptix-comm REQUIRED)
 find_package(ignition-transport REQUIRED)
 
 # make below target specific?
 include_directories(
   include
   ${GAZEBO_INCLUDE_DIRS}
-  ${HAPTIX_COMM_INCLUDE_DIRS}
+  ${HAPTIX-COMM_INCLUDE_DIRS}
   ${IGNITION-TRANSPORT_INCLUDE_DIRS}
   ${polhemus_driver_INCLUDE_DIRS}
 )
@@ -26,16 +26,16 @@ include_directories(
 # make below target specific?
 link_directories(
   ${GAZEBO_LIBRARY_DIRS}
-  ${HAPTIX_COMM_LIBRARY_DIRS}
+  ${HAPTIX-COMM_LIBRARY_DIRS}
   ${IGNITION-TRANSPORT_LIBRARY_DIRS}
   ${polhemus_driver_LIBRARY_DIRS}
 )
 
 # build library
 add_library(HaptixControlPlugin SHARED src/HaptixControlPlugin.cc
-  ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSensor.pb.cc
-  ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxDevice.pb.cc
-  ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSensor.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxDevice.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)
 
 # additional library dependencies
 add_dependencies(HaptixControlPlugin
