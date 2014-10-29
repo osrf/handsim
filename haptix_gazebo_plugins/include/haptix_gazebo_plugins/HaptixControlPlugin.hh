@@ -104,7 +104,10 @@ namespace gazebo
     /// \brief Gazebo loop: Update the controller on every simulation tick.
     private: void GazeboUpdateStates();
 
+    /// \breif A pointer to the world
     private: physics::WorldPtr world;
+
+    /// \breif A pointer to the parent model
     private: physics::ModelPtr model;
 
     /// \brief Pointer to the update event connection
