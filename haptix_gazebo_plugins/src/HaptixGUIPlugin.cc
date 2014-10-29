@@ -624,38 +624,6 @@ void HaptixGUIPlugin::PreRender()
   }
 }
 
-
-const hxAPLMotors mcp_indices[5] = {motor_little_mcp, motor_ring_mcp, motor_middle_mcp, motor_index_mcp, motor_thumb_mcp};
-
-//////////////////////////////////////////////////
-void coupling_v1(_hxCommand* cmd){
-  //Version 1 Joint Coupling modeling
-
-  //this relies on the ordering of enums, bit messy
-  for(int k = 0; k < 5; k++){
-    //Check if slider was changeded
-
-    hxAPLMotors mcp = mcp_indices[k];
-
-    float mcp_commanded = cmd->ref_pos[mcp];
-    if(mcp_commanded <= 0){
-      if(mcp == motor_thumb_mcp){
-        cmd->ref_pos[mcp+1] = 0; //thumb dip
-      } else {
-        cmd->ref_pos[mcp+1] = 0; //pip
-        cmd->ref_pos[mcp-1] = 0; //dip
-      }
-    } else {
-      if(mcp == motor_thumb_mcp){
-        cmd->ref_pos[mcp+1] = 8/9.0*mcp_commanded; //thumb dip
-      } else {
-        cmd->ref_pos[mcp+1] = 10/9.0*mcp_commanded; //pip
-        cmd->ref_pos[mcp-1] = 8/9.0*mcp_commanded; //dip
-      }
-    }
-  }
-}
-
 //////////////////////////////////////////////////
 // TODO: This function is inefficient. Think of ways to refactor--maybe a more
 // efficient structure for storage/search.
@@ -688,16 +656,6 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
       increment.rot = cameraRot.RotateVector(increment.rot.GetAsEuler());
     }
 
-    /*gazebo::msgs::Pose msg;
-    gazebo::msgs::Vector3d* vec_msg = msg.mutable_position();
-    vec_msg->set_x(increment.pos.x);
-    vec_msg->set_y(increment.pos.y);
-    vec_msg->set_z(increment.pos.z);
-    gazebo::msgs::Quaternion* quat_msg = msg.mutable_orientation();
-    quat_msg->set_x(increment.rot.x);
-    quat_msg->set_y(increment.rot.y);
-    quat_msg->set_z(increment.rot.z);
-    quat_msg->set_w(increment.rot.w);*/
     msgs::Pose msg(msgs::Convert(increment));
 
     ignNode->Publish("/haptix/arm_pose_inc", msg);
@@ -715,7 +673,6 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
       float inc = this->handCommands[key].increment;
       handCommand.ref_pos[motor_index] += inc;
 
-      //coupling_v1(&handCommand);
   }
   else if (this->graspCommands.find(key) != this->graspCommands.end())
   {

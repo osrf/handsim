@@ -57,7 +57,6 @@ target_link_libraries(HaptixControlPlugin
   ${GAZEBO_LIBRARIES}
   ${polhemus_driver_LIBRARY_DIRS}
   polhemus_driver
-  spnav
   ${IGNITION-TRANSPORT_LIBRARIES})
 
 target_link_libraries( HaptixGUIPlugin ${GAZEBO_LIBRARIES} ${OGRE_LIBRARIES} 
