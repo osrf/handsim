@@ -110,38 +110,77 @@ namespace gazebo
     /// \brief Pointer to the update event connection
     private: event::ConnectionPtr updateConnection;
 
+    /// \brief For computing dt
     private: common::Time lastTime;
 
-    // basic polhemus interfaces
+    /**********************************************/
+    /*                                            */
+    /*       basic polhemus interface stuff       */
+    /*                                            */
+    /**********************************************/
+    /// \brief true if there a working polhemus connected to this computer?
     private: bool havePolhemus;
+    /// \brief connection handle
     private: polhemus_conn_t *polhemusConn;
+    /// \brief convenience utility function
     private: math::Pose convertPolhemusToPose(double x, double y, double z,
       double roll, double pitch, double yaw);
+    /// \brief convenience utility function
     private: math::Pose convertPolhemusToPose(const polhemus_pose_t &_pose);
+    /// \brief polhemus polling thread to detect sensor locations
     private: void UpdatePolhemus();
+    /// \brief polhemus polling thread handle
     private: boost::thread polhemusThread;
 
-    // for polhemus arm base link pose control
+    /**********************************************/
+    /*                                            */
+    /*       arm base control stuff               */
+    /*                                            */
+    /**********************************************/
+    /// \brief: a pointer to the arm base "floating" joint for positioning
+    /// the arm in space. This joint is provides implicit viscous damping
+    /// of the arm base motion.
     private: physics::JointPtr baseJoint;
+    /// \brief: base link of the arm.
     private: physics::LinkPtr baseLink;
+    /// \brief: target position for the arm base link in world frame.
     private: math::Pose targetBaseLinkPose;
     /// \brief base link pose in world frame on startup.  This is where
     /// the user spawned the base link model.
     private: math::Pose initialBaseLinkPose;
-    // used to PID base link pose
+    /// \brief PID for controlling arm base link position in world frame.
     private: common::PID posPid;
+    /// \brief PID for controlling arm base link orientation in world frame.
     private: common::PID rotPid;
+    /// \brief force for moving the arm base link to target location.
     private: Wrench wrench;
+    /// \brief this actually does the PID force calculation and applies
+    /// force to the arm base link.
+    /// \param[in] _dt time step size.
     private: void UpdateBaseLink(double _dt);
 
-    // for polhemus view point tracking
+    /**********************************************/
+    /*                                            */
+    /*   for polhemus based view point tracking   */
+    /*                                            */
+    /**********************************************/
+    /// \brief gazebo gz transport node for commanding gazebo UserCamera
     private: gazebo::transport::NodePtr gazeboNode;
+    /// \brief gazebo gz transport node publisher handle
     private: gazebo::transport::PublisherPtr polhemusJoyPub;
+    /// \brief gazebo gz transport message
     private: gazebo::msgs::Pose joyMsg;
+    /// \brief target UserCamera pose in world frame
     private: math::Pose targetCameraPose;
+    /// \brief initial UserCamera pose in world frame, not used.
     private: math::Pose initialCameraPose;
 
-    // subscribe to key events from gazebo qt window
+    /**********************************************/
+    /*                                            */
+    /*   for subscribing to key events published  */
+    /*   by gzclient window                       */
+    /*                                            */
+    /**********************************************/
     private: gazebo::transport::SubscriberPtr keySub;
     private: void OnKey(ConstRequestPtr &_msg);
     private: char keyPressed;
