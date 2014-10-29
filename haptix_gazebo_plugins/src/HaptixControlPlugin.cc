@@ -17,14 +17,6 @@
 
 #include "haptix_gazebo_plugins/HaptixControlPlugin.hh"
 
-// for spacenav
-#include <stdio.h>
-#include <iostream>
-
-// Used to scale joystick output to be in [-1, 1].
-// Estimated from data, and not necessarily correct.
-#define SPNAV_FULL_SCALE (512.0)
-
 namespace gazebo
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +39,6 @@ HaptixControlPlugin::~HaptixControlPlugin()
 {
   this->polhemusThread.join();
   event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
-  spnav_close();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,15 +53,18 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->world->EnablePhysicsEngine(true);
 
   // start a transport node for polhemus head pose view point control
-  this->gazebonode =
+  this->gazeboNode =
     gazebo::transport::NodePtr(new gazebo::transport::Node());
   fprintf(stderr, "world name: [%s]\n", this->world->GetName().c_str());
-  this->gazebonode->Init(this->world->GetName());
+  this->gazeboNode->Init(this->world->GetName());
   this->polhemusJoyPub =
-    this->gazebonode->Advertise<gazebo::msgs::Pose>("~/polhemus/joy");
+    this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/polhemus/joy");
   this->keySub =
-    this->gazebonode->Subscribe("~/qtKeyEvent",
+    this->gazeboNode->Subscribe("~/qtKeyEvent",
       &HaptixControlPlugin::OnKey, this);
+  this->joySub =
+    this->gazeboNode->Subscribe("~/user_camera/joy_twist",
+      &HaptixControlPlugin::OnJoy, this);
 
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
@@ -153,9 +147,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
       boost::bind(&HaptixControlPlugin::UpdatePolhemus, this));
   else
     std::cerr << "No usable polhemus setup detected.\n";
-
-  // check for spacenav
-  this->haveSpacenav = this->LoadSpacenav();
 
   this->haveKeyboard = false;
 
@@ -358,164 +349,41 @@ bool HaptixControlPlugin::LoadKeyboard()
   return false;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-// Open spacenav
-bool HaptixControlPlugin::LoadSpacenav()
-{
-  if (spnav_open() == -1)
-  {
-    printf("Could not open the space navigator device."
-           " Did you remember to run spacenavd (as root)?");
-
-    std::cout << "no spacenav\n\n\n";
-    return false;
-  }
-
-  // Parameters
-  // The number of polls needed to be done before the device is considered
-  // "static"
-  this->static_count_threshold = 30;
-
-  // If true, the node will zero the output when the device is "static"
-  this->zero_when_static = true;
-
-  // If the device is considered "static" and each trans, rot component is
-  // below the deadband, it will output zeros in either rotation, translation,
-  // or both
-  this->static_trans_deadband = 50;
-  this->static_rot_deadband = 50;
-
-  this->spnState.axes.resize(6);
-  this->spnState.buttons.resize(2);
-
-  this->no_motion_count = 0;
-  this->motion_stale = false;
-
-  this->joy_stale = false;
-  this->queue_empty = false;
-
-  std::cout << "have spacenav\n\n\n";
-  return true;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Play the trajectory, update states
 void HaptixControlPlugin::UpdateSpacenav(double _dt)
 {
-  // Sleep when the queue is empty.
-  // If the queue is empty 30 times in a row output zeros.
-  // Output changes each time a button event happens, or when a motion
-  // event happens and the queue is empty.
-  // this->spnState.header.stamp = ros::Time().now();
-  switch (spnav_poll_event(&(this->sev)))
+  if (!this->newJoystickMessage)
   {
-    case 0:
-      this->queue_empty = true;
-      if (++this->no_motion_count > this->static_count_threshold)
-      {
-        if ( zero_when_static ||
-            ( fabs(this->spnPosOffset.x) < this->static_trans_deadband &&
-              fabs(this->spnPosOffset.y) < this->static_trans_deadband &&
-              fabs(this->spnPosOffset.z) < this->static_trans_deadband)
-           )
-        {
-          this->spnPosOffset.x = this->spnPosOffset.y
-                               = this->spnPosOffset.z = 0;
-        }
-
-        if ( this->zero_when_static ||
-            ( fabs(this->spnRotOffset.x) < this->static_rot_deadband &&
-              fabs(this->spnRotOffset.y) < this->static_rot_deadband &&
-              fabs(this->spnRotOffset.z) < this->static_rot_deadband )
-           )
-        {
-          this->spnRotOffset.x = this->spnRotOffset.y
-                               = this->spnRotOffset.z = 0;
-        }
-
-        this->no_motion_count = 0;
-        this->motion_stale = true;
-      }
-      break;
-
-    case SPNAV_EVENT_MOTION:
-      this->spnPosOffset.x = this->sev.motion.z;
-      this->spnPosOffset.y = -this->sev.motion.x;
-      this->spnPosOffset.z = this->sev.motion.y;
-
-      this->spnRotOffset.x = this->sev.motion.rz;
-      this->spnRotOffset.y = -this->sev.motion.rx;
-      this->spnRotOffset.z = this->sev.motion.ry;
-
-      this->motion_stale = true;
-      break;
-
-    case SPNAV_EVENT_BUTTON:
-      // printf("type, press, bnum = <%d, %d, %d>\n", this->sev.button.type,
-      //   this->sev.button.press, this->sev.button.bnum);
-      this->spnState.buttons[this->sev.button.bnum] = this->sev.button.press;
-
-      joy_stale = true;
-      break;
-
-    default:
-      printf("Unknown message type in spacenav. This should never happen.");
-      break;
+    return;
   }
 
-  if (motion_stale && (queue_empty || joy_stale))
+  msgs::Joystick joy;
   {
-    // offset_pub.publish(this->spnPosOffset);
-    // rot_pub.publish(this->spnRotOffset);
-
-    // twist_msg.linear = this->spnPosOffset;
-    // twist_msg.angular = this->spnRotOffset;
-    // twist_pub.publish(twist_msg);
-
-    this->spnState.axes[0] = this->spnPosOffset.x / SPNAV_FULL_SCALE;
-    this->spnState.axes[1] = this->spnPosOffset.y / SPNAV_FULL_SCALE;
-    this->spnState.axes[2] = this->spnPosOffset.z / SPNAV_FULL_SCALE;
-    this->spnState.axes[3] = this->spnRotOffset.x / SPNAV_FULL_SCALE;
-    this->spnState.axes[4] = this->spnRotOffset.y / SPNAV_FULL_SCALE;
-    this->spnState.axes[5] = this->spnRotOffset.z / SPNAV_FULL_SCALE;
-
-    this->no_motion_count = 0;
-    this->motion_stale = false;
-    this->joy_stale = true;
+    boost::mutex::scoped_lock lock(this->joystickMessageMutex);
+    joy = this->latestJoystickMessage;
+    this->newJoystickMessage = false;
   }
 
-  if (this->joy_stale)
+  math::Vector3 posRate, rotRate;
+
+  if (joy.has_translation())
   {
-    // update target pose
-    // joy_pub.publish(this->spnState);
+    posRate = msgs::Convert(joy.translation());
+  }
 
-    double posScale = 2.0;
-    // negative signs hacks because +x is into the screen
-    math::Vector3 posRate(-this->spnState.axes[0],
-                          -this->spnState.axes[1],
-                          this->spnState.axes[2]);
-    {
-      boost::mutex::scoped_lock lock(this->baseLinkMutex);
-      this->targetBaseLinkPose.pos = this->targetBaseLinkPose.pos
-        + _dt * posScale * posRate;
+  if (joy.has_rotation())
+  {
+    rotRate = msgs::Convert(joy.rotation());
+  }
 
-      double rotScale = 1.0;
-      // negative signs, etc are hacks because +x is into the screen
-      math::Vector3 rotRate(this->spnState.axes[4],
-                            -this->spnState.axes[3],
-                            this->spnState.axes[5]);
-
-      // rotate
-      math::Vector3 euler = this->targetBaseLinkPose.rot.GetAsEuler();
-      math::Quaternion rotOffset =
-        this->initialBaseLinkPose.rot.GetInverse() *
-        this->targetBaseLinkPose.rot;
-      rotRate = rotOffset.RotateVectorReverse(rotRate);
-      euler = euler + _dt * rotScale * rotRate;
-      this->targetBaseLinkPose.rot.SetFromEuler(euler);
-    }
+  const double posScale = 2.0;
+  const double rotScale = 5.0;
+  {
+    boost::mutex::scoped_lock lock(this->baseLinkMutex);
+    this->targetBaseLinkPose.pos += _dt * posScale * posRate;
+    this->targetBaseLinkPose.rot =
+      this->targetBaseLinkPose.rot.Integrate(rotScale * rotRate, _dt);
   }
 }
 
@@ -692,9 +560,8 @@ void HaptixControlPlugin::UpdateStates()
   double dt = (curTime - this->lastTime).Double();
   if (dt > 0)
   {
-    // update target pose if using spacenav
-    if (this->haveSpacenav)
-      this->UpdateSpacenav(dt);
+    // update target pose with spacenav
+    this->UpdateSpacenav(dt);
 
     if (this->haveKeyboard)
       this->UpdateKeyboard(dt);
@@ -799,6 +666,14 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   _rep = this->robotState;
 
   _result = true;
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
+{
+  boost::mutex::scoped_lock lock(this->joystickMessageMutex);
+  this->latestJoystickMessage = *_msg;
+  this->newJoystickMessage = true;
 }
 
 //////////////////////////////////////////////////

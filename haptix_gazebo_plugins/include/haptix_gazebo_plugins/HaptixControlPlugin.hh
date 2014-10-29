@@ -36,8 +36,6 @@
 
 #include "polhemus_driver/polhemus_driver.h"
 
-#include <spnav.h>
-
 // #include <haptix/comm/Comm.h>
 #include <haptix/comm/haptix.h>
 #include <haptix/comm/msg/hxCommand.pb.h>
@@ -137,7 +135,7 @@ namespace gazebo
     private: void UpdateBaseLink(double _dt);
 
     // for polhemus view point tracking
-    private: gazebo::transport::NodePtr gazebonode;
+    private: gazebo::transport::NodePtr gazeboNode;
     private: gazebo::transport::PublisherPtr polhemusJoyPub;
     private: gazebo::msgs::Pose joyMsg;
     private: math::Pose targetCameraPose;
@@ -147,6 +145,22 @@ namespace gazebo
     private: gazebo::transport::SubscriberPtr keySub;
     private: void OnKey(ConstRequestPtr &_msg);
     private: char keyPressed;
+
+    /// \brief Subscriber to spacenav messages.
+    private: gazebo::transport::SubscriberPtr joySub;
+
+    /// \brief Callback for subscriber to spacenav messages.
+    /// \param[in] _msg Joystick data.
+    private: void OnJoy(ConstJoystickPtr &_msg);
+
+    /// \brief Copy of latest Joystick message.
+    private: msgs::Joystick latestJoystickMessage;
+
+    /// \brief Flag to indicate when new Joystick message has been received.
+    private: bool newJoystickMessage;
+
+    /// \brief Mutex to protect access to newJoystickMessage
+    private: boost::mutex joystickMessageMutex;
 
     // for tracking polhemus setup, where is the source in the world frame?
     private: physics::LinkPtr polhemusSourceLink;
@@ -195,21 +209,11 @@ namespace gazebo
     // initialize gazebo controllers
     private: void LoadHandControl();
 
-    // spacenav params
-    private: bool LoadSpacenav();
+    /// \brief Update arm position based on spacenav input.
+    /// The spacenav input is interpreted as a desired velocity
+    /// that is integrated over a specified timestep.
+    /// \param[in] _dt Time step to integrate over.
     private: void UpdateSpacenav(double _dt);
-    private: bool haveSpacenav;
-    private: int static_count_threshold;
-    private: bool zero_when_static;
-    private: int static_trans_deadband;
-    private: int static_rot_deadband;
-    private: spnav_event sev;
-    private: int no_motion_count;
-    private: bool motion_stale;
-    private: bool joy_stale;
-    private: bool queue_empty;
-    private: math::Vector3 spnPosOffset;
-    private: math::Vector3 spnRotOffset;
 
     // keyboard params and methods
     private: bool LoadKeyboard();
@@ -221,7 +225,6 @@ namespace gazebo
       public: std::vector<int> buttons;
       public: std::vector<double> axes;
     };
-    private: SpnState spnState;
     private: boost::mutex updateMutex;
     private: boost::mutex baseLinkMutex;
     private: sdf::ElementPtr sdf;

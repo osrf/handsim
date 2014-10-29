@@ -47,7 +47,6 @@ target_link_libraries(HaptixControlPlugin
   ${GAZEBO_LIBRARIES}
   ${polhemus_driver_LIBRARY_DIRS}
   polhemus_driver
-  spnav
   ${IGNITION-TRANSPORT_LIBRARIES})
 
 # below adds -std=c++11, needed to compile against ign-transport
