@@ -181,8 +181,11 @@ namespace gazebo
     /*   by gzclient window                       */
     /*                                            */
     /**********************************************/
+    /// \brief gazebo key event subscriber handle
     private: gazebo::transport::SubscriberPtr keySub;
+    /// \brief gazebo key event subscriber callback function
     private: void OnKey(ConstRequestPtr &_msg);
+    /// \brief stores the key pressed from gazebo key event
     private: char keyPressed;
 
     /// \brief Subscriber to spacenav messages.
