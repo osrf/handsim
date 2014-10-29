@@ -67,7 +67,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   fprintf(stderr, "world name: [%s]\n", this->world->GetName().c_str());
   this->gazebonode->Init(this->world->GetName());
   this->polhemusJoyPub =
-    this->gazebonode->Advertise<gazebo::msgs::Pose>("~/polhemus/joy");
+    this->gazebonode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
   this->keySub =
     this->gazebonode->Subscribe("~/qtKeyEvent",
       &HaptixControlPlugin::OnKey, this);
