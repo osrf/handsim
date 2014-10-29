@@ -180,7 +180,7 @@ namespace gazebo
     /// \brief: state and command messages
     private: haptix::comm::msgs::hxSensor robotState;
     private: haptix::comm::msgs::hxCommand robotCommand;
-    public: class SimRobotCommand
+    private: class SimRobotCommand
     {
       public: double ref_pos;
       public: double ref_vel;
@@ -201,7 +201,7 @@ namespace gazebo
     private: std::vector<physics::JointPtr> joints;
 
     /// \brief: class containing info on motors
-    public: class MotorInfo
+    private: class MotorInfo
     {
       /// \brief: motor name
       public: std::string name;
