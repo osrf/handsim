@@ -673,26 +673,22 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
 
     float pose_inc_args[6] = {0, 0, 0, 0, 0, 0};
     pose_inc_args[index] = inc;
-    gazebo::math::Pose increment(gazebo::math::Vector3(pose_inc_args[0],
-                                   pose_inc_args[1], pose_inc_args[2]),
-                                 gazebo::math::Quaternion(pose_inc_args[3],
-                                   pose_inc_args[4], pose_inc_args[5]));
+    math::Pose increment(gazebo::math::Vector3(pose_inc_args[0],
+                           pose_inc_args[1], pose_inc_args[2]),
+                         gazebo::math::Quaternion(pose_inc_args[3],
+                           pose_inc_args[4], pose_inc_args[5]));
 
-    gazebo::math::Quaternion cameraRot =
-                                gui::get_active_camera()->GetWorldRotation();
+    math::Quaternion cameraRot = gui::get_active_camera()->GetWorldRotation();
     if (index < 3)
     {
       increment.pos = cameraRot.RotateVector(increment.pos);
     }
     else
     {
-      std::cout << "Increment.rot: " << increment.rot.GetAsEuler() << std::endl;
-      std::cout << "camera rot: " << cameraRot.GetAsEuler() << std::endl;
-      increment.rot = increment.rot*cameraRot;
-      std::cout << "rotation after multiplication " << increment.rot.GetAsEuler() << std::endl;
+      increment.rot = cameraRot.RotateVector(increment.rot.GetAsEuler());
     }
 
-    gazebo::msgs::Pose msg;
+    /*gazebo::msgs::Pose msg;
     gazebo::msgs::Vector3d* vec_msg = msg.mutable_position();
     vec_msg->set_x(increment.pos.x);
     vec_msg->set_y(increment.pos.y);
@@ -701,7 +697,8 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     quat_msg->set_x(increment.rot.x);
     quat_msg->set_y(increment.rot.y);
     quat_msg->set_z(increment.rot.z);
-    quat_msg->set_w(increment.rot.w);
+    quat_msg->set_w(increment.rot.w);*/
+    msgs::Pose msg(msgs::Convert(increment));
 
     ignNode->Publish("/haptix/arm_pose_inc", msg);
     return true;

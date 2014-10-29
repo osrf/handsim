@@ -76,20 +76,20 @@
       </taskGroup>
 
       <commands>
-        <command button="a" name="arm_pos_x" increment=-0.025></command>
-        <command button="d" name="arm_pos_x" increment=0.025></command>
+        <command button="s" name="arm_pos_x" increment=-0.025></command>
+        <command button="w" name="arm_pos_x" increment=0.025></command>
 
-        <command button="w" name="arm_pos_y" increment=0.025></command>
-        <command button="s" name="arm_pos_y" increment=-0.025></command>
+        <command button="a" name="arm_pos_y" increment=0.025></command>
+        <command button="d" name="arm_pos_y" increment=-0.025></command>
 
         <command button="q" name="arm_pos_z" increment=0.025></command>
         <command button="e" name="arm_pos_z" increment=-0.025></command>
 
-        <command button="A" name="arm_rot_x" increment=-0.025></command>
-        <command button="D" name="arm_rot_x" increment=0.025></command>
+        <command button="S" name="arm_rot_x" increment=-0.025></command>
+        <command button="W" name="arm_rot_x" increment=0.025></command>
 
-        <command button="W" name="arm_rot_y" increment=0.025></command>
-        <command button="S" name="arm_rot_y" increment=-0.025></command>
+        <command button="A" name="arm_rot_y" increment=0.025></command>
+        <command button="D" name="arm_rot_y" increment=-0.025></command>
 
         <command button="Q" name="arm_rot_z" increment=0.025></command>
         <command button="E" name="arm_rot_z" increment=-0.025></command>
