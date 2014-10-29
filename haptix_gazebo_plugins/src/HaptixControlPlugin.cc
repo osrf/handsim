@@ -93,15 +93,19 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->initialCameraPose = math::Pose(); // + this->baseLink->GetWorldPose();
   this->targetCameraPose = this->initialCameraPose;
 
-  this->polhemusSourceLink =
-    this->world->GetModel("polhemus_source")->GetLink("link");
-  if (!this->polhemusSourceLink)
+  // for tracking polhemus setup, where is the source in the world frame
+  this->polhemusSourceModel = this->world->GetModel("polhemus_source");
+  if (!this->polhemusSourceModel)
   {
-    gzerr << "world needs a polhemus_source model with link named link\n";
-    return;
+    /// \TODO: make this a sdf param for the plugin?
+    gzwarn << "no polhemus_source model detected using predefine location.\n";
+    this->sourceWorldPose = math::Pose(-0.5, 0, 1.3, 3.14159, 0, -1.57159);
   }
-  // for tracking polhemus setup, where is the source in the world frame?
-  this->sourceWorldPose = this->polhemusSourceLink->GetWorldPose();
+  else
+  {
+    this->sourceWorldPose = this->polhemusSourceModel->GetWorldPose();
+  }
+  gzdbg << "Polhemus Source Pose [" << this->sourceWorldPose << "]\n";
   // transform from polhemus sensor orientation to base link frame
   // -0.6 meters towards wrist from elbow
   // -0.7 rad pitch up

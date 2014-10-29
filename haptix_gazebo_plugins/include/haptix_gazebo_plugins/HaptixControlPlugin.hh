@@ -163,7 +163,7 @@ namespace gazebo
     private: boost::mutex joystickMessageMutex;
 
     // for tracking polhemus setup, where is the source in the world frame?
-    private: physics::LinkPtr polhemusSourceLink;
+    private: physics::ModelPtr polhemusSourceModel;
     private: math::Pose sourceWorldPose;
     // transform from polhemus sensor orientation to base link frame
     private: math::Pose baseLinkToArmSensor;
