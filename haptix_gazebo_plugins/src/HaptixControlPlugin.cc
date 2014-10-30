@@ -479,6 +479,8 @@ void HaptixControlPlugin::LoadHandControl()
 void HaptixControlPlugin::Reset()
 {
   this->targetBaseLinkPose = this->initialBaseLinkPose;
+  this->targetSpacenavPose = this->baseLinktoSpacenavPose
+                           + this->initialBaseLinkPose;
 
   std::vector<SimRobotCommand>::iterator iter;
   for (iter = this->simRobotCommands.begin();
