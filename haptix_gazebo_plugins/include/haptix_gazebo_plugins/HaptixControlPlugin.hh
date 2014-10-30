@@ -254,6 +254,9 @@ namespace gazebo
       /// \brief: joint name associated with each motor
       public: std::string jointName;
 
+      /// \brief: max continuous motor torque
+      public: double motorTorque;
+
       /// \brief: gear_ratio = motor_angle / joint_angle
       /// assuming the _hxCommand::ref_pos and _hxCommand::ref_vel are
       /// motor position and motor velocities, use gear_ratio to

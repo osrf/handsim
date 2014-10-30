@@ -269,6 +269,12 @@ void HaptixControlPlugin::LoadHandControl()
     this->motorInfos[id].gearRatio = gearRatioSDF->Get<double>();
     gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
 
+    // get max [continuous] motor torque associated with this motor
+    sdf::ElementPtr motorTorqueSDF =
+      motorSDF->GetElement("motor_torque");
+    this->motorInfos[id].motorTorque = motorTorqueSDF->Get<double>();
+    gzdbg << "  torque [" << this->motorInfos[id].motorTorque << "]\n";
+
     // this should return index of the joint in this->joints
     // where this->jointNames matches motorInfos[id].jointName.
     /// \TODO: there must be a faster way of doing this?
@@ -282,7 +288,7 @@ void HaptixControlPlugin::LoadHandControl()
       }
     }
 
-    // get coupled joints
+    // get coupled joints from <gearbox> blocks
     if (motorSDF->HasElement("gearbox"))
     {
       sdf::ElementPtr gearboxSDF = motorSDF->GetElement("gearbox");
@@ -312,6 +318,34 @@ void HaptixControlPlugin::LoadHandControl()
       }
     }
 
+    // Adjust max/min torque commands based on <motor_torque>,
+    // <gear_ratio> and <gearbox> params.
+    for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+    {
+      unsigned int m = this->motorInfos[i].index;
+      // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
+      double jointTorque = this->motorInfos[i].gearRatio *
+                           this->motorInfos[i].motorTorque;
+      this->pids[m].SetCmdMax(jointTorque);
+      this->pids[m].SetCmdMin(-jointTorque);
+      gzdbg << " motor torque [" << m
+            << "] : " << jointTorque << "\n";
+
+      /// \TODO: contemplate about using Joint::SetEffortLimit()
+      /// instead of PID::SetCmdMax() and PID::SetCmdMin()
+
+      // set torque command limits through <gearbox> coupling params.
+      for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+      {
+        unsigned int n = this->motorInfos[i].gearboxes[j].index;
+        double coupledJointTorque = jointTorque *
+          this->motorInfos[i].gearboxes[j].multiplier;
+        this->pids[n].SetCmdMax(coupledJointTorque);
+        this->pids[n].SetCmdMin(-coupledJointTorque);
+        gzdbg << " motor torque [" << n
+              << "] : " << coupledJointTorque << "\n";
+      }
+    }
 
     // get next sdf
     motorSDF = motorSDF->GetNextElement("motor");
@@ -491,6 +525,9 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
     this->targetBaseLinkPose.pos += _dt * posScale * posRate;
     this->targetBaseLinkPose.rot =
       this->targetBaseLinkPose.rot.Integrate(rotScale * rotRate, _dt);
+
+    // how to shift control to wrist / hand location?
+    // this->targetBaseLinkPose += this->baseLinkToArmSensor.GetInverse();
   }
 }
 
@@ -621,10 +658,12 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
     this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
     this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
-    /// \TODO: fix
+
+    /// \TODO: fix by implementing better models
     // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
     // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
-    // coupling through <gearbox> params
+
+    // set joint command using coupling specified in <gearbox> params.
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       unsigned int n = this->motorInfos[i].gearboxes[j].index;
@@ -637,7 +676,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
         (this->robotCommand.ref_vel(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
-      /// \TODO: fix
+
+      /// \TODO: fix by implementing better models
       // this->simRobotCommand[n].gain_pos = this->robotCommand.gain_pos(i);
       // this->simRobotCommand[n].gain_vel = this->robotCommand.gain_vel(i);
     }
@@ -646,11 +686,9 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   // command all joints
   for(unsigned int i = 0; i < this->joints.size(); ++i)
   {
-    /// \TODO: no need for transmission gear_ratio, since the encoder
     /// is at the joint end, but implement it anyways?
     double position = this->joints[i]->GetAngle(0).Radian();
 
-    /// \TODO: no need for transmission gear_ratio, since the encoder
     /// is at the joint end, but implement it anyways?
     double velocity = this->joints[i]->GetVelocity(0);
 
