@@ -115,6 +115,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->lastTime = this->world->GetSimTime();
 
   // initialize PID's
+  double baseJointImplicitDamping = 100.0;
   if (this->sdf->HasElement("base_pid_pos"))
   {
     sdf::ElementPtr basePidPos = this->sdf->GetElement("base_pid_pos");
@@ -124,7 +125,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     basePidPos->GetAttribute("d")->Get(dVal);
     basePidPos->GetAttribute("cmd_max")->Get(cmdMaxVal);
     basePidPos->GetAttribute("cmd_min")->Get(cmdMinVal);
-    this->posPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+    this->posPid.Init(pVal, iVal, 0, 0, 0, cmdMaxVal, cmdMinVal);
+    baseJointImplicitDamping = dVal;
   }
   else
   {
@@ -141,13 +143,21 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     basePidRot->GetAttribute("d")->Get(dVal);
     basePidRot->GetAttribute("cmd_max")->Get(cmdMaxVal);
     basePidRot->GetAttribute("cmd_min")->Get(cmdMinVal);
-    this->rotPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+    this->rotPid.Init(pVal, iVal, 0, 0, 0, cmdMaxVal, cmdMinVal);
+    baseJointImplicitDamping = std::max(dVal, baseJointImplicitDamping);
   }
   else
   {
     gzwarn << "no <base_pid_rot> block, using defaults.\n";
     this->rotPid.Init(10000, 0, 0, 0, 0, 10000, -10000);
   }
+
+  // d-gain is enforced implicitly
+  this->baseJoint->SetParam("erp", 0, 0.0);
+  this->baseJoint->SetParam("cfm", 0, 1.0/baseJointImplicitDamping);
+  // same implicit damping for revolute joint stops
+  this->baseJoint->SetParam("stop_erp", 0, 0.0);
+  this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
   // initialize polhemus
   this->havePolhemus = false;
@@ -187,11 +197,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
-
-  // base joint damping
-  const double baseJointDamping = 0.01;
-  this->baseJoint->SetParam("erp", 0, 0.0);
-  this->baseJoint->SetParam("cfm", 0, baseJointDamping);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
