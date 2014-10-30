@@ -544,7 +544,8 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
     this->targetSpacenavPose.rot =
       this->targetSpacenavPose.rot.Integrate(rotScale * rotRate, _dt);
 
-    // how to shift control to wrist / hand location?
+    // apply inverse transform from spacenav reference point
+    // back to base link pose
     this->targetBaseLinkPose = this->baseLinktoSpacenavPose.GetInverse()
                              + this->targetSpacenavPose;
   }
