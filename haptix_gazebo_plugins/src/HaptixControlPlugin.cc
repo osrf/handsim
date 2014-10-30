@@ -467,6 +467,20 @@ void HaptixControlPlugin::LoadHandControl()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void HaptixControlPlugin::Reset()
+{
+  this->targetBaseLinkPose = this->initialBaseLinkPose;
+
+  std::vector<SimRobotCommand>::iterator iter;
+  for (iter = this->simRobotCommands.begin();
+      iter != this->simRobotCommands.end(); ++iter)
+  {
+    iter->ref_pos = 0.0;
+    iter->ref_vel = 0.0;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Open keyboard commands
 
 void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,

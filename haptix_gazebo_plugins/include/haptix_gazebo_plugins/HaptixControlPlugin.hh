@@ -99,7 +99,10 @@ namespace gazebo
     public: virtual ~HaptixControlPlugin();
 
     /// \brief Load the controller
-    public: void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
+    public: virtual void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
+
+    // Documentation inherited.
+    public: virtual void Reset();
 
     /// \brief Gazebo loop: Update the controller on every simulation tick.
     private: void GazeboUpdateStates();
