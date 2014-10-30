@@ -56,7 +56,6 @@ namespace gazebo
     {
       public:
         float sliderValue;
-        std::vector<float> desiredGrasp;
         char incKey;
         char decKey;
         void SliderChanged(char key, float inc);

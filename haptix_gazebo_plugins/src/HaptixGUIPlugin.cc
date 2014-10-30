@@ -19,6 +19,7 @@
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/rendering/FPSViewController.hh>
+#include <haptix/comm/msg/hxGrasp.pb.h>
 #include "haptix_gazebo_plugins/HaptixGUIPlugin.hh"
 
 using namespace gazebo;
@@ -27,7 +28,8 @@ using namespace gazebo;
 GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 
 //////////////////////////////////////////////////
-void Grasp::SliderChanged(char key, float inc){
+void Grasp::SliderChanged(char key, float inc)
+{
   if (key != this->incKey && key != this->decKey)
   {
     return;
@@ -424,11 +426,12 @@ HaptixGUIPlugin::HaptixGUIPlugin()
     command = command->GetNextElement();
   }
 
-  // Get predefined grasps
+  // Get predefined grasp key mappings
   sdf::ElementPtr grasp = elem->GetElement("grasps");
   grasp->GetElement("increment")->GetValue()->Get(this->graspIncrement);
   grasp = grasp->GetElement("grasp");
-  while(grasp){
+  while(grasp)
+  {
     std::string name;
     char inc_key;
     char dec_key;
@@ -436,6 +439,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
     grasp->GetAttribute("inc_key")->Get(inc_key);
     grasp->GetAttribute("dec_key")->Get(dec_key);
     this->grasps[name] = Grasp(inc_key, dec_key);
+    /*
     std::string graspBuffer;
     grasp->GetValue()->Get(graspBuffer);
     std::istringstream iss(graspBuffer);
@@ -445,6 +449,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
     {
       grasps[name].desiredGrasp.push_back(stof(tokens[i]));
     }
+    */
     this->graspCommands[inc_key] = name;
     this->graspCommands[dec_key] = name;
     grasp = grasp->GetNextElement();
@@ -646,6 +651,9 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
                          gazebo::math::Quaternion(pose_inc_args[3],
                            pose_inc_args[4], pose_inc_args[5]));
 
+    // Disable changing of keyboard control axes with user camera motion,
+    // because I find it very non-intuitive.
+    /*
     math::Quaternion cameraRot = gui::get_active_camera()->GetWorldRotation();
     if (index < 3)
     {
@@ -655,12 +663,14 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     {
       increment.rot = cameraRot.RotateVector(increment.rot.GetAsEuler());
     }
+    */
 
     msgs::Pose msg(msgs::Convert(increment));
 
     ignNode->Publish("/haptix/arm_pose_inc", msg);
     return true;
   }
+  std::string curr_grasp_name;
   // if key is in handCommands
   if (this->handCommands.find(key) != this->handCommands.end())
   {
@@ -680,18 +690,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
 
     // Increment/decrement slider value corresponding to key
     grasps[name].SliderChanged(key, this->graspIncrement);
-  }
-
-
-  float sliderTotal = 0;
-  // get total of slider values
-  for (std::map<std::string, Grasp>::iterator it = grasps.begin();
-       it != grasps.end(); it++)
-  {
-    if (it->second.sliderValue > 0)
-    {
-      sliderTotal += 1;
-    }
+    curr_grasp_name = name;
   }
 
   hxCommand avgCommand;
@@ -700,21 +699,6 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     avgCommand.ref_pos[j] = 0;
   }
 
-  for (std::map<std::string, Grasp>::iterator it = grasps.begin();
-       it != grasps.end(); it++)
-  {
-    // Get the slider value and interpolate the grasp
-    float sliderValue = it->second.sliderValue;
-
-    std::vector<float> desiredGrasp = it->second.desiredGrasp;
-    for (unsigned int j = 0; j < handDeviceInfo.nmotor; j++)
-    {
-      if(sliderTotal > 0 && j < desiredGrasp.size()){
-        avgCommand.ref_pos[j] += sliderValue*desiredGrasp[j]/
-                                                        (sliderTotal);
-      }
-    }
-  }
   for (int j = 0; j < handDeviceInfo.nmotor; j++)
   {
     avgCommand.ref_pos[j] += this->handCommand.ref_pos[j];
@@ -722,7 +706,31 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
 
   if (hx_update(hxGAZEBO, &avgCommand, &handSensor) != hxOK)
   {
-    printf("hx_update(): Request error.\n");
+    std::cerr << "hx_update(): Request error." << std::endl;
+  }
+
+  // If the user commanded a grasp, send that, too (it's out of band from the
+  // haptix_comm call).
+  if (curr_grasp_name.size() != 0)
+  {
+    // For now, we'll just send the most recently commanded grasp, to avoid
+    // confusion from non-intuitive superposition.
+    haptix::comm::msgs::hxGrasp req;
+    haptix::comm::msgs::hxGraspValue* gv = req.add_grasps();
+    gv->set_grasp_name(curr_grasp_name);
+    gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
+    haptix::comm::msgs::hxGrasp rep;
+    bool result;
+    // this->ignNode was created in the "haptix" namespace
+    if(!this->ignNode->Request("gazebo/Grasp", req, 1000, rep, result) ||
+      !result)
+    {
+      std::cerr << "Failed to call gazebo/Grasp service" << std::endl;
+    }
+    else
+    {
+      std::cout << "Got response: " << rep.DebugString() << std::endl;
+    }
   }
   return true;
 }

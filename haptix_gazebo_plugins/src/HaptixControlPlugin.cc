@@ -31,6 +31,9 @@ HaptixControlPlugin::HaptixControlPlugin()
 
   this->ignNode.Advertise("/haptix/gazebo/Update",
     &HaptixControlPlugin::HaptixUpdateCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/Grasp",
+    &HaptixControlPlugin::HaptixGraspCallback, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -846,6 +849,23 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   _rep.Clear();
 
   _rep = this->robotState;
+
+  _result = true;
+}
+
+//////////////////////////////////////////////////
+/// using haptix_comm service callback
+void HaptixControlPlugin::HaptixGraspCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxGrasp &_req,
+      haptix::comm::msgs::hxGrasp &_rep, bool &_result)
+{
+  boost::mutex::scoped_lock lock(this->updateMutex);
+
+  std::cout << "Received a new grasp command:" << _req.DebugString() <<
+    std::endl;
+
+  _rep = _req;
 
   _result = true;
 }

@@ -39,10 +39,12 @@ link_directories(
 
 QT4_WRAP_CPP(HaptixGUIPlugin_MOC include/haptix_gazebo_plugins/HaptixGUIPlugin.hh)
 add_library(HaptixGUIPlugin SHARED ${HaptixGUIPlugin_MOC}
-            src/HaptixGUIPlugin.cc)
+            src/HaptixGUIPlugin.cc
+            ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxGrasp.pb.cc)
 
 # build library
 add_library(HaptixControlPlugin SHARED src/HaptixControlPlugin.cc
+  ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxGrasp.pb.cc
   ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSensor.pb.cc
   ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxDevice.pb.cc
   ${HAPTIX_COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)

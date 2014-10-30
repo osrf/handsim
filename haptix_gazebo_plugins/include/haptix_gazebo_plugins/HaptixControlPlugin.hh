@@ -41,6 +41,7 @@
 #include <haptix/comm/msg/hxCommand.pb.h>
 #include <haptix/comm/msg/hxDevice.pb.h>
 #include <haptix/comm/msg/hxSensor.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
 #include <ignition/transport.hh>
 
 namespace gazebo
@@ -255,6 +256,12 @@ namespace gazebo
       const std::string &_service,
       const haptix::comm::msgs::hxCommand &_req,
       haptix::comm::msgs::hxSensor &_rep, bool &_result);
+
+    /// \brief: Simulation responder to execute predefined grasps
+    private: void HaptixGraspCallback(
+      const std::string &_service,
+      const haptix::comm::msgs::hxGrasp &_req,
+      haptix::comm::msgs::hxGrasp &_rep, bool &_result);
 
     /// \brief: initialize gazebo controllers
     private: void LoadHandControl();
