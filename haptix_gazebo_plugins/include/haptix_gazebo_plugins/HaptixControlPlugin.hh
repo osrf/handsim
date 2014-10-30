@@ -104,7 +104,10 @@ namespace gazebo
     /// \brief Gazebo loop: Update the controller on every simulation tick.
     private: void GazeboUpdateStates();
 
+    /// \breif A pointer to the world
     private: physics::WorldPtr world;
+
+    /// \breif A pointer to the parent model
     private: physics::ModelPtr model;
 
     /// \brief Pointer to the update event connection
@@ -204,15 +207,16 @@ namespace gazebo
     /// \brief Mutex to protect access to newJoystickMessage
     private: boost::mutex joystickMessageMutex;
 
-    // for tracking polhemus setup, where is the source in the world frame?
+    /// \brief Model for tracking the polhemus source.
     private: physics::ModelPtr polhemusSourceModel;
+    /// \brief Pose of the polhemus source in the world frame.
     private: math::Pose sourceWorldPose;
-    // transform from polhemus sensor orientation to base link frame
+    /// \brief Transform from polhemus sensor orientation to base link frame.
     private: math::Pose baseLinkToArmSensor;
-    // transform from polhemus sensor orientation to camera frame
+    /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    // control the hand
+    /// \brief Update the state of the robot hand based the commanded states.
     private: void GetRobotStateFromSim();
 
     /// \brief: Update joint PIDs in simulation on every tick
@@ -358,9 +362,28 @@ namespace gazebo
     private: math::Quaternion joyFrameOffset;
 
     // keyboard params and methods
+
+    /// \brief Initialize parameters for keyboard teleop
+    /// \return Whether or not keyboard teleop initialization was successful
     private: bool LoadKeyboard();
+
+    /// \brief Update the state of the arm based on keyboard input.
+    /// \param[in] _dt Timestep between updates
     private: void UpdateKeyboard(double _dt);
+
+    /// \brief Callback to set the saved keyboard pose based on user input.
+    /// \param[in] _pose The input pose.
+    private: void SetKeyboardPose(const std::string &/*_topic*/,
+                                  const msgs::Pose &_pose);
+
+    /// \brief True if keyboard teleop is enabled, false otherwise.
     private: bool haveKeyboard;
+
+    /// \brief The pose commanded by user input.
+    math::Pose keyboardPose;
+
+    /// \brief True if keyboardPose is old data that has already been consumed
+    bool staleKeyboardPose;
 
     private: boost::mutex updateMutex;
     private: boost::mutex baseLinkMutex;
