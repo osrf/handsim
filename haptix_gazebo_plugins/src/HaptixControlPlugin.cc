@@ -87,12 +87,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->initialBaseLinkPose = this->baseLink->GetWorldPose();
   this->targetBaseLinkPose = this->initialBaseLinkPose;
 
-  // we should get this from the polhemus sensor, but first approximate
-  // it as some constant offset from arm base link.
-  // assuming arm is over the table, and the
-  this->initialCameraPose = math::Pose();  // + this->baseLink->GetWorldPose();
-  this->targetCameraPose = this->initialCameraPose;
-
+  // get polhemus_source model location
   this->polhemusSourceLink =
     this->world->GetModel("polhemus_source")->GetLink("link");
   if (!this->polhemusSourceLink)

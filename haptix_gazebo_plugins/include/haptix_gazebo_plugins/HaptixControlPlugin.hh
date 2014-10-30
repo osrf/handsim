@@ -139,7 +139,6 @@ namespace gazebo
     private: gazebo::transport::PublisherPtr polhemusJoyPub;
     private: gazebo::msgs::Pose joyMsg;
     private: math::Pose targetCameraPose;
-    private: math::Pose initialCameraPose;
 
     // subscribe to key events from gazebo qt window
     private: gazebo::transport::SubscriberPtr keySub;
