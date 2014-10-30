@@ -107,14 +107,13 @@
       <grasps>
         <increment>0.015</increment>
         <grasp inc_key="0" dec_key=")" name="NONE"></grasp>
-        <grasp inc_key="1" dec_key="!" name="FinePinch(British)"></grasp>
-        <grasp inc_key="2" dec_key="@" name="FinePinch(American)"></grasp>
+        <grasp inc_key="1" dec_key="!" name="Cylindrical"></grasp>
+        <grasp inc_key="2" dec_key="@" name="Spherical"></grasp>
         <grasp inc_key="3" dec_key="#" name="ThreeFingerPinch"></grasp>
-        <grasp inc_key="4" dec_key="$" name="Palmar(Tray)"></grasp>
-        <grasp inc_key="5" dec_key="%" name="Cylindrical"></grasp>
-        <grasp inc_key="6" dec_key="^" name="Trigger"></grasp>
-        <grasp inc_key="7" dec_key="&amp;" name="Spherical"></grasp>
-        <grasp inc_key="8" dec_key="*" name="Hook"></grasp>
+        <grasp inc_key="4" dec_key="$" name="FinePinch(American)"></grasp>
+        <grasp inc_key="5" dec_key="%" name="FinePinch(British)"></grasp>
+        <grasp inc_key="6" dec_key="^" name="Palmar(Tray)"></grasp>
+        <grasp inc_key="7" dec_key="&amp;" name="Hook"></grasp>
       </grasps>
 
       <indices>
