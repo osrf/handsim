@@ -207,12 +207,13 @@ namespace gazebo
     /// \brief Mutex to protect access to newJoystickMessage
     private: boost::mutex joystickMessageMutex;
 
-    // for tracking polhemus setup, where is the source in the world frame?
+    /// \brief Model for tracking the polhemus source.
     private: physics::ModelPtr polhemusSourceModel;
+    /// \brief Pose of the polhemus source in the world frame.
     private: math::Pose sourceWorldPose;
-    // transform from polhemus sensor orientation to base link frame
+    /// \brief Transform from polhemus sensor orientation to base link frame.
     private: math::Pose baseLinkToArmSensor;
-    // transform from polhemus sensor orientation to camera frame
+    /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
     // control the hand
