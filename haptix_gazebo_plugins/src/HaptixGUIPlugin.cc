@@ -319,6 +319,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
 
+  this->graspMode = true;
   // Read parameters
   common::SystemPaths* paths = common::SystemPaths::Instance();
   this->handImgFilename = paths->FindFileURI
@@ -409,16 +410,19 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Parse SDF to get the arm teleop commands
   sdf::ElementPtr command = elem->GetElement("commands");
   command = command->GetElement("command");
-  while(command){
+  while(command)
+  {
     char button;
     std::string name;
     float increment;
     command->GetAttribute("button")->Get(button);
     command->GetAttribute("name")->Get(name);
     command->GetAttribute("increment")->Get(increment);
-    if(name.substr(0, 5).compare("motor") == 0){
+    if(name.substr(0, 5).compare("motor") == 0)
+    {
       this->handCommands[button] = KeyCommand(button, name, increment);
-    } else if(name.substr(0, 3).compare("arm") == 0){
+    } else if(name.substr(0, 3).compare("arm") == 0)
+    {
       this->armCommands[button] = KeyCommand(button, name, increment);
     }
     buttonNames[name].push_back(button);
@@ -458,7 +462,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   sdf::ElementPtr index = elem->GetElement("indices");
   index = index->GetElement("index");
-  while(index){
+  while(index)
+  {
     std::string name;
     int num;
     index->GetAttribute("name")->Get(name);
@@ -473,20 +478,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       }
     }
     index = index->GetNextElement();
-  }
-
-  // Set up hx objects
-  if (hx_getdeviceinfo(hxGAZEBO, &handDeviceInfo) != hxOK)
-  {
-    std::cout << "hx_getdeviceinfo(): Request error. Cannot control hand."
-              << std::endl;
-  }
-  for(int i = 0; i < handDeviceInfo.nmotor; i++)
-  {
-    handCommand.ref_pos[i] = 0;
-  }
-  if(hx_update(hxGAZEBO, &handCommand, &handSensor) != hxOK ){
-    std::cout << "hx_update(): Request error.\n" << std::endl;
   }
 
   // Set up an array of subscribers for each contact sensor
@@ -635,10 +626,42 @@ void HaptixGUIPlugin::PreRender()
 // efficient structure for storage/search.
 bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
 {
+  static bool hxInitialized = false;
+  int cmd_motor_index = -1;
+  // Set up hx objects
+  if (!hxInitialized)
+  {
+    if (hx_getdeviceinfo(hxGAZEBO, &handDeviceInfo) != hxOK)
+    {
+      std::cout << "hx_getdeviceinfo(): Request error. Cannot control hand."
+                << std::endl;
+      return false;
+    }
+    hxCommand cmd;
+    memset(&cmd, 0, sizeof(cmd));
+    if(hx_update(hxGAZEBO, &cmd, &this->handSensor) != hxOK )
+    {
+      std::cout << "hx_update(): Request error.\n" << std::endl;
+      return false;
+    }
+    
+    hxInitialized = true;
+  }
+
   std::string text = _event.text;
   char key = text[0];
+  std::cout << "key: " << key << std::endl;
+  std::cout << "nmotor: " << this->handDeviceInfo.nmotor << std::endl;
+  hxCommand cmd;
+  memset(&cmd, 0, sizeof(cmd));
+  for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
+  {
+    cmd.ref_pos[i] = this->handSensor.motor_pos[i];
+  }
+  
   // if key is in armCommands
-  if(this->armCommands.find(key) != this->armCommands.end()){
+  if(this->armCommands.find(key) != this->armCommands.end())
+  {
     int index = this->armCommands[key].index;
     if(index >= 6){
       return false;
@@ -673,8 +696,10 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   }
   std::string curr_grasp_name;
   // if key is in handCommands
-  if (this->handCommands.find(key) != this->handCommands.end())
+  if ((this->handCommands.find(key) != this->handCommands.end()) &&
+      (!this->graspMode || this->handCommands[key].index < 3))
   {
+    std::cout << "Arm key" << std::endl;
     int motor_index = this->handCommands[key].index;
     if(motor_index >= handDeviceInfo.nmotor)
     {
@@ -682,31 +707,52 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     }
 
     float inc = this->handCommands[key].increment;
-    handCommand.ref_pos[motor_index] += inc;
+    //handCommand.ref_pos[motor_index] += inc;
+    std::cout << "Incrementing position of motor " << motor_index << " from " << handSensor.motor_pos[motor_index] << " by " << inc << std::endl;
+    cmd.ref_pos[motor_index] = handSensor.motor_pos[motor_index] + inc;
+    cmd_motor_index = motor_index;
   }
   else if (this->graspCommands.find(key) != this->graspCommands.end())
   {
+    std::cout << "Grasp key" << std::endl;
     std::string name = this->graspCommands[key];
 
     // Increment/decrement slider value corresponding to key
     grasps[name].SliderChanged(key, this->graspIncrement);
     curr_grasp_name = name;
   }
-
-  hxCommand avgCommand;
-  for (int j = 0; j < handDeviceInfo.nmotor; j++)
+  else if (key == '~')
   {
-    avgCommand.ref_pos[j] = 0;
+    this->graspMode = !this->graspMode;
+    std::cout << "Changed graspMode to: " << this->graspMode << std::endl;
+    return false;
   }
 
-  for (int j = 0; j < handDeviceInfo.nmotor; j++)
+  std::cout << "calling hx_update(): " << std::endl;
+  for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
   {
-    avgCommand.ref_pos[j] += this->handCommand.ref_pos[j];
+    std::cout << cmd.ref_pos[i] << " ";
   }
+  std::cout << std::endl;
 
-  if (hx_update(hxGAZEBO, &avgCommand, &handSensor) != hxOK)
+  hxSensor updateSensor;
+  
+  if (hx_update(hxGAZEBO, &cmd, &updateSensor) != hxOK)
   {
     std::cerr << "hx_update(): Request error." << std::endl;
+  }
+  // Sensor filtering
+  float p = 0.95;
+  for (int i = 0; i < this->handDeviceInfo.nmotor; i++)
+  {
+    this->handSensor.motor_pos[i] = (1-p)*updateSensor.motor_pos[i] +
+				    p * handSensor.motor_pos[i];
+  }
+
+  if (cmd_motor_index >= 0)
+  {
+    // efferent copy
+    this->handSensor.motor_pos[cmd_motor_index] = cmd.ref_pos[cmd_motor_index];
   }
 
   // If the user commanded a grasp, send that, too (it's out of band from the

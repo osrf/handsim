@@ -136,6 +136,7 @@ namespace gazebo
       // The mapping between a button and the grasp it is commanding
       private: std::map<char, std::string> graspCommands;
       private: std::map<std::string, Grasp> grasps;
+      private: bool graspMode;
 
       /// \brief Publisher of factory messages.
       private: gazebo::transport::PublisherPtr taskPub;
