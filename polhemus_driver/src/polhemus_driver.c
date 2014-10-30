@@ -215,7 +215,7 @@ polhemus_get_pose(polhemus_conn_t* conn,
     return -1;
   }
   // Read until we get data
-  int len;
+  int len=0;
   for(i=0; i<max_retries; i++)
   {
     len = polhemus_read_usb(conn, buf, sizeof(buf));
@@ -247,7 +247,7 @@ polhemus_get_poses(polhemus_conn_t* conn,
     return -1;
   }
   // Read until we get data
-  int len;
+  int len=0;
   for(i=0; i<max_retries; i++)
   {
     len = polhemus_read_usb(conn, buf, sizeof(buf));
