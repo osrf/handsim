@@ -99,7 +99,10 @@ namespace gazebo
     public: virtual ~HaptixControlPlugin();
 
     /// \brief Load the controller
-    public: void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
+    public: virtual void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
+
+    // Documentation inherited.
+    public: virtual void Reset();
 
     /// \brief Gazebo loop: Update the controller on every simulation tick.
     private: void GazeboUpdateStates();
@@ -235,7 +238,7 @@ namespace gazebo
     };
     /// \brief: commanding all the joints in robot, and map
     /// robotCommand motor joints to a subset of the joints here.
-    private: std::vector<SimRobotCommand> simRobotCommand;
+    private: std::vector<SimRobotCommand> simRobotCommands;
 
     /// \brief: joint names matching those of gazebo model
     /// All joints to be controlled by this plugin.
