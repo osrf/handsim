@@ -100,7 +100,10 @@ namespace gazebo
     public: virtual ~HaptixControlPlugin();
 
     /// \brief Load the controller
-    public: void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
+    public: virtual void Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf);
+
+    // Documentation inherited.
+    public: virtual void Reset();
 
     /// \brief Gazebo loop: Update the controller on every simulation tick.
     private: void GazeboUpdateStates();
@@ -208,15 +211,16 @@ namespace gazebo
     /// \brief Mutex to protect access to newJoystickMessage
     private: boost::mutex joystickMessageMutex;
 
-    // for tracking polhemus setup, where is the source in the world frame?
+    /// \brief Model for tracking the polhemus source.
     private: physics::ModelPtr polhemusSourceModel;
+    /// \brief Pose of the polhemus source in the world frame.
     private: math::Pose sourceWorldPose;
-    // transform from polhemus sensor orientation to base link frame
+    /// \brief Transform from polhemus sensor orientation to base link frame.
     private: math::Pose baseLinkToArmSensor;
-    // transform from polhemus sensor orientation to camera frame
+    /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    // control the hand
+    /// \brief Update the state of the robot hand based the commanded states.
     private: void GetRobotStateFromSim();
 
     /// \brief: Update joint PIDs in simulation on every tick
@@ -235,7 +239,7 @@ namespace gazebo
     };
     /// \brief: commanding all the joints in robot, and map
     /// robotCommand motor joints to a subset of the joints here.
-    private: std::vector<SimRobotCommand> simRobotCommand;
+    private: std::vector<SimRobotCommand> simRobotCommands;
 
     /// \brief: joint names matching those of gazebo model
     /// All joints to be controlled by this plugin.

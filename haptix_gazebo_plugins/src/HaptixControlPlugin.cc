@@ -419,7 +419,7 @@ void HaptixControlPlugin::LoadHandControl()
     c.ref_vel = 0.0;
     c.gain_pos = 1.0;
     c.gain_vel = 0.0;
-    this->simRobotCommand.push_back(c);
+    this->simRobotCommands.push_back(c);
 
      // get gazebo joint handles
     this->joints[i] = this->model->GetJoint(this->jointNames[i]);
@@ -441,6 +441,20 @@ void HaptixControlPlugin::LoadHandControl()
     angvel->set_x(0);
     angvel->set_y(0);
     angvel->set_z(0);
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void HaptixControlPlugin::Reset()
+{
+  this->targetBaseLinkPose = this->initialBaseLinkPose;
+
+  std::vector<SimRobotCommand>::iterator iter;
+  for (iter = this->simRobotCommands.begin();
+      iter != this->simRobotCommands.end(); ++iter)
+  {
+    iter->ref_pos = 0.0;
+    iter->ref_vel = 0.0;
   }
 }
 
@@ -639,33 +653,33 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     unsigned int numWristMotors = 3;
     if (this->graspMode && i >= numWristMotors)
     {
-      this->simRobotCommand[m].ref_pos = this->graspPositions[i];
-      this->simRobotCommand[m].ref_vel = 0.0;
+      this->simRobotCommands[m].ref_pos = this->graspPositions[i];
+      this->simRobotCommands[m].ref_vel = 0.0;
     }
     else
     {
-      this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
-      this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
+      this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
+      this->simRobotCommands[m].ref_vel = this->robotCommand.ref_vel(i);
     }
     /// \TODO: fix
-    // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
-    // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+    // this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
+    // this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
     // coupling through <gearbox> params
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       unsigned int n = this->motorInfos[i].gearboxes[j].index;
-      // gzdbg << " " << n << " : " << this->simRobotCommand[n].ref_pos << "\n";
-      this->simRobotCommand[n].ref_pos =
+      // gzdbg << " " << n << " : " << this->simRobotCommands[n].ref_pos << "\n";
+      this->simRobotCommands[n].ref_pos =
         (this->robotCommand.ref_pos(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
-      this->simRobotCommand[n].ref_vel =
+      this->simRobotCommands[n].ref_vel =
         (this->robotCommand.ref_vel(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
       /// \TODO: fix
-      // this->simRobotCommand[n].gain_pos = this->robotCommand.gain_pos(i);
-      // this->simRobotCommand[n].gain_vel = this->robotCommand.gain_vel(i);
+      // this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
+      // this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
 
@@ -681,12 +695,12 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     double velocity = this->joints[i]->GetVelocity(0);
 
     // compute position and velocity error
-    double errorPos = position - this->simRobotCommand[i].ref_pos;
-    double errorVel = velocity - this->simRobotCommand[i].ref_vel;
+    double errorPos = position - this->simRobotCommands[i].ref_pos;
+    double errorVel = velocity - this->simRobotCommands[i].ref_vel;
 
     // compute overall error
-    double error = this->simRobotCommand[i].gain_pos * errorPos
-                 + this->simRobotCommand[i].gain_vel * errorVel;
+    double error = this->simRobotCommands[i].gain_pos * errorPos
+                 + this->simRobotCommands[i].gain_vel * errorVel;
 
     // compute force needed
     double force = this->pids[i].Update(error, _dt);
@@ -848,7 +862,7 @@ void HaptixControlPlugin::HaptixGetDeviceInfoCallback(
 }
 
 //////////////////////////////////////////////////
-/// using haptix_comm service callback
+/// using haptix-comm service callback
 void HaptixControlPlugin::HaptixUpdateCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxCommand &_req,
