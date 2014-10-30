@@ -58,7 +58,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   fprintf(stderr, "world name: [%s]\n", this->world->GetName().c_str());
   this->gazeboNode->Init(this->world->GetName());
   this->polhemusJoyPub =
-    this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/polhemus/joy");
+    this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
   this->keySub =
     this->gazeboNode->Subscribe("~/qtKeyEvent",
       &HaptixControlPlugin::OnKey, this);
@@ -88,15 +88,19 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->targetBaseLinkPose = this->initialBaseLinkPose;
 
   // get polhemus_source model location
-  this->polhemusSourceLink =
-    this->world->GetModel("polhemus_source")->GetLink("link");
-  if (!this->polhemusSourceLink)
+  // for tracking polhemus setup, where is the source in the world frame
+  this->polhemusSourceModel = this->world->GetModel("polhemus_source");
+  if (!this->polhemusSourceModel)
   {
-    gzerr << "world needs a polhemus_source model with link named link\n";
-    return;
+    /// \TODO: make this a sdf param for the plugin?
+    gzwarn << "no polhemus_source model detected using predefine location.\n";
+    this->sourceWorldPose = math::Pose(-0.5, 0, 1.3, 3.14159, 0, -1.57159);
   }
-  // for tracking polhemus setup, where is the source in the world frame?
-  this->sourceWorldPose = this->polhemusSourceLink->GetWorldPose();
+  else
+  {
+    this->sourceWorldPose = this->polhemusSourceModel->GetWorldPose();
+  }
+  gzdbg << "Polhemus Source Pose [" << this->sourceWorldPose << "]\n";
   // transform from polhemus sensor orientation to base link frame
   // -0.6 meters towards wrist from elbow
   // -0.7 rad pitch up
@@ -111,12 +115,41 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->lastTime = this->world->GetSimTime();
 
   // initialize PID's
-  const double pGain = 10000.0;
-  const double cmdMax = 10000.0;
-  const double cmdMin = -10000.0;
-  this->posPid.Init(pGain, 0, 0.0, 0, 0, cmdMax, cmdMin);
-  this->rotPid.Init(pGain, 0, 0.0, 0, 0, cmdMax, cmdMin);
+  if (this->sdf->HasElement("base_pid_pos"))
+  {
+    sdf::ElementPtr basePidPos = this->sdf->GetElement("base_pid_pos");
+    double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
+    basePidPos->GetAttribute("p")->Get(pVal);
+    basePidPos->GetAttribute("i")->Get(iVal);
+    basePidPos->GetAttribute("d")->Get(dVal);
+    basePidPos->GetAttribute("cmd_max")->Get(cmdMaxVal);
+    basePidPos->GetAttribute("cmd_min")->Get(cmdMinVal);
+    this->posPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+  }
+  else
+  {
+    gzwarn << "no <base_pid_pos> block, using defaults.\n";
+    this->posPid.Init(10000, 0, 0, 0, 0, 10000, -10000);
+  }
 
+  if (this->sdf->HasElement("base_pid_rot"))
+  {
+    sdf::ElementPtr basePidRot = this->sdf->GetElement("base_pid_rot");
+    double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
+    basePidRot->GetAttribute("p")->Get(pVal);
+    basePidRot->GetAttribute("i")->Get(iVal);
+    basePidRot->GetAttribute("d")->Get(dVal);
+    basePidRot->GetAttribute("cmd_max")->Get(cmdMaxVal);
+    basePidRot->GetAttribute("cmd_min")->Get(cmdMinVal);
+    this->rotPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+  }
+  else
+  {
+    gzwarn << "no <base_pid_rot> block, using defaults.\n";
+    this->rotPid.Init(10000, 0, 0, 0, 0, 10000, -10000);
+  }
+
+  // initialize polhemus
   this->havePolhemus = false;
   if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
                                                   LIBERTY_HS_PRODUCT_ID,
@@ -141,7 +174,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->polhemusThread = boost::thread(
       boost::bind(&HaptixControlPlugin::UpdatePolhemus, this));
   else
-    std::cerr << "No usable polhemus setup detected.\n";
+    gzwarn << "No usable polhemus setup detected.\n";
 
   this->haveKeyboard = false;
 
@@ -153,7 +186,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
-      boost::bind(&HaptixControlPlugin::UpdateStates, this));
+      boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
 
   // base joint damping
   const double baseJointDamping = 0.01;
@@ -175,21 +208,28 @@ void HaptixControlPlugin::LoadHandControl()
   {
     joint->GetAttribute("id")->Get(id);
     this->jointNames[id] = joint->Get<std::string>();
-    /// \TODO: assume id in order
-    this->joints.push_back(this->model->GetJoint(this->jointNames[id]));
-
     // get next sdf
+    gzdbg << "getting joint name [" << this->jointNames[id] << "]\n";
     joint = joint->GetNextElement("joint");
+  }
+
+  // Get pointers to joints
+  this->joints.resize(this->jointNames.size());
+  for (unsigned int i = 0; i < this->joints.size(); ++i)
+  {
+    /// \TODO: this assumes id's for joints are consecutive, starting with 0
+    this->joints[i] = this->model->GetJoint(this->jointNames[i]);
+    gzdbg << "got gazebo joint [" << this->joints[i]->GetName() << "]\n";
   }
 
   // Get pid gains and insert into pid
   this->pids.resize(this->joints.size());
   sdf::ElementPtr pid = this->sdf->GetElement("pid");
-  std::cerr << "getting pid\n";
+  gzdbg << "getting pid\n";
   while (pid)
   {
     pid->GetAttribute("id")->Get(id);
-    std::cerr << "getting pid [" << id << "]\n";
+    gzdbg << "getting pid [" << id << "]\n";
     double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
     pid->GetAttribute("p")->Get(pVal);
     pid->GetAttribute("i")->Get(iVal);
@@ -202,18 +242,74 @@ void HaptixControlPlugin::LoadHandControl()
     pid = pid->GetNextElement("pid");
   }
 
-  // Get motor names and insert id/name pair into map
-  sdf::ElementPtr motor = this->sdf->GetElement("motor");
-  while (motor)
+  // Get motor names and insert id/name pair into MotorInfo map
+  sdf::ElementPtr motorSDF = this->sdf->GetElement("motor");
+  while (motorSDF)
   {
-    motor->GetAttribute("id")->Get(id);
-    this->motorNames[id] = motor->Get<std::string>();
+    std::string motorName;
+    motorSDF->GetAttribute("id")->Get(id);
+    motorSDF->GetAttribute("name")->Get(motorName);
+    gzdbg << "getting motor [" << id << "]: [" << motorName << "]\n";
+    this->motorInfos[id].name = motorName;
 
-    /// \TODO: assume id in order
-    this->motors.push_back(this->model->GetJoint(this->motorNames[id]));
+    // get joint name associated with this motor
+    sdf::ElementPtr poweredMotorJointSDF =
+      motorSDF->GetElement("powered_motor_joint");
+    this->motorInfos[id].jointName = poweredMotorJointSDF->Get<std::string>();
+    gzdbg << "  joint [" << this->motorInfos[id].jointName << "]\n";
+
+    // get gear ratio associated with this motor
+    sdf::ElementPtr gearRatioSDF =
+      motorSDF->GetElement("gear_ratio");
+    this->motorInfos[id].gearRatio = gearRatioSDF->Get<double>();
+    gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
+
+    // this should return index of the joint in this->joints
+    // where this->jointNames matches motorInfos[id].jointName.
+    /// \TODO: there must be a faster way of doing this?
+    unsigned int j;
+    for (j = 0; j < this->jointNames.size(); ++j)
+    {
+      if (this->jointNames[j] == this->motorInfos[id].jointName)
+      {
+        this->motorInfos[id].index = j;
+        break;
+      }
+    }
+
+    // get coupled joints
+    if (motorSDF->HasElement("gearbox"))
+    {
+      sdf::ElementPtr gearboxSDF = motorSDF->GetElement("gearbox");
+      while (gearboxSDF)
+      {
+        // get joint, offset and multiplier
+        sdf::ElementPtr jointSDF = gearboxSDF->GetElement("joint");
+        sdf::ElementPtr offsetSDF = gearboxSDF->GetElement("offset");
+        sdf::ElementPtr multiplierSDF = gearboxSDF->GetElement("multiplier");
+        MotorInfo::GearBox g;
+
+        // find index in this->joints that matches jointSDF->Get<std::string>();
+        unsigned int k;
+        for (k = 0; k < this->jointNames.size(); ++k)
+        {
+          if (this->jointNames[k] == jointSDF->Get<std::string>())
+          {
+            g.index = k;
+            break;
+          }
+        }
+        g.offset = offsetSDF->Get<double>();
+        g.multiplier = multiplierSDF->Get<double>();
+        this->motorInfos[id].gearboxes.push_back(g);
+
+        gearboxSDF = gearboxSDF->GetNextElement("gearbox");
+      }
+    }
+
 
     // get next sdf
-    motor = motor->GetNextElement("motor");
+    motorSDF = motorSDF->GetNextElement("motor");
   }
 
   // Get contact sensor names and insert id/name pair into map
@@ -221,6 +317,7 @@ void HaptixControlPlugin::LoadHandControl()
   while (contactSensor)
   {
     contactSensor->GetAttribute("id")->Get(id);
+    gzdbg << "getting contactSensor [" << id << "]\n";
     this->contactSensorNames[id] = contactSensor->Get<std::string>();
 
     // get sensor from gazebo
@@ -250,6 +347,7 @@ void HaptixControlPlugin::LoadHandControl()
   {
     imuSensor->GetAttribute("id")->Get(id);
     this->imuSensorNames[id] = imuSensor->Get<std::string>();
+    gzdbg << "getting imuSensor [" << id << "]\n";
 
     // get sensor from gazebo
     sensors::SensorManager *mgr = sensors::SensorManager::Instance();
@@ -273,11 +371,20 @@ void HaptixControlPlugin::LoadHandControl()
   }
 
   // Allocate memory for all the protobuf fields.
-  for (unsigned int i = 0; i < this->motors.size(); ++i)
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
+    // motor states
     this->robotState.add_motor_pos(0);
     this->robotState.add_motor_vel(0);
     this->robotState.add_motor_torque(0);
+
+    // initialize position command.
+    this->robotCommand.add_ref_pos(0.0);
+    this->robotCommand.add_ref_vel(0.0);
+
+    // default position and velocity gains
+    this->robotCommand.add_gain_pos(1.0);
+    this->robotCommand.add_gain_vel(0.0);
   }
 
   for (unsigned int i = 0; i < this->joints.size(); ++i)
@@ -285,8 +392,13 @@ void HaptixControlPlugin::LoadHandControl()
     this->robotState.add_joint_pos(0);
     this->robotState.add_joint_vel(0);
 
-    // initialize position command.
-    this->robotCommand.add_ref_pos(0.0);
+    // internal command of all joints controller here (not just motors)
+    SimRobotCommand c;
+    c.ref_pos = 0.0;
+    c.ref_vel = 0.0;
+    c.gain_pos = 1.0;
+    c.gain_vel = 0.0;
+    this->simRobotCommand.push_back(c);
 
      // get gazebo joint handles
     this->joints[i] = this->model->GetJoint(this->jointNames[i]);
@@ -295,12 +407,10 @@ void HaptixControlPlugin::LoadHandControl()
     //           i, this->jointNames[i].c_str());
   }
 
-  const int num_contact_sensors = 0;  /// \TODO: fix me, add sdf
-  for (int i = 0; i < num_contact_sensors; ++i)
+  for (int i = 0; i < this->contactSensors.size(); ++i)
     this->robotState.add_contact(0);
 
-  const int num_imu_sensors = 0;  /// \TODO: fix me, add sdf
-  for (int i = 0; i < num_imu_sensors; ++i)
+  for (int i = 0; i < imuSensors.size(); ++i)
   {
     haptix::comm::msgs::imu *linacc = this->robotState.add_imu_linacc();
     linacc->set_x(0);
@@ -395,8 +505,8 @@ void HaptixControlPlugin::UpdatePolhemus()
       {
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
         // std::cout << "arm [" << armSensorPose << "]\n";
-        const char *cKey = "c";
-        if (strcmp(&this->keyPressed, cKey) == 0)
+        const char *calibrationKey = "p";
+        if (strcmp(&this->keyPressed, calibrationKey) == 0)
         {
           // calibration mode, update this->baseLinkToArmSensor
           // withouthis->world->IsPaused())t changing targetBaseLinkPose
@@ -425,7 +535,7 @@ void HaptixControlPlugin::UpdatePolhemus()
     }
     else
     {
-      std::cerr << "polhemus_get_pose() failed\n";
+      gzerr << "polhemus_get_pose() failed\n";
       /*
       // test reconnect?
       if(!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
@@ -497,17 +607,64 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 //
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
-  for (unsigned int i = 0; i < this->joints.size(); ++i)
+  // copy command from hxCommand for motors to list of all joints
+  // commanded by this plugin.
+  // also account for joint coupling here based on <gearbox> params
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
+    unsigned int m = this->motorInfos[i].index;
+    // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
+    this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
+    this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
+    /// \TODO: fix
+    // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
+    // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+    // coupling through <gearbox> params
+    for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+    {
+      unsigned int n = this->motorInfos[i].gearboxes[j].index;
+      // gzdbg << " " << n << " : " << this->simRobotCommand[n].ref_pos << "\n";
+      this->simRobotCommand[n].ref_pos =
+        (this->robotCommand.ref_pos(i) +
+         this->motorInfos[i].gearboxes[j].offset)
+        * this->motorInfos[i].gearboxes[j].multiplier;
+      this->simRobotCommand[n].ref_vel =
+        (this->robotCommand.ref_vel(i) +
+         this->motorInfos[i].gearboxes[j].offset)
+        * this->motorInfos[i].gearboxes[j].multiplier;
+      /// \TODO: fix
+      // this->simRobotCommand[n].gain_pos = this->robotCommand.gain_pos(i);
+      // this->simRobotCommand[n].gain_vel = this->robotCommand.gain_vel(i);
+    }
+  }
+
+  // command all joints
+  for(unsigned int i = 0; i < this->joints.size(); ++i)
+  {
+    /// \TODO: no need for transmission gear_ratio, since the encoder
+    /// is at the joint end, but implement it anyways?
     double position = this->joints[i]->GetAngle(0).Radian();
-    // double velocity = this->joints[i]->GetVelocity(0);
-    double positionError = position - this->robotCommand.ref_pos(i);
-    double force = this->pids[i].Update(positionError, _dt);
+
+    /// \TODO: no need for transmission gear_ratio, since the encoder
+    /// is at the joint end, but implement it anyways?
+    double velocity = this->joints[i]->GetVelocity(0);
+
+    // compute position and velocity error
+    double errorPos = position - this->simRobotCommand[i].ref_pos;
+    double errorVel = velocity - this->simRobotCommand[i].ref_vel;
+
+    // compute overall error
+    double error = this->simRobotCommand[i].gain_pos * errorPos
+                 + this->simRobotCommand[i].gain_vel * errorVel;
+
+    // compute force needed
+    double force = this->pids[i].Update(error, _dt);
+
     // this->robotState.set_motor_torque(i, force);
     if (this->joints[i])
       this->joints[i]->SetForce(0, force);
     else
-      fprintf(stderr, "joint bad\n");
+      gzerr << "joint [" << this->jointNames[i] << "] bad.\n";
   }
 }
 
@@ -515,38 +672,66 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 // Play the trajectory, update states
 void HaptixControlPlugin::GetRobotStateFromSim()
 {
-  for (unsigned int i = 0; i < this->motors.size(); ++i)
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    this->robotState.set_motor_pos(i, i);
-    this->robotState.set_motor_vel(i, i + 1);
-    this->robotState.set_motor_torque(i, i + 2);
+    unsigned int m = motorInfos[i].index;
+    this->robotState.set_motor_pos(i, this->joints[m]->GetAngle(0).Radian());
+    this->robotState.set_motor_vel(i, this->joints[m]->GetVelocity(0));
+    this->robotState.set_motor_torque(i, this->joints[m]->GetForce(0));
   }
 
   for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
-    this->robotState.set_joint_pos(i, i);
-    this->robotState.set_joint_vel(i, i + 1);
+    this->robotState.set_joint_pos(i, this->joints[i]->GetAngle(0).Radian());
+    this->robotState.set_joint_vel(i, this->joints[i]->GetVelocity(0));
   }
 
   for (unsigned int i = 0; i < this->contactSensors.size(); ++i)
-    this->robotState.set_contact(i, i);
+  {
+    // for now, aggregate forces into a single scalar
+    math::Vector3 contactForce;
+    math::Vector3 contactTorque;
+    msgs::Contacts contacts = this->contactSensors[i]->GetContacts();
+    // contact sensor report contact between pairs of bodies
+    for (unsigned int j = 0; j < contacts.contact().size(); ++j)
+    {
+      msgs::Contact contact = contacts.contact(j);
+      // each contact can have multiple wrenches
+      for (unsigned int k = 0; k < contact.wrench().size(); ++k)
+      {
+        msgs::JointWrench wrench = contact.wrench(k);
+        // sum up all wrenches from body_1
+        // body_2_wrench should be -body_1_wrench?
+        contactForce += msgs::Convert(wrench.body_1_wrench().force());
+        contactTorque += msgs::Convert(wrench.body_1_wrench().torque());
+      }
+    }
+
+    // return summed force
+    double force = contactForce.GetLength();
+
+    // return force
+    this->robotState.set_contact(i, force);
+  }
 
   for (unsigned int i = 0; i < this->imuSensors.size(); ++i)
   {
     haptix::comm::msgs::imu *linacc = this->robotState.mutable_imu_linacc(i);
-    linacc->set_x(i);
-    linacc->set_y(i + 1);
-    linacc->set_z(i + 2);
+    math::Vector3 acc = this->imuSensors[i]->GetLinearAcceleration();
+    math::Vector3 vel = this->imuSensors[i]->GetAngularVelocity();
+    linacc->set_x(acc.x);
+    linacc->set_y(acc.y);
+    linacc->set_z(acc.z);
     haptix::comm::msgs::imu *angvel = this->robotState.mutable_imu_angvel(i);
-    angvel->set_x(i + 3);
-    angvel->set_y(i + 4);
-    angvel->set_z(i + 5);
+    angvel->set_x(vel.x);
+    angvel->set_y(vel.y);
+    angvel->set_z(vel.z);
   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 // Play the trajectory, update states
-void HaptixControlPlugin::UpdateStates()
+void HaptixControlPlugin::GazeboUpdateStates()
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
 
@@ -615,16 +800,17 @@ void HaptixControlPlugin::HaptixGetDeviceInfoCallback(
   // if (_service != deviceInfoTopic)
   //   _result = false;
 
-  _rep.set_nmotor(this->motors.size());
+  _rep.set_nmotor(this->motorInfos.size());
   _rep.set_njoint(this->joints.size());
   _rep.set_ncontactsensor(this->contactSensors.size());
   _rep.set_nimu(this->imuSensors.size());
 
-  for (unsigned int i = 0; i < this->joints.size(); ++i)
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     haptix::comm::msgs::hxJointAngle *joint = _rep.add_limit();
-    joint->set_minimum(this->joints[i]->GetLowerLimit(0).Radian());
-    joint->set_maximum(this->joints[i]->GetUpperLimit(0).Radian());
+    unsigned int m = this->motorInfos[i].index;
+    joint->set_minimum(this->joints[m]->GetLowerLimit(0).Radian());
+    joint->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
   }
 
   _result = true;
@@ -676,19 +862,19 @@ void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  // std::cerr << "got key [" << _msg->data()
+  // gzdbg << "got key [" << _msg->data()
   //           << "] press [" << _msg->dbl_data() << "]\n";
   if (_msg->dbl_data() > 0.0)
   {
     // pressed
     this->keyPressed = _msg->data().c_str()[0];
-    // std::cerr << " pressed key [" << this->keyPressed << "]\n";
+    // gzdbg << " pressed key [" << this->keyPressed << "]\n";
   }
   else
   {
     // clear
     this->keyPressed = static_cast<char>(0);
-    // std::cerr << " released key [" << this->keyPressed << "]\n";
+    // gzdbg << " released key [" << this->keyPressed << "]\n";
   }
 }
 
