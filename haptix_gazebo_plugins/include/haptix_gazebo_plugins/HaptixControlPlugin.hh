@@ -216,7 +216,7 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    // control the hand
+    /// \brief Update the state of the robot hand based the commanded states.
     private: void GetRobotStateFromSim();
 
     /// \brief: Update joint PIDs in simulation on every tick
