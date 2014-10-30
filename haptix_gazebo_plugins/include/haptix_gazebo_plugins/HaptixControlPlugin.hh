@@ -139,7 +139,6 @@ namespace gazebo
     private: gazebo::transport::PublisherPtr polhemusJoyPub;
     private: gazebo::msgs::Pose joyMsg;
     private: math::Pose targetCameraPose;
-    private: math::Pose initialCameraPose;
 
     // subscribe to key events from gazebo qt window
     private: gazebo::transport::SubscriberPtr keySub;
@@ -182,7 +181,7 @@ namespace gazebo
     private: std::map<unsigned int, std::string> jointNames;
     private: std::vector<physics::JointPtr> joints;
 
-    /// \TODO: fixme, implement motors, 
+    /// \TODO: fixme, implement motors,
     private: std::map<unsigned int, std::string> motorNames;
     private: std::vector<physics::JointPtr> motors;
     private: std::map<unsigned int, std::string> contactSensorNames;
@@ -216,9 +215,28 @@ namespace gazebo
     private: void UpdateSpacenav(double _dt);
 
     // keyboard params and methods
+
+    /// \brief Initialize parameters for keyboard teleop
+    /// \return Whether or not keyboard teleop initialization was successful
     private: bool LoadKeyboard();
+
+    /// \brief Update the state of the arm based on keyboard input.
+    /// \param[in] _dt Timestep between updates
     private: void UpdateKeyboard(double _dt);
+
+    /// \brief Callback to set the saved keyboard pose based on user input.
+    /// \param[in] _pose The input pose.
+    private: void SetKeyboardPose(const std::string &/*_topic*/,
+                                  const msgs::Pose &_pose);
+
+    /// \brief True if keyboard teleop is enabled, false otherwise.
     private: bool haveKeyboard;
+
+    /// \brief The pose commanded by user input.
+    math::Pose keyboardPose;
+
+    /// \brief True if keyboardPose is old data that has already been consumed
+    bool staleKeyboardPose;
 
     class SpnState
     {
