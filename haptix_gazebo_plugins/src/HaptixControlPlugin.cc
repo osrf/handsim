@@ -86,7 +86,11 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // this is where the user spawned the base link of the arm
   this->initialBaseLinkPose = this->baseLink->GetWorldPose();
   this->targetBaseLinkPose = this->initialBaseLinkPose;
-
+  // param for spacenav control, this is the point in arm base link
+  // frame for which we want to control with the spacenav
+  this->baseLinktoSpacenavPose = math::Pose(0, -0.8, 0, 0, 0, 0);
+  this->targetSpacenavPose = this->baseLinktoSpacenavPose
+                           + this->initialBaseLinkPose;
   // get polhemus_source model location
   // for tracking polhemus setup, where is the source in the world frame
   this->polhemusSourceModel = this->world->GetModel("polhemus_source");
@@ -522,12 +526,13 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   const double rotScale = 5.0;
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
-    this->targetBaseLinkPose.pos += _dt * posScale * posRate;
-    this->targetBaseLinkPose.rot =
-      this->targetBaseLinkPose.rot.Integrate(rotScale * rotRate, _dt);
+    this->targetSpacenavPose.pos += _dt * posScale * posRate;
+    this->targetSpacenavPose.rot =
+      this->targetSpacenavPose.rot.Integrate(rotScale * rotRate, _dt);
 
     // how to shift control to wrist / hand location?
-    // this->targetBaseLinkPose += this->baseLinkToArmSensor.GetInverse();
+    this->targetBaseLinkPose = this->baseLinktoSpacenavPose.GetInverse()
+                             + this->targetSpacenavPose;
   }
 }
 

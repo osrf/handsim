@@ -148,6 +148,10 @@ namespace gazebo
     private: physics::LinkPtr baseLink;
     /// \brief: target position for the arm base link in world frame.
     private: math::Pose targetBaseLinkPose;
+    /// \brief: spacenav target pose
+    private: math::Pose targetSpacenavPose;
+    /// \brief: from spacenav target pose to the arm base link
+    private: math::Pose baseLinktoSpacenavPose;
     /// \brief base link pose in world frame on startup.  This is where
     /// the user spawned the base link model.
     private: math::Pose initialBaseLinkPose;
