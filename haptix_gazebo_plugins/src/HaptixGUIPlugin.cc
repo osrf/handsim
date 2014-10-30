@@ -436,6 +436,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
     char inc_key;
     char dec_key;
     grasp->GetAttribute("name")->Get(name);
+    std::cout << "name: " << name << std::endl;
     grasp->GetAttribute("inc_key")->Get(inc_key);
     grasp->GetAttribute("dec_key")->Get(dec_key);
     this->grasps[name] = Grasp(inc_key, dec_key);
@@ -674,15 +675,14 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   // if key is in handCommands
   if (this->handCommands.find(key) != this->handCommands.end())
   {
-      int motor_index = this->handCommands[key].index;
-      if(motor_index >= handDeviceInfo.nmotor)
-      {
-        return false;
-      }
+    int motor_index = this->handCommands[key].index;
+    if(motor_index >= handDeviceInfo.nmotor)
+    {
+      return false;
+    }
 
-      float inc = this->handCommands[key].increment;
-      handCommand.ref_pos[motor_index] += inc;
-
+    float inc = this->handCommands[key].increment;
+    handCommand.ref_pos[motor_index] += inc;
   }
   else if (this->graspCommands.find(key) != this->graspCommands.end())
   {
@@ -713,12 +713,17 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   // haptix_comm call).
   if (curr_grasp_name.size() != 0)
   {
-    // For now, we'll just send the most recently commanded grasp, to avoid
-    // confusion from non-intuitive superposition.
     haptix::comm::msgs::hxGrasp req;
-    haptix::comm::msgs::hxGraspValue* gv = req.add_grasps();
-    gv->set_grasp_name(curr_grasp_name);
-    gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
+    // Special case: the "NONE" grasp means that we send an empty request, to
+    // switch out of grasp mode on the other side.
+    if (curr_grasp_name != "NONE")
+    {
+      // For now, we'll just send the most recently commanded grasp, to avoid
+      // confusion from non-intuitive superposition.
+      haptix::comm::msgs::hxGraspValue* gv = req.add_grasps();
+      gv->set_grasp_name(curr_grasp_name);
+      gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
+    }
     haptix::comm::msgs::hxGrasp rep;
     bool result;
     // this->ignNode was created in the "haptix" namespace
@@ -726,10 +731,6 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
       !result)
     {
       std::cerr << "Failed to call gazebo/Grasp service" << std::endl;
-    }
-    else
-    {
-      std::cout << "Got response: " << rep.DebugString() << std::endl;
     }
   }
   return true;

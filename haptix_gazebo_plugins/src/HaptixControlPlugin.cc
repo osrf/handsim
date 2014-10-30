@@ -373,6 +373,24 @@ void HaptixControlPlugin::LoadHandControl()
     imuSensor = imuSensor->GetNextElement("imuSensor");
   }
 
+  // Get predefined grasp poses
+  sdf::ElementPtr grasp = this->sdf->GetElement("grasp");
+  while(grasp)
+  {
+    std::string name;
+    grasp->GetAttribute("name")->Get(name);
+    std::string graspBuffer;
+    grasp->GetValue()->Get(graspBuffer);
+    std::istringstream iss(graspBuffer);
+    std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
+                                    std::istream_iterator<std::string>{}};
+    for(unsigned int i = 0; i < tokens.size(); i++)
+      this->grasps[name].push_back(stof(tokens[i]));
+    grasp = grasp->GetNextElement("grasp");
+  }
+
+  this->graspMode = false;
+
   // Allocate memory for all the protobuf fields.
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
@@ -617,8 +635,18 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   {
     unsigned int m = this->motorInfos[i].index;
     // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
-    this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
-    this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
+    // If we're in grasp mode, then take commands from elsewhere
+    unsigned int numWristMotors = 3;
+    if (this->graspMode && i >= numWristMotors)
+    {
+      this->simRobotCommand[m].ref_pos = this->graspPositions[i];
+      this->simRobotCommand[m].ref_vel = 0.0;
+    }
+    else
+    {
+      this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
+      this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
+    }
     /// \TODO: fix
     // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
     // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
@@ -854,7 +882,7 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 }
 
 //////////////////////////////////////////////////
-/// using haptix_comm service callback
+/// using ign-transport service, out of band from haptix_comm
 void HaptixControlPlugin::HaptixGraspCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxGrasp &_req,
@@ -862,9 +890,42 @@ void HaptixControlPlugin::HaptixGraspCallback(
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
 
-  std::cout << "Received a new grasp command:" << _req.DebugString() <<
-    std::endl;
+  if (this->graspPositions.size() != this->motorInfos.size())
+    this->graspPositions.resize(this->motorInfos.size());
 
+  for (unsigned int j = 0; j < this->graspPositions.size(); ++j)
+    this->graspPositions[j] = 0.0;
+
+  for (unsigned int i=0; i < _req.grasps_size(); ++i)
+  {
+    std::string name = _req.grasps(i).grasp_name();
+    std::map<std::string, std::vector<float> >::const_iterator g =
+      this->grasps.find(name);
+    if (g != this->grasps.end())
+    {
+      for (unsigned int j=0;
+           j < g->second.size() && j < this->graspPositions.size();
+	   ++j)
+      {
+        float value = _req.grasps(i).grasp_value();
+	if (value < 0.0)
+	  value = 0.0;
+	if (value > 1.0)
+	  value = 1.0;
+	// This superposition logic could use a lot of thought.  But it should
+	// at least work for the case of a single type of grasp.
+        this->graspPositions[j] += value * g->second[j] / _req.grasps_size();
+      }
+    }
+  }
+
+  // An empty request puts us back in single-finger control mode
+  if (_req.grasps_size() == 0)
+    this->graspMode = false;
+  else
+    this->graspMode = true;
+
+  // Echo back for reply
   _rep = _req;
 
   _result = true;
