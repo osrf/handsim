@@ -327,7 +327,7 @@ void HaptixControlPlugin::LoadHandControl()
     for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
     {
       unsigned int m = this->motorInfos[i].index;
-      // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
+      // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
       double jointTorque = this->motorInfos[i].gearRatio *
                            this->motorInfos[i].motorTorque;
       this->pids[m].SetCmdMax(jointTorque);
@@ -441,7 +441,7 @@ void HaptixControlPlugin::LoadHandControl()
     c.ref_vel = 0.0;
     c.gain_pos = 1.0;
     c.gain_vel = 0.0;
-    this->simRobotCommand.push_back(c);
+    this->simRobotCommands.push_back(c);
 
      // get gazebo joint handles
     this->joints[i] = this->model->GetJoint(this->jointNames[i]);
@@ -660,31 +660,32 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     unsigned int m = this->motorInfos[i].index;
-    // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
-    this->simRobotCommand[m].ref_pos = this->robotCommand.ref_pos(i);
-    this->simRobotCommand[m].ref_vel = this->robotCommand.ref_vel(i);
+    // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
+    this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
+    this->simRobotCommands[m].ref_vel = this->robotCommand.ref_vel(i);
 
     /// \TODO: fix by implementing better models
-    // this->simRobotCommand[m].gain_pos = this->robotCommand.gain_pos(i);
-    // this->simRobotCommand[m].gain_vel = this->robotCommand.gain_vel(i);
+    // this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
+    // this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
 
     // set joint command using coupling specified in <gearbox> params.
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       unsigned int n = this->motorInfos[i].gearboxes[j].index;
-      // gzdbg << " " << n << " : " << this->simRobotCommand[n].ref_pos << "\n";
-      this->simRobotCommand[n].ref_pos =
+      // gzdbg << " " << n
+      //       << " : " << this->simRobotCommands[n].ref_pos << "\n";
+      this->simRobotCommands[n].ref_pos =
         (this->robotCommand.ref_pos(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
-      this->simRobotCommand[n].ref_vel =
+      this->simRobotCommands[n].ref_vel =
         (this->robotCommand.ref_vel(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
 
       /// \TODO: fix by implementing better models
-      // this->simRobotCommand[n].gain_pos = this->robotCommand.gain_pos(i);
-      // this->simRobotCommand[n].gain_vel = this->robotCommand.gain_vel(i);
+      // this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
+      // this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
 
@@ -698,12 +699,12 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     double velocity = this->joints[i]->GetVelocity(0);
 
     // compute position and velocity error
-    double errorPos = position - this->simRobotCommand[i].ref_pos;
-    double errorVel = velocity - this->simRobotCommand[i].ref_vel;
+    double errorPos = position - this->simRobotCommands[i].ref_pos;
+    double errorVel = velocity - this->simRobotCommands[i].ref_vel;
 
     // compute overall error
-    double error = this->simRobotCommand[i].gain_pos * errorPos
-                 + this->simRobotCommand[i].gain_vel * errorVel;
+    double error = this->simRobotCommands[i].gain_pos * errorPos
+                 + this->simRobotCommands[i].gain_vel * errorVel;
 
     // compute force needed
     double force = this->pids[i].Update(error, _dt);

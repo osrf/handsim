@@ -239,7 +239,7 @@ namespace gazebo
     };
     /// \brief: commanding all the joints in robot, and map
     /// robotCommand motor joints to a subset of the joints here.
-    private: std::vector<SimRobotCommand> simRobotCommand;
+    private: std::vector<SimRobotCommand> simRobotCommands;
 
     /// \brief: joint names matching those of gazebo model
     /// All joints to be controlled by this plugin.
