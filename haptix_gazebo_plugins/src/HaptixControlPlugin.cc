@@ -23,7 +23,7 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->keyPressed = static_cast<char>(0);
+  this->pausePolhemus = false;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -31,6 +31,9 @@ HaptixControlPlugin::HaptixControlPlugin()
 
   this->ignNode.Advertise("/haptix/gazebo/Update",
     &HaptixControlPlugin::HaptixUpdateCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/Grasp",
+    &HaptixControlPlugin::HaptixGraspCallback, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -419,6 +422,24 @@ void HaptixControlPlugin::LoadHandControl()
     imuSensor = imuSensor->GetNextElement("imuSensor");
   }
 
+  // Get predefined grasp poses
+  sdf::ElementPtr grasp = this->sdf->GetElement("grasp");
+  while(grasp)
+  {
+    std::string name;
+    grasp->GetAttribute("name")->Get(name);
+    std::string graspBuffer;
+    grasp->GetValue()->Get(graspBuffer);
+    std::istringstream iss(graspBuffer);
+    std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
+                                    std::istream_iterator<std::string>{}};
+    for(unsigned int i = 0; i < tokens.size(); i++)
+      this->grasps[name].push_back(stof(tokens[i]));
+    grasp = grasp->GetNextElement("grasp");
+  }
+
+  this->graspMode = false;
+
   // Allocate memory for all the protobuf fields.
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
@@ -572,9 +593,7 @@ void HaptixControlPlugin::UpdatePolhemus()
       if (armId < numPoses)
       {
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
-        // std::cout << "arm [" << armSensorPose << "]\n";
-        const char *calibrationKey = "p";
-        if (strcmp(&this->keyPressed, calibrationKey) == 0)
+        if (this->pausePolhemus)
         {
           // calibration mode, update this->baseLinkToArmSensor
           // withouthis->world->IsPaused())t changing targetBaseLinkPose
@@ -594,11 +613,22 @@ void HaptixControlPlugin::UpdatePolhemus()
       if (headId < numPoses)
       {
         math::Pose headSensorPose = this->convertPolhemusToPose(poses[headId]);
-        this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
-          + headSensorPose + this->sourceWorldPose;
+        if (this->pausePolhemus)
+        {
+          // calibration mode, update this->baseLinkToArmSensor
+          // withouthis->world->IsPaused())t changing targetBaseLinkPose
+          math::Pose userCameraPose = this->targetCameraPose;
+          this->cameraToHeadSensor =
+            (headSensorPose + this->sourceWorldPose) - userCameraPose;
+        }
+        else
+        {
+          this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
+            + headSensorPose + this->sourceWorldPose;
 
-        gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
-        this->polhemusJoyPub->Publish(this->joyMsg);
+          gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
+          this->polhemusJoyPub->Publish(this->joyMsg);
+        }
       }
     }
     else
@@ -681,10 +711,19 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     unsigned int m = this->motorInfos[i].index;
-    // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
-    this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
-    this->simRobotCommands[m].ref_vel = this->robotCommand.ref_vel(i);
-
+    // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
+    // If we're in grasp mode, then take commands from elsewhere
+    unsigned int numWristMotors = 3;
+    if (this->graspMode && i >= numWristMotors)
+    {
+      this->simRobotCommands[m].ref_pos = this->graspPositions[i];
+      this->simRobotCommands[m].ref_vel = 0.0;
+    }
+    else
+    {
+      this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
+      this->simRobotCommands[m].ref_vel = this->robotCommand.ref_vel(i);
+    }
     /// \TODO: fix by implementing better models
     // this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
     // this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
@@ -919,6 +958,57 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 }
 
 //////////////////////////////////////////////////
+/// using ign-transport service, out of band from haptix_comm
+void HaptixControlPlugin::HaptixGraspCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxGrasp &_req,
+      haptix::comm::msgs::hxCommand &_rep, bool &_result)
+{
+  boost::mutex::scoped_lock lock(this->updateMutex);
+
+  if (this->graspPositions.size() != this->motorInfos.size())
+    this->graspPositions.resize(this->motorInfos.size());
+
+  for (unsigned int j = 0; j < this->graspPositions.size(); ++j)
+  {
+    this->graspPositions[j] = 0.0;
+    _rep.add_ref_pos(0.0); 
+  }
+
+  for (unsigned int i=0; i < _req.grasps_size(); ++i)
+  {
+    std::string name = _req.grasps(i).grasp_name();
+    std::map<std::string, std::vector<float> >::const_iterator g =
+      this->grasps.find(name);
+    if (g != this->grasps.end())
+    {
+      for (unsigned int j=0;
+           j < g->second.size() && j < this->graspPositions.size();
+	   ++j)
+      {
+        float value = _req.grasps(i).grasp_value();
+	if (value < 0.0)
+	  value = 0.0;
+	if (value > 1.0)
+	  value = 1.0;
+	// This superposition logic could use a lot of thought.  But it should
+	// at least work for the case of a single type of grasp.
+        this->graspPositions[j] += value * g->second[j] / _req.grasps_size();
+        _rep.set_ref_pos(j, this->graspPositions[j]);
+      }
+    }
+  }
+
+  // An empty request puts us back in single-finger control mode
+  if (_req.grasps_size() == 0)
+    this->graspMode = false;
+  else
+    this->graspMode = true;
+
+  _result = true;
+}
+
+//////////////////////////////////////////////////
 void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->joystickMessageMutex);
@@ -932,16 +1022,18 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   // gzdbg << "got key [" << _msg->data()
   //           << "] press [" << _msg->dbl_data() << "]\n";
+  // char key = _msg->data().c_str()[0];
+  // if (strcmp(&key, &this->lastKeyPressed) != 0)
   if (_msg->dbl_data() > 0.0)
   {
     // pressed
-    this->keyPressed = _msg->data().c_str()[0];
-    // gzdbg << " pressed key [" << this->keyPressed << "]\n";
+    if (strcmp(_msg->data().c_str(), "p") == 0)
+      this->pausePolhemus = !this->pausePolhemus;
+    gzdbg << " pausing polhemus [" << this->pausePolhemus << "]\n";
   }
   else
   {
     // clear
-    this->keyPressed = static_cast<char>(0);
     // gzdbg << " released key [" << this->keyPressed << "]\n";
   }
 }
