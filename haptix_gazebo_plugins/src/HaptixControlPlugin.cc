@@ -86,7 +86,11 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // this is where the user spawned the base link of the arm
   this->initialBaseLinkPose = this->baseLink->GetWorldPose();
   this->targetBaseLinkPose = this->initialBaseLinkPose;
-
+  // param for spacenav control, this is the point in arm base link
+  // frame for which we want to control with the spacenav
+  this->baseLinktoSpacenavPose = math::Pose(0, -0.8, 0, 0, 0, 0);
+  this->targetSpacenavPose = this->baseLinktoSpacenavPose
+                           + this->initialBaseLinkPose;
   // get polhemus_source model location
   // for tracking polhemus setup, where is the source in the world frame
   this->polhemusSourceModel = this->world->GetModel("polhemus_source");
@@ -115,6 +119,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->lastTime = this->world->GetSimTime();
 
   // initialize PID's
+  double baseJointImplicitDamping = 100.0;
   if (this->sdf->HasElement("base_pid_pos"))
   {
     sdf::ElementPtr basePidPos = this->sdf->GetElement("base_pid_pos");
@@ -124,7 +129,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     basePidPos->GetAttribute("d")->Get(dVal);
     basePidPos->GetAttribute("cmd_max")->Get(cmdMaxVal);
     basePidPos->GetAttribute("cmd_min")->Get(cmdMinVal);
-    this->posPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+    this->posPid.Init(pVal, iVal, 0, 0, 0, cmdMaxVal, cmdMinVal);
+    baseJointImplicitDamping = dVal;
   }
   else
   {
@@ -141,13 +147,27 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     basePidRot->GetAttribute("d")->Get(dVal);
     basePidRot->GetAttribute("cmd_max")->Get(cmdMaxVal);
     basePidRot->GetAttribute("cmd_min")->Get(cmdMinVal);
-    this->rotPid.Init(pVal, iVal, dVal, 0, 0, cmdMaxVal, cmdMinVal);
+    this->rotPid.Init(pVal, iVal, 0, 0, 0, cmdMaxVal, cmdMinVal);
+    baseJointImplicitDamping = std::max(dVal, baseJointImplicitDamping);
   }
   else
   {
     gzwarn << "no <base_pid_rot> block, using defaults.\n";
     this->rotPid.Init(10000, 0, 0, 0, 0, 10000, -10000);
   }
+
+  // d-gain is enforced implicitly
+  this->baseJoint->SetParam("erp", 0, 0.0);
+  const double dampTol = 1.0e-6;
+  if (baseJointImplicitDamping < dampTol)
+  {
+    gzwarn << "truncating arm base joint damping at " << dampTol << ".\n";
+    baseJointImplicitDamping = dampTol;
+  }
+  this->baseJoint->SetParam("cfm", 0, 1.0/baseJointImplicitDamping);
+  // same implicit damping for revolute joint stops
+  this->baseJoint->SetParam("stop_erp", 0, 0.0);
+  this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
   // initialize polhemus
   this->havePolhemus = false;
@@ -187,11 +207,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
-
-  // base joint damping
-  const double baseJointDamping = 0.01;
-  this->baseJoint->SetParam("erp", 0, 0.0);
-  this->baseJoint->SetParam("cfm", 0, baseJointDamping);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -264,6 +279,12 @@ void HaptixControlPlugin::LoadHandControl()
     this->motorInfos[id].gearRatio = gearRatioSDF->Get<double>();
     gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
 
+    // get max [continuous] motor torque associated with this motor
+    sdf::ElementPtr motorTorqueSDF =
+      motorSDF->GetElement("motor_torque");
+    this->motorInfos[id].motorTorque = motorTorqueSDF->Get<double>();
+    gzdbg << "  torque [" << this->motorInfos[id].motorTorque << "]\n";
+
     // this should return index of the joint in this->joints
     // where this->jointNames matches motorInfos[id].jointName.
     /// \TODO: there must be a faster way of doing this?
@@ -277,7 +298,7 @@ void HaptixControlPlugin::LoadHandControl()
       }
     }
 
-    // get coupled joints
+    // get coupled joints from <gearbox> blocks
     if (motorSDF->HasElement("gearbox"))
     {
       sdf::ElementPtr gearboxSDF = motorSDF->GetElement("gearbox");
@@ -307,6 +328,34 @@ void HaptixControlPlugin::LoadHandControl()
       }
     }
 
+    // Adjust max/min torque commands based on <motor_torque>,
+    // <gear_ratio> and <gearbox> params.
+    for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+    {
+      unsigned int m = this->motorInfos[i].index;
+      // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
+      double jointTorque = this->motorInfos[i].gearRatio *
+                           this->motorInfos[i].motorTorque;
+      this->pids[m].SetCmdMax(jointTorque);
+      this->pids[m].SetCmdMin(-jointTorque);
+      gzdbg << " motor torque [" << m
+            << "] : " << jointTorque << "\n";
+
+      /// \TODO: contemplate about using Joint::SetEffortLimit()
+      /// instead of PID::SetCmdMax() and PID::SetCmdMin()
+
+      // set torque command limits through <gearbox> coupling params.
+      for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+      {
+        unsigned int n = this->motorInfos[i].gearboxes[j].index;
+        double coupledJointTorque = jointTorque *
+          this->motorInfos[i].gearboxes[j].multiplier;
+        this->pids[n].SetCmdMax(coupledJointTorque);
+        this->pids[n].SetCmdMin(-coupledJointTorque);
+        gzdbg << " motor torque [" << n
+              << "] : " << coupledJointTorque << "\n";
+      }
+    }
 
     // get next sdf
     motorSDF = motorSDF->GetNextElement("motor");
@@ -497,9 +546,14 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   const double rotScale = 5.0;
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
-    this->targetBaseLinkPose.pos += _dt * posScale * posRate;
-    this->targetBaseLinkPose.rot =
-      this->targetBaseLinkPose.rot.Integrate(rotScale * rotRate, _dt);
+    this->targetSpacenavPose.pos += _dt * posScale * posRate;
+    this->targetSpacenavPose.rot =
+      this->targetSpacenavPose.rot.Integrate(rotScale * rotRate, _dt);
+
+    // apply inverse transform from spacenav reference point
+    // back to base link pose
+    this->targetBaseLinkPose = this->baseLinktoSpacenavPose.GetInverse()
+                             + this->targetSpacenavPose;
   }
 }
 
@@ -630,14 +684,17 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
     this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
     this->simRobotCommands[m].ref_vel = this->robotCommand.ref_vel(i);
-    /// \TODO: fix
+
+    /// \TODO: fix by implementing better models
     // this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
     // this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
-    // coupling through <gearbox> params
+
+    // set joint command using coupling specified in <gearbox> params.
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       unsigned int n = this->motorInfos[i].gearboxes[j].index;
-      // gzdbg << " " << n << " : " << this->simRobotCommands[n].ref_pos << "\n";
+      // gzdbg << " " << n
+      //       << " : " << this->simRobotCommands[n].ref_pos << "\n";
       this->simRobotCommands[n].ref_pos =
         (this->robotCommand.ref_pos(i) +
          this->motorInfos[i].gearboxes[j].offset)
@@ -646,7 +703,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
         (this->robotCommand.ref_vel(i) +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
-      /// \TODO: fix
+
+      /// \TODO: fix by implementing better models
       // this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
       // this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
     }
@@ -655,12 +713,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   // command all joints
   for(unsigned int i = 0; i < this->joints.size(); ++i)
   {
-    /// \TODO: no need for transmission gear_ratio, since the encoder
-    /// is at the joint end, but implement it anyways?
+    // get joint positions and velocities
     double position = this->joints[i]->GetAngle(0).Radian();
-
-    /// \TODO: no need for transmission gear_ratio, since the encoder
-    /// is at the joint end, but implement it anyways?
     double velocity = this->joints[i]->GetVelocity(0);
 
     // compute position and velocity error
