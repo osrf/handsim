@@ -769,7 +769,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     haptix::comm::msgs::hxGrasp req;
     // For now, we'll just send the most recently commanded grasp, to avoid
     // confusion from non-intuitive superposition.
-    haptix::comm::msgs::hxGraspValue* gv = req.add_grasps();
+    haptix::comm::msgs::hxGrasp::hxGraspValue* gv = req.add_grasps();
     gv->set_grasp_name(curr_grasp_name);
     gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
     haptix::comm::msgs::hxCommand rep;
