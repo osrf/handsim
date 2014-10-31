@@ -1,4 +1,9 @@
 #!/bin/bash
+# some people don't like using job control (set -m) in bash scripts
+# http://stackoverflow.com/questions/690266/why-cant-i-use-job-control-in-a-bash-script
+# it's ok to use here becase we know there haven't been any other background
+# processes created in this script
+set -m
 gazebo worlds/arat.world $@ &
 sleep 3
 modelName=apl_description
@@ -16,3 +21,5 @@ then
 else
   echo Model spawned successfully.
 fi
+
+fg
