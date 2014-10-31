@@ -218,6 +218,10 @@ namespace gazebo
     private: physics::ModelPtr polhemusSourceModel;
     /// \brief Pose of the polhemus source in the world frame.
     private: math::Pose sourceWorldPose;
+    /// \brief used to offset polhemus source for arm sensor during calibration
+    private: math::Pose sourceWorldPoseArmOffset;
+    /// \brief used to offset polhemus source for head sensor during calibration
+    private: math::Pose sourceWorldPoseHeadOffset;
     /// \brief Transform from polhemus sensor orientation to base link frame.
     private: math::Pose baseLinkToArmSensor;
     /// \brief Transform from polhemus sensor orientation to camera frame
