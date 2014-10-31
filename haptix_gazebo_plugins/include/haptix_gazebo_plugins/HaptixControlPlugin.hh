@@ -376,7 +376,7 @@ namespace gazebo
     private: void HaptixGraspCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxGrasp &_req,
-      haptix::comm::msgs::hxGrasp &_rep, bool &_result);
+      haptix::comm::msgs::hxCommand &_rep, bool &_result);
 
     /// \brief: initialize gazebo controllers
     private: void LoadHandControl();

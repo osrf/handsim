@@ -20,6 +20,7 @@
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/rendering/FPSViewController.hh>
 #include <haptix/comm/msg/hxGrasp.pb.h>
+#include <haptix/comm/msg/hxCommand.pb.h>
 #include "haptix_gazebo_plugins/HaptixGUIPlugin.hh"
 
 using namespace gazebo;
@@ -320,6 +321,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 {
 
   this->graspMode = true;
+  this->lastGraspCommandValid = false;
   // Read parameters
   common::SystemPaths* paths = common::SystemPaths::Instance();
   this->handImgFilename = paths->FindFileURI
@@ -637,9 +639,8 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
                 << std::endl;
       return false;
     }
-    hxCommand cmd;
-    memset(&cmd, 0, sizeof(cmd));
-    if(hx_update(hxGAZEBO, &cmd, &this->handSensor) != hxOK )
+    memset(&this->handCommand, 0, sizeof(this->handCommand));
+    if(hx_update(hxGAZEBO, &this->handCommand, &this->handSensor) != hxOK )
     {
       std::cout << "hx_update(): Request error.\n" << std::endl;
       return false;
@@ -652,11 +653,14 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   char key = text[0];
   std::cout << "key: " << key << std::endl;
   std::cout << "nmotor: " << this->handDeviceInfo.nmotor << std::endl;
+
   hxCommand cmd;
   memset(&cmd, 0, sizeof(cmd));
   for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
   {
-    cmd.ref_pos[i] = this->handSensor.motor_pos[i];
+    cmd.ref_pos[i] = this->handCommand.ref_pos[i];
+    if (this->lastGraspCommandValid)
+      cmd.ref_pos[i] += this->lastGraspCommand.ref_pos(i);
   }
   
   // if key is in armCommands
@@ -681,6 +685,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     math::Quaternion cameraRot = gui::get_active_camera()->GetWorldRotation();
     if (index < 3)
     {
+
       increment.pos = cameraRot.RotateVector(increment.pos);
     }
     else
@@ -709,8 +714,8 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     float inc = this->handCommands[key].increment;
     //handCommand.ref_pos[motor_index] += inc;
     std::cout << "Incrementing position of motor " << motor_index << " from " << handSensor.motor_pos[motor_index] << " by " << inc << std::endl;
-    cmd.ref_pos[motor_index] = handSensor.motor_pos[motor_index] + inc;
-    cmd_motor_index = motor_index;
+    this->handCommand.ref_pos[motor_index] += inc;
+    cmd.ref_pos[motor_index] += inc;
   }
   else if (this->graspCommands.find(key) != this->graspCommands.end())
   {
@@ -728,21 +733,10 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     return false;
   }
 
-  std::cout << "calling hx_update(): " << std::endl;
-  for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
-  {
-    std::cout << cmd.ref_pos[i] << " ";
-  }
-  std::cout << std::endl;
-
-  hxSensor updateSensor;
+  //hxSensor updateSensor;
   
-  if (hx_update(hxGAZEBO, &cmd, &updateSensor) != hxOK)
-  {
-    std::cerr << "hx_update(): Request error." << std::endl;
-  }
   // Sensor filtering
-  float p = 0.95;
+  /*float p = 0.95;
   for (int i = 0; i < this->handDeviceInfo.nmotor; i++)
   {
     this->handSensor.motor_pos[i] = (1-p)*updateSensor.motor_pos[i] +
@@ -753,7 +747,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   {
     // efferent copy
     this->handSensor.motor_pos[cmd_motor_index] = cmd.ref_pos[cmd_motor_index];
-  }
+  }*/
 
   // If the user commanded a grasp, send that, too (it's out of band from the
   // haptix_comm call).
@@ -770,7 +764,7 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
       gv->set_grasp_name(curr_grasp_name);
       gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
     }
-    haptix::comm::msgs::hxGrasp rep;
+    haptix::comm::msgs::hxCommand rep;
     bool result;
     // this->ignNode was created in the "haptix" namespace
     if(!this->ignNode->Request("gazebo/Grasp", req, 1000, rep, result) ||
@@ -778,6 +772,32 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
     {
       std::cerr << "Failed to call gazebo/Grasp service" << std::endl;
     }
+    else
+    {
+      std::cout << "Received reply: " << std::endl;
+      for(int i = 0; i < rep.ref_pos_size(); i++)
+        std::cout << rep.ref_pos(i) << " ";
+      std::cout << std::endl;
+      if (curr_grasp_name != "NONE")
+      {
+        this->lastGraspCommand = rep;
+        this->lastGraspCommandValid = true;
+        for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
+        {
+          cmd.ref_pos[i] = this->lastGraspCommand.ref_pos(i);
+          this->handCommand.ref_pos[i] = 0.0;
+        }
+      }
+    }
+  }
+
+  std::cout << "Sending: " << std::endl;
+  for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
+    std::cout << cmd.ref_pos[i] << " ";
+  std::cout << std::endl;
+  if (hx_update(hxGAZEBO, &cmd, &handSensor) != hxOK)
+  {
+    std::cerr << "hx_update(): Request error." << std::endl;
   }
   return true;
 }

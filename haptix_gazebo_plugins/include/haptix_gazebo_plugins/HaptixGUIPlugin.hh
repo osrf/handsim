@@ -30,6 +30,8 @@
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/transport/transport.hh>
 
+#include <haptix/comm/msg/hxCommand.pb.h>
+
 namespace gazebo
 {
 
@@ -137,6 +139,8 @@ namespace gazebo
       private: std::map<char, std::string> graspCommands;
       private: std::map<std::string, Grasp> grasps;
       private: bool graspMode;
+      private: bool lastGraspCommandValid;
+      private: haptix::comm::msgs::hxCommand lastGraspCommand;
 
       /// \brief Publisher of factory messages.
       private: gazebo::transport::PublisherPtr taskPub;

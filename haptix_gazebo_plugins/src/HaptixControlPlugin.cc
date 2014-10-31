@@ -900,7 +900,7 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 void HaptixControlPlugin::HaptixGraspCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxGrasp &_req,
-      haptix::comm::msgs::hxGrasp &_rep, bool &_result)
+      haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
 
@@ -908,7 +908,10 @@ void HaptixControlPlugin::HaptixGraspCallback(
     this->graspPositions.resize(this->motorInfos.size());
 
   for (unsigned int j = 0; j < this->graspPositions.size(); ++j)
+  {
     this->graspPositions[j] = 0.0;
+    _rep.add_ref_pos(0.0); 
+  }
 
   for (unsigned int i=0; i < _req.grasps_size(); ++i)
   {
@@ -929,6 +932,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
 	// This superposition logic could use a lot of thought.  But it should
 	// at least work for the case of a single type of grasp.
         this->graspPositions[j] += value * g->second[j] / _req.grasps_size();
+        _rep.set_ref_pos(j, this->graspPositions[j]);
       }
     }
   }
@@ -938,9 +942,6 @@ void HaptixControlPlugin::HaptixGraspCallback(
     this->graspMode = false;
   else
     this->graspMode = true;
-
-  // Echo back for reply
-  _rep = _req;
 
   _result = true;
 }
