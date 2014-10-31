@@ -159,7 +159,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // d-gain is enforced implicitly
   this->baseJoint->SetParam("erp", 0, 0.0);
   const double dampTol = 1.0e-6;
-  if (baseJointImplicitDamping < dampTol))
+  if (baseJointImplicitDamping < dampTol)
   {
     gzwarn << "truncating arm base joint damping at " << dampTol << ".\n";
     baseJointImplicitDamping = dampTol;
