@@ -1,0 +1,18 @@
+#!/bin/bash
+gazebo --verbose worlds/arat.world $@ &
+sleep 3
+modelName=apl_description
+echo "Trying to spawn model [${modelName}]..."
+echo "<sdf version='1.5'><include><uri>model://${modelName}</uri></include></sdf>" \
+  | gz model -s -m ${modelName} -x 0.5 -y "-1" -z 0 -Y "-1.57"
+
+# sleep to allow model to be parsed, then try to get model info
+sleep 5
+
+# it failed if there are fewer than 5 visuals, should be many more
+if [ `gz model -i -m ${modelName} | grep visual | wc -l` -lt 5 ]
+then
+  echo "Have you sourced '`which gzserver | sed -e 's@/bin/gzserver@@'`/share/haptix_gazebo_plugins/setup.sh'?"
+else
+  echo Model spawned successfully.
+fi
