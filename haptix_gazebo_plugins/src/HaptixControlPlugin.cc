@@ -707,10 +707,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   // command all joints
   for(unsigned int i = 0; i < this->joints.size(); ++i)
   {
-    /// is at the joint end, but implement it anyways?
+    // get joint positions and velocities
     double position = this->joints[i]->GetAngle(0).Radian();
-
-    /// is at the joint end, but implement it anyways?
     double velocity = this->joints[i]->GetVelocity(0);
 
     // compute position and velocity error
