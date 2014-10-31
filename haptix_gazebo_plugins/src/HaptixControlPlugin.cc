@@ -108,15 +108,17 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->sourceWorldPose = this->polhemusSourceModel->GetWorldPose();
   }
   gzdbg << "Polhemus Source Pose [" << this->sourceWorldPose << "]\n";
+  this->sourceWorldPoseArmOffset = math::Pose();
+  this->sourceWorldPoseHeadOffset = math::Pose();
   // transform from polhemus sensor orientation to base link frame
   // -0.6 meters towards wrist from elbow
   // -0.7 rad pitch up
   // 90 degrees yaw to the left
-  this->baseLinkToArmSensor = math::Pose(0, -0.6, 0, 0, -0.7, -0.5*M_PI);
+  this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
   // transform from polhemus sensor orientation to camera frame
   // 10cm to the right of the sensor is roughly where the eyes are
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn near wrist
-  this->cameraToHeadSensor = math::Pose(0, 0.1, 0, 0.0, -0.3, 0.0);
+  this->cameraToHeadSensor = math::Pose(0, 0.5, 0, 0.0, -0.3, 0.0);
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
@@ -598,14 +600,16 @@ void HaptixControlPlugin::UpdatePolhemus()
           // calibration mode, update this->baseLinkToArmSensor
           // withouthis->world->IsPaused())t changing targetBaseLinkPose
           math::Pose baseLinkPose = this->baseLink->GetWorldPose();
-          this->baseLinkToArmSensor =
-            (armSensorPose + this->sourceWorldPose) - baseLinkPose;
+          this->sourceWorldPoseArmOffset =
+            (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
+             baseLinkPose) - this->sourceWorldPose;
         }
         else
         {
           boost::mutex::scoped_lock lock(this->baseLinkMutex);
           this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
-            + armSensorPose + this->sourceWorldPose;
+            + armSensorPose
+            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
         }
       }
 
@@ -618,13 +622,15 @@ void HaptixControlPlugin::UpdatePolhemus()
           // calibration mode, update this->baseLinkToArmSensor
           // withouthis->world->IsPaused())t changing targetBaseLinkPose
           math::Pose userCameraPose = this->targetCameraPose;
-          this->cameraToHeadSensor =
-            (headSensorPose + this->sourceWorldPose) - userCameraPose;
+          this->sourceWorldPoseHeadOffset =
+            (headSensorPose.GetInverse() + this->cameraToHeadSensor +
+             userCameraPose) - this->sourceWorldPose;
         }
         else
         {
           this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
-            + headSensorPose + this->sourceWorldPose;
+            + headSensorPose
+            + (this->sourceWorldPoseHeadOffset + this->sourceWorldPose);
 
           gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
           this->polhemusJoyPub->Publish(this->joyMsg);
