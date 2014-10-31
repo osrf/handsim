@@ -196,8 +196,8 @@ namespace gazebo
     private: gazebo::transport::SubscriberPtr keySub;
     /// \brief gazebo key event subscriber callback function
     private: void OnKey(ConstRequestPtr &_msg);
-    /// \brief stores the key pressed from gazebo key event
-    private: char keyPressed;
+    /// \brief pause polhemus updates
+    private: bool pausePolhemus;
 
     /// \brief Subscriber to spacenav messages.
     private: gazebo::transport::SubscriberPtr joySub;

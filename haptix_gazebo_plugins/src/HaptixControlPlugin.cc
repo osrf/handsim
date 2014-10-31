@@ -23,7 +23,7 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->keyPressed = static_cast<char>(0);
+  this->pausePolhemus = false;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -587,9 +587,7 @@ void HaptixControlPlugin::UpdatePolhemus()
       if (armId < numPoses)
       {
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
-        // std::cout << "arm [" << armSensorPose << "]\n";
-        const char *calibrationKey = "p";
-        if (strcmp(&this->keyPressed, calibrationKey) == 0)
+        if (this->pausePolhemus)
         {
           // calibration mode, update this->baseLinkToArmSensor
           // withouthis->world->IsPaused())t changing targetBaseLinkPose
@@ -609,11 +607,22 @@ void HaptixControlPlugin::UpdatePolhemus()
       if (headId < numPoses)
       {
         math::Pose headSensorPose = this->convertPolhemusToPose(poses[headId]);
-        this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
-          + headSensorPose + this->sourceWorldPose;
+        if (this->pausePolhemus)
+        {
+          // calibration mode, update this->baseLinkToArmSensor
+          // withouthis->world->IsPaused())t changing targetBaseLinkPose
+          math::Pose userCameraPose = this->targetCameraPose;
+          this->cameraToHeadSensor =
+            (headSensorPose + this->sourceWorldPose) - userCameraPose;
+        }
+        else
+        {
+          this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
+            + headSensorPose + this->sourceWorldPose;
 
-        gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
-        this->polhemusJoyPub->Publish(this->joyMsg);
+          gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
+          this->polhemusJoyPub->Publish(this->joyMsg);
+        }
       }
     }
     else
@@ -1007,16 +1016,18 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   // gzdbg << "got key [" << _msg->data()
   //           << "] press [" << _msg->dbl_data() << "]\n";
+  // char key = _msg->data().c_str()[0];
+  // if (strcmp(&key, &this->lastKeyPressed) != 0)
   if (_msg->dbl_data() > 0.0)
   {
     // pressed
-    this->keyPressed = _msg->data().c_str()[0];
-    // gzdbg << " pressed key [" << this->keyPressed << "]\n";
+    if (strcmp(_msg->data().c_str(), "p") == 0)
+      this->pausePolhemus = !this->pausePolhemus;
+    gzdbg << " pausing polhemus [" << this->pausePolhemus << "]\n";
   }
   else
   {
     // clear
-    this->keyPressed = static_cast<char>(0);
     // gzdbg << " released key [" << this->keyPressed << "]\n";
   }
 }
