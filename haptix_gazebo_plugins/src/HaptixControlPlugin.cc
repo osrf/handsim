@@ -88,7 +88,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->targetBaseLinkPose = this->initialBaseLinkPose;
   // param for spacenav control, this is the point in arm base link
   // frame for which we want to control with the spacenav
-  this->baseLinktoSpacenavPose = math::Pose(0, -0.8, 0, 0, 0, 0);
+  this->baseLinktoSpacenavPose = math::Pose(0, -0.4, 0, 0, 0, 0);
   this->targetSpacenavPose = this->baseLinktoSpacenavPose
                            + this->initialBaseLinkPose;
   // get polhemus_source model location
@@ -476,6 +476,8 @@ void HaptixControlPlugin::LoadHandControl()
 void HaptixControlPlugin::Reset()
 {
   this->targetBaseLinkPose = this->initialBaseLinkPose;
+  this->targetSpacenavPose = this->baseLinktoSpacenavPose
+                           + this->initialBaseLinkPose;
 
   std::vector<SimRobotCommand>::iterator iter;
   for (iter = this->simRobotCommands.begin();
