@@ -131,7 +131,6 @@
 
       <grasps>
         <increment>0.015</increment>
-        <grasp inc_key="0" dec_key=")" name="NONE"></grasp>
         <grasp inc_key="1" dec_key="!" name="Cylindrical"></grasp>
         <grasp inc_key="2" dec_key="@" name="Spherical"></grasp>
         <grasp inc_key="3" dec_key="#" name="ThreeFingerPinch"></grasp>

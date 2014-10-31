@@ -728,6 +728,19 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   }
   else if (key == '~')
   {
+    if (this->graspMode)
+    {
+      // Send an empty grasp request, to switch modes in the control plugin
+      haptix::comm::msgs::hxGrasp req;
+      haptix::comm::msgs::hxCommand rep;
+      bool result;
+      // this->ignNode was created in the "haptix" namespace
+      if(!this->ignNode->Request("gazebo/Grasp", req, 1000, rep, result) ||
+        !result)
+      {
+        std::cerr << "Failed to call gazebo/Grasp service" << std::endl;
+      }
+    }
     this->graspMode = !this->graspMode;
     std::cout << "Changed graspMode to: " << this->graspMode << std::endl;
     return false;
@@ -754,16 +767,11 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
   if (curr_grasp_name.size() != 0)
   {
     haptix::comm::msgs::hxGrasp req;
-    // Special case: the "NONE" grasp means that we send an empty request, to
-    // switch out of grasp mode on the other side.
-    if (curr_grasp_name != "NONE")
-    {
-      // For now, we'll just send the most recently commanded grasp, to avoid
-      // confusion from non-intuitive superposition.
-      haptix::comm::msgs::hxGraspValue* gv = req.add_grasps();
-      gv->set_grasp_name(curr_grasp_name);
-      gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
-    }
+    // For now, we'll just send the most recently commanded grasp, to avoid
+    // confusion from non-intuitive superposition.
+    haptix::comm::msgs::hxGraspValue* gv = req.add_grasps();
+    gv->set_grasp_name(curr_grasp_name);
+    gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
     haptix::comm::msgs::hxCommand rep;
     bool result;
     // this->ignNode was created in the "haptix" namespace
@@ -778,15 +786,12 @@ bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
       for(int i = 0; i < rep.ref_pos_size(); i++)
         std::cout << rep.ref_pos(i) << " ";
       std::cout << std::endl;
-      if (curr_grasp_name != "NONE")
+      this->lastGraspCommand = rep;
+      this->lastGraspCommandValid = true;
+      for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
       {
-        this->lastGraspCommand = rep;
-        this->lastGraspCommandValid = true;
-        for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
-        {
-          cmd.ref_pos[i] = this->lastGraspCommand.ref_pos(i);
-          this->handCommand.ref_pos[i] = 0.0;
-        }
+        cmd.ref_pos[i] = this->lastGraspCommand.ref_pos(i);
+        this->handCommand.ref_pos[i] = 0.0;
       }
     }
   }
