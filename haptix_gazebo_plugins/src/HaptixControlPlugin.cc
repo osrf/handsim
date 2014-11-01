@@ -111,14 +111,13 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->sourceWorldPoseArmOffset = math::Pose();
   this->sourceWorldPoseHeadOffset = math::Pose();
   // transform from polhemus sensor orientation to base link frame
-  // -0.6 meters towards wrist from elbow
-  // -0.7 rad pitch up
+  // -0.3 meters towards wrist from elbow
   // 90 degrees yaw to the left
   this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
   // transform from polhemus sensor orientation to camera frame
   // 10cm to the right of the sensor is roughly where the eyes are
-  // -0.3 rad pitch up: sensor is usually tilted upwards when worn near wrist
-  this->cameraToHeadSensor = math::Pose(0, 0.5, 0, 0.0, -0.3, 0.0);
+  // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
+  this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
