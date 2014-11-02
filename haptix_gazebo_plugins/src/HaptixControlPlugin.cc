@@ -23,7 +23,7 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->pausePolhemus = false;
+  this->pausePolhemus = true;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -116,6 +116,21 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
+  // initial camera pose
+  if (this->sdf->HasElement("initial_camera_pose_polhemus_source_frame"))
+  {
+    sdf::ElementPtr initialCamPose =
+      this->sdf->GetElement("initial_camera_pose_polhemus_source_frame");
+    this->targetCameraPose = initialCamPose->Get<math::Pose>();
+  }
+  else
+  {
+    gzwarn << "no <initial_camera_pose_polhemus_source_frame>, using"
+           << " no default values.  Even better if we can get the"
+           << " initial user camera pose from world sdf or from"
+           << " UserCamera directly here.\n";
+    this->targetCameraPose = math::Pose(-0.15, -0.8, 1.50, 0, 0.3, 1.57);
+  }
   // for controller time control
   this->lastTime = this->world->GetSimTime();
 
@@ -944,8 +959,9 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
   // if (strcmp(&key, &this->lastKeyPressed) != 0)
   if (_msg->dbl_data() > 0.0)
   {
-    // pressed
-    if (strcmp(_msg->data().c_str(), "p") == 0)
+    // pressed "p" or spacebar?
+    if (strcmp(_msg->data().c_str(), "p") == 0 ||
+        strcmp(_msg->data().c_str(), " ") == 0)
       this->pausePolhemus = !this->pausePolhemus;
     gzdbg << " pausing polhemus [" << this->pausePolhemus << "]\n";
   }
