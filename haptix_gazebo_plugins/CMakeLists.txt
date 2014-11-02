@@ -68,9 +68,15 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.hh"
 )
 
-# install includes
+# install worlds
 install(DIRECTORY worlds
   DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
+)
+
+# install scripts
+install(PROGRAMS
+    scripts/handsim_apl
+  DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 # setup config file
