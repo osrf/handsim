@@ -129,7 +129,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
            << " no default values.  Even better if we can get the"
            << " initial user camera pose from world sdf or from"
            << " UserCamera directly here.\n";
-    this->targetCameraPose = math::Pose(-0.15, -0.8, 1.50, 0, 0.3, 1.57);
+    this->targetCameraPose = math::Pose(-0.10, -1.8, 1.50, 0, 0.3, 1.57);
   }
   // for controller time control
   this->lastTime = this->world->GetSimTime();
