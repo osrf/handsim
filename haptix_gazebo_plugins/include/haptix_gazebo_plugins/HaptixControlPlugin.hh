@@ -187,6 +187,21 @@ namespace gazebo
 
     /**********************************************/
     /*                                            */
+    /*   get user camera pose                     */
+    /*                                            */
+    /**********************************************/
+    /// \brief subscribe to user camera pose publisher
+    private: gazebo::transport::SubscriberPtr userCameraPoseSub;
+    /// \brief callback for subscriber to the user camera pose publisher
+    private: void OnUserCameraPose(ConstPosePtr &_msg);
+    /// \brief store camera pose
+    private: math::Pose userCameraPose;
+    private: bool gotUserCameraPose;
+    /// \brief Mutex to protect access to userCameraPose
+    private: boost::mutex userCameraPoseMessageMutex;
+
+    /**********************************************/
+    /*                                            */
     /*   for subscribing to key events published  */
     /*   by gzclient window                       */
     /*                                            */
