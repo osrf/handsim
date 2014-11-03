@@ -68,7 +68,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.hh"
 )
 
-# install includes
+# install worlds
 install(DIRECTORY worlds
   DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
 )
