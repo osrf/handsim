@@ -44,20 +44,10 @@ echo "Retrieving packages"
 sudo apt-get update -qq
 echo "OK"
 
-# Install protobuf.
-echo "Installing Google Protobuf"
-sudo apt-get install libprotobuf-dev protobuf-compiler
+# Install Gazebo (Haptix).
+sudo apt-get install gazebo-prerelease
 
-# Install ZeroMQ and cppzmq.
-echo "Installing ZeroMQ and cppzmq"
-sudo apt-get install libzmq3 libzmq3-dev
-
-# Install ignition-transport.
-echo "Installing Ignition Transport"
-sudo apt-get install libignition-transport0 libignition-transport-dev
-
-# Install haptix-comm.
-echo "Installing haptix-comm"
-sudo apt-get install libhaptix-comm libhaptix-comm-dev
+# Install Handsim
+sudo apt-get install handsim
 
 echo "Complete."
