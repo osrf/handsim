@@ -73,12 +73,6 @@ install(DIRECTORY worlds
   DESTINATION ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
 )
 
-# install scripts
-install(PROGRAMS
-    scripts/handsim_apl
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
 # setup config file
 configure_file(${PROJECT_SOURCE_DIR}/cmake/setup.sh.in
                ${PROJECT_BINARY_DIR}/setup.sh @ONLY)
