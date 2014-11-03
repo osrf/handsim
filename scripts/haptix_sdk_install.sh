@@ -45,6 +45,6 @@ sudo apt-get update -qq
 echo "OK"
 
 # Install haptix-comm
-sudo apt-get install libhaptix-comm libhaptix-comm-dev 
+sudo apt-get install libhaptix-comm-dev 
 
 echo "Complete."
