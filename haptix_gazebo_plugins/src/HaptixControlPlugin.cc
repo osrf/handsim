@@ -23,7 +23,6 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->gotUserCameraPose = false;
   this->pausePolhemus = true;
 
   // Advertise haptix services.
@@ -95,7 +94,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->targetBaseLinkPose = this->initialBaseLinkPose;
   // param for spacenav control, this is the point in arm base link
   // frame for which we want to control with the spacenav
-  this->baseLinktoSpacenavPose = math::Pose(0, -0.8, 0, 0, 0, 0);
+  this->baseLinktoSpacenavPose = math::Pose(0, -0.4, 0, 0, 0, 0);
   this->targetSpacenavPose = this->baseLinktoSpacenavPose
                            + this->initialBaseLinkPose;
   // get polhemus_source model location
@@ -123,28 +122,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
-  // initial camera pose
-  if (this->sdf->HasElement("initial_camera_pose_polhemus_source_frame"))
-  {
-    sdf::ElementPtr initialCamPose =
-      this->sdf->GetElement("initial_camera_pose_polhemus_source_frame");
-    this->targetCameraPose = initialCamPose->Get<math::Pose>();
-  }
-  else
-  {
-    if (this->gotUserCameraPose)
-    {
-      this->targetCameraPose = this->userCameraPose;
-    }
-    else
-    {
-      gzwarn << "no <initial_camera_pose_polhemus_source_frame>, using"
-             << " no default values.  Even better if we can get the"
-             << " initial user camera pose from world sdf or from"
-             << " UserCamera directly here.\n";
-      this->targetCameraPose = math::Pose(-0.10, -1.8, 1.50, 0, 0.3, 1.57);
-    }
-  }
   // for controller time control
   this->lastTime = this->world->GetSimTime();
 
@@ -627,11 +604,11 @@ void HaptixControlPlugin::UpdatePolhemus()
         }
         else
         {
-          this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
+          math::Pose targetCameraPose = this->cameraToHeadSensor.GetInverse()
             + headSensorPose
             + (this->sourceWorldPoseHeadOffset + this->sourceWorldPose);
 
-          gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
+          gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
           this->polhemusJoyPub->Publish(this->joyMsg);
         }
       }
@@ -958,7 +935,6 @@ void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
   this->userCameraPose = math::Pose(msgs::Convert(*_msg));
-  this->gotUserCameraPose = true;
 }
 
 //////////////////////////////////////////////////
