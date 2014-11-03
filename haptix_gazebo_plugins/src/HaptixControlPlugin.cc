@@ -616,7 +616,7 @@ void HaptixControlPlugin::UpdatePolhemus()
         if (this->pausePolhemus)
         {
           // calibration mode, update this->baseLinkToArmSensor
-          // withouthis->world->IsPaused())t changing targetBaseLinkPose
+          // without changing targetBaseLinkPose
           math::Pose userCameraPose = this->targetCameraPose;
           this->cameraToHeadSensor =
             (headSensorPose + this->sourceWorldPose) - userCameraPose;
