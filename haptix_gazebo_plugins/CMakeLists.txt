@@ -37,9 +37,11 @@ link_directories(
   ${polhemus_driver_LIBRARY_DIRS}
 )
 
-QT4_WRAP_CPP(HaptixGUIPlugin_MOC include/haptix_gazebo_plugins/HaptixGUIPlugin.hh)
+QT4_WRAP_CPP(HaptixGUIPlugin_MOC
+             include/haptix_gazebo_plugins/HaptixGUIPlugin.hh
+             include/haptix_gazebo_plugins/TaskButton.hh)
 add_library(HaptixGUIPlugin SHARED ${HaptixGUIPlugin_MOC}
-            src/HaptixGUIPlugin.cc
+            src/HaptixGUIPlugin.cc src/TaskButton.cc
             ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxGrasp.pb.cc)
 
 # build library

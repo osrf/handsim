@@ -13,205 +13,149 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
-*/
+ */
 #ifndef _GUI_ARAT_PLUGIN_HH_
 #define _GUI_ARAT_PLUGIN_HH_
 
-#include <queue>
-
-#include <haptix/comm/haptix.h>
-#include <ignition/transport.hh>
-
-#include "gazebo/common/Events.hh"
+#include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/gui/gui.hh>
 #include <gazebo/gui/GuiPlugin.hh>
-#include "gazebo/math/gzmath.hh"
+#include <gazebo/math/gzmath.hh>
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/transport/transport.hh>
 
-#include <haptix/comm/msg/hxCommand.pb.h>
-
-namespace gazebo
+namespace haptix_gazebo_plugins
 {
+  // Forward declare task button
+  class TaskButton;
 
-    class ContactsWrapper
-    {
-      public: ConstContactsPtr msg;
-      public: std::string name;
-      public: ContactsWrapper(ConstContactsPtr m, const std::string &n) : msg(m), name(n){}
-    };
+  /// \brief A graphical interface for the HAPTIX project
+  class HaptixGUIPlugin : public gazebo::GUIPlugin
+  {
+    Q_OBJECT
 
-    class KeyCommand
-    {
-      public:
-        char button;
-        std::string name;
-        int index;
-        float increment;
-        KeyCommand(const char b, const std::string& n, const float i) :
-                        button(b), name(n), increment(i){}
-        KeyCommand(){index = 0; }
-    };
+    /// \brief Constructor
+    public: HaptixGUIPlugin();
 
-    class Grasp
-    {
-      public:
-        float sliderValue;
-        char incKey;
-        char decKey;
-        void SliderChanged(char key, float inc);
-        Grasp(char i, char d) : incKey(i), decKey(d) { sliderValue = 0; }
-        Grasp() {}
-    };
+    /// \brief Destructor
+    public: virtual ~HaptixGUIPlugin();
 
-    class QTaskButton : public QToolButton
-    {
-      Q_OBJECT
-      public: QTaskButton();
+    // Documentation inherited
+    public: void Load(sdf::ElementPtr _elem);
 
-      public: void SetTaskId(const std::string &task_id);
-      public: void SetTaskInstructionsDocument(QTextDocument* instr);
-      public: void SetIndex(const int i);
+    /// \brief Callback when a finger contact message is received.
+    /// \param[in] _msg Contact message.
+    private: void OnFingerContact(ConstContactsPtr &_msg);
 
-      public slots: void OnButton();
+    /// \brief Signal to set a contact visualization value.
+    /// \param[in] _contactName Name of the contact sensor.
+    /// \param[in] _value Force value.
+    signals: void SetContactForce(QString _contactName, double _value);
 
-      private: std::string id;
-      private: QTextDocument* instructions;
+    /// \brief Handles setting a contact visualization value.
+    /// \param[in] _contactName Name of the contact sensor.
+    /// \param[in] _value Force value.
+    private slots: void OnSetContactForce(QString _contactName, double _value);
 
-      // The canonical index at which this task is stored
-      private: int index;
+    /// \brief Handles the PreRender Gazebo signal
+    private: void PreRender();
 
-      signals: void SendTask(const std::string &id,
-                             QTextDocument* instructions, const int index);
-    };
+    /// \brief Callback triggered when a task button is pressed.
+    /// \param[in] _id ID of the task.
+    private slots: void OnTaskSent(const int _id);
 
-    // Digital clock adapted from
-    // http://qt-project.org/doc/qt-4.8/widgets-digitalclock.html
-    class DigitalClock : public QLCDNumber
-    {
-       Q_OBJECT
-       
-       public: DigitalClock(QWidget *parent = 0);
-       public: void StopClock();
-       private: QTime lastStartTime;
-       private: bool running;
+    /// \brief Helper function to publish a task message
+    /// \param[in] _taskName Name of the task to publish
+    private: void PublishTaskMessage(const std::string &_taskName) const;
 
-       protected slots: void ShowTime();
+    /// \brief Helper function to publish a timer message
+    /// \param[in] _msg Message to publish
+    private: void PublishTimerMessage(const std::string &_msg) const;
 
-      private slots: void OnStartStop();
-    };
+    /// \brief Callback when the start/stop button is pressed.
+    /// \param[in] _checked True if the button was checked.
+    private slots: void OnStartStop(bool _checked);
 
-    class HaptixGUIPlugin : public gazebo::GUIPlugin 
-    {
-      Q_OBJECT
+    /// \brief Callback triggered when the next button is clicked
+    private slots: void OnNextClicked();
 
-      /// \brief Constructor
-      /// \param[in] _parent Parent widget
-      public: HaptixGUIPlugin();
+    /// \brief Callback triggered when the reset button is clicked
+    private slots: void OnResetClicked();
 
-      /// \brief Destructor
-      public: virtual ~HaptixGUIPlugin();
+    /// \brief Helper function to initialize the task view
+    /// \param[in] _elem SDF element pointer that contains HAPTIX task
+    /// parameters.
+    private: void InitializeTaskView(sdf::ElementPtr _elem);
 
-      /// \brief Callback trigged when the button is pressed.
-      //protected slots: void OnButton();
-      protected slots: void OnTaskSent(const std::string &id,
-                                       QTextDocument* instructions,
-                                       const int index);
-      protected slots: void OnResetClicked(); 
-      protected slots: void OnNextClicked(); 
-      protected slots: void OnStartStopClicked();
+    /// \brief Handle GUI keypresses
+    private: bool OnKeyPress(gazebo::common::KeyEvent _event);
 
-      private: void PublishTaskMessage(const std::string &task_name); 
+    /// \brief Size of the contact sensor display circle, in pixels.
+    private: int circleSize;
 
-      /// \brief Node used to establish communication with gzserver.
-      private: gazebo::transport::NodePtr node;
+    /// \brief Minimum force value
+    private: float forceMin;
 
-      private: ignition::transport::Node* ignNode;
-      private: hxSensor handSensor;
-      private: hxDeviceInfo handDeviceInfo;
-      hxCommand handCommand;
+    /// \brief Maximum force value
+    private: float forceMax;
 
-      private: std::map<char, KeyCommand> armCommands;
-      private: std::map<char, KeyCommand> handCommands;
-      private: std::map<std::string, std::vector<char> > buttonNames;
-      // The mapping between a button and the grasp it is commanding
-      private: std::map<char, std::string> graspCommands;
-      private: std::map<std::string, Grasp> grasps;
-      private: bool graspMode;
-      private: bool lastGraspCommandValid;
-      private: haptix::comm::msgs::hxCommand lastGraspCommand;
+    /// \brief Minimum force color value
+    private: gazebo::common::Color colorMin;
 
-      /// \brief Publisher of factory messages.
-      private: gazebo::transport::PublisherPtr taskPub;
+    /// \brief Maximum force color value
+    private: gazebo::common::Color colorMax;
 
-      /// \brief Subscriber to finger contact sensors.
-      private: std::vector<transport::SubscriberPtr> contactSubscribers;
+    /// \brief Which hand is displayed (left, right)
+    private: std::string handSide;
 
-      /// \brief Maximum number tasks.
-      /// \sa taskNum
+    /// \brief All the finger contact points.
+    private: std::map<std::string, gazebo::math::Vector2d > contactPoints;
 
-      private: int handImgX;
-      private: int handImgY;
+    /// \brief The scene onto which is drawn the hand and contact
+    /// force data
+    private: QGraphicsScene *handScene;
 
-      private: std::string handImgFilename;
-      private: std::string configFilename;
+    /// \brief Contact force visualization items.
+    private: std::map<std::string, QGraphicsEllipseItem*>
+             contactGraphicsItems;
 
-      private: float GUIScaleFactor;
-      private: int circleSize;
-      private: math::Vector2d iconSize;
-      private: math::Vector3 colorMin;
-      private: math::Vector3 colorMax;
-      private: float forceMin;
-      private: float forceMax;
-      private: float graspIncrement;
+    /// \brief Subscriber to finger contact sensors.
+    private: std::vector<gazebo::transport::SubscriberPtr> contactSubscribers;
 
-      private: bool isTestRunning;
-      private: QString startButtonStyle;
-      private: QString stopButtonStyle;
+    /// \brief Node used to establish communication with gzserver.
+    private: gazebo::transport::NodePtr node;
 
-      private: std::string handSide;
-      
-      private: std::map<std::string, math::Vector2d > contactPoints;
+    // \brief Set of Gazebo signal connections.
+    private: std::vector<gazebo::event::ConnectionPtr> connections;
 
-      private: std::map<std::string, QGraphicsEllipseItem*>
-                                                contactGraphicsItems;
+    private: QTabWidget *taskTab;
 
-      private: std::vector<QTextDocument*> instructionsList;
+    /// \brief Text box that hold instructions to the user.
+    private: QTextEdit *instructionsView;
 
-      private: QVBoxLayout* mainLayout;
+    /// \brief All the tasks in all the groups
+    private: std::map<int, TaskButton*> taskList;
 
-      private: QTextEdit* instructionsView;
+    /// \brief Number of the current task.
+    private: int currentTaskId;
 
-      private: QGraphicsScene *handScene;
+    /// \brief Publisher that talks with the arrange plugin to setup the
+    /// scene.
+    private: gazebo::transport::PublisherPtr taskPub;
 
-      private: QPushButton *startStopButton;
-  
-      private: DigitalClock *digitalClock;
+    /// \brief Publisher that controls the clock
+    private: gazebo::transport::PublisherPtr timerPub;
 
-      private: std::vector<event::ConnectionPtr> connections;
+    /// \brief Task start/stop button
+    private: QPushButton *startStopButton;
 
-      private: std::queue<ContactsWrapper> msgQueue;
-  
-      private: std::vector<std::string> taskList;
+    /// \brief QT style for the start setting of the start/stop button
+    private: std::string startStyle;
 
-      /// \brief Number of the current task.
-      private: int currentTaskIndex;
+    /// \brief QT style for the start setting of the start/stop button
+    private: std::string stopStyle;
 
-      private: void InitializeHandView();
-
-      private: void InitializeTaskView(sdf::ElementPtr elem,
-                                       common::SystemPaths* paths);
-
-      private: void OnFingerContact(ConstContactsPtr &msg);
-      
-      private: bool OnKeyPress(common::KeyEvent _event);
-
-      private: std::string getTopicName(const std::string& fingerName);
-
-      private: void PreRender();
-
-    };
-
+  };
 }
 #endif

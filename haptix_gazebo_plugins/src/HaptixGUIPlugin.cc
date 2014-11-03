@@ -18,841 +18,581 @@
 #include <sstream>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
-#include <gazebo/rendering/FPSViewController.hh>
-#include <haptix/comm/msg/hxGrasp.pb.h>
-#include <haptix/comm/msg/hxCommand.pb.h>
+#include <gazebo/gui/GuiEvents.hh>
+
+#include "haptix_gazebo_plugins/TaskButton.hh"
 #include "haptix_gazebo_plugins/HaptixGUIPlugin.hh"
 
+using namespace haptix_gazebo_plugins;
 using namespace gazebo;
 
 // Register this plugin with the simulator
 GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 
-//////////////////////////////////////////////////
-void Grasp::SliderChanged(char key, float inc)
-{
-  if (key != this->incKey && key != this->decKey)
-  {
-    return;
-  }
-  int sign = key == this->incKey ? 1 : -1;
-  this->sliderValue += sign*inc;
-  this->sliderValue = this->sliderValue < 0 ? 0 : this->sliderValue;
-  this->sliderValue = this->sliderValue > 1 ? 1 : this->sliderValue;
-}
-
-//////////////////////////////////////////////////
-QTaskButton::QTaskButton()
-{
-  connect(this, SIGNAL(clicked()), this, SLOT(OnButton()));
-}
-
-//////////////////////////////////////////////////
-void QTaskButton::SetTaskId(const std::string& task_id)
-{
-  this->id = task_id;
-}
-
-//////////////////////////////////////////////////
-void QTaskButton::SetTaskInstructionsDocument(QTextDocument* instr)
-{
-  this->instructions = instr;
-}
-
-//////////////////////////////////////////////////
-void QTaskButton::SetIndex(const int i)
-{
-  this->index = i;
-}
-
-//////////////////////////////////////////////////
-void QTaskButton::OnButton()
-{
-  emit SendTask(this->id, this->instructions, this->index);
-}
-
-//////////////////////////////////////////////////
-DigitalClock::DigitalClock(QWidget *parent) : QLCDNumber(parent)
-{
-  setSegmentStyle(Filled);
-  setStyleSheet("font: 30px;");
-  setDigitCount(8);
-
-  lastStartTime = QTime(0, 0);
-  //lastStartTime.start();
-
-  running = false;
-  QTimer *clock = new QTimer(this);
-  connect(clock, SIGNAL(timeout()), this, SLOT(ShowTime()));
-  clock->start(100);
-
-  ShowTime();
-
-  //resize(300, 60);
-}
-
-//////////////////////////////////////////////////
-void DigitalClock::ShowTime()
-{
-  QString text("00:00:00");
-  if(running)
-  {
-    QTime elapsedTime = QTime(0, 0, 0).addMSecs(lastStartTime.elapsed());
-    text = elapsedTime.toString("hh:mm:ss");
-  }
-
-  display(text);
-  update();
-}
-
-
-//////////////////////////////////////////////////
-void DigitalClock::StopClock()
-{
-  this->running = false;
-}
-
-void DigitalClock::OnStartStop()
-{
-  running = !running;
-
-  if (running)
-  {
-    // If we are now running, restart the time
-    lastStartTime.restart();
-    ShowTime();
-  }
-}
-
-void HaptixGUIPlugin::InitializeHandView()
-{
-  // Create a QGraphicsView to draw the finger force contacts
-  this->handScene = new QGraphicsScene(QRectF(0, 0, this->handImgX,
-                                                    this->handImgY));
-  QGraphicsView *handView = new QGraphicsView(this->handScene);
-
-  // Load the hand image
-  QPixmap handImg = QPixmap(QString(this->handImgFilename.c_str()));
-  handImg = handImg.scaled(this->handImgX, this->handImgY);
-  QGraphicsPixmapItem* handItem = new QGraphicsPixmapItem(handImg);
-
-  // Draw the hand on the canvas
-  this->handScene->addItem(handItem);
-
-  // Preallocate QGraphicsItems for each contact point
-  for(std::map<std::string, math::Vector2d>::iterator it =
-        this->contactPoints.begin(); it != this->contactPoints.end(); it++)
-  {
-    std::string fingerName = it->first;
-    int xpos = this->contactPoints[fingerName][0];
-    int ypos = this->contactPoints[fingerName][1];
-    this->contactGraphicsItems[fingerName] =
-                  new QGraphicsEllipseItem(xpos, ypos,
-                                           this->circleSize, this->circleSize);
-    this->handScene->addItem(this->contactGraphicsItems[fingerName]);
-
-    this->contactGraphicsItems[fingerName]
-                                 ->setBrush(QBrush(QColor(255, 255, 255, 0)));
-    this->contactGraphicsItems[fingerName]
-                                 ->setPen(QPen(QColor(153, 153, 153, 255)));
-  }
-
-  this->handScene->update();
-  handView->setMinimumSize(this->handImgX, this->handImgY);
-  handView->setMaximumSize(this->handImgX+5, this->handImgY+5);
-
-  mainLayout->addWidget(handView);
-  handView->show();
-}
-
-void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr elem,
-                                       common::SystemPaths* paths)
-{
-  QVBoxLayout *taskLayout = new QVBoxLayout();
-  taskLayout->setContentsMargins(0, 0, 0, 0);
-
-  QTabWidget *tabWidget = new QTabWidget();
-
-  // Populate the tabWidget by parsing out SDF
-  this->instructionsView = new QTextEdit();
-  this->instructionsView->setReadOnly(true);
-  this->instructionsView->setMaximumHeight(handImgY/3);
-
-  if(! elem->HasElement("taskGroup") ){
-    return;
-  }
-  sdf::ElementPtr taskGroup = elem->GetElement("taskGroup");
-  //std::cout << "Getting tasks" << std::endl;
-  while(taskGroup){
-    std::string taskGroupName;
-    if(!taskGroup->HasAttribute("name")){
-      break;
-    }
-    taskGroup->GetAttribute("name")->Get(taskGroupName);
-
-    QGroupBox *buttonGroup = new QGroupBox();
-    QGridLayout *buttonLayout = new QGridLayout();
-
-    int i = 0;
-    sdf::ElementPtr task = taskGroup->GetElement("task");
-    while(task){
-      std::string id;
-      std::string name;
-      std::string icon_path;
-      std::string instructions;
-      task->GetAttribute("id")->Get(id);
-      task->GetAttribute("name")->Get(name);
-      task->GetAttribute("icon")->Get(icon_path);
-      task->GetAttribute("instructions")->Get(instructions);
-
-      QTaskButton *taskButton = new QTaskButton();
-      taskButton->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
-      taskButton->setMaximumWidth(this->handImgX/3);
-      taskButton->setMaximumHeight(this->handImgX/3);
-      taskButton->resize(this->handImgX/3, this->handImgY/3);
-      taskButton->setText(QString(name.c_str()));
-      taskButton->SetTaskId(id);
-      QTextDocument* instructionsDocument =
-                            new QTextDocument(QString(instructions.c_str()));
-      taskButton->SetTaskInstructionsDocument(instructionsDocument);
-      taskButton->SetIndex(taskList.size());
-
-      connect(taskButton, SIGNAL(SendTask(std::string, QTextDocument*, int)),
-         this, SLOT(OnTaskSent(const std::string&, QTextDocument*, const int)));
-
-      int col = i%3;
-      int row = i/3;
-      buttonLayout->addWidget(taskButton, row, col);
-
-      if(icon_path.compare("none") != 0){
-        QPixmap icon_picture(QString(paths->FindFileURI(icon_path).c_str()));
-        icon_picture = icon_picture.scaled(iconSize[0], iconSize[1]);
-
-        taskButton->setIcon(QIcon(icon_picture));
-        taskButton->setIconSize(QSize(iconSize[0], iconSize[1]));
-        taskButton->setMinimumSize(iconSize[0]+20, iconSize[1]+30);
-      }
-      if(taskList.empty()){
-        instructionsView->setDocument(instructionsDocument);
-      }
-      taskList.push_back(id);
-      this->instructionsList.push_back(instructionsDocument);
-
-      task = task->GetNextElement();
-      i++;
-    }
-    buttonGroup->setMinimumWidth(handImgX);
-    buttonGroup->setContentsMargins(0, 0, 0, 0);
-    buttonGroup->setLayout(buttonLayout);
-    buttonLayout->setContentsMargins(0, 0, 0, 0);
-    buttonLayout->setSpacing(0);
-
-    tabWidget->addTab((QWidget*) buttonGroup, QString(taskGroupName.c_str()));
-
-    taskGroup = taskGroup->GetNextElement();
-  }
-
-  this->currentTaskIndex = 0;
-
-  QFrame *taskFrame = new QFrame();
-  tabWidget->setContentsMargins(0, 0, 0, 0);
-  taskLayout->addWidget(tabWidget);
-  taskLayout->addWidget(instructionsView);
-
-  QHBoxLayout* cycleButtonLayout = new QHBoxLayout();
-  QPushButton *resetButton = new QPushButton();
-  resetButton->setText(QString("Reset Test"));
-  resetButton->setStyleSheet("border:1px solid #ffffff");
-  connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
-  cycleButtonLayout->addWidget(resetButton);
-  resetButton->setMaximumWidth(this->handImgX/2);
-
-  QPushButton *nextButton = new QPushButton();
-  nextButton->setText(QString("Next Test"));
-  nextButton->setStyleSheet("border:1px solid #ffffff");
-  connect(nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
-  cycleButtonLayout->addWidget(nextButton);
-  nextButton->setMaximumWidth(this->handImgX/2);
-
-  QFrame* cycleButtonFrame = new QFrame;
-  cycleButtonFrame->setLayout(cycleButtonLayout);
-  taskLayout->addWidget(cycleButtonFrame);
-
-  taskFrame->setLayout(taskLayout);
-  mainLayout->addWidget(taskFrame);
-
-  // Start/Stop button
-  this->isTestRunning = false;
-  this->startStopButton = new QPushButton();
-  this->startStopButton->setText(QString("Start Test"));
-  this->startStopButton->setStyleSheet(startButtonStyle);
-  this->startStopButton->setMaximumWidth(this->handImgX*0.85);
-  connect(this->startStopButton, SIGNAL(clicked()), this,
-          SLOT(OnStartStopClicked()));
-
-  // Clock
-  this->digitalClock = new DigitalClock();
-  connect(this->startStopButton, SIGNAL(clicked()), this->digitalClock,
-          SLOT(OnStartStop()));
-  this->digitalClock->setMaximumWidth(this->handImgX*0.5);
-
-  QHBoxLayout *clockBox = new QHBoxLayout();
-  clockBox->addStretch();
-  clockBox->addWidget(digitalClock);
-  clockBox->addStretch();
-  QFrame *clockFrame = new QFrame();
-  clockFrame->setLayout(clockBox);
-  clockFrame->setContentsMargins(0, 0, 0, 0);
-  mainLayout->addWidget(clockFrame);
-
-  QHBoxLayout *startStopBox = new QHBoxLayout();
-  startStopBox->addStretch();
-  startStopBox->addWidget(startStopButton);
-  startStopBox->addStretch();
-  QFrame *startStopFrame = new QFrame();
-  startStopFrame->setLayout(startStopBox);
-  startStopFrame->setContentsMargins(0, 0, 0, 0);
-  mainLayout->addWidget(startStopFrame);
-}
-
 /////////////////////////////////////////////////
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
-
-  this->graspMode = true;
-  this->lastGraspCommandValid = false;
   // Read parameters
-  common::SystemPaths* paths = common::SystemPaths::Instance();
-  this->handImgFilename = paths->FindFileURI
-                                  ("file://config/handsim.png");
-  this->configFilename = paths->FindFileURI
-                                  ("file://config/HaptixGUIPlugin.sdf");
-
-
-  std::ifstream fileinput(this->configFilename.c_str());
-  std::stringstream inputStream;
-  inputStream << fileinput.rdbuf();
-  std::string sdfString = inputStream.str();
-  fileinput.close();
+  std::string handImgFilename = common::SystemPaths::Instance()->FindFileURI
+                                  ("file://config/arat_icons/hand.svg");
 
   // Parameters for sensor contact visualization
-  sdf::SDF parameters;
-  parameters.SetFromString(sdfString);
-  sdf::ElementPtr elem;
-  elem = parameters.root->GetElement("world");
-  elem = elem->GetElement("plugin");
-  elem->GetElement("circleSize")->GetValue()->Get(this->circleSize);
+  // Set the frame background and foreground colors
+  this->setStyleSheet(
+      "QFrame {background-color: rgba(255, 255, 255, 255);"
+      "color: rgba(100, 100, 100, 255);"
+      "}"
+      );
 
-  elem->GetElement("forceMin")->GetValue()->Get(this->forceMin);
-  elem->GetElement("forceMax")->GetValue()->Get(this->forceMax);
-  elem->GetElement("colorMin")->GetValue()->Get(this->colorMin);
-  elem->GetElement("colorMax")->GetValue()->Get(this->colorMax);
-  elem->GetElement("handSide")->GetValue()->Get(this->handSide);
-  elem->GetElement("scaleFactor")->GetValue()->Get(this->GUIScaleFactor);
+  // Create the frame to hold all the widgets
+  QFrame *mainFrame = new QFrame();
+  QVBoxLayout *frameLayout = new QVBoxLayout;
+  frameLayout->setContentsMargins(4, 4, 0, 0);
+  mainFrame->setLayout(frameLayout);
 
-  std::string buttonStyle;
-  elem->GetElement("startButtonStyle")->GetValue()->Get(buttonStyle);
-  this->startButtonStyle = QString(buttonStyle.c_str());
-  elem->GetElement("stopButtonStyle")->GetValue()->Get(buttonStyle);
-  this->stopButtonStyle = QString(buttonStyle.c_str());
+  this->setPalette(QPalette(QColor(255, 255, 255, 0)));
 
-  math::Vector2d handImgDims;
-  elem->GetElement("handImgDimensions")->GetValue()->Get(handImgDims);
-  this->handImgX = GUIScaleFactor*handImgDims[0];
-  this->handImgY = GUIScaleFactor*handImgDims[1];
+  // Create the hand
+    // Create a QGraphicsView to draw the finger force contacts
+    this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
+    QGraphicsView *handView = new QGraphicsView(this->handScene);
+    handView->setStyleSheet("border: 0px");
+    handView->setSizePolicy(QSizePolicy::Expanding,
+                            QSizePolicy::MinimumExpanding);
 
-  elem->GetElement("iconDimensions")->GetValue()->Get(this->iconSize);
-  this->iconSize *= GUIScaleFactor;
-  this->circleSize *= GUIScaleFactor;
+    // Load the hand image
+    QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
+    QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
+    handItem->setPos(-20, -73);
+
+    // Draw the hand on the canvas
+    this->handScene->addItem(handItem);
+
+  // Create the task layout
+  this->taskTab = new QTabWidget();
+  this->taskTab->setStyleSheet(
+      "QTabWidget {"
+        "border: 1px solid rgba(128, 128, 128, 255)"
+      "}"
+
+      "QTabWidget::pane {"
+        "top: -1px;"
+        "background-color: #ff00ff;"
+        "border: 1px solid rgba(128, 128, 128, 255);"
+      "}"
+
+      "QTabBar::tab-bar {"
+        "left: 5px"
+      "}"
+
+      "QTabBar::tab {"
+        "color: rgba(100, 100, 100, 255);"
+        "border: 1px solid rgba(128, 128, 128, 255);"
+        "padding: 0px;"
+        "border-top-left-radius: 4px;"
+        "border-top-right-radius: 4px;"
+        "background-color: rgba(200, 200, 200, 255);"
+      "}"
+
+      "QTabBar::tab:selected {"
+        "color: rgba(100, 100, 100, 255);"
+        "background-color: rgba(255, 255, 255, 255);"
+        "border: 1px solid rgba(128, 128, 128, 255);"
+        "border-bottom: 1px solid rgba(255, 255, 255, 255);"
+      "}"
+      );
+
+  QFrame *tabFrame = new QFrame();
+  tabFrame->setContentsMargins(4, 0, 4, 0);
+  QVBoxLayout *tabFrameLayout = new QVBoxLayout();
+  tabFrame->setLayout(tabFrameLayout);
+
+  this->instructionsView = new QTextEdit("Instructions:");
+  this->instructionsView->setReadOnly(true);
+  this->instructionsView->setMaximumHeight(60);
+  this->instructionsView->setMinimumHeight(60);
+  this->instructionsView->setStyleSheet(
+      "margin-top: 0px;"
+      "margin-bottom: 0px;"
+      "margin-left: 20px;"
+      "margin-right: 20px;"
+      "background-color: #ffffff"
+      );
+
+  tabFrameLayout->addWidget(taskTab);
+  tabFrameLayout->addWidget(this->instructionsView);
+
+
+  QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
+  QPushButton *resetButton = new QPushButton();
+  resetButton->setText(QString("Reset Test"));
+  resetButton->setStyleSheet(
+      "background-color: rgba(120, 120, 120, 255);"
+      "border: 0px;"
+      "border-radius: 4px;"
+      "color: #ffffff");
+  connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
+  resetButton->setMaximumWidth(120);
+
+  QPushButton *nextButton = new QPushButton();
+  nextButton->setText(QString("Next Test"));
+  nextButton->setStyleSheet(
+      "background-color: rgba(120, 120, 120, 255);"
+      "border: 0px;"
+      "border-radius: 4px;"
+      "color: #ffffff");
+  connect(nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
+  nextButton->setMaximumWidth(120);
+
+  cycleButtonLayout->addWidget(resetButton);
+  cycleButtonLayout->addWidget(nextButton);
+
+  QFrame *cycleButtonFrame = new QFrame;
+  cycleButtonFrame->setLayout(cycleButtonLayout);
+
+  // Start/Stop button
+  this->startStopButton = new QPushButton();
+  this->startStopButton->setCheckable(true);
+  this->startStopButton->setText(QString("Start"));
+  this->startStopButton->setDisabled(true);
+  this->startStyle =
+      "QPushButton {"
+        "margin: 10px;"
+        "padding: 10px;"
+        "background-color: #7A95D6;"
+        "font: bold 30px;"
+        "border: 0px;"
+        "border-radius: 4px;"
+        "color: #FFFFFF;"
+      "}"
+
+      "QPushButton:hover {"
+        "background-color: rgba(83, 101, 146, 255);"
+      "}"
+
+      "QPushButton::disabled {"
+        "background-color: rgba(180, 180, 180, 255);"
+        "color: rgba(200, 200, 200, 255);"
+      "}";
+
+  this->stopStyle =
+      "QPushButton {"
+        "margin: 10px;"
+        "padding: 10px;"
+        "background-color: #D85C48;"
+        "font: bold 30px;"
+        "border: 0px;"
+        "border-radius: 4px;"
+        "color: #FFFFFF;"
+      "}"
+
+      "QPushButton:hover {"
+        "background-color: rgba(191, 81, 64, 255);"
+      "}"
+
+      "QPushButton::disabled {"
+        "background-color: rgba(180, 180, 180, 255);"
+        "color: rgba(200, 200, 200, 255);"
+      "}";
+
+  this->startStopButton->setStyleSheet(this->startStyle.c_str());
+
+  connect(this->startStopButton, SIGNAL(toggled(bool)), this,
+      SLOT(OnStartStop(bool)));
+
+  // Add all widgets to the main frame layout
+  frameLayout->addWidget(handView, 1.0);
+  frameLayout->addWidget(tabFrame);
+  frameLayout->addWidget(instructionsView);
+  frameLayout->addWidget(cycleButtonFrame);
+  frameLayout->addWidget(startStopButton);
+
+  QVBoxLayout *mainLayout = new QVBoxLayout();
+  mainLayout->addWidget(mainFrame);
+
+  // Remove margins to reduce space
+  frameLayout->setContentsMargins(0, 0, 0, 0);
+  mainLayout->setContentsMargins(0, 0, 0, 0);
+
+  this->setLayout(mainLayout);
+  this->move(10, 10);
+  this->resize(450, 800);
+
+  // Create a QueuedConnection to set contact visualization value.
+  connect(this, SIGNAL(SetContactForce(QString, double)),
+          this, SLOT(OnSetContactForce(QString, double)), Qt::QueuedConnection);
+
+  // Create a node for transportation
+  this->node = transport::NodePtr(new transport::Node());
+  this->node->Init();
+
+  // Create the publisher that communicates with the arrange plugin
+  this->taskPub = this->node->Advertise<msgs::GzString>("~/arrange");
+
+  // Connect to the PreRender Gazebo signal
+  this->connections.push_back(event::Events::ConnectPreRender(
+                              boost::bind(&HaptixGUIPlugin::PreRender, this)));
+
+  this->currentTaskId = 0;
+}
+
+/////////////////////////////////////////////////
+HaptixGUIPlugin::~HaptixGUIPlugin()
+{
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
+{
+  if (gui::get_active_camera())
+    gui::get_active_camera()->SetHFOV(GZ_DTOR(120));
+
+  // Hide the scene tree.
+  gui::Events::leftPaneVisibility(false);
+
+  // Create the publisher that controls the timer
+  if (_elem->HasElement("timer_topic"))
+  {
+    this->timerPub = this->node->Advertise<msgs::GzString>(
+        _elem->Get<std::string>("timer_topic"));
+  }
+  else
+  {
+    this->timerPub = this->node->Advertise<msgs::GzString>("~/timer_control");
+  }
+
+  this->circleSize = _elem->Get<int>("circle_size");
+
+  this->forceMin = _elem->Get<double>("force_min");
+  this->forceMax = _elem->Get<double>("force_max");
+
+  this->colorMin = _elem->Get<common::Color>("color_min");
+  this->colorMax = _elem->Get<common::Color>("color_max");
+
+  this->handSide = _elem->Get<std::string>("hand_side");
 
   // Get contact names
-  if(elem->HasElement("contacts")){
-    sdf::ElementPtr contact = elem->GetElement("contacts");
+  if (_elem->HasElement("contacts"))
+  {
+    sdf::ElementPtr contact = _elem->GetElement("contacts");
     contact = contact->GetElement("contact");
-    while(contact){
-      if(contact->HasAttribute("name")){
-        std::string contactName;
-        contact->GetAttribute("name")->Get(contactName);
+
+    while (contact)
+    {
+      if (contact->HasAttribute("name"))
+      {
+        // Read the contact data from SDF
+        std::string contactName = contact->Get<std::string>("name");
+        math::Vector2d contactPos = contact->Get<math::Vector2d>("pos");
+        std::string topic = contact->Get<std::string>("topic");
+
+        // Create a subscriber that receive contact data
+        transport::SubscriberPtr sub = this->node->Subscribe(topic,
+            &HaptixGUIPlugin::OnFingerContact, this);
+        this->contactSubscribers.push_back(sub);
+
+        this->contactGraphicsItems[contactName] =
+          new QGraphicsEllipseItem(contactPos.x,
+              contactPos.y, this->circleSize, this->circleSize);
+        this->handScene->addItem(this->contactGraphicsItems[contactName]);
+
+        this->contactGraphicsItems[contactName]->setBrush(
+            QBrush(QColor(255, 255, 255, 0)));
+        this->contactGraphicsItems[contactName]->setPen(
+            QPen(QColor(153, 153, 153, 255)));
+
         // Get the position of the contact
-        contact->GetValue()->Get(this->contactPoints[contactName]);
-        this->contactPoints[contactName]*=this->GUIScaleFactor;
+        this->contactPoints[contactName] = contactPos;
+
         contact = contact->GetNextElement();
       }
     }
   }
 
-  // Set the frame background and foreground colors
-  this->setStyleSheet(
-      "QFrame { background-color : rgba(100, 100, 100, 255); color : white; }");
-  mainLayout = new QVBoxLayout();
-  this->setPalette(QPalette(QColor(255, 255, 255, 0)));
-
-  this->InitializeHandView();
-
-  this->InitializeTaskView(elem, paths);
-
-
-  // Remove margins to reduce space
-  mainLayout->setContentsMargins(0, 0, 0, 0);
-  mainLayout->setSpacing(0);
-  this->setLayout(mainLayout);
-
-  this->setMaximumWidth(this->handImgX+10);
-  this->setMinimumHeight(this->handImgY*2.6);
-
-  // Create a node for transportation
-  this->node = transport::NodePtr(new transport::Node());
-  this->node->Init();
-  this->taskPub = this->node->Advertise<msgs::GzString>("~/arrange");
-
-  this->ignNode = new ignition::transport::Node("haptix");
-  ignNode->Advertise("arm_pose_inc");
-
-  // Parse SDF to get the arm teleop commands
-  sdf::ElementPtr command = elem->GetElement("commands");
-  command = command->GetElement("command");
-  while(command)
+  // Draw contact pads and force gauge
   {
-    char button;
-    std::string name;
-    float increment;
-    command->GetAttribute("button")->Get(button);
-    command->GetAttribute("name")->Get(name);
-    command->GetAttribute("increment")->Get(increment);
-    if(name.substr(0, 5).compare("motor") == 0)
+    float scaleXPos = 365;
+    float scaleWidth = 20;
+
+    QGraphicsRectItem *forceScaleItem =
+      new QGraphicsRectItem(scaleXPos, -40, scaleWidth, 400);
+    forceScaleItem->setPen(QPen(QColor(255, 255, 255, 0)));
+    QLinearGradient grad(0, 0, 0, 400);
+    grad.setColorAt(0, QColor(255, 227, 32, 255));
+    grad.setColorAt(1, QColor(255, 102, 102, 255));
+    forceScaleItem->setBrush(grad);
+    this->handScene->addItem(forceScaleItem);
+
+    // Draw the lines and force values.
+    int lineStep = 40;
+    double force = this->forceMax;
+    int steps = (440/40) - 1;
+    double forceStep = (this->forceMax - this->forceMin)/steps;
+
+    for (int i = -40; i < 400-lineStep; i += lineStep)
     {
-      this->handCommands[button] = KeyCommand(button, name, increment);
-    } else if(name.substr(0, 3).compare("arm") == 0)
-    {
-      this->armCommands[button] = KeyCommand(button, name, increment);
+      QGraphicsLineItem *lineItem =
+        new QGraphicsLineItem(scaleXPos, i, scaleXPos + scaleWidth, i);
+      lineItem->setPen(QPen(
+            QBrush(QColor(255, 255, 255, 255)), 2.0));
+      this->handScene->addItem(lineItem);
+
+      std::stringstream forceStream;
+      forceStream << std::fixed << std::setprecision(1) << force;
+      force -= forceStep;
+
+      QGraphicsTextItem *text = new QGraphicsTextItem(
+          forceStream.str().c_str());
+      text->setPos(scaleXPos + scaleWidth + 4, i-11.5);
+      this->handScene->addItem(text);
     }
-    buttonNames[name].push_back(button);
 
-    command = command->GetNextElement();
+    // Draw the PSI label
+    QGraphicsTextItem *newtonText = new QGraphicsTextItem(tr("N"));
+    newtonText->setPos(scaleXPos + scaleWidth - 20, -62);
+    this->handScene->addItem(newtonText);
   }
 
-  // Get predefined grasp key mappings
-  sdf::ElementPtr grasp = elem->GetElement("grasps");
-  grasp->GetElement("increment")->GetValue()->Get(this->graspIncrement);
-  grasp = grasp->GetElement("grasp");
-  while(grasp)
-  {
-    std::string name;
-    char inc_key;
-    char dec_key;
-    grasp->GetAttribute("name")->Get(name);
-    std::cout << "name: " << name << std::endl;
-    grasp->GetAttribute("inc_key")->Get(inc_key);
-    grasp->GetAttribute("dec_key")->Get(dec_key);
-    this->grasps[name] = Grasp(inc_key, dec_key);
-    /*
-    std::string graspBuffer;
-    grasp->GetValue()->Get(graspBuffer);
-    std::istringstream iss(graspBuffer);
-    std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
-                                    std::istream_iterator<std::string>{}};
-    for(unsigned int i = 0; i < tokens.size(); i++)
-    {
-      grasps[name].desiredGrasp.push_back(stof(tokens[i]));
-    }
-    */
-    this->graspCommands[inc_key] = name;
-    this->graspCommands[dec_key] = name;
-    grasp = grasp->GetNextElement();
-  }
-
-  sdf::ElementPtr index = elem->GetElement("indices");
-  index = index->GetElement("index");
-  while(index)
-  {
-    std::string name;
-    int num;
-    index->GetAttribute("name")->Get(name);
-    index->GetAttribute("num")->Get(num);
-    std::vector<char> buttons = buttonNames[name];
-    for(unsigned int i = 0; i < buttons.size(); i++){
-      char button = buttons[i];
-      if(this->handCommands.find(button) != this->handCommands.end()){
-        this->handCommands[button].index = num;
-      } else if (this->armCommands.find(button) != this->armCommands.end()){
-        this->armCommands[button].index = num;
-      }
-    }
-    index = index->GetNextElement();
-  }
-
-  // Set up an array of subscribers for each contact sensor
-  for(std::map<std::string, math::Vector2d>::iterator it =
-        this->contactPoints.begin(); it != this->contactPoints.end(); it++)
-  {
-    std::string topic = this->getTopicName(it->first);
-    transport::SubscriberPtr sub = this->node->Subscribe(topic,
-                                   &HaptixGUIPlugin::OnFingerContact, this);
-    this->contactSubscribers.push_back(sub);
-  }
-
-  this->connections.push_back(event::Events::ConnectPreRender(
-                              boost::bind(&HaptixGUIPlugin::PreRender, this)));
+  this->InitializeTaskView(_elem);
 
   gui::KeyEventHandler::Instance()->SetAutoRepeat(true);
   gui::KeyEventHandler::Instance()->AddPressFilter("arat_gui",
                           boost::bind(&HaptixGUIPlugin::OnKeyPress, this, _1));
 }
 
-
 /////////////////////////////////////////////////
-/////////////////////////////////////////////////
-HaptixGUIPlugin::~HaptixGUIPlugin()
+void HaptixGUIPlugin::OnFingerContact(ConstContactsPtr &_msg)
 {
-  for (int i = 0; i < instructionsList.size(); i++)
-  {
-    delete instructionsList[i];
-    instructionsList[i] = NULL;
-  }
-
-  for (std::map<std::string, QGraphicsEllipseItem*>::iterator it =
-       contactGraphicsItems.begin(); it != contactGraphicsItems.end(); it++)
-  {
-    delete it->second;
-    it->second = NULL;
-  }
-
-  delete mainLayout;
-  mainLayout = NULL;
-
-  delete instructionsView;
-  instructionsView = NULL;
-
-  delete handScene;
-  handScene = NULL;
-
-  delete startStopButton;
-  startStopButton = NULL;
-
-  delete digitalClock;
-  digitalClock = NULL;
-
-  delete ignNode;
-  ignNode = NULL;
-}
-
-//////////////////////////////////////////////////
-std::string parseString(const std::string& rawString){
-  size_t end_idx = rawString.find("::", 6);
-  return rawString.substr(6, end_idx-6);
-}
-
-//////////////////////////////////////////////////
-std::string HaptixGUIPlugin::getTopicName(const std::string& fingerName)
-{
-  std::string topicName = this->handSide+fingerName;
-  return "~/mpl/"+topicName+"/"+topicName+"_contact_sensor";
-}
-
-//////////////////////////////////////////////////
-void HaptixGUIPlugin::OnFingerContact(ConstContactsPtr &msg){
   // Parse out the finger name
-  // Format is: mpl::r<finger name>::r<finger name>_collision
-  // start at index 6
-  if (msg->contact_size() > 0)
+  if (_msg->contact_size() > 0)
   {
-    std::string collisionName1 = parseString(msg->contact(0).collision1());
-    std::string collisionName2 = parseString(msg->contact(0).collision2());
+    std::string collisionName1 = _msg->contact(0).collision1();
+    std::string collisionName2 = _msg->contact(0).collision2();
+
+    // Calculate the force
+    msgs::Vector3d forceVector = _msg->contact(0).wrench(0).
+      body_1_wrench().force();
+    double force = math::Vector3(forceVector.x(), forceVector.y(),
+        forceVector.z()).GetLength();
+
     if (this->contactPoints.find(collisionName1) != this->contactPoints.end())
     {
-      this->msgQueue.push(ContactsWrapper(msg, collisionName1));
+      // Draw the new force value
+      this->SetContactForce(QString::fromStdString(collisionName1), force);
     }
-    else if (this->contactPoints.find(collisionName1) !=
+    else if (this->contactPoints.find(collisionName2) !=
              this->contactPoints.end())
     {
-      this->msgQueue.push(ContactsWrapper(msg, collisionName2));
+      // Draw the new force value
+      this->SetContactForce(QString::fromStdString(collisionName2), force);
     }
   }
 }
 
-//////////////////////////////////////////////////
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
+{
+  double colorArray[3];
+  float forceRange = this->forceMax - this->forceMin;
+
+  for (int i = 0; i < 3; ++i)
+  {
+    float colorRange = this->colorMax[i] - this->colorMin[i];
+    colorArray[i] = colorRange/forceRange * _value + this->colorMin[i];
+
+    if (colorArray[i] > this->colorMin[i])
+      colorArray[i] = this->colorMin[i];
+    else if (colorArray[i] < this->colorMax[i])
+      colorArray[i] = this->colorMax[i];
+  }
+
+  QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
+
+  this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
+}
+
+/////////////////////////////////////////////////
 void HaptixGUIPlugin::PreRender()
 {
-  // Draw the contacts as empty gray circles
-  for(std::map<std::string, math::Vector2d>::iterator it =
-        this->contactPoints.begin(); it != this->contactPoints.end(); it++)
+  // Fade out old force values
+  for (std::map<std::string, QGraphicsEllipseItem*>::iterator iter =
+      this->contactGraphicsItems.begin();
+      iter != this->contactGraphicsItems.end(); ++iter)
   {
-    std::string fingerName = it->first;
+    QBrush brush = iter->second->brush();
+    QColor color = brush.color();
+    color.setAlpha(std::max(0, color.alpha()-5));
+    brush.setColor(color);
 
-    this->contactGraphicsItems[fingerName]->
-                                    setBrush(QBrush(QColor(255, 255, 255, 1)));
-    this->contactGraphicsItems[fingerName]->
-                                    setPen(QPen(QColor(153, 153, 153, 255)));
-  }
-
-  //Clear queued messages and draw them
-  while(!this->msgQueue.empty())
-  {
-    ContactsWrapper wrapper = this->msgQueue.front();
-    ConstContactsPtr msg = wrapper.msg;
-    std::string fingerName = wrapper.name;
-    this->msgQueue.pop();
-    if(msg->contact_size() > 0){
-      // Calculate contact force
-      msgs::Vector3d forceVector = msg->contact(0).wrench(0).
-                                                  body_1_wrench().force();
-      float f = math::Vector3(forceVector.x(), forceVector.y(),
-                                              forceVector.z()).GetLength();
-      float forceRange = this->forceMax - this->forceMin;
-
-      float colorArray[3];
-      for(int i = 0; i < 3; i++)
-      {
-        float colorRange = this->colorMax[i] - this->colorMin[i];
-        colorArray[i] = colorRange/forceRange*f + this->colorMin[i];
-        if(colorArray[i] > this->colorMin[i])
-        {
-          colorArray[i] = this->colorMin[i];
-        }
-        else if (colorArray[i] < this->colorMax[i])
-
-          colorArray[i] = this->colorMax[i];
-        }
-
-      QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
-
-      this->contactGraphicsItems[fingerName]->setBrush(color);
-      this->contactGraphicsItems[fingerName]->setPen(QPen(QColor(0, 0, 0, 0)));
-    }
+    iter->second->setBrush(brush);
   }
 }
 
-//////////////////////////////////////////////////
-// TODO: This function is inefficient. Think of ways to refactor--maybe a more
-// efficient structure for storage/search.
-bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent _event)
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 {
-  static bool hxInitialized = false;
-  int cmd_motor_index = -1;
-  // Set up hx objects
-  if (!hxInitialized)
+  // Populate the taskTab by parsing out SDF
+  if (!_elem->HasElement("task_group"))
+    return;
+
+  int taskIndex = 0;
+  int groupIndex = 0;
+
+  // Create a button group. This group will hold all the task buttons.
+  QButtonGroup *buttonGroup = new QButtonGroup();
+
+  sdf::ElementPtr taskGroup = _elem->GetElement("task_group");
+
+  // Process each task group, as specified in SDF
+  while (taskGroup)
   {
-    if (hx_getdeviceinfo(hxGAZEBO, &handDeviceInfo) != hxOK)
+    std::string taskGroupName = taskGroup->Get<std::string>("name");
+    sdf::ElementPtr task = taskGroup->GetElement("task");
+
+    // Create the button layout and frame
+    QFrame *groupFrame = new QFrame();
+    QGridLayout *groupLayout = new QGridLayout();
+    groupFrame->setLayout(groupLayout);
+
+    int count = 0;
+
+    // Process each task in the group
+    while (task)
     {
-      std::cout << "hx_getdeviceinfo(): Request error. Cannot control hand."
-                << std::endl;
-      return false;
-    }
-    memset(&this->handCommand, 0, sizeof(this->handCommand));
-    if(hx_update(hxGAZEBO, &this->handCommand, &this->handSensor) != hxOK )
-    {
-      std::cout << "hx_update(): Request error.\n" << std::endl;
-      return false;
-    }
-    
-    hxInitialized = true;
-  }
+      // Read task information
+      std::string id = task->Get<std::string>("id");
+      std::string name = task->Get<std::string>("name");
+      std::string instructions = task->Get<std::string>("instructions");
+      std::string iconPath = common::SystemPaths::Instance()->FindFileURI(
+          task->Get<std::string>("icon"));
+      bool enabled = task->Get<bool>("enabled");
 
-  std::string text = _event.text;
-  char key = text[0];
-  std::cout << "key: " << key << std::endl;
-  std::cout << "nmotor: " << this->handDeviceInfo.nmotor << std::endl;
+      // Create a new button for the task
+      TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
+      taskButton->SetInstructions(instructions);
+      taskButton->setEnabled(enabled);
 
-  hxCommand cmd;
-  memset(&cmd, 0, sizeof(cmd));
-  for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
-  {
-    cmd.ref_pos[i] = this->handCommand.ref_pos[i];
-    if (this->lastGraspCommandValid)
-      cmd.ref_pos[i] += this->lastGraspCommand.ref_pos(i);
-  }
-  
-  // if key is in armCommands
-  if(this->armCommands.find(key) != this->armCommands.end())
-  {
-    int index = this->armCommands[key].index;
-    if(index >= 6){
-      return false;
-    }
-    float inc = this->armCommands[key].increment;
+      // Listen to the task button press signal
+      connect(taskButton, SIGNAL(SendTask(const int)),
+         this, SLOT(OnTaskSent(const int)));
 
-    float pose_inc_args[6] = {0, 0, 0, 0, 0, 0};
-    pose_inc_args[index] = inc;
-    math::Pose increment(gazebo::math::Vector3(pose_inc_args[0],
-                           pose_inc_args[1], pose_inc_args[2]),
-                         gazebo::math::Quaternion(pose_inc_args[3],
-                           pose_inc_args[4], pose_inc_args[5]));
+      int col = count % 4;
+      int row = count / 4;
 
-    // Disable changing of keyboard control axes with user camera motion,
-    // because I find it very non-intuitive.
-    /*
-    math::Quaternion cameraRot = gui::get_active_camera()->GetWorldRotation();
-    if (index < 3)
-    {
+      // Add the button to the visual layout
+      groupLayout->addWidget(taskButton, row, col);
 
-      increment.pos = cameraRot.RotateVector(increment.pos);
-    }
-    else
-    {
-      increment.rot = cameraRot.RotateVector(increment.rot.GetAsEuler());
-    }
-    */
+      // Add the button to the button group (ensurce exclusive buttons)
+      buttonGroup->addButton(taskButton);
 
-    msgs::Pose msg(msgs::Convert(increment));
-
-    ignNode->Publish("/haptix/arm_pose_inc", msg);
-    return true;
-  }
-  std::string curr_grasp_name;
-  // if key is in handCommands
-  if ((this->handCommands.find(key) != this->handCommands.end()) &&
-      (!this->graspMode || this->handCommands[key].index < 3))
-  {
-    std::cout << "Arm key" << std::endl;
-    int motor_index = this->handCommands[key].index;
-    if(motor_index >= handDeviceInfo.nmotor)
-    {
-      return false;
-    }
-
-    float inc = this->handCommands[key].increment;
-    //handCommand.ref_pos[motor_index] += inc;
-    std::cout << "Incrementing position of motor " << motor_index << " from " << handSensor.motor_pos[motor_index] << " by " << inc << std::endl;
-    this->handCommand.ref_pos[motor_index] += inc;
-    cmd.ref_pos[motor_index] += inc;
-  }
-  else if (this->graspCommands.find(key) != this->graspCommands.end())
-  {
-    std::cout << "Grasp key" << std::endl;
-    std::string name = this->graspCommands[key];
-
-    // Increment/decrement slider value corresponding to key
-    grasps[name].SliderChanged(key, this->graspIncrement);
-    curr_grasp_name = name;
-  }
-  else if (key == '~')
-  {
-    if (this->graspMode)
-    {
-      // Send an empty grasp request, to switch modes in the control plugin
-      haptix::comm::msgs::hxGrasp req;
-      haptix::comm::msgs::hxCommand rep;
-      bool result;
-      // this->ignNode was created in the "haptix" namespace
-      if(!this->ignNode->Request("gazebo/Grasp", req, 1000, rep, result) ||
-        !result)
+      // Add an icon, if specified
+      if (!iconPath.empty())
       {
-        std::cerr << "Failed to call gazebo/Grasp service" << std::endl;
+        QPixmap iconPixmap(QString::fromStdString(iconPath));
+
+        taskButton->setIcon(QIcon(iconPixmap));
+        taskButton->setIconSize(QSize(60, 60));
+        taskButton->setMinimumSize(80, 80);
+        taskButton->setMaximumSize(100, 80);
       }
+
+      this->taskList[taskIndex] = taskButton;
+
+      task = task->GetNextElement();
+
+      count++;
+      taskIndex++;
     }
-    this->graspMode = !this->graspMode;
-    std::cout << "Changed graspMode to: " << this->graspMode << std::endl;
-    return false;
-  }
 
-  //hxSensor updateSensor;
-  
-  // Sensor filtering
-  /*float p = 0.95;
-  for (int i = 0; i < this->handDeviceInfo.nmotor; i++)
-  {
-    this->handSensor.motor_pos[i] = (1-p)*updateSensor.motor_pos[i] +
-				    p * handSensor.motor_pos[i];
+    this->taskTab->addTab(groupFrame, QString::fromStdString(taskGroupName));
+    taskGroup = taskGroup->GetNextElement("task_group");
+    groupIndex++;
   }
-
-  if (cmd_motor_index >= 0)
-  {
-    // efferent copy
-    this->handSensor.motor_pos[cmd_motor_index] = cmd.ref_pos[cmd_motor_index];
-  }*/
-
-  // If the user commanded a grasp, send that, too (it's out of band from the
-  // haptix_comm call).
-  if (curr_grasp_name.size() != 0)
-  {
-    haptix::comm::msgs::hxGrasp req;
-    // For now, we'll just send the most recently commanded grasp, to avoid
-    // confusion from non-intuitive superposition.
-    haptix::comm::msgs::hxGrasp::hxGraspValue* gv = req.add_grasps();
-    gv->set_grasp_name(curr_grasp_name);
-    gv->set_grasp_value(this->grasps[curr_grasp_name].sliderValue);
-    haptix::comm::msgs::hxCommand rep;
-    bool result;
-    // this->ignNode was created in the "haptix" namespace
-    if(!this->ignNode->Request("gazebo/Grasp", req, 1000, rep, result) ||
-      !result)
-    {
-      std::cerr << "Failed to call gazebo/Grasp service" << std::endl;
-    }
-    else
-    {
-      std::cout << "Received reply: " << std::endl;
-      for(int i = 0; i < rep.ref_pos_size(); i++)
-        std::cout << rep.ref_pos(i) << " ";
-      std::cout << std::endl;
-      this->lastGraspCommand = rep;
-      this->lastGraspCommandValid = true;
-      for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
-      {
-        cmd.ref_pos[i] = this->lastGraspCommand.ref_pos(i);
-        this->handCommand.ref_pos[i] = 0.0;
-      }
-    }
-  }
-
-  std::cout << "Sending: " << std::endl;
-  for(int i = 0; i < this->handDeviceInfo.nmotor; i++)
-    std::cout << cmd.ref_pos[i] << " ";
-  std::cout << std::endl;
-  if (hx_update(hxGAZEBO, &cmd, &handSensor) != hxOK)
-  {
-    std::cerr << "hx_update(): Request error." << std::endl;
-  }
-  return true;
 }
 
-//////////////////////////////////////////////////
-void HaptixGUIPlugin::PublishTaskMessage(const std::string& task_name)
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnTaskSent(const int _id)
 {
-  msgs::GzString msg;
-  msg.set_data(task_name);
-  this->taskPub->Publish(msg);
+  this->startStopButton->setDisabled(false);
+  this->startStopButton->setChecked(false);
 
+  // reset the clock when a new task is selected
+  this->PublishTimerMessage("reset");
+
+  // Show the instructions to the user
+  this->instructionsView->setDocument(this->taskList[_id]->Instructions());
+  this->currentTaskId = _id;
+  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 }
 
-//////////////////////////////////////////////////
-void HaptixGUIPlugin::OnResetClicked()
-{
-  // Signal to the ArrangePlugin to set up the current task
-  this->digitalClock->StopClock();
-  PublishTaskMessage(this->taskList[currentTaskIndex]);
-}
-
-//////////////////////////////////////////////////
+////////////////////////////////////////////////
 void HaptixGUIPlugin::OnNextClicked()
 {
-  this->currentTaskIndex = (this->currentTaskIndex+1) % this->taskList.size();
-  PublishTaskMessage(this->taskList[this->currentTaskIndex]);
+  this->startStopButton->setDisabled(false);
+  this->startStopButton->setChecked(false);
+
+  // reset the clock when a new task is selected
+  this->PublishTimerMessage("reset");
+
+  do
+  {
+    this->currentTaskId = (this->currentTaskId+1) % this->taskList.size();
+  } while (!this->taskList[this->currentTaskId]->isEnabled());
+
   this->instructionsView->setDocument(
-                               this->instructionsList[this->currentTaskIndex]);
+      this->taskList[this->currentTaskId]->Instructions());
+  this->taskList[this->currentTaskId]->setChecked(true);
+  this->taskTab->setCurrentIndex(this->taskList[this->currentTaskId]->Group());
+
+  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 }
 
-//////////////////////////////////////////////////
-void HaptixGUIPlugin::OnStartStopClicked(){
-  if(isTestRunning){
-    startStopButton->setStyleSheet(startButtonStyle);
-    startStopButton->setText(QString("Start Test"));
-    // Stop timer
-  } else {
-    startStopButton->setStyleSheet(stopButtonStyle);
-    startStopButton->setText(QString("End Test"));
-    // Start timer
-  }
-  isTestRunning = !isTestRunning;
-}
-
-//////////////////////////////////////////////////
-void HaptixGUIPlugin::OnTaskSent(const std::string& id,
-                               QTextDocument* instructions, const int index)
+////////////////////////////////////////////////
+void HaptixGUIPlugin::PublishTimerMessage(const std::string &_msg) const
 {
-  // Show the instructions to the user
-  this->instructionsView->setDocument(instructions);
-  PublishTaskMessage(id);
-  this->currentTaskIndex = index;
+  msgs::GzString msg;
+  msg.set_data(_msg);
+  this->timerPub->Publish(msg);
+}
+
+////////////////////////////////////////////////
+void HaptixGUIPlugin::PublishTaskMessage(const std::string &_taskId) const
+{
+  msgs::GzString msg;
+  msg.set_data(_taskId);
+  this->taskPub->Publish(msg);
+}
+
+////////////////////////////////////////////////
+void HaptixGUIPlugin::OnStartStop(bool _checked)
+{
+  if (_checked)
+  {
+    this->startStopButton->setText(tr("Stop"));
+    this->startStopButton->setStyleSheet(this->stopStyle.c_str());
+    this->PublishTimerMessage("start");
+  }
+  else
+  {
+    this->startStopButton->setText(tr("Start"));
+    this->startStopButton->setStyleSheet(this->startStyle.c_str());
+    this->PublishTimerMessage("stop");
+  }
+}
+
+////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetClicked()
+{
+  this->startStopButton->setChecked(false);
+
+  // Signal to the ArrangePlugin to set up the current task
+  this->PublishTimerMessage("reset");
+  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
+}
+
+/////////////////////////////////////////////////
+bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent /*_event*/)
+{
+  return true;
 }

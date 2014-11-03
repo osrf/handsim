@@ -1,4 +1,5 @@
 set (files 
+      hand.svg
       grasp_1.jpg
       grasp_3.jpg
       grasp_5.jpg
