@@ -181,10 +181,24 @@ namespace gazebo
     private: gazebo::transport::PublisherPtr polhemusJoyPub;
     /// \brief gazebo gz transport message
     private: gazebo::msgs::Pose joyMsg;
-    /// \brief target UserCamera pose in world frame
-    private: math::Pose targetCameraPose;
     /// \brief initial UserCamera pose in world frame, not used.
     private: math::Pose initialCameraPose;
+
+    /**********************************************/
+    /*                                            */
+    /*   get user camera pose                     */
+    /*                                            */
+    /**********************************************/
+    /// \brief subscribe to user camera pose publisher
+    private: gazebo::transport::SubscriberPtr userCameraPoseSub;
+    /// \brief callback for subscriber to the user camera pose publisher
+    private: void OnUserCameraPose(ConstPosePtr &_msg);
+    /// \brief store camera pose
+    private: math::Pose userCameraPose;
+    /// \brief have we received at least one camera pose?
+    private: bool userCameraPoseValid;
+    /// \brief Mutex to protect access to userCameraPose
+    private: boost::mutex userCameraPoseMessageMutex;
 
     /**********************************************/
     /*                                            */
@@ -219,6 +233,10 @@ namespace gazebo
     private: physics::ModelPtr polhemusSourceModel;
     /// \brief Pose of the polhemus source in the world frame.
     private: math::Pose sourceWorldPose;
+    /// \brief used to offset polhemus source for arm sensor during calibration
+    private: math::Pose sourceWorldPoseArmOffset;
+    /// \brief used to offset polhemus source for head sensor during calibration
+    private: math::Pose sourceWorldPoseHeadOffset;
     /// \brief Transform from polhemus sensor orientation to base link frame.
     private: math::Pose baseLinkToArmSensor;
     /// \brief Transform from polhemus sensor orientation to camera frame

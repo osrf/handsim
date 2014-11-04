@@ -23,7 +23,7 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->pausePolhemus = false;
+  this->pausePolhemus = true;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -62,12 +62,19 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->gazeboNode->Init(this->world->GetName());
   this->polhemusJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
+
   this->keySub =
     this->gazeboNode->Subscribe("~/qtKeyEvent",
       &HaptixControlPlugin::OnKey, this);
+
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
       &HaptixControlPlugin::OnJoy, this);
+
+  this->userCameraPoseValid = false;
+  this->userCameraPoseSub =
+    this->gazeboNode->Subscribe("~/user_camera/pose",
+      &HaptixControlPlugin::OnUserCameraPose, this);
 
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
@@ -91,7 +98,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->targetBaseLinkPose = this->initialBaseLinkPose;
   // param for spacenav control, this is the point in arm base link
   // frame for which we want to control with the spacenav
-  this->baseLinktoSpacenavPose = math::Pose(0, -0.8, 0, 0, 0, 0);
+  this->baseLinktoSpacenavPose = math::Pose(0, -0.4, 0, 0, 0, 0);
   this->targetSpacenavPose = this->baseLinktoSpacenavPose
                            + this->initialBaseLinkPose;
   // get polhemus_source model location
@@ -108,15 +115,16 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->sourceWorldPose = this->polhemusSourceModel->GetWorldPose();
   }
   gzdbg << "Polhemus Source Pose [" << this->sourceWorldPose << "]\n";
+  this->sourceWorldPoseArmOffset = math::Pose();
+  this->sourceWorldPoseHeadOffset = math::Pose();
   // transform from polhemus sensor orientation to base link frame
-  // -0.6 meters towards wrist from elbow
-  // -0.7 rad pitch up
+  // -0.3 meters towards wrist from elbow
   // 90 degrees yaw to the left
-  this->baseLinkToArmSensor = math::Pose(0, -0.6, 0, 0, -0.7, -0.5*M_PI);
+  this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
   // transform from polhemus sensor orientation to camera frame
   // 10cm to the right of the sensor is roughly where the eyes are
-  // -0.3 rad pitch up: sensor is usually tilted upwards when worn near wrist
-  this->cameraToHeadSensor = math::Pose(0, 0.1, 0, 0.0, -0.3, 0.0);
+  // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
+  this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
@@ -497,6 +505,8 @@ void HaptixControlPlugin::LoadHandControl()
 void HaptixControlPlugin::Reset()
 {
   this->targetBaseLinkPose = this->initialBaseLinkPose;
+  this->targetSpacenavPose = this->baseLinktoSpacenavPose
+                           + this->initialBaseLinkPose;
 
   std::vector<SimRobotCommand>::iterator iter;
   for (iter = this->simRobotCommands.begin();
@@ -582,6 +592,10 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
 // Update targetBaseLinkPose using Polhemus
 void HaptixControlPlugin::UpdatePolhemus()
 {
+  // Wait for the user camera pose to be valid, to avoid possible race
+  // condition on startup.
+  while (!this->userCameraPoseValid)
+    usleep(1000);
   // Get current pose from Polhemus
   polhemus_pose_t poses[8];
   while (true)
@@ -595,17 +609,18 @@ void HaptixControlPlugin::UpdatePolhemus()
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
         if (this->pausePolhemus)
         {
-          // calibration mode, update this->baseLinkToArmSensor
-          // withouthis->world->IsPaused())t changing targetBaseLinkPose
+          // calibration mode, update offset
           math::Pose baseLinkPose = this->baseLink->GetWorldPose();
-          this->baseLinkToArmSensor =
-            (armSensorPose + this->sourceWorldPose) - baseLinkPose;
+          this->sourceWorldPoseArmOffset =
+            (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
+             baseLinkPose) - this->sourceWorldPose;
         }
         else
         {
           boost::mutex::scoped_lock lock(this->baseLinkMutex);
           this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
-            + armSensorPose + this->sourceWorldPose;
+            + armSensorPose
+            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
         }
       }
 
@@ -615,18 +630,19 @@ void HaptixControlPlugin::UpdatePolhemus()
         math::Pose headSensorPose = this->convertPolhemusToPose(poses[headId]);
         if (this->pausePolhemus)
         {
-          // calibration mode, update this->baseLinkToArmSensor
-          // without changing targetBaseLinkPose
-          math::Pose userCameraPose = this->targetCameraPose;
-          this->cameraToHeadSensor =
-            (headSensorPose + this->sourceWorldPose) - userCameraPose;
+          boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+          // calibration mode, update offset
+          this->sourceWorldPoseHeadOffset =
+            (headSensorPose.GetInverse() + this->cameraToHeadSensor +
+             this->userCameraPose) - this->sourceWorldPose;
         }
         else
         {
-          this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
-            + headSensorPose + this->sourceWorldPose;
+          math::Pose targetCameraPose = this->cameraToHeadSensor.GetInverse()
+            + headSensorPose
+            + (this->sourceWorldPoseHeadOffset + this->sourceWorldPose);
 
-          gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
+          gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
           this->polhemusJoyPub->Publish(this->joyMsg);
         }
       }
@@ -938,8 +954,8 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 
   // Read the request parameters.
   // Debug output.
-  std::cout << "Received a new command:" << std::endl;
-  /*for (unsigned int i = 0; i < this->joints.size(); ++i)
+  /*std::cout << "Received a new command:" << std::endl;
+  for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
     std::cout << "\tMotor " << i << ":" << std::endl;
     std::cout << "\t\t" << _req.ref_pos(i) << std::endl;
@@ -955,6 +971,14 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   _rep = this->robotState;
 
   _result = true;
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
+{
+  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+  this->userCameraPose = math::Pose(msgs::Convert(*_msg));
+  this->userCameraPoseValid = true;
 }
 
 //////////////////////////////////////////////////
@@ -1026,8 +1050,9 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
   // if (strcmp(&key, &this->lastKeyPressed) != 0)
   if (_msg->dbl_data() > 0.0)
   {
-    // pressed
-    if (strcmp(_msg->data().c_str(), "p") == 0)
+    // pressed "p" or spacebar?
+    if (strcmp(_msg->data().c_str(), "p") == 0 ||
+        strcmp(_msg->data().c_str(), " ") == 0)
       this->pausePolhemus = !this->pausePolhemus;
     gzdbg << " pausing polhemus [" << this->pausePolhemus << "]\n";
   }
