@@ -54,20 +54,20 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->setPalette(QPalette(QColor(255, 255, 255, 0)));
 
   // Create the hand
-    // Create a QGraphicsView to draw the finger force contacts
-    this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
-    QGraphicsView *handView = new QGraphicsView(this->handScene);
-    handView->setStyleSheet("border: 0px");
-    handView->setSizePolicy(QSizePolicy::Expanding,
-                            QSizePolicy::MinimumExpanding);
+  // Create a QGraphicsView to draw the finger force contacts
+  this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
+  QGraphicsView *handView = new QGraphicsView(this->handScene);
+  handView->setStyleSheet("border: 0px");
+  handView->setSizePolicy(QSizePolicy::Expanding,
+                          QSizePolicy::MinimumExpanding);
 
-    // Load the hand image
-    QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
-    QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
-    handItem->setPos(-20, -73);
+  // Load the hand image
+  QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
+  QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
+  handItem->setPos(-20, -73);
 
-    // Draw the hand on the canvas
-    this->handScene->addItem(handItem);
+  // Draw the hand on the canvas
+  this->handScene->addItem(handItem);
 
   // Create the task layout
   this->taskTab = new QTabWidget();
@@ -122,7 +122,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   tabFrameLayout->addWidget(taskTab);
   tabFrameLayout->addWidget(this->instructionsView);
-
 
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
   QPushButton *resetButton = new QPushButton();
@@ -289,7 +288,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         // Read the contact data from SDF
         std::string contactName = contact->Get<std::string>("name");
         gazebo::math::Vector2d contactPos =
-	  contact->Get<gazebo::math::Vector2d>("pos");
+          contact->Get<gazebo::math::Vector2d>("pos");
         std::string topic = contact->Get<std::string>("topic");
 
         // Create a subscriber that receive contact data
@@ -373,16 +372,16 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
           motor->HasAttribute("increment"))
       {
         std::pair<unsigned int, float> mapping;
-	mapping.first = motor->Get<int>("index");
-	mapping.second = motor->Get<float>("increment");
-	this->motorKeys[motor->Get<std::string>("inc_key")[0]] = mapping;
-	mapping.second = -mapping.second;
-	std::string dec_key = motor->Get<std::string>("dec_key");
-	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
-	// work either).
+        mapping.first = motor->Get<int>("index");
+        mapping.second = motor->Get<float>("increment");
+        this->motorKeys[motor->Get<std::string>("inc_key")[0]] = mapping;
+        mapping.second = -mapping.second;
+        std::string dec_key = motor->Get<std::string>("dec_key");
+        // Special case to work around trouble with parsing "&" ("&amp;" doesn't
+        // work either).
         if (dec_key == "amp")
-	  dec_key = "&";
-	this->motorKeys[dec_key[0]] = mapping;
+          dec_key = "&";
+        this->motorKeys[dec_key[0]] = mapping;
       }
       else
       {
@@ -406,16 +405,16 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
           arm->HasAttribute("increment"))
       {
         std::pair<unsigned int, float> mapping;
-	mapping.first = arm->Get<int>("index");
-	mapping.second = arm->Get<float>("increment");
-	this->armKeys[arm->Get<std::string>("inc_key")[0]] = mapping;
-	mapping.second = -mapping.second;
-	std::string dec_key = arm->Get<std::string>("dec_key");
-	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
-	// work either).
+        mapping.first = arm->Get<int>("index");
+        mapping.second = arm->Get<float>("increment");
+        this->armKeys[arm->Get<std::string>("inc_key")[0]] = mapping;
+        mapping.second = -mapping.second;
+        std::string dec_key = arm->Get<std::string>("dec_key");
+        // Special case to work around trouble with parsing "&" ("&amp;" doesn't
+        // work either).
         if (dec_key == "amp")
-	  dec_key = "&";
-	this->armKeys[dec_key[0]] = mapping;
+          dec_key = "&";
+        this->armKeys[dec_key[0]] = mapping;
       }
       else
       {
@@ -439,16 +438,16 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
           grasp->HasAttribute("increment"))
       {
         std::pair<std::string, float> mapping;
-	mapping.first = grasp->Get<std::string>("name");
-	mapping.second = grasp->Get<float>("increment");
-	this->graspKeys[grasp->Get<std::string>("inc_key")[0]] = mapping;
-	mapping.second = -mapping.second;
-	std::string dec_key = grasp->Get<std::string>("dec_key");
-	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
-	// work either).
+        mapping.first = grasp->Get<std::string>("name");
+        mapping.second = grasp->Get<float>("increment");
+        this->graspKeys[grasp->Get<std::string>("inc_key")[0]] = mapping;
+        mapping.second = -mapping.second;
+        std::string dec_key = grasp->Get<std::string>("dec_key");
+        // Special case to work around trouble with parsing "&" ("&amp;" doesn't
+        // work either).
         if (dec_key == "amp")
-	  dec_key = "&";
-	this->graspKeys[dec_key[0]] = mapping;
+          dec_key = "&";
+        this->graspKeys[dec_key[0]] = mapping;
       }
       else
       {
@@ -772,16 +771,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
                                    pose_inc_args[1], pose_inc_args[2]),
                                  gazebo::math::Quaternion(pose_inc_args[3],
                                    pose_inc_args[4], pose_inc_args[5]));
-    gazebo::msgs::Pose msg;
-    gazebo::msgs::Vector3d* vec_msg = msg.mutable_position();
-    vec_msg->set_x(increment.pos.x);
-    vec_msg->set_y(increment.pos.y);
-    vec_msg->set_z(increment.pos.z);
-    gazebo::msgs::Quaternion* quat_msg = msg.mutable_orientation();
-    quat_msg->set_x(increment.rot.x);
-    quat_msg->set_y(increment.rot.y);
-    quat_msg->set_z(increment.rot.z);
-    quat_msg->set_w(increment.rot.w);
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
 
     //std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
     this->ignNode.Publish("haptix/arm_pose_inc", msg);
@@ -819,9 +809,9 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     haptix::comm::msgs::hxCommand resp;
     if(!this->ignNode.Request("haptix/gazebo/Grasp",
                               grasp,
-			      1000,
-			      resp,
-			      result) || !result)
+                              1000,
+                              resp,
+                              result) || !result)
     {
       gzerr << "Failed to call gazebo/Grasp service" << std::endl;
       return false;
