@@ -735,11 +735,11 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       // gzdbg << " " << n
       //       << " : " << this->simRobotCommands[n].ref_pos << "\n";
       this->simRobotCommands[n].ref_pos =
-        (this->robotCommand.ref_pos(i) +
+        (this->simRobotCommands[m].ref_pos +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
       this->simRobotCommands[n].ref_vel =
-        (this->robotCommand.ref_vel(i) +
+        (this->simRobotCommands[m].ref_vel +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
 

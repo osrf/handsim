@@ -25,6 +25,11 @@
 #include <gazebo/msgs/msgs.hh>
 #include <gazebo/transport/transport.hh>
 
+#include <ignition/transport.hh>
+#include <haptix/comm/haptix.h>
+#include <haptix/comm/msg/hxCommand.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
+
 namespace haptix_gazebo_plugins
 {
   // Forward declare task button
@@ -156,6 +161,35 @@ namespace haptix_gazebo_plugins
     /// \brief QT style for the start setting of the start/stop button
     private: std::string stopStyle;
 
+    /// \brief A place to store key-to-motor mappings
+    private: std::map<char, std::pair<unsigned int, float> > motorKeys;
+
+    /// \brief A place to store key-to-arm mappings
+    private: std::map<char, std::pair<unsigned int, float> > armKeys;
+
+    /// \brief A place to store key-to-grasp mappings
+    private: std::map<char, std::pair<std::string, float> > graspKeys;
+
+    /// \brief An ignition node that we'll use for sending messages
+    private: ignition::transport::Node ignNode;
+
+    /// \brief Are we in grasp mode, or direct motor control mode?
+    private: bool graspMode;
+
+    /// \brief The last grasp request that we sent
+    private: haptix::comm::msgs::hxGrasp lastGraspRequest;
+
+    /// \brief The last motor command that we sent
+    private: ::hxCommand lastMotorCommand;
+
+    /// \brief The device info returned by the other side
+    private: ::hxDeviceInfo deviceInfo;
+
+    /// \brief Have we initialized our information about the device?
+    private: bool hxInitialized;
+
+    /// \brief The number of initial degrees of freedom that are in the wrist
+    private: unsigned int numWristMotors;
   };
 }
 #endif

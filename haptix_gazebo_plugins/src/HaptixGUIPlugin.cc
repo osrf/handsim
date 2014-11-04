@@ -24,7 +24,6 @@
 #include "haptix_gazebo_plugins/HaptixGUIPlugin.hh"
 
 using namespace haptix_gazebo_plugins;
-using namespace gazebo;
 
 // Register this plugin with the simulator
 GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
@@ -34,8 +33,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
   // Read parameters
-  std::string handImgFilename = common::SystemPaths::Instance()->FindFileURI
-                                  ("file://config/arat_icons/hand.svg");
+  std::string handImgFilename =
+    gazebo::common::SystemPaths::Instance()->FindFileURI(
+      "file://config/arat_icons/hand.svg");
 
   // Parameters for sensor contact visualization
   // Set the frame background and foreground colors
@@ -224,17 +224,20 @@ HaptixGUIPlugin::HaptixGUIPlugin()
           this, SLOT(OnSetContactForce(QString, double)), Qt::QueuedConnection);
 
   // Create a node for transportation
-  this->node = transport::NodePtr(new transport::Node());
+  this->node = gazebo::transport::NodePtr(new gazebo::transport::Node());
   this->node->Init();
 
   // Create the publisher that communicates with the arrange plugin
-  this->taskPub = this->node->Advertise<msgs::GzString>("~/arrange");
+  this->taskPub = this->node->Advertise<gazebo::msgs::GzString>("~/arrange");
 
   // Connect to the PreRender Gazebo signal
-  this->connections.push_back(event::Events::ConnectPreRender(
+  this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
 
   this->currentTaskId = 0;
+
+  // Advertise the Ignition topic on which we'll publish arm pose changes
+  this->ignNode.Advertise("haptix/arm_pose_inc");
 }
 
 /////////////////////////////////////////////////
@@ -245,21 +248,22 @@ HaptixGUIPlugin::~HaptixGUIPlugin()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 {
-  if (gui::get_active_camera())
-    gui::get_active_camera()->SetHFOV(GZ_DTOR(120));
+  if (gazebo::gui::get_active_camera())
+    gazebo::gui::get_active_camera()->SetHFOV(GZ_DTOR(120));
 
   // Hide the scene tree.
-  gui::Events::leftPaneVisibility(false);
+  gazebo::gui::Events::leftPaneVisibility(false);
 
   // Create the publisher that controls the timer
   if (_elem->HasElement("timer_topic"))
   {
-    this->timerPub = this->node->Advertise<msgs::GzString>(
+    this->timerPub = this->node->Advertise<gazebo::msgs::GzString>(
         _elem->Get<std::string>("timer_topic"));
   }
   else
   {
-    this->timerPub = this->node->Advertise<msgs::GzString>("~/timer_control");
+    this->timerPub =
+      this->node->Advertise<gazebo::msgs::GzString>("~/timer_control");
   }
 
   this->circleSize = _elem->Get<int>("circle_size");
@@ -267,8 +271,8 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->forceMin = _elem->Get<double>("force_min");
   this->forceMax = _elem->Get<double>("force_max");
 
-  this->colorMin = _elem->Get<common::Color>("color_min");
-  this->colorMax = _elem->Get<common::Color>("color_max");
+  this->colorMin = _elem->Get<gazebo::common::Color>("color_min");
+  this->colorMax = _elem->Get<gazebo::common::Color>("color_max");
 
   this->handSide = _elem->Get<std::string>("hand_side");
 
@@ -284,11 +288,12 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       {
         // Read the contact data from SDF
         std::string contactName = contact->Get<std::string>("name");
-        math::Vector2d contactPos = contact->Get<math::Vector2d>("pos");
+        gazebo::math::Vector2d contactPos =
+	  contact->Get<gazebo::math::Vector2d>("pos");
         std::string topic = contact->Get<std::string>("topic");
 
         // Create a subscriber that receive contact data
-        transport::SubscriberPtr sub = this->node->Subscribe(topic,
+        gazebo::transport::SubscriberPtr sub = this->node->Subscribe(topic,
             &HaptixGUIPlugin::OnFingerContact, this);
         this->contactSubscribers.push_back(sub);
 
@@ -354,10 +359,113 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
     this->handScene->addItem(newtonText);
   }
 
+  // Get motor key commands
+  if (_elem->HasElement("motor_keys"))
+  {
+    sdf::ElementPtr motor = _elem->GetElement("motor_keys");
+    motor = motor->GetElement("motor");
+
+    while (motor)
+    {
+      if (motor->HasAttribute("inc_key") &&
+          motor->HasAttribute("dec_key") &&
+          motor->HasAttribute("index") &&
+          motor->HasAttribute("increment"))
+      {
+        std::pair<unsigned int, float> mapping;
+	mapping.first = motor->Get<int>("index");
+	mapping.second = motor->Get<float>("increment");
+	this->motorKeys[motor->Get<std::string>("inc_key")[0]] = mapping;
+	mapping.second = -mapping.second;
+	std::string dec_key = motor->Get<std::string>("dec_key");
+	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
+	// work either).
+        if (dec_key == "amp")
+	  dec_key = "&";
+	this->motorKeys[dec_key[0]] = mapping;
+      }
+      else
+      {
+        gzwarn << "Skipping malformed motor_key/motor element" << std::endl;
+      }
+      motor = motor->GetNextElement();
+    }
+  }
+
+  // Get arm key commands
+  if (_elem->HasElement("arm_keys"))
+  {
+    sdf::ElementPtr arm = _elem->GetElement("arm_keys");
+    arm = arm->GetElement("arm");
+
+    while (arm)
+    {
+      if (arm->HasAttribute("inc_key") &&
+          arm->HasAttribute("dec_key") &&
+          arm->HasAttribute("index") &&
+          arm->HasAttribute("increment"))
+      {
+        std::pair<unsigned int, float> mapping;
+	mapping.first = arm->Get<int>("index");
+	mapping.second = arm->Get<float>("increment");
+	this->armKeys[arm->Get<std::string>("inc_key")[0]] = mapping;
+	mapping.second = -mapping.second;
+	std::string dec_key = arm->Get<std::string>("dec_key");
+	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
+	// work either).
+        if (dec_key == "amp")
+	  dec_key = "&";
+	this->armKeys[dec_key[0]] = mapping;
+      }
+      else
+      {
+        gzwarn << "Skipping malformed arm_key/arm element" << std::endl;
+      }
+      arm = arm->GetNextElement();
+    }
+  }
+
+  // Get grasp key commands
+  if (_elem->HasElement("grasp_keys"))
+  {
+    sdf::ElementPtr grasp = _elem->GetElement("grasp_keys");
+    grasp = grasp->GetElement("grasp");
+
+    while (grasp)
+    {
+      if (grasp->HasAttribute("inc_key") &&
+          grasp->HasAttribute("dec_key") &&
+          grasp->HasAttribute("name") &&
+          grasp->HasAttribute("increment"))
+      {
+        std::pair<std::string, float> mapping;
+	mapping.first = grasp->Get<std::string>("name");
+	mapping.second = grasp->Get<float>("increment");
+	this->graspKeys[grasp->Get<std::string>("inc_key")[0]] = mapping;
+	mapping.second = -mapping.second;
+	std::string dec_key = grasp->Get<std::string>("dec_key");
+	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
+	// work either).
+        if (dec_key == "amp")
+	  dec_key = "&";
+	this->graspKeys[dec_key[0]] = mapping;
+      }
+      else
+      {
+        gzwarn << "Skipping malformed grasp_key/grasp element" << std::endl;
+      }
+      grasp = grasp->GetNextElement();
+    }
+  }
+
+  this->graspMode = true;
+  this->hxInitialized = false;
+  this->numWristMotors = 3;
+
   this->InitializeTaskView(_elem);
 
-  gui::KeyEventHandler::Instance()->SetAutoRepeat(true);
-  gui::KeyEventHandler::Instance()->AddPressFilter("arat_gui",
+  gazebo::gui::KeyEventHandler::Instance()->SetAutoRepeat(true);
+  gazebo::gui::KeyEventHandler::Instance()->AddPressFilter("arat_gui",
                           boost::bind(&HaptixGUIPlugin::OnKeyPress, this, _1));
 }
 
@@ -371,9 +479,9 @@ void HaptixGUIPlugin::OnFingerContact(ConstContactsPtr &_msg)
     std::string collisionName2 = _msg->contact(0).collision2();
 
     // Calculate the force
-    msgs::Vector3d forceVector = _msg->contact(0).wrench(0).
+    gazebo::msgs::Vector3d forceVector = _msg->contact(0).wrench(0).
       body_1_wrench().force();
-    double force = math::Vector3(forceVector.x(), forceVector.y(),
+    double force = gazebo::math::Vector3(forceVector.x(), forceVector.y(),
         forceVector.z()).GetLength();
 
     if (this->contactPoints.find(collisionName1) != this->contactPoints.end())
@@ -464,7 +572,8 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       std::string id = task->Get<std::string>("id");
       std::string name = task->Get<std::string>("name");
       std::string instructions = task->Get<std::string>("instructions");
-      std::string iconPath = common::SystemPaths::Instance()->FindFileURI(
+      std::string iconPath =
+        gazebo::common::SystemPaths::Instance()->FindFileURI(
           task->Get<std::string>("icon"));
       bool enabled = task->Get<bool>("enabled");
 
@@ -551,7 +660,7 @@ void HaptixGUIPlugin::OnNextClicked()
 ////////////////////////////////////////////////
 void HaptixGUIPlugin::PublishTimerMessage(const std::string &_msg) const
 {
-  msgs::GzString msg;
+  gazebo::msgs::GzString msg;
   msg.set_data(_msg);
   this->timerPub->Publish(msg);
 }
@@ -559,7 +668,7 @@ void HaptixGUIPlugin::PublishTimerMessage(const std::string &_msg) const
 ////////////////////////////////////////////////
 void HaptixGUIPlugin::PublishTaskMessage(const std::string &_taskId) const
 {
-  msgs::GzString msg;
+  gazebo::msgs::GzString msg;
   msg.set_data(_taskId);
   this->taskPub->Publish(msg);
 }
@@ -592,7 +701,184 @@ void HaptixGUIPlugin::OnResetClicked()
 }
 
 /////////////////////////////////////////////////
-bool HaptixGUIPlugin::OnKeyPress(common::KeyEvent /*_event*/)
+bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 {
-  return true;
+  char key = _event.text[0];
+  std::cout << "key: " << key << std::endl;
+
+  // The first time, we need to talk to the hand.  Can't do this at startup
+  // because the hand might not have been spawned yet.
+  if (!this->hxInitialized)
+  {
+    if (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
+    {
+      gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
+        << std::endl;
+      return false;
+    }
+    memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+    ::hxSensor sensor;
+    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK )
+    {
+      gzerr << "hx_update(): Request error.\n" << std::endl;
+      return false;
+    }
+    
+    this->hxInitialized = true;
+  }
+
+  // '~' toggles between grasp mode and motor mode
+  if (key == '~')
+  {
+    // Send a motor command to hold current pose
+    ::hxSensor sensor;
+    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+    {
+      gzerr << "hx_update(): Request error." << std::endl;
+    }
+    if (this->graspMode)
+    {
+      // Send an empty grasp request, to switch modes in the control plugin
+      haptix::comm::msgs::hxGrasp req;
+      haptix::comm::msgs::hxCommand rep;
+      bool result;
+      if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                                req, 1000, rep, result) || !result)
+      {
+        gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+      }
+    }
+    this->graspMode = !this->graspMode;
+    gzdbg << "Changed graspMode to: " << this->graspMode << std::endl;
+    return false;
+  }
+
+  // Is this an arm motion command?  These keys don't overlap with any others.
+  std::map<char, std::pair<unsigned int, float> >::const_iterator arm;
+  arm = this->armKeys.find(key);
+  if (arm != this->armKeys.end())
+  {
+    unsigned int index = arm->second.first;
+    if (index > 5)
+    {
+      gzerr << "Index out of bounds for arm control." << std::endl;
+      return false;
+    }
+    float inc = arm->second.second;
+
+    float pose_inc_args[6] = {0, 0, 0, 0, 0, 0};
+    pose_inc_args[index] = inc;
+    gazebo::math::Pose increment(gazebo::math::Vector3(pose_inc_args[0],
+                                   pose_inc_args[1], pose_inc_args[2]),
+                                 gazebo::math::Quaternion(pose_inc_args[3],
+                                   pose_inc_args[4], pose_inc_args[5]));
+    gazebo::msgs::Pose msg;
+    gazebo::msgs::Vector3d* vec_msg = msg.mutable_position();
+    vec_msg->set_x(increment.pos.x);
+    vec_msg->set_y(increment.pos.y);
+    vec_msg->set_z(increment.pos.z);
+    gazebo::msgs::Quaternion* quat_msg = msg.mutable_orientation();
+    quat_msg->set_x(increment.rot.x);
+    quat_msg->set_y(increment.rot.y);
+    quat_msg->set_z(increment.rot.z);
+    quat_msg->set_w(increment.rot.w);
+
+    //std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
+    this->ignNode.Publish("haptix/arm_pose_inc", msg);
+    return true;
+  }
+
+  // If we're in grasp mode, is this a grasp command?
+  std::map<char, std::pair<std::string, float> >::const_iterator grasp;
+  grasp = this->graspKeys.find(key);
+  if (this->graspMode && (grasp != this->graspKeys.end()))
+  {
+    std::string name = grasp->second.first;
+    float inc = grasp->second.second;
+    // If we're commanding the same grasp as last time, increment it; otherwise,
+    // start over.
+    haptix::comm::msgs::hxGrasp grasp;
+    haptix::comm::msgs::hxGrasp::hxGraspValue* gv = grasp.add_grasps();
+    gv->set_grasp_name(name);
+    if ((this->lastGraspRequest.grasps_size() > 0) &&
+        (this->lastGraspRequest.grasps(0).grasp_name() == name))
+    {
+      float curr = this->lastGraspRequest.grasps(0).grasp_value();
+      float newValue = curr + inc;
+      if (newValue > 1.0)
+        newValue = 1.0;
+      if (newValue < 0.0)
+        newValue = 0.0;
+      gv->set_grasp_value(newValue);
+    }
+    else
+      gv->set_grasp_value(inc);
+
+    bool result;
+    //std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
+    haptix::comm::msgs::hxCommand resp;
+    if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                              grasp,
+			      1000,
+			      resp,
+			      result) || !result)
+    {
+      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+      return false;
+    }
+
+    gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
+    
+    this->lastGraspRequest = grasp;
+    // Assign to lastMotorCommand, because now we're tracking the target based
+    // purely on grasp poses.
+    for (unsigned int i = this->numWristMotors;
+         i < this->deviceInfo.nmotor;
+         ++i)
+      this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
+    return true;
+  }
+
+  // If it's a motor command and either: we're not in grasp mode, or it's
+  // for the wrist motors (which are the first 3 indices).
+  std::map<char, std::pair<unsigned int, float> >::const_iterator motor;
+  motor = this->motorKeys.find(key);
+  if (motor != this->motorKeys.end())
+  {
+    unsigned int index = motor->second.first;
+    if ( index >= this->deviceInfo.nmotor)
+    {
+      gzerr << "Index out of bounds for motor control." << std::endl;
+      return false;
+    }
+    float inc = motor->second.second;
+    if (!this->graspMode || (motor->second.first < this->numWristMotors))
+    {
+      // Start with the last direct motor command.
+      ::hxCommand cmd;
+      for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
+        cmd.ref_pos[i] = this->lastMotorCommand.ref_pos[i];
+
+      // Now add in the new diff
+      cmd.ref_pos[index] += inc;
+
+      // Now command it.
+      /*std::cout << "Sending: " << std::endl;
+       for(int i = 0; i < this->deviceInfo.nmotor; i++)
+         std::cout << cmd.ref_pos[i] << " ";
+      std::cout << std::endl;*/
+      ::hxSensor sensor;
+      if (::hx_update(::hxGAZEBO, &cmd, &sensor) != ::hxOK)
+      {
+        gzerr << "hx_update(): Request error." << std::endl;
+      }
+
+      // And record it for next time
+      for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
+        this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
+
+      return true;
+    }
+  }
+  return false;
 }
