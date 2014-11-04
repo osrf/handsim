@@ -109,7 +109,7 @@
           </task>
 
           <task id="grasp_6"name="Stone">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grasp_6.jpg</icon> 
             <instructions>
               Instructions: Pick up the stone and place it on top of the box.
@@ -161,7 +161,7 @@
           </task>
 
           <task id="pinch_2" name="Marble">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/pinch_2.jpg</icon>
             <instructions>
               Instructions:   Pick up the marble and place it on top of the box, inside of the tin lid.
