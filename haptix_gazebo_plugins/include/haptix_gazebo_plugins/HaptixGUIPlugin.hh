@@ -94,7 +94,12 @@ namespace haptix_gazebo_plugins
     private: void InitializeTaskView(sdf::ElementPtr _elem);
 
     /// \brief Handle GUI keypresses
+    /// \param[in] _event Key press event.
     private: bool OnKeyPress(gazebo::common::KeyEvent _event);
+
+    /// \brief Handle request responses
+    /// \param[in] _msg Response message.
+    private: void OnResponse(ConstResponsePtr &_msg);
 
     /// \brief Size of the contact sensor display circle, in pixels.
     private: int circleSize;
@@ -130,6 +135,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief Node used to establish communication with gzserver.
     private: gazebo::transport::NodePtr node;
+
+    /// \brief Publisher of requests.
+    private: gazebo::transport::PublisherPtr requestPub;
+
+    /// \brief Subscriber of respones.
+    private: gazebo::transport::SubscriberPtr responseSub;
 
     // \brief Set of Gazebo signal connections.
     private: std::vector<gazebo::event::ConnectionPtr> connections;
@@ -190,6 +201,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief The number of initial degrees of freedom that are in the wrist
     private: unsigned int numWristMotors;
+
+    /// \brief Starting pose of the arm.
+    private: gazebo::math::Pose armStartPose;
+
+    /// \brief Request message used to get the initial arm pose.
+    private: gazebo::msgs::Request *requestMsg;
   };
 }
 #endif

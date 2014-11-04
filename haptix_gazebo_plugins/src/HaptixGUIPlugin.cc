@@ -469,6 +469,30 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   gazebo::gui::KeyEventHandler::Instance()->SetAutoRepeat(true);
   gazebo::gui::KeyEventHandler::Instance()->AddPressFilter("arat_gui",
                           boost::bind(&HaptixGUIPlugin::OnKeyPress, this, _1));
+
+  // Setup default arm starting pose
+  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
+
+  this->requestPub = this->node->Advertise<gazebo::msgs::Request>(
+      "~/request");
+
+  this->responseSub = this->node->Subscribe("~/response",
+      &HaptixGUIPlugin::OnResponse, this, true);
+
+  // Request info about the mpl arm
+  this->requestMsg = gazebo::msgs::CreateRequest("entity_info", "mpl");
+  this->requestPub->Publish(*this->requestMsg);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResponse(ConstResponsePtr &_msg)
+{
+  if (!this->requestMsg || _msg->id() != this->requestMsg->id())
+    return;
+
+  gazebo::msgs::Model modelMsg;
+  modelMsg.ParseFromString(_msg->serialized_data());
+  this->armStartPose = gazebo::msgs::Convert(modelMsg.pose());
 }
 
 /////////////////////////////////////////////////
@@ -769,10 +793,15 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
     float poseIncArgs[6] = {0, 0, 0, 0, 0, 0};
     poseIncArgs[index] = inc;
-    gazebo::math::Pose increment(gazebo::math::Vector3(poseIncArgs[0],
-                                   poseIncArgs[1], poseIncArgs[2]),
-                                 gazebo::math::Quaternion(poseIncArgs[3],
-                                   poseIncArgs[4], poseIncArgs[5]));
+    gazebo::math::Vector3 pos = gazebo::math::Vector3(poseIncArgs[0],
+          poseIncArgs[1], poseIncArgs[2]);
+
+    pos = this->armStartPose.rot.RotateVector(pos);
+
+    gazebo::math::Pose increment(pos,
+        gazebo::math::Quaternion(poseIncArgs[3],
+          poseIncArgs[4], poseIncArgs[5]));
+
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
 
     //std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
@@ -872,5 +901,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       return true;
     }
   }
+
+  printf("Return false\n");
   return false;
 }
