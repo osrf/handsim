@@ -180,10 +180,22 @@ namespace gazebo
     private: gazebo::transport::PublisherPtr polhemusJoyPub;
     /// \brief gazebo gz transport message
     private: gazebo::msgs::Pose joyMsg;
-    /// \brief target UserCamera pose in world frame
-    private: math::Pose targetCameraPose;
     /// \brief initial UserCamera pose in world frame, not used.
     private: math::Pose initialCameraPose;
+
+    /**********************************************/
+    /*                                            */
+    /*   get user camera pose                     */
+    /*                                            */
+    /**********************************************/
+    /// \brief subscribe to user camera pose publisher
+    private: gazebo::transport::SubscriberPtr userCameraPoseSub;
+    /// \brief callback for subscriber to the user camera pose publisher
+    private: void OnUserCameraPose(ConstPosePtr &_msg);
+    /// \brief store camera pose
+    private: math::Pose userCameraPose;
+    /// \brief Mutex to protect access to userCameraPose
+    private: boost::mutex userCameraPoseMessageMutex;
 
     /**********************************************/
     /*                                            */

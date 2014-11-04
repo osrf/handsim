@@ -23,7 +23,7 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->pausePolhemus = false;
+  this->pausePolhemus = true;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -59,12 +59,18 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->gazeboNode->Init(this->world->GetName());
   this->polhemusJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
+
   this->keySub =
     this->gazeboNode->Subscribe("~/qtKeyEvent",
       &HaptixControlPlugin::OnKey, this);
+
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
       &HaptixControlPlugin::OnJoy, this);
+
+  this->userCameraPoseSub =
+    this->gazeboNode->Subscribe("~/user_camera/pose",
+      &HaptixControlPlugin::OnUserCameraPose, this);
 
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
@@ -577,8 +583,7 @@ void HaptixControlPlugin::UpdatePolhemus()
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
         if (this->pausePolhemus)
         {
-          // calibration mode, update this->baseLinkToArmSensor
-          // withouthis->world->IsPaused())t changing targetBaseLinkPose
+          // calibration mode, update offset
           math::Pose baseLinkPose = this->baseLink->GetWorldPose();
           this->sourceWorldPoseArmOffset =
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
@@ -599,20 +604,19 @@ void HaptixControlPlugin::UpdatePolhemus()
         math::Pose headSensorPose = this->convertPolhemusToPose(poses[headId]);
         if (this->pausePolhemus)
         {
-          // calibration mode, update this->baseLinkToArmSensor
-          // withouthis->world->IsPaused())t changing targetBaseLinkPose
-          math::Pose userCameraPose = this->targetCameraPose;
+          boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+          // calibration mode, update offset
           this->sourceWorldPoseHeadOffset =
             (headSensorPose.GetInverse() + this->cameraToHeadSensor +
-             userCameraPose) - this->sourceWorldPose;
+             this->userCameraPose) - this->sourceWorldPose;
         }
         else
         {
-          this->targetCameraPose = this->cameraToHeadSensor.GetInverse()
+          math::Pose targetCameraPose = this->cameraToHeadSensor.GetInverse()
             + headSensorPose
             + (this->sourceWorldPoseHeadOffset + this->sourceWorldPose);
 
-          gazebo::msgs::Set(&this->joyMsg, this->targetCameraPose);
+          gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
           this->polhemusJoyPub->Publish(this->joyMsg);
         }
       }
@@ -935,6 +939,13 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 }
 
 //////////////////////////////////////////////////
+void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
+{
+  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+  this->userCameraPose = math::Pose(msgs::Convert(*_msg));
+}
+
+//////////////////////////////////////////////////
 void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->joystickMessageMutex);
@@ -952,8 +963,9 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
   // if (strcmp(&key, &this->lastKeyPressed) != 0)
   if (_msg->dbl_data() > 0.0)
   {
-    // pressed
-    if (strcmp(_msg->data().c_str(), "p") == 0)
+    // pressed "p" or spacebar?
+    if (strcmp(_msg->data().c_str(), "p") == 0 ||
+        strcmp(_msg->data().c_str(), " ") == 0)
       this->pausePolhemus = !this->pausePolhemus;
     gzdbg << " pausing polhemus [" << this->pausePolhemus << "]\n";
   }
