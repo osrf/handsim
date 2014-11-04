@@ -71,6 +71,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
       &HaptixControlPlugin::OnJoy, this);
 
+  this->userCameraPoseValid = false;
   this->userCameraPoseSub =
     this->gazeboNode->Subscribe("~/user_camera/pose",
       &HaptixControlPlugin::OnUserCameraPose, this);
@@ -591,6 +592,10 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
 // Update targetBaseLinkPose using Polhemus
 void HaptixControlPlugin::UpdatePolhemus()
 {
+  // Wait for the user camera pose to be valid, to avoid possible race
+  // condition on startup.
+  while (!this->userCameraPoseValid)
+    usleep(1000);
   // Get current pose from Polhemus
   polhemus_pose_t poses[8];
   while (true)
@@ -973,6 +978,7 @@ void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
   this->userCameraPose = math::Pose(msgs::Convert(*_msg));
+  this->userCameraPoseValid = true;
 }
 
 //////////////////////////////////////////////////

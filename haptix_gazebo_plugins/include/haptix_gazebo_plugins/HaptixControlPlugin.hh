@@ -195,6 +195,8 @@ namespace gazebo
     private: void OnUserCameraPose(ConstPosePtr &_msg);
     /// \brief store camera pose
     private: math::Pose userCameraPose;
+    /// \brief have we received at least one camera pose?
+    private: bool userCameraPoseValid;
     /// \brief Mutex to protect access to userCameraPose
     private: boost::mutex userCameraPoseMessageMutex;
 
