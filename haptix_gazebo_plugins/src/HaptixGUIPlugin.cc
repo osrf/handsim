@@ -796,7 +796,9 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     gazebo::math::Vector3 pos = gazebo::math::Vector3(poseIncArgs[0],
           poseIncArgs[1], poseIncArgs[2]);
 
-    pos = this->armStartPose.rot.RotateVector(pos);
+    // \todo Put this back in to enable movement in the local coordinate
+    // frame.
+    // pos = this->armStartPose.rot.RotateVector(pos);
 
     gazebo::math::Pose increment(pos,
         gazebo::math::Quaternion(poseIncArgs[3],
