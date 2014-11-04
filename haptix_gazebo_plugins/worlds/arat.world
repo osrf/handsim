@@ -153,7 +153,7 @@
 
         <task_group name="Pinch">
           <task id="pinch_1" name="Ball bearing">
-            <enabled>1</enabled>
+            <enabled>0</enabled>
             <icon>file://config/arat_icons/pinch_1.jpg</icon>
             <instructions>
               Instructions: Pick up the ball bearing and place it on top of the box, inside of the tin lid.
@@ -161,7 +161,7 @@
           </task>
 
           <task id="pinch_2" name="Marble">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/pinch_2.jpg</icon>
             <instructions>
               Instructions:   Pick up the marble and place it on top of the box, inside of the tin lid.
