@@ -65,7 +65,7 @@ target_link_libraries(HaptixControlPlugin
 
 target_link_libraries( HaptixGUIPlugin ${GAZEBO_LIBRARIES} ${OGRE_LIBRARIES} 
             ${OGRE-Terrain_LIBRARIES} ${QT_LIBRARIES} ${PROTOBUF_LIBRARIES}
-            haptix_comm ${IGNITION-TRANSPORT_LIBRARIES})
+            haptix-comm ${IGNITION-TRANSPORT_LIBRARIES})
 
 # below adds -std=c++11, needed to compile against ign-transport
 set_target_properties(HaptixControlPlugin HaptixGUIPlugin PROPERTIES
