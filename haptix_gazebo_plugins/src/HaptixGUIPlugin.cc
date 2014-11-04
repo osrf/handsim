@@ -703,7 +703,6 @@ void HaptixGUIPlugin::OnResetClicked()
 bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 {
   char key = _event.text[0];
-  std::cout << "key: " << key << std::endl;
 
   // The first time, we need to talk to the hand.  Can't do this at startup
   // because the hand might not have been spawned yet.
@@ -722,7 +721,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return false;
     }
-    
+
     this->hxInitialized = true;
   }
 
@@ -818,7 +817,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     }
 
     gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
-    
+
     this->lastGraspRequest = grasp;
     // Assign to lastMotorCommand, because now we're tracking the target based
     // purely on grasp poses.
