@@ -572,6 +572,15 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
     rotRate = msgs::Convert(joy.rotation());
   }
 
+  // rotate posRate into camera frame
+  math::Pose camPose;
+  {
+    boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+    camPose = this->userCameraPose;
+  }
+  posRate = camPose.rot.RotateVector(posRate);
+  rotRate = camPose.rot.RotateVector(rotRate);
+
   const double posScale = 2.0;
   const double rotScale = 5.0;
   {
