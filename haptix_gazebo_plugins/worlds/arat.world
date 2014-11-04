@@ -491,7 +491,7 @@
         <pose model="ball_bearing">0.217 -0.270 1.038 0 0 0</pose>
       </arrangement>
       <arrangement name="pinch_2">
-        <pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>
+        <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
         <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
         <pose model="marble">0.217 -0.274 1.036 0 0 0</pose>
       </arrangement>
