@@ -376,12 +376,14 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         mapping.second = motor->Get<float>("increment");
         this->motorKeys[motor->Get<std::string>("inc_key")[0]] = mapping;
         mapping.second = -mapping.second;
-        std::string dec_key = motor->Get<std::string>("dec_key");
+        std::string decKey = motor->Get<std::string>("dec_key");
+
         // Special case to work around trouble with parsing "&" ("&amp;" doesn't
         // work either).
-        if (dec_key == "amp")
-          dec_key = "&";
-        this->motorKeys[dec_key[0]] = mapping;
+        if (decKey == "amp")
+          decKey = "&";
+
+        this->motorKeys[decKey[0]] = mapping;
       }
       else
       {
@@ -409,12 +411,13 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         mapping.second = arm->Get<float>("increment");
         this->armKeys[arm->Get<std::string>("inc_key")[0]] = mapping;
         mapping.second = -mapping.second;
-        std::string dec_key = arm->Get<std::string>("dec_key");
+        std::string decKey = arm->Get<std::string>("dec_key");
+
         // Special case to work around trouble with parsing "&" ("&amp;" doesn't
         // work either).
-        if (dec_key == "amp")
-          dec_key = "&";
-        this->armKeys[dec_key[0]] = mapping;
+        if (decKey == "amp")
+          decKey = "&";
+        this->armKeys[decKey[0]] = mapping;
       }
       else
       {
@@ -442,12 +445,12 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         mapping.second = grasp->Get<float>("increment");
         this->graspKeys[grasp->Get<std::string>("inc_key")[0]] = mapping;
         mapping.second = -mapping.second;
-        std::string dec_key = grasp->Get<std::string>("dec_key");
+        std::string decKey = grasp->Get<std::string>("dec_key");
         // Special case to work around trouble with parsing "&" ("&amp;" doesn't
         // work either).
-        if (dec_key == "amp")
-          dec_key = "&";
-        this->graspKeys[dec_key[0]] = mapping;
+        if (decKey == "amp")
+          decKey = "&";
+        this->graspKeys[decKey[0]] = mapping;
       }
       else
       {
@@ -764,12 +767,12 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     }
     float inc = arm->second.second;
 
-    float pose_inc_args[6] = {0, 0, 0, 0, 0, 0};
-    pose_inc_args[index] = inc;
-    gazebo::math::Pose increment(gazebo::math::Vector3(pose_inc_args[0],
-                                   pose_inc_args[1], pose_inc_args[2]),
-                                 gazebo::math::Quaternion(pose_inc_args[3],
-                                   pose_inc_args[4], pose_inc_args[5]));
+    float poseIncArgs[6] = {0, 0, 0, 0, 0, 0};
+    poseIncArgs[index] = inc;
+    gazebo::math::Pose increment(gazebo::math::Vector3(poseIncArgs[0],
+                                   poseIncArgs[1], poseIncArgs[2]),
+                                 gazebo::math::Quaternion(poseIncArgs[3],
+                                   poseIncArgs[4], poseIncArgs[5]));
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
 
     //std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
@@ -804,7 +807,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       gv->set_grasp_value(inc);
 
     bool result;
-    //std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
+    // std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
     haptix::comm::msgs::hxCommand resp;
     if(!this->ignNode.Request("haptix/gazebo/Grasp",
                               grasp,
@@ -852,10 +855,10 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       cmd.ref_pos[index] += inc;
 
       // Now command it.
-      /*std::cout << "Sending: " << std::endl;
-       for(int i = 0; i < this->deviceInfo.nmotor; i++)
-         std::cout << cmd.ref_pos[i] << " ";
-      std::cout << std::endl;*/
+      // std::cout << "Sending: " << std::endl;
+      //  for(int i = 0; i < this->deviceInfo.nmotor; i++)
+      //    std::cout << cmd.ref_pos[i] << " ";
+      // std::cout << std::endl;
       ::hxSensor sensor;
       if (::hx_update(::hxGAZEBO, &cmd, &sensor) != ::hxOK)
       {
