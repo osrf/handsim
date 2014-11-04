@@ -41,6 +41,7 @@
 #include <haptix/comm/msg/hxCommand.pb.h>
 #include <haptix/comm/msg/hxDevice.pb.h>
 #include <haptix/comm/msg/hxSensor.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
 #include <ignition/transport.hh>
 
 namespace gazebo
@@ -344,6 +345,25 @@ namespace gazebo
     /// create a list of imu sensors based on imuSensorNames
     private: std::vector<sensors::ImuSensorPtr> imuSensors;
 
+    /// \brief: list of predefined grasps
+    /// Give each one a name and the desired positions for the motors. E.g.:
+    ///    <grasp name="MyGrasp">0 0 0 0.7679 0 0 1.3963 0 0 0 0
+    ///                          0.8727 0 0.5236 -0.349</grasp>
+    private: std::map<std::string, std::vector<float> > grasps;
+
+    /// \brief: current desired grasp pose
+    /// If graspMode is true, then these are the desired positions of the finger
+    /// motors.
+    private: std::vector<float> graspPositions;
+
+    /// \brief: are we in predefined grasp mode?
+    /// If true, then only values drawn from predefined grasps are commanded;
+    /// else direct finger motor control is performed.  We start not in
+    /// predefined mode; we enter this mode on receipt of a non-empty request to
+    /// "haptix/gazebo/grasp" service; we exit this mode on receipt of an empty
+    /// request to the same service.
+    private: bool graspMode;
+
     /// \brief: internal PIDs for holding all actuated joints in gazebo
     /// One PID controller per joint specified by plugin's <joint> param.
     /// pid id's must match joint id's.
@@ -374,6 +394,16 @@ namespace gazebo
       const std::string &_service,
       const haptix::comm::msgs::hxCommand &_req,
       haptix::comm::msgs::hxSensor &_rep, bool &_result);
+
+    /// \brief: Simulation responder to execute predefined grasps
+    /// \param[in] _service Service name
+    /// \param[in] _req Requested grasp
+    /// \param[out] _rep Reply in the form of commanded joint angles
+    /// \param[out] _result True if the command was successful
+    private: void HaptixGraspCallback(
+      const std::string &_service,
+      const haptix::comm::msgs::hxGrasp &_req,
+      haptix::comm::msgs::hxCommand &_rep, bool &_result);
 
     /// \brief: initialize gazebo controllers
     private: void LoadHandControl();
