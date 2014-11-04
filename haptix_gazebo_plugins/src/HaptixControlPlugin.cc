@@ -949,8 +949,8 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 
   // Read the request parameters.
   // Debug output.
-  std::cout << "Received a new command:" << std::endl;
-  /*for (unsigned int i = 0; i < this->joints.size(); ++i)
+  /*std::cout << "Received a new command:" << std::endl;
+  for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
     std::cout << "\tMotor " << i << ":" << std::endl;
     std::cout << "\t\t" << _req.ref_pos(i) << std::endl;
