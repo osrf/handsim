@@ -284,7 +284,7 @@
 
     <include>
       <uri>model://apl_description</uri>
-      <pose>0.8 0 0 0 0 0</pose>
+      <pose>0.8 0 0 0 0 -1.5708</pose>
     </include>
 
     <model name="polhemus_source">
