@@ -27,7 +27,7 @@ case $codename in
 esac
 
 # Add the OSRF repository.
-if [ ! -e /etc/apt/sources.list.d/haptix-latest.list ]; then
+if [ ! -e /etc/apt/sources.list.d/gazebo-latest.list ]; then
   sudo sh -c "echo \"deb http://packages.osrfoundation.org/gazebo/ubuntu ${codename} main\" > /etc/apt/sources.list.d/gazebo-latest.list"
 fi
 
