@@ -380,6 +380,10 @@ namespace gazebo
       haptix::comm::msgs::hxSensor &_rep, bool &_result);
 
     /// \brief: Simulation responder to execute predefined grasps
+    /// \param[in] _service Service name
+    /// \param[in] _req Requested grasp
+    /// \param[out] _rep Reply in the form of commanded joint angles
+    /// \param[out] _result True if the command was successful
     private: void HaptixGraspCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxGrasp &_req,
