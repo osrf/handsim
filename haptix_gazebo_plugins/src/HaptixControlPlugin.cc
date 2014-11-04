@@ -132,7 +132,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // hydra sensor offset
-  this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, -0.5*M_PI, -0.5*M_PI);
+  this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
