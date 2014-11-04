@@ -282,6 +282,11 @@
       <pose>0 0.037 1.015 0 0 -1.570796</pose>
     </include>
 
+    <include>
+      <uri>model://apl_description</uri>
+      <pose>0.8 0 0 0 0 0</pose>
+    </include>
+
     <model name="polhemus_source">
       <pose>-.5 0 1.3 0 3.1416 1.57</pose>
       <link name="link">
