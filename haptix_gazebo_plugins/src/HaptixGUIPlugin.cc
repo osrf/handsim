@@ -804,7 +804,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
 
-    //std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
+    // std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
     this->ignNode.Publish("haptix/arm_pose_inc", msg);
     return true;
   }
@@ -902,6 +902,5 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     }
   }
 
-  printf("Return false\n");
   return false;
 }
