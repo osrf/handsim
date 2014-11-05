@@ -32,6 +32,8 @@ GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
+  this->localCoordMove = true;
+
   // Read parameters
   std::string handImgFilename =
     gazebo::common::SystemPaths::Instance()->FindFileURI(
@@ -200,6 +202,14 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(this->startStopButton, SIGNAL(toggled(bool)), this,
       SLOT(OnStartStop(bool)));
 
+  QCheckBox *localCoordMoveCheck = new QCheckBox("Local frame");
+  localCoordMoveCheck->setToolTip(tr("Enable movement in arm's local frame"));
+  localCoordMoveCheck->setFocusPolicy(Qt::NoFocus);
+  localCoordMoveCheck->setChecked(true);
+  connect(localCoordMoveCheck, SIGNAL(stateChanged(int)),
+          this, SLOT(OnLocalCoordMove(int)));
+  frameLayout->addWidget(localCoordMoveCheck);
+
   // Add all widgets to the main frame layout
   frameLayout->addWidget(handView, 1.0);
   frameLayout->addWidget(tabFrame);
@@ -216,7 +226,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   this->setLayout(mainLayout);
   this->move(10, 10);
-  this->resize(450, 800);
+  this->resize(480, 830);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -492,7 +502,7 @@ void HaptixGUIPlugin::OnResponse(ConstResponsePtr &_msg)
 
   gazebo::msgs::Model modelMsg;
   modelMsg.ParseFromString(_msg->serialized_data());
-  this->armStartPose = gazebo::msgs::Convert(modelMsg.pose());
+  //this->armStartPose = gazebo::msgs::Convert(modelMsg.pose());
 }
 
 /////////////////////////////////////////////////
@@ -793,16 +803,31 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
     float poseIncArgs[6] = {0, 0, 0, 0, 0, 0};
     poseIncArgs[index] = inc;
-    gazebo::math::Vector3 pos = gazebo::math::Vector3(poseIncArgs[0],
-          poseIncArgs[1], poseIncArgs[2]);
 
-    // \todo Put this back in to enable movement in the local coordinate
-    // frame.
-    // pos = this->armStartPose.rot.RotateVector(pos);
+    gazebo::math::Vector3 pos, rot;
 
-    gazebo::math::Pose increment(pos,
-        gazebo::math::Quaternion(poseIncArgs[3],
-          poseIncArgs[4], poseIncArgs[5]));
+    // Move in the local coordinate frame if true.
+    if (this->localCoordMove)
+    {
+      rot = gazebo::math::Vector3(poseIncArgs[4],
+          -poseIncArgs[3], poseIncArgs[5]);
+      pos = gazebo::math::Vector3(-poseIncArgs[0],
+          -poseIncArgs[1], poseIncArgs[2]);
+
+      pos = this->armStartPose.rot.RotateVector(pos);
+      rot = this->armStartPose.rot.RotateVector(rot);
+    }
+    else
+    {
+      pos = gazebo::math::Vector3(poseIncArgs[0], poseIncArgs[1],
+          poseIncArgs[2]);
+      rot = gazebo::math::Vector3(-poseIncArgs[3], -poseIncArgs[4],
+          poseIncArgs[5]);
+    }
+
+    gazebo::math::Pose increment(pos, rot);
+    this->armStartPose.rot = gazebo::math::Quaternion(rot) *
+      this->armStartPose.rot;
 
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
 
@@ -905,4 +930,10 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   }
 
   return false;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnLocalCoordMove(int _state)
+{
+  this->localCoordMove = _state == Qt::Unchecked ? false : true;
 }

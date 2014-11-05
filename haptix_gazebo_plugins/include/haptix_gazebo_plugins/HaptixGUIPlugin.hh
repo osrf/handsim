@@ -88,6 +88,10 @@ namespace haptix_gazebo_plugins
     /// \brief Callback triggered when the reset button is clicked
     private slots: void OnResetClicked();
 
+    /// \brief Callback triggered when local frame checked is clicked.
+    /// \param[in] _state State of the check box.
+    private slots: void OnLocalCoordMove(int _state);
+
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
     /// parameters.
@@ -207,6 +211,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief Request message used to get the initial arm pose.
     private: gazebo::msgs::Request *requestMsg;
+
+    /// \brief When true, move in the arm's local coordinate frame.
+    private: bool localCoordMove;
   };
 }
 #endif
