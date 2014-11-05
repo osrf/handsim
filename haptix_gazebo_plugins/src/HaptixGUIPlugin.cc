@@ -33,6 +33,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
   this->localCoordMove = true;
+  this->posScalingFactor = 0.25;
 
   // Read parameters
   std::string handImgFilename =
@@ -202,13 +203,27 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(this->startStopButton, SIGNAL(toggled(bool)), this,
       SLOT(OnStartStop(bool)));
 
+  QHBoxLayout *movementLayout = new QHBoxLayout();
+
+  QSlider *posScalingSlider = new QSlider(Qt::Horizontal);
+  posScalingSlider->setRange(1, 100);
+  posScalingSlider->setValue(this->posScalingFactor*100);
+  posScalingSlider->setToolTip(tr("Adjust arm movement speed"));
+  connect(posScalingSlider, SIGNAL(sliderMoved(int)),
+          this, SLOT(OnScalingSlider(int)));
+
   QCheckBox *localCoordMoveCheck = new QCheckBox("Local frame");
   localCoordMoveCheck->setToolTip(tr("Enable movement in arm's local frame"));
   localCoordMoveCheck->setFocusPolicy(Qt::NoFocus);
   localCoordMoveCheck->setChecked(true);
   connect(localCoordMoveCheck, SIGNAL(stateChanged(int)),
           this, SLOT(OnLocalCoordMove(int)));
-  frameLayout->addWidget(localCoordMoveCheck);
+
+  movementLayout->addWidget(localCoordMoveCheck);
+  movementLayout->addWidget(new QLabel(tr("Move speed:")));
+  movementLayout->addWidget(posScalingSlider);
+
+  frameLayout->addLayout(movementLayout);
 
   // Add all widgets to the main frame layout
   frameLayout->addWidget(handView, 1.0);
@@ -825,7 +840,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           poseIncArgs[5]);
     }
 
-    gazebo::math::Pose increment(pos, rot);
+    gazebo::math::Pose increment(pos * this->posScalingFactor, rot);
     this->armStartPose.rot = gazebo::math::Quaternion(rot) *
       this->armStartPose.rot;
 
@@ -936,4 +951,10 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 void HaptixGUIPlugin::OnLocalCoordMove(int _state)
 {
   this->localCoordMove = _state == Qt::Unchecked ? false : true;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnScalingSlider(int _state)
+{
+  this->posScalingFactor = _state * 0.01;
 }

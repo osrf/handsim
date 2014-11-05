@@ -105,6 +105,10 @@ namespace haptix_gazebo_plugins
     /// \param[in] _msg Response message.
     private: void OnResponse(ConstResponsePtr &_msg);
 
+    /// \brief Handle position scaling slider movement
+    /// \param[in] _state State of the slider
+    private slots: void OnScalingSlider(int _state);
+
     /// \brief Size of the contact sensor display circle, in pixels.
     private: int circleSize;
 
@@ -214,6 +218,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief When true, move in the arm's local coordinate frame.
     private: bool localCoordMove;
+
+    /// \brief Position movement scaling factor.
+    private: double posScalingFactor;
   };
 }
 #endif
