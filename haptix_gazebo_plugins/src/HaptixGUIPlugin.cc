@@ -293,6 +293,13 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       this->node->Advertise<gazebo::msgs::GzString>("~/timer_control");
   }
 
+  this->pausePolhemusPub =
+    this->node->Advertise<gazebo::msgs::Int>("~/polhemus/pause_request");
+
+  this->pausePolhemusSub =
+    this->node->Subscribe("~/polhemus/pause_response",
+      &HaptixGUIPlugin::OnPausePolhemus, this);
+
   this->circleSize = _elem->Get<int>("circle_size");
 
   this->forceMin = _elem->Get<double>("force_min");
@@ -713,10 +720,8 @@ void HaptixGUIPlugin::OnNextClicked()
 
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 
-  // Signal to WorldControl to reset the world
-  gazebo::msgs::WorldControl msg;
-  msg.mutable_reset()->set_all(true);
-  this->worldControlPub->Publish(msg);
+  // Reset models
+  this->ResetModels();
 
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
@@ -763,13 +768,33 @@ void HaptixGUIPlugin::OnResetClicked()
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
   
-  // Signal to WorldControl to reset models
-  gazebo::msgs::WorldControl msg;
-  msg.mutable_reset()->set_all(true);
-  this->worldControlPub->Publish(msg);
+  // Reset models
+  this->ResetModels();
 
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::ResetModels()
+{
+  // Signal to HaptixControlPlugin to pause polhemus tracking
+  this->polhemusPaused = false;
+  gazebo::msgs::Int pause;
+  pause.set_data(1);
+  this->pausePolhemusPub->Publish(pause);
+  int maxTries = 30;
+  while (maxTries > 0 && !this->polhemusPaused)
+  {
+    gzdbg << "waiting for polhemus to pause (max wait 3 sec).\n";
+    --maxTries;
+    usleep(100000);
+  }
+
+  // Signal to WorldControl to reset the world
+  gazebo::msgs::WorldControl msg;
+  msg.mutable_reset()->set_all(true);
+  this->worldControlPub->Publish(msg);
 }
 
 /////////////////////////////////////////////////
@@ -978,4 +1003,19 @@ void HaptixGUIPlugin::OnLocalCoordMove(int _state)
 void HaptixGUIPlugin::OnScalingSlider(int _state)
 {
   this->posScalingFactor = _state * 0.01;
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
+{
+  gzdbg << "got pause polhemus response [" << _msg->data() << "]\n";
+  if (_msg->data() == 0)
+  {
+    gzdbg << "no polhemus to pause.\n";
+  }
+  else
+  {
+    gzdbg << "polhemus paused successfully.\n";
+  }
+  this->polhemusPaused = true;
 }
