@@ -73,6 +73,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
       &HaptixControlPlugin::OnJoy, this);
 
+  this->userCameraPoseValid = false;
   this->userCameraPoseSub =
     this->gazeboNode->Subscribe("~/user_camera/pose",
       &HaptixControlPlugin::OnUserCameraPose, this);
@@ -533,10 +534,10 @@ void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
 {
   math::Pose inputPose(msgs::Convert(_pose));
 
-  this->keyboardPose = inputPose*this->keyboardPose;
+  this->keyboardPose.pos += inputPose.pos;
+  this->keyboardPose.rot = inputPose.rot * this->keyboardPose.rot;
 
   // Add pose to our keyboardPose object
-
   this->staleKeyboardPose = false;
 }
 
@@ -609,6 +610,10 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
 // Update targetBaseLinkPose using Polhemus
 void HaptixControlPlugin::UpdatePolhemus()
 {
+  // Wait for the user camera pose to be valid, to avoid possible race
+  // condition on startup.
+  while (!this->userCameraPoseValid)
+    usleep(1000);
   // Get current pose from Polhemus
   polhemus_pose_t poses[8];
   while (true)
@@ -967,8 +972,8 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 
   // Read the request parameters.
   // Debug output.
-  std::cout << "Received a new command:" << std::endl;
-  /*for (unsigned int i = 0; i < this->joints.size(); ++i)
+  /*std::cout << "Received a new command:" << std::endl;
+  for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
     std::cout << "\tMotor " << i << ":" << std::endl;
     std::cout << "\t\t" << _req.ref_pos(i) << std::endl;
@@ -987,6 +992,14 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 }
 
 //////////////////////////////////////////////////
+void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
+{
+  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+  this->userCameraPose = math::Pose(msgs::Convert(*_msg));
+  this->userCameraPoseValid = true;
+}
+
+//////////////////////////////////////////////////
 /// using ign-transport service, out of band from haptix_comm
 void HaptixControlPlugin::HaptixGraspCallback(
       const std::string &/*_service*/,
@@ -1001,7 +1014,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
   for (unsigned int j = 0; j < this->graspPositions.size(); ++j)
   {
     this->graspPositions[j] = 0.0;
-    _rep.add_ref_pos(0.0); 
+    _rep.add_ref_pos(0.0);
   }
 
   for (unsigned int i=0; i < _req.grasps_size(); ++i)
@@ -1012,16 +1025,15 @@ void HaptixControlPlugin::HaptixGraspCallback(
     if (g != this->grasps.end())
     {
       for (unsigned int j=0;
-           j < g->second.size() && j < this->graspPositions.size();
-	   ++j)
+          j < g->second.size() && j < this->graspPositions.size(); ++j)
       {
         float value = _req.grasps(i).grasp_value();
-	if (value < 0.0)
-	  value = 0.0;
-	if (value > 1.0)
-	  value = 1.0;
-	// This superposition logic could use a lot of thought.  But it should
-	// at least work for the case of a single type of grasp.
+        if (value < 0.0)
+          value = 0.0;
+        if (value > 1.0)
+          value = 1.0;
+        // This superposition logic could use a lot of thought.  But it should
+        // at least work for the case of a single type of grasp.
         this->graspPositions[j] += value * g->second[j] / _req.grasps_size();
         _rep.set_ref_pos(j, this->graspPositions[j]);
       }

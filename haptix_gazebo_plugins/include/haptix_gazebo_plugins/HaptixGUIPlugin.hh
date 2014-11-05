@@ -88,13 +88,26 @@ namespace haptix_gazebo_plugins
     /// \brief Callback triggered when the reset button is clicked
     private slots: void OnResetClicked();
 
+    /// \brief Callback triggered when local frame checked is clicked.
+    /// \param[in] _state State of the check box.
+    private slots: void OnLocalCoordMove(int _state);
+
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
     /// parameters.
     private: void InitializeTaskView(sdf::ElementPtr _elem);
 
     /// \brief Handle GUI keypresses
+    /// \param[in] _event Key press event.
     private: bool OnKeyPress(gazebo::common::KeyEvent _event);
+
+    /// \brief Handle request responses
+    /// \param[in] _msg Response message.
+    private: void OnResponse(ConstResponsePtr &_msg);
+
+    /// \brief Handle position scaling slider movement
+    /// \param[in] _state State of the slider
+    private slots: void OnScalingSlider(int _state);
 
     /// \brief Size of the contact sensor display circle, in pixels.
     private: int circleSize;
@@ -130,6 +143,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief Node used to establish communication with gzserver.
     private: gazebo::transport::NodePtr node;
+
+    /// \brief Publisher of requests.
+    private: gazebo::transport::PublisherPtr requestPub;
+
+    /// \brief Subscriber of respones.
+    private: gazebo::transport::SubscriberPtr responseSub;
 
     // \brief Set of Gazebo signal connections.
     private: std::vector<gazebo::event::ConnectionPtr> connections;
@@ -190,6 +209,18 @@ namespace haptix_gazebo_plugins
 
     /// \brief The number of initial degrees of freedom that are in the wrist
     private: unsigned int numWristMotors;
+
+    /// \brief Starting pose of the arm.
+    private: gazebo::math::Pose armStartPose;
+
+    /// \brief Request message used to get the initial arm pose.
+    private: gazebo::msgs::Request *requestMsg;
+
+    /// \brief When true, move in the arm's local coordinate frame.
+    private: bool localCoordMove;
+
+    /// \brief Position movement scaling factor.
+    private: double posScalingFactor;
   };
 }
 #endif

@@ -32,6 +32,9 @@ GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
+  this->localCoordMove = true;
+  this->posScalingFactor = 0.25;
+
   // Read parameters
   std::string handImgFilename =
     gazebo::common::SystemPaths::Instance()->FindFileURI(
@@ -54,20 +57,20 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->setPalette(QPalette(QColor(255, 255, 255, 0)));
 
   // Create the hand
-    // Create a QGraphicsView to draw the finger force contacts
-    this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
-    QGraphicsView *handView = new QGraphicsView(this->handScene);
-    handView->setStyleSheet("border: 0px");
-    handView->setSizePolicy(QSizePolicy::Expanding,
-                            QSizePolicy::MinimumExpanding);
+  // Create a QGraphicsView to draw the finger force contacts
+  this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
+  QGraphicsView *handView = new QGraphicsView(this->handScene);
+  handView->setStyleSheet("border: 0px");
+  handView->setSizePolicy(QSizePolicy::Expanding,
+                          QSizePolicy::MinimumExpanding);
 
-    // Load the hand image
-    QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
-    QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
-    handItem->setPos(-20, -73);
+  // Load the hand image
+  QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
+  QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
+  handItem->setPos(-20, -73);
 
-    // Draw the hand on the canvas
-    this->handScene->addItem(handItem);
+  // Draw the hand on the canvas
+  this->handScene->addItem(handItem);
 
   // Create the task layout
   this->taskTab = new QTabWidget();
@@ -122,7 +125,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   tabFrameLayout->addWidget(taskTab);
   tabFrameLayout->addWidget(this->instructionsView);
-
 
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
   QPushButton *resetButton = new QPushButton();
@@ -201,6 +203,28 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(this->startStopButton, SIGNAL(toggled(bool)), this,
       SLOT(OnStartStop(bool)));
 
+  QHBoxLayout *movementLayout = new QHBoxLayout();
+
+  QSlider *posScalingSlider = new QSlider(Qt::Horizontal);
+  posScalingSlider->setRange(1, 100);
+  posScalingSlider->setValue(this->posScalingFactor*100);
+  posScalingSlider->setToolTip(tr("Adjust arm movement speed"));
+  connect(posScalingSlider, SIGNAL(sliderMoved(int)),
+          this, SLOT(OnScalingSlider(int)));
+
+  QCheckBox *localCoordMoveCheck = new QCheckBox("Local frame");
+  localCoordMoveCheck->setToolTip(tr("Enable movement in arm's local frame"));
+  localCoordMoveCheck->setFocusPolicy(Qt::NoFocus);
+  localCoordMoveCheck->setChecked(true);
+  connect(localCoordMoveCheck, SIGNAL(stateChanged(int)),
+          this, SLOT(OnLocalCoordMove(int)));
+
+  movementLayout->addWidget(localCoordMoveCheck);
+  movementLayout->addWidget(new QLabel(tr("Move speed:")));
+  movementLayout->addWidget(posScalingSlider);
+
+  frameLayout->addLayout(movementLayout);
+
   // Add all widgets to the main frame layout
   frameLayout->addWidget(handView, 1.0);
   frameLayout->addWidget(tabFrame);
@@ -217,7 +241,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   this->setLayout(mainLayout);
   this->move(10, 10);
-  this->resize(450, 800);
+  this->resize(480, 830);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -289,7 +313,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         // Read the contact data from SDF
         std::string contactName = contact->Get<std::string>("name");
         gazebo::math::Vector2d contactPos =
-	  contact->Get<gazebo::math::Vector2d>("pos");
+          contact->Get<gazebo::math::Vector2d>("pos");
         std::string topic = contact->Get<std::string>("topic");
 
         // Create a subscriber that receive contact data
@@ -373,16 +397,18 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
           motor->HasAttribute("increment"))
       {
         std::pair<unsigned int, float> mapping;
-	mapping.first = motor->Get<int>("index");
-	mapping.second = motor->Get<float>("increment");
-	this->motorKeys[motor->Get<std::string>("inc_key")[0]] = mapping;
-	mapping.second = -mapping.second;
-	std::string dec_key = motor->Get<std::string>("dec_key");
-	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
-	// work either).
-        if (dec_key == "amp")
-	  dec_key = "&";
-	this->motorKeys[dec_key[0]] = mapping;
+        mapping.first = motor->Get<int>("index");
+        mapping.second = motor->Get<float>("increment");
+        this->motorKeys[motor->Get<std::string>("inc_key")[0]] = mapping;
+        mapping.second = -mapping.second;
+        std::string decKey = motor->Get<std::string>("dec_key");
+
+        // Special case to work around trouble with parsing "&" ("&amp;" doesn't
+        // work either).
+        if (decKey == "amp")
+          decKey = "&";
+
+        this->motorKeys[decKey[0]] = mapping;
       }
       else
       {
@@ -406,16 +432,17 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
           arm->HasAttribute("increment"))
       {
         std::pair<unsigned int, float> mapping;
-	mapping.first = arm->Get<int>("index");
-	mapping.second = arm->Get<float>("increment");
-	this->armKeys[arm->Get<std::string>("inc_key")[0]] = mapping;
-	mapping.second = -mapping.second;
-	std::string dec_key = arm->Get<std::string>("dec_key");
-	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
-	// work either).
-        if (dec_key == "amp")
-	  dec_key = "&";
-	this->armKeys[dec_key[0]] = mapping;
+        mapping.first = arm->Get<int>("index");
+        mapping.second = arm->Get<float>("increment");
+        this->armKeys[arm->Get<std::string>("inc_key")[0]] = mapping;
+        mapping.second = -mapping.second;
+        std::string decKey = arm->Get<std::string>("dec_key");
+
+        // Special case to work around trouble with parsing "&" ("&amp;" doesn't
+        // work either).
+        if (decKey == "amp")
+          decKey = "&";
+        this->armKeys[decKey[0]] = mapping;
       }
       else
       {
@@ -439,16 +466,16 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
           grasp->HasAttribute("increment"))
       {
         std::pair<std::string, float> mapping;
-	mapping.first = grasp->Get<std::string>("name");
-	mapping.second = grasp->Get<float>("increment");
-	this->graspKeys[grasp->Get<std::string>("inc_key")[0]] = mapping;
-	mapping.second = -mapping.second;
-	std::string dec_key = grasp->Get<std::string>("dec_key");
-	// Special case to work around trouble with parsing "&" ("&amp;" doesn't
-	// work either).
-        if (dec_key == "amp")
-	  dec_key = "&";
-	this->graspKeys[dec_key[0]] = mapping;
+        mapping.first = grasp->Get<std::string>("name");
+        mapping.second = grasp->Get<float>("increment");
+        this->graspKeys[grasp->Get<std::string>("inc_key")[0]] = mapping;
+        mapping.second = -mapping.second;
+        std::string decKey = grasp->Get<std::string>("dec_key");
+        // Special case to work around trouble with parsing "&" ("&amp;" doesn't
+        // work either).
+        if (decKey == "amp")
+          decKey = "&";
+        this->graspKeys[decKey[0]] = mapping;
       }
       else
       {
@@ -467,6 +494,30 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   gazebo::gui::KeyEventHandler::Instance()->SetAutoRepeat(true);
   gazebo::gui::KeyEventHandler::Instance()->AddPressFilter("arat_gui",
                           boost::bind(&HaptixGUIPlugin::OnKeyPress, this, _1));
+
+  // Setup default arm starting pose
+  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
+
+  this->requestPub = this->node->Advertise<gazebo::msgs::Request>(
+      "~/request");
+
+  this->responseSub = this->node->Subscribe("~/response",
+      &HaptixGUIPlugin::OnResponse, this, true);
+
+  // Request info about the mpl arm
+  this->requestMsg = gazebo::msgs::CreateRequest("entity_info", "mpl");
+  this->requestPub->Publish(*this->requestMsg);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResponse(ConstResponsePtr &_msg)
+{
+  if (!this->requestMsg || _msg->id() != this->requestMsg->id())
+    return;
+
+  gazebo::msgs::Model modelMsg;
+  modelMsg.ParseFromString(_msg->serialized_data());
+  //this->armStartPose = gazebo::msgs::Convert(modelMsg.pose());
 }
 
 /////////////////////////////////////////////////
@@ -704,7 +755,6 @@ void HaptixGUIPlugin::OnResetClicked()
 bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 {
   char key = _event.text[0];
-  std::cout << "key: " << key << std::endl;
 
   // The first time, we need to talk to the hand.  Can't do this at startup
   // because the hand might not have been spawned yet.
@@ -723,7 +773,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return false;
     }
-    
+
     this->hxInitialized = true;
   }
 
@@ -766,24 +816,37 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     }
     float inc = arm->second.second;
 
-    float pose_inc_args[6] = {0, 0, 0, 0, 0, 0};
-    pose_inc_args[index] = inc;
-    gazebo::math::Pose increment(gazebo::math::Vector3(pose_inc_args[0],
-                                   pose_inc_args[1], pose_inc_args[2]),
-                                 gazebo::math::Quaternion(pose_inc_args[3],
-                                   pose_inc_args[4], pose_inc_args[5]));
-    gazebo::msgs::Pose msg;
-    gazebo::msgs::Vector3d* vec_msg = msg.mutable_position();
-    vec_msg->set_x(increment.pos.x);
-    vec_msg->set_y(increment.pos.y);
-    vec_msg->set_z(increment.pos.z);
-    gazebo::msgs::Quaternion* quat_msg = msg.mutable_orientation();
-    quat_msg->set_x(increment.rot.x);
-    quat_msg->set_y(increment.rot.y);
-    quat_msg->set_z(increment.rot.z);
-    quat_msg->set_w(increment.rot.w);
+    float poseIncArgs[6] = {0, 0, 0, 0, 0, 0};
+    poseIncArgs[index] = inc;
 
-    //std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
+    gazebo::math::Vector3 pos, rot;
+
+    // Move in the local coordinate frame if true.
+    if (this->localCoordMove)
+    {
+      rot = gazebo::math::Vector3(poseIncArgs[4],
+          -poseIncArgs[3], poseIncArgs[5]);
+      pos = gazebo::math::Vector3(-poseIncArgs[0],
+          -poseIncArgs[1], poseIncArgs[2]);
+
+      pos = this->armStartPose.rot.RotateVector(pos);
+      rot = this->armStartPose.rot.RotateVector(rot);
+    }
+    else
+    {
+      pos = gazebo::math::Vector3(poseIncArgs[0], poseIncArgs[1],
+          poseIncArgs[2]);
+      rot = gazebo::math::Vector3(-poseIncArgs[3], -poseIncArgs[4],
+          poseIncArgs[5]);
+    }
+
+    gazebo::math::Pose increment(pos * this->posScalingFactor, rot);
+    this->armStartPose.rot = gazebo::math::Quaternion(rot) *
+      this->armStartPose.rot;
+
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
+
+    // std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
     this->ignNode.Publish("haptix/arm_pose_inc", msg);
     return true;
   }
@@ -815,20 +878,20 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       gv->set_grasp_value(inc);
 
     bool result;
-    //std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
+    // std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
     haptix::comm::msgs::hxCommand resp;
     if(!this->ignNode.Request("haptix/gazebo/Grasp",
                               grasp,
-			      1000,
-			      resp,
-			      result) || !result)
+                              1000,
+                              resp,
+                              result) || !result)
     {
       gzerr << "Failed to call gazebo/Grasp service" << std::endl;
       return false;
     }
 
     gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
-    
+
     this->lastGraspRequest = grasp;
     // Assign to lastMotorCommand, because now we're tracking the target based
     // purely on grasp poses.
@@ -863,10 +926,10 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       cmd.ref_pos[index] += inc;
 
       // Now command it.
-      /*std::cout << "Sending: " << std::endl;
-       for(int i = 0; i < this->deviceInfo.nmotor; i++)
-         std::cout << cmd.ref_pos[i] << " ";
-      std::cout << std::endl;*/
+      // std::cout << "Sending: " << std::endl;
+      //  for(int i = 0; i < this->deviceInfo.nmotor; i++)
+      //    std::cout << cmd.ref_pos[i] << " ";
+      // std::cout << std::endl;
       ::hxSensor sensor;
       if (::hx_update(::hxGAZEBO, &cmd, &sensor) != ::hxOK)
       {
@@ -889,5 +952,18 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       return true;
     }
   }
+
   return false;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnLocalCoordMove(int _state)
+{
+  this->localCoordMove = _state == Qt::Unchecked ? false : true;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnScalingSlider(int _state)
+{
+  this->posScalingFactor = _state * 0.01;
 }
