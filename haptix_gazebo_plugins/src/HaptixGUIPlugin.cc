@@ -659,7 +659,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
       this->taskList[taskIndex] = taskButton;
 
-      if(taskIndex == this->currentTaskId)
+      if (taskIndex == this->currentTaskId)
       {
         taskButton->setChecked(true);
       }
