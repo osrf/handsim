@@ -150,6 +150,9 @@ namespace haptix_gazebo_plugins
     /// \brief Subscriber of respones.
     private: gazebo::transport::SubscriberPtr responseSub;
 
+    /// \brief Publisher for signaling WorldControl node.
+    private: gazebo::transport::PublisherPtr worldControlPub;
+
     // \brief Set of Gazebo signal connections.
     private: std::vector<gazebo::event::ConnectionPtr> connections;
 

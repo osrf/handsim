@@ -501,6 +501,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->requestPub = this->node->Advertise<gazebo::msgs::Request>(
       "~/request");
 
+  this->worldControlPub = this->node->Advertise<gazebo::msgs::WorldControl>
+                                        ("~/world_control");
+
   this->responseSub = this->node->Subscribe("~/response",
       &HaptixGUIPlugin::OnResponse, this, true);
 
@@ -706,6 +709,11 @@ void HaptixGUIPlugin::OnNextClicked()
   this->taskTab->setCurrentIndex(this->taskList[this->currentTaskId]->Group());
 
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
+
+  // Signal to WorldControl to reset the world
+  gazebo::msgs::WorldControl msg;
+  msg.mutable_reset()->set_all(true);
+  this->worldControlPub->Publish(msg);
 }
 
 ////////////////////////////////////////////////
@@ -746,9 +754,13 @@ void HaptixGUIPlugin::OnResetClicked()
 {
   this->startStopButton->setChecked(false);
 
-  // Signal to the ArrangePlugin to set up the current task
+  // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
-  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
+  
+  // Signal to WorldControl to reset models
+  gazebo::msgs::WorldControl msg;
+  msg.mutable_reset()->set_all(true);
+  this->worldControlPub->Publish(msg);
 }
 
 /////////////////////////////////////////////////
