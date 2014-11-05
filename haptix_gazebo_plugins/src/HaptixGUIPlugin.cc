@@ -157,7 +157,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->startStopButton = new QPushButton();
   this->startStopButton->setCheckable(true);
   this->startStopButton->setText(QString("Start"));
-  this->startStopButton->setDisabled(true);
+  //this->startStopButton->setDisabled(true);
   this->startStyle =
       "QPushButton {"
         "margin: 10px;"
@@ -659,6 +659,11 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
       this->taskList[taskIndex] = taskButton;
 
+      if(taskIndex == this->currentTaskId)
+      {
+        taskButton->setChecked(true);
+      }
+
       task = task->GetNextElement();
 
       count++;
@@ -669,6 +674,10 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     taskGroup = taskGroup->GetNextElement("task_group");
     groupIndex++;
   }
+
+  this->instructionsView->setDocument(this->taskList[this->currentTaskId]
+                                                      ->Instructions());
+
 }
 
 /////////////////////////////////////////////////
