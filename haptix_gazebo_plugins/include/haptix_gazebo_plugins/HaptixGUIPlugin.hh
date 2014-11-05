@@ -1,0 +1,226 @@
+/*
+ * Copyright (C) 2014 Open Source Robotics Foundation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ */
+#ifndef _GUI_ARAT_PLUGIN_HH_
+#define _GUI_ARAT_PLUGIN_HH_
+
+#include <gazebo/common/Events.hh>
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/gui/gui.hh>
+#include <gazebo/gui/GuiPlugin.hh>
+#include <gazebo/math/gzmath.hh>
+#include <gazebo/msgs/msgs.hh>
+#include <gazebo/transport/transport.hh>
+
+#include <ignition/transport.hh>
+#include <haptix/comm/haptix.h>
+#include <haptix/comm/msg/hxCommand.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
+
+namespace haptix_gazebo_plugins
+{
+  // Forward declare task button
+  class TaskButton;
+
+  /// \brief A graphical interface for the HAPTIX project
+  class HaptixGUIPlugin : public gazebo::GUIPlugin
+  {
+    Q_OBJECT
+
+    /// \brief Constructor
+    public: HaptixGUIPlugin();
+
+    /// \brief Destructor
+    public: virtual ~HaptixGUIPlugin();
+
+    // Documentation inherited
+    public: void Load(sdf::ElementPtr _elem);
+
+    /// \brief Callback when a finger contact message is received.
+    /// \param[in] _msg Contact message.
+    private: void OnFingerContact(ConstContactsPtr &_msg);
+
+    /// \brief Signal to set a contact visualization value.
+    /// \param[in] _contactName Name of the contact sensor.
+    /// \param[in] _value Force value.
+    signals: void SetContactForce(QString _contactName, double _value);
+
+    /// \brief Handles setting a contact visualization value.
+    /// \param[in] _contactName Name of the contact sensor.
+    /// \param[in] _value Force value.
+    private slots: void OnSetContactForce(QString _contactName, double _value);
+
+    /// \brief Handles the PreRender Gazebo signal
+    private: void PreRender();
+
+    /// \brief Callback triggered when a task button is pressed.
+    /// \param[in] _id ID of the task.
+    private slots: void OnTaskSent(const int _id);
+
+    /// \brief Helper function to publish a task message
+    /// \param[in] _taskName Name of the task to publish
+    private: void PublishTaskMessage(const std::string &_taskName) const;
+
+    /// \brief Helper function to publish a timer message
+    /// \param[in] _msg Message to publish
+    private: void PublishTimerMessage(const std::string &_msg) const;
+
+    /// \brief Callback when the start/stop button is pressed.
+    /// \param[in] _checked True if the button was checked.
+    private slots: void OnStartStop(bool _checked);
+
+    /// \brief Callback triggered when the next button is clicked
+    private slots: void OnNextClicked();
+
+    /// \brief Callback triggered when the reset button is clicked
+    private slots: void OnResetClicked();
+
+    /// \brief Callback triggered when local frame checked is clicked.
+    /// \param[in] _state State of the check box.
+    private slots: void OnLocalCoordMove(int _state);
+
+    /// \brief Helper function to initialize the task view
+    /// \param[in] _elem SDF element pointer that contains HAPTIX task
+    /// parameters.
+    private: void InitializeTaskView(sdf::ElementPtr _elem);
+
+    /// \brief Handle GUI keypresses
+    /// \param[in] _event Key press event.
+    private: bool OnKeyPress(gazebo::common::KeyEvent _event);
+
+    /// \brief Handle request responses
+    /// \param[in] _msg Response message.
+    private: void OnResponse(ConstResponsePtr &_msg);
+
+    /// \brief Handle position scaling slider movement
+    /// \param[in] _state State of the slider
+    private slots: void OnScalingSlider(int _state);
+
+    /// \brief Size of the contact sensor display circle, in pixels.
+    private: int circleSize;
+
+    /// \brief Minimum force value
+    private: float forceMin;
+
+    /// \brief Maximum force value
+    private: float forceMax;
+
+    /// \brief Minimum force color value
+    private: gazebo::common::Color colorMin;
+
+    /// \brief Maximum force color value
+    private: gazebo::common::Color colorMax;
+
+    /// \brief Which hand is displayed (left, right)
+    private: std::string handSide;
+
+    /// \brief All the finger contact points.
+    private: std::map<std::string, gazebo::math::Vector2d > contactPoints;
+
+    /// \brief The scene onto which is drawn the hand and contact
+    /// force data
+    private: QGraphicsScene *handScene;
+
+    /// \brief Contact force visualization items.
+    private: std::map<std::string, QGraphicsEllipseItem*>
+             contactGraphicsItems;
+
+    /// \brief Subscriber to finger contact sensors.
+    private: std::vector<gazebo::transport::SubscriberPtr> contactSubscribers;
+
+    /// \brief Node used to establish communication with gzserver.
+    private: gazebo::transport::NodePtr node;
+
+    /// \brief Publisher of requests.
+    private: gazebo::transport::PublisherPtr requestPub;
+
+    /// \brief Subscriber of respones.
+    private: gazebo::transport::SubscriberPtr responseSub;
+
+    // \brief Set of Gazebo signal connections.
+    private: std::vector<gazebo::event::ConnectionPtr> connections;
+
+    private: QTabWidget *taskTab;
+
+    /// \brief Text box that hold instructions to the user.
+    private: QTextEdit *instructionsView;
+
+    /// \brief All the tasks in all the groups
+    private: std::map<int, TaskButton*> taskList;
+
+    /// \brief Number of the current task.
+    private: int currentTaskId;
+
+    /// \brief Publisher that talks with the arrange plugin to setup the
+    /// scene.
+    private: gazebo::transport::PublisherPtr taskPub;
+
+    /// \brief Publisher that controls the clock
+    private: gazebo::transport::PublisherPtr timerPub;
+
+    /// \brief Task start/stop button
+    private: QPushButton *startStopButton;
+
+    /// \brief QT style for the start setting of the start/stop button
+    private: std::string startStyle;
+
+    /// \brief QT style for the start setting of the start/stop button
+    private: std::string stopStyle;
+
+    /// \brief A place to store key-to-motor mappings
+    private: std::map<char, std::pair<unsigned int, float> > motorKeys;
+
+    /// \brief A place to store key-to-arm mappings
+    private: std::map<char, std::pair<unsigned int, float> > armKeys;
+
+    /// \brief A place to store key-to-grasp mappings
+    private: std::map<char, std::pair<std::string, float> > graspKeys;
+
+    /// \brief An ignition node that we'll use for sending messages
+    private: ignition::transport::Node ignNode;
+
+    /// \brief Are we in grasp mode, or direct motor control mode?
+    private: bool graspMode;
+
+    /// \brief The last grasp request that we sent
+    private: haptix::comm::msgs::hxGrasp lastGraspRequest;
+
+    /// \brief The last motor command that we sent
+    private: ::hxCommand lastMotorCommand;
+
+    /// \brief The device info returned by the other side
+    private: ::hxDeviceInfo deviceInfo;
+
+    /// \brief Have we initialized our information about the device?
+    private: bool hxInitialized;
+
+    /// \brief The number of initial degrees of freedom that are in the wrist
+    private: unsigned int numWristMotors;
+
+    /// \brief Starting pose of the arm.
+    private: gazebo::math::Pose armStartPose;
+
+    /// \brief Request message used to get the initial arm pose.
+    private: gazebo::msgs::Request *requestMsg;
+
+    /// \brief When true, move in the arm's local coordinate frame.
+    private: bool localCoordMove;
+
+    /// \brief Position movement scaling factor.
+    private: double posScalingFactor;
+  };
+}
+#endif

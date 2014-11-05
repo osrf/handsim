@@ -525,10 +525,10 @@ void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
 {
   math::Pose inputPose(msgs::Convert(_pose));
 
-  this->keyboardPose = inputPose*this->keyboardPose;
+  this->keyboardPose.pos += inputPose.pos;
+  this->keyboardPose.rot = inputPose.rot * this->keyboardPose.rot;
 
   // Add pose to our keyboardPose object
-
   this->staleKeyboardPose = false;
 }
 
@@ -760,11 +760,11 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       // gzdbg << " " << n
       //       << " : " << this->simRobotCommands[n].ref_pos << "\n";
       this->simRobotCommands[n].ref_pos =
-        (this->robotCommand.ref_pos(i) +
+        (this->simRobotCommands[m].ref_pos +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
       this->simRobotCommands[n].ref_vel =
-        (this->robotCommand.ref_vel(i) +
+        (this->simRobotCommands[m].ref_vel +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
 
@@ -1005,7 +1005,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
   for (unsigned int j = 0; j < this->graspPositions.size(); ++j)
   {
     this->graspPositions[j] = 0.0;
-    _rep.add_ref_pos(0.0); 
+    _rep.add_ref_pos(0.0);
   }
 
   for (unsigned int i=0; i < _req.grasps_size(); ++i)
@@ -1016,16 +1016,15 @@ void HaptixControlPlugin::HaptixGraspCallback(
     if (g != this->grasps.end())
     {
       for (unsigned int j=0;
-           j < g->second.size() && j < this->graspPositions.size();
-	   ++j)
+          j < g->second.size() && j < this->graspPositions.size(); ++j)
       {
         float value = _req.grasps(i).grasp_value();
-	if (value < 0.0)
-	  value = 0.0;
-	if (value > 1.0)
-	  value = 1.0;
-	// This superposition logic could use a lot of thought.  But it should
-	// at least work for the case of a single type of grasp.
+        if (value < 0.0)
+          value = 0.0;
+        if (value > 1.0)
+          value = 1.0;
+        // This superposition logic could use a lot of thought.  But it should
+        // at least work for the case of a single type of grasp.
         this->graspPositions[j] += value * g->second[j] / _req.grasps_size();
         _rep.set_ref_pos(j, this->graspPositions[j]);
       }
