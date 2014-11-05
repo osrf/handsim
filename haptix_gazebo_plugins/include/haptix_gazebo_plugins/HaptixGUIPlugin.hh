@@ -141,6 +141,8 @@ namespace haptix_gazebo_plugins
     /// \brief Subscriber to finger contact sensors.
     private: std::vector<gazebo::transport::SubscriberPtr> contactSubscribers;
 
+    private: gazebo::math::Pose initialCameraPose;
+
     /// \brief Node used to establish communication with gzserver.
     private: gazebo::transport::NodePtr node;
 

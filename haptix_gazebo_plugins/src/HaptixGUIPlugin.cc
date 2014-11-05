@@ -272,8 +272,11 @@ HaptixGUIPlugin::~HaptixGUIPlugin()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 {
-  if (gazebo::gui::get_active_camera())
-    gazebo::gui::get_active_camera()->SetHFOV(GZ_DTOR(120));
+  gazebo::rendering::UserCameraPtr userCamera =
+                                            gazebo::gui::get_active_camera();
+  if (userCamera)
+    userCamera->SetHFOV(GZ_DTOR(120));
+  this->initialCameraPose = userCamera->GetWorldPose();
 
   // Hide the scene tree.
   gazebo::gui::Events::leftPaneVisibility(false);
@@ -714,6 +717,9 @@ void HaptixGUIPlugin::OnNextClicked()
   gazebo::msgs::WorldControl msg;
   msg.mutable_reset()->set_all(true);
   this->worldControlPub->Publish(msg);
+
+  // Reset the camera
+  gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
 }
 
 ////////////////////////////////////////////////
@@ -761,6 +767,9 @@ void HaptixGUIPlugin::OnResetClicked()
   gazebo::msgs::WorldControl msg;
   msg.mutable_reset()->set_all(true);
   this->worldControlPub->Publish(msg);
+
+  // Reset the camera
+  gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
 }
 
 /////////////////////////////////////////////////
