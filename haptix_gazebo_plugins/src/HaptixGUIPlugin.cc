@@ -778,7 +778,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   }
 
   // '~' toggles between grasp mode and motor mode
-  /*if (key == '~')
+  if (key == '~')
   {
     // Send a motor command to hold current pose
     ::hxSensor sensor;
@@ -801,7 +801,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     this->graspMode = !this->graspMode;
     gzdbg << "Changed graspMode to: " << this->graspMode << std::endl;
     return false;
-  }*/
+  }
 
   // Is this an arm motion command?  These keys don't overlap with any others.
   std::map<char, std::pair<unsigned int, float> >::const_iterator arm;
