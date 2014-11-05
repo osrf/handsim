@@ -128,6 +128,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
   QPushButton *resetButton = new QPushButton();
+  resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset Test"));
   resetButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
@@ -138,6 +139,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   resetButton->setMaximumWidth(120);
 
   QPushButton *nextButton = new QPushButton();
+  nextButton->setFocusPolicy(Qt::NoFocus);
   nextButton->setText(QString("Next Test"));
   nextButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
@@ -155,9 +157,11 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Start/Stop button
   this->startStopButton = new QPushButton();
+  this->startStopButton->setFocusPolicy(Qt::NoFocus);
   this->startStopButton->setCheckable(true);
   this->startStopButton->setText(QString("Start"));
   this->startStopButton->setDisabled(true);
+
   this->startStyle =
       "QPushButton {"
         "margin: 10px;"
@@ -208,7 +212,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QSlider *posScalingSlider = new QSlider(Qt::Horizontal);
   posScalingSlider->setRange(1, 100);
   posScalingSlider->setValue(this->posScalingFactor*100);
-  posScalingSlider->setToolTip(tr("Adjust arm movement speed"));
+  posScalingSlider->setToolTip(tr("Adjust keyboard arm movement speed"));
   connect(posScalingSlider, SIGNAL(sliderMoved(int)),
           this, SLOT(OnScalingSlider(int)));
 
@@ -220,7 +224,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
           this, SLOT(OnLocalCoordMove(int)));
 
   movementLayout->addWidget(localCoordMoveCheck);
-  movementLayout->addWidget(new QLabel(tr("Move speed:")));
+  movementLayout->addWidget(new QLabel(tr("Arm move speed:")));
   movementLayout->addWidget(posScalingSlider);
 
   frameLayout->addLayout(movementLayout);
@@ -630,6 +634,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
       // Create a new button for the task
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
+      taskButton->setFocusPolicy(Qt::NoFocus);
       taskButton->SetInstructions(instructions);
       taskButton->setEnabled(enabled);
 
