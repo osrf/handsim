@@ -24,6 +24,7 @@ namespace gazebo
 HaptixControlPlugin::HaptixControlPlugin()
 {
   this->pausePolhemus = true;
+  this->gotPausePolhemusRequest = false;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -668,11 +669,15 @@ void HaptixControlPlugin::UpdatePolhemus()
       }
 
       // report back if polhemus is paused
-      if (this->pausePolhemus)
+      if (this->gotPausePolhemusRequest)
       {
+        gzdbg << "have polhemus, responding to pause request\n";
+        // signal pause completion
         msgs::Int res;
         res.set_data(1);
         this->pausePolhemusPub->Publish(res);
+        // reset flag
+        this->gotPausePolhemusRequest = false;
       }
     }
     else
@@ -1071,13 +1076,29 @@ void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 void HaptixControlPlugin::OnPausePolhemus(ConstIntPtr &_msg)
 {
   boost::mutex::scoped_lock pauseLock(this->pausePolhemusMutex);
-  if (_msg->data() == 0)
+  if (this->havePolhemus)
   {
-    this->pausePolhemus = false;
+    gzerr << "got " << _msg->data() << "\n";
+    if (_msg->data() == 0)
+    {
+      this->pausePolhemus = false;
+    }
+    else
+    {
+      this->pausePolhemus = true;
+    }
+    // set request flag
+    this->gotPausePolhemusRequest = true;
+    gzdbg << "got request, set flag " << this->gotPausePolhemusRequest << "\n";
   }
   else
   {
-    this->pausePolhemus = true;
+    // if there's no polhemus
+    gzdbg << "no polhemus, but responding to pause request\n";
+    // signal pause completion
+    msgs::Int res;
+    res.set_data(0);
+    this->pausePolhemusPub->Publish(res);
   }
 }
 

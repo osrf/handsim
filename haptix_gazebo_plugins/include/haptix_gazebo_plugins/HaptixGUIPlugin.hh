@@ -233,12 +233,15 @@ namespace haptix_gazebo_plugins
     /// \brief Subscriber to pause polhemus status
     private: gazebo::transport::SubscriberPtr pausePolhemusSub;
 
+    /// \brief Reset models
+    private: void ResetModels();
+
     /// \brief Callback for subscriber to pause polhemus response
     /// \param[in] _msg pause state
     private: void OnPausePolhemus(ConstIntPtr &_msg);
 
     /// \brief was pause polhemus successful?
-    private: bool pausePolhemus;
+    private: bool polhemusPaused;
   };
 }
 #endif

@@ -720,21 +720,8 @@ void HaptixGUIPlugin::OnNextClicked()
 
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 
-  // Signal to HaptixControlPlugin to pause polhemus tracking
-  gazebo::msgs::Int pause;
-  pause.set_data(1);
-  this->pausePolhemus = false;
-  this->pausePolhemusPub->Publish(pause);
-  while (!this->pausePolhemus)
-  {
-    usleep(1000);
-    gzdbg << "waiting for polhemus to pause.\n";
-  }
-
-  // Signal to WorldControl to reset the world
-  gazebo::msgs::WorldControl msg;
-  msg.mutable_reset()->set_all(true);
-  this->worldControlPub->Publish(msg);
+  // Reset models
+  this->ResetModels();
 
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
@@ -781,13 +768,32 @@ void HaptixGUIPlugin::OnResetClicked()
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
   
-  // Signal to WorldControl to reset models
-  gazebo::msgs::WorldControl msg;
-  msg.mutable_reset()->set_all(true);
-  this->worldControlPub->Publish(msg);
+  // Reset models
+  this->ResetModels();
 
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::ResetModels()
+{
+
+  // Signal to HaptixControlPlugin to pause polhemus tracking
+  this->polhemusPaused = false;
+  gazebo::msgs::Int pause;
+  pause.set_data(1);
+  this->pausePolhemusPub->Publish(pause);
+  while (!this->polhemusPaused)
+  {
+    gzdbg << "waiting for polhemus to pause.\n";
+    usleep(1000000);
+  }
+
+  // Signal to WorldControl to reset the world
+  gazebo::msgs::WorldControl msg;
+  msg.mutable_reset()->set_all(true);
+  this->worldControlPub->Publish(msg);
 }
 
 /////////////////////////////////////////////////
@@ -1001,12 +1007,14 @@ void HaptixGUIPlugin::OnScalingSlider(int _state)
 //////////////////////////////////////////////////
 void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
 {
+  gzdbg << "got pause polhemus response [" << _msg->data() << "]\n";
   if (_msg->data() == 0)
   {
-    this->pausePolhemus = false;
+    gzdbg << "no polhemus to pause.\n";
   }
   else
   {
-    this->pausePolhemus = true;
+    gzdbg << "polhemus paused successfully.\n";
   }
+  this->polhemusPaused = true;
 }

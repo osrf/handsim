@@ -214,6 +214,8 @@ namespace gazebo
     private: void OnKey(ConstRequestPtr &_msg);
     /// \brief pause polhemus updates
     private: bool pausePolhemus;
+    /// \brief got command to pause polhemus updates
+    private: bool gotPausePolhemusRequest;
 
     /// \brief Subscriber to spacenav messages.
     private: gazebo::transport::SubscriberPtr joySub;
