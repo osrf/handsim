@@ -293,6 +293,13 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       this->node->Advertise<gazebo::msgs::GzString>("~/timer_control");
   }
 
+  this->pausePolhemusPub =
+    this->node->Advertise<gazebo::msgs::Int>("~/polhemus/pause_request");
+
+  this->pausePolhemusSub =
+    this->node->Subscribe("~/polhemus/pause_response",
+      &HaptixGUIPlugin::OnPausePolhemus, this);
+
   this->circleSize = _elem->Get<int>("circle_size");
 
   this->forceMin = _elem->Get<double>("force_min");
@@ -713,6 +720,17 @@ void HaptixGUIPlugin::OnNextClicked()
 
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 
+  // Signal to HaptixControlPlugin to pause polhemus tracking
+  gazebo::msgs::Int pause;
+  pause.set_data(1);
+  this->pausePolhemus = false;
+  this->pausePolhemusPub->Publish(pause);
+  while (!this->pausePolhemus)
+  {
+    usleep(1000);
+    gzdbg << "waiting for polhemus to pause.\n";
+  }
+
   // Signal to WorldControl to reset the world
   gazebo::msgs::WorldControl msg;
   msg.mutable_reset()->set_all(true);
@@ -978,4 +996,17 @@ void HaptixGUIPlugin::OnLocalCoordMove(int _state)
 void HaptixGUIPlugin::OnScalingSlider(int _state)
 {
   this->posScalingFactor = _state * 0.01;
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
+{
+  if (_msg->data() == 0)
+  {
+    this->pausePolhemus = false;
+  }
+  else
+  {
+    this->pausePolhemus = true;
+  }
 }

@@ -183,6 +183,8 @@ namespace gazebo
     private: gazebo::msgs::Pose joyMsg;
     /// \brief initial UserCamera pose in world frame, not used.
     private: math::Pose initialCameraPose;
+    /// \brief respond to successful pausing of polhemus
+    private: gazebo::transport::PublisherPtr pausePolhemusPub;
 
     /**********************************************/
     /*                                            */
@@ -216,9 +218,16 @@ namespace gazebo
     /// \brief Subscriber to spacenav messages.
     private: gazebo::transport::SubscriberPtr joySub;
 
+    /// \brief Subscriber to pause polhemus
+    private: gazebo::transport::SubscriberPtr pausePolhemusSub;
+
     /// \brief Callback for subscriber to spacenav messages.
     /// \param[in] _msg Joystick data.
     private: void OnJoy(ConstJoystickPtr &_msg);
+
+    /// \brief Callback for subscriber to pause polhemus
+    /// \param[in] _msg pause state
+    private: void OnPausePolhemus(ConstIntPtr &_msg);
 
     /// \brief Copy of latest Joystick message.
     private: msgs::Joystick latestJoystickMessage;
@@ -442,6 +451,7 @@ namespace gazebo
 
     private: boost::mutex updateMutex;
     private: boost::mutex baseLinkMutex;
+    private: boost::mutex pausePolhemusMutex;
     private: sdf::ElementPtr sdf;
   };
 

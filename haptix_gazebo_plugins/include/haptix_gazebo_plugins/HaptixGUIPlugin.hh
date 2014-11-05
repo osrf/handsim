@@ -226,6 +226,19 @@ namespace haptix_gazebo_plugins
 
     /// \brief Position movement scaling factor.
     private: double posScalingFactor;
+
+    /// \brief Publish command to pause polhemus
+    private: gazebo::transport::PublisherPtr pausePolhemusPub;
+
+    /// \brief Subscriber to pause polhemus status
+    private: gazebo::transport::SubscriberPtr pausePolhemusSub;
+
+    /// \brief Callback for subscriber to pause polhemus response
+    /// \param[in] _msg pause state
+    private: void OnPausePolhemus(ConstIntPtr &_msg);
+
+    /// \brief was pause polhemus successful?
+    private: bool pausePolhemus;
   };
 }
 #endif
