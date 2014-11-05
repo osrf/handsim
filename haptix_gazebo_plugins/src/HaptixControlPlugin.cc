@@ -1075,13 +1075,6 @@ void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
-{
-  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
-  this->userCameraPose = math::Pose(msgs::Convert(*_msg));
-}
-
-//////////////////////////////////////////////////
 void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->joystickMessageMutex);
