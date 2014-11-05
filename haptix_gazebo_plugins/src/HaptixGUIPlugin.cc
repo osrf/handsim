@@ -697,6 +697,12 @@ void HaptixGUIPlugin::OnTaskSent(const int _id)
   this->instructionsView->setDocument(this->taskList[_id]->Instructions());
   this->currentTaskId = _id;
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
+
+  // Reset models
+  this->ResetModels();
+
+  // Reset the camera
+  gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
 }
 
 ////////////////////////////////////////////////
