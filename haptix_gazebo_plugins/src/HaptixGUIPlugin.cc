@@ -778,16 +778,17 @@ void HaptixGUIPlugin::OnResetClicked()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::ResetModels()
 {
-
   // Signal to HaptixControlPlugin to pause polhemus tracking
   this->polhemusPaused = false;
   gazebo::msgs::Int pause;
   pause.set_data(1);
   this->pausePolhemusPub->Publish(pause);
-  while (!this->polhemusPaused)
+  int maxTries = 30;
+  while (maxTries > 0 && !this->polhemusPaused)
   {
-    gzdbg << "waiting for polhemus to pause.\n";
-    usleep(1000000);
+    gzdbg << "waiting for polhemus to pause (max wait 3 sec).\n";
+    --maxTries;
+    usleep(100000);
   }
 
   // Signal to WorldControl to reset the world
