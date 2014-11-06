@@ -127,8 +127,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   tabFrameLayout->addWidget(this->instructionsView);
 
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
+
+  // reset all button
   QPushButton *resetButton = new QPushButton();
-  resetButton->setText(QString("Reset Test"));
+  resetButton->setText(QString("Reset All"));
   resetButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
@@ -137,6 +139,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
   resetButton->setMaximumWidth(120);
 
+  // next scene button
   QPushButton *nextButton = new QPushButton();
   nextButton->setText(QString("Next Test"));
   nextButton->setStyleSheet(
@@ -147,7 +150,20 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
   nextButton->setMaximumWidth(120);
 
+  // add reset scene only
+  QPushButton *resetSceneButton = new QPushButton();
+  resetSceneButton->setText(QString("Reset Scene"));
+  resetSceneButton->setStyleSheet(
+      "background-color: rgba(120, 120, 120, 255);"
+      "border: 0px;"
+      "border-radius: 4px;"
+      "color: #ffffff");
+  connect(resetSceneButton, SIGNAL(clicked()), this,
+    SLOT(OnResetSceneClicked()));
+  resetSceneButton->setMaximumWidth(120);
+
   cycleButtonLayout->addWidget(resetButton);
+  cycleButtonLayout->addWidget(resetSceneButton);
   cycleButtonLayout->addWidget(nextButton);
 
   QFrame *cycleButtonFrame = new QFrame;
@@ -779,6 +795,18 @@ void HaptixGUIPlugin::OnResetClicked()
 
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
+}
+
+////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetSceneClicked()
+{
+  this->startStopButton->setChecked(false);
+
+  // Signal to the TimerPlugin to reset the clock
+  this->PublishTimerMessage("reset");
+  
+  // place scene objects back
+  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 }
 
 /////////////////////////////////////////////////
