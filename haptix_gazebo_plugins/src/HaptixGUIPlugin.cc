@@ -258,7 +258,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
   
-  //FIXME
+  // currentTaskId has default value of 0, gets set after reading SDF
   this->currentTaskId = 0;
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
