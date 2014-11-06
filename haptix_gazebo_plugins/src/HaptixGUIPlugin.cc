@@ -995,7 +995,9 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     for (unsigned int i = this->numWristMotors;
          i < this->deviceInfo.nmotor;
          ++i)
+    {
       this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
+    }
     return true;
   }
 
@@ -1035,7 +1037,19 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
       // And record it for next time
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
-        this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
+      {
+        if (cmd.ref_pos[i] < this->deviceInfo.limit[i][0]){
+          this->lastMotorCommand.ref_pos[i] = this->deviceInfo.limit[i][0];
+        }
+        else if (cmd.ref_pos[i] > this->deviceInfo.limit[i][1])
+        {
+          this->lastMotorCommand.ref_pos[i] = this->deviceInfo.limit[i][1];
+        }
+        else
+        {
+          this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
+        }
+      }
 
       return true;
     }
