@@ -17,6 +17,8 @@
 #ifndef _GUI_ARAT_PLUGIN_HH_
 #define _GUI_ARAT_PLUGIN_HH_
 
+#include <boost/thread/mutex.hpp>
+
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/gui/gui.hh>
@@ -141,6 +143,8 @@ namespace haptix_gazebo_plugins
     /// \brief Subscriber to finger contact sensors.
     private: std::vector<gazebo::transport::SubscriberPtr> contactSubscribers;
 
+    private: gazebo::math::Pose initialCameraPose;
+
     /// \brief Node used to establish communication with gzserver.
     private: gazebo::transport::NodePtr node;
 
@@ -149,6 +153,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief Subscriber of respones.
     private: gazebo::transport::SubscriberPtr responseSub;
+
+    /// \brief Publisher for signaling WorldControl node.
+    private: gazebo::transport::PublisherPtr worldControlPub;
 
     // \brief Set of Gazebo signal connections.
     private: std::vector<gazebo::event::ConnectionPtr> connections;
@@ -221,6 +228,25 @@ namespace haptix_gazebo_plugins
 
     /// \brief Position movement scaling factor.
     private: double posScalingFactor;
+
+    /// \brief Publish command to pause polhemus
+    private: gazebo::transport::PublisherPtr pausePolhemusPub;
+
+    /// \brief Subscriber to pause polhemus status
+    private: gazebo::transport::SubscriberPtr pausePolhemusSub;
+
+    /// \brief Reset models, signal Polhemus to pause, reset hand state
+    private: void ResetModels();
+
+    /// \brief Callback for subscriber to pause polhemus response
+    /// \param[in] _msg pause state
+    private: void OnPausePolhemus(ConstIntPtr &_msg);
+
+    /// \brief was pause polhemus successful?
+    private: bool polhemusPaused;
+
+    /// \brief a lock to hold when commanding wrist/finger positions
+    private: boost::mutex motorCommandMutex;
   };
 }
 #endif
