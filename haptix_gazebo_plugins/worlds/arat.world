@@ -123,7 +123,7 @@
             <enabled>1</enabled>
             <icon>file://config/arat_icons/grip_1.jpg</icon>
             <instructions>
-              Instructions: Pour the contents of the filled cup into the empty cup.
+              Instructions: Pour the marble from one cup into the other.
             </instructions>
           </task>
 
@@ -281,6 +281,7 @@
     <include>
       <uri>model://wooden_case</uri>
       <pose>0 0.037 1.015 0 0 -1.570796</pose>
+      <static>true</static>
     </include>
 
     <!-- The apl_description model is not (yet) publicly available. -->
