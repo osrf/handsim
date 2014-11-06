@@ -784,6 +784,8 @@ void HaptixGUIPlugin::OnResetClicked()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::ResetModels()
 {
+  boost::mutex::scoped_lock lock(this->motorCommandMutex);
+
   // Signal to HaptixControlPlugin to pause polhemus tracking
   this->polhemusPaused = false;
   gazebo::msgs::Int pause;
@@ -801,11 +803,34 @@ void HaptixGUIPlugin::ResetModels()
   gazebo::msgs::WorldControl msg;
   msg.mutable_reset()->set_all(true);
   this->worldControlPub->Publish(msg);
+
+  // Also reset wrist and finger posture
+  memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+  ::hxSensor sensor;
+  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+    gzerr << "hx_update(): Request error.\n" << std::endl;
+  // And zero the grasp, if any.
+  if (this->lastGraspRequest.grasps_size() > 0)
+  {
+    this->lastGraspRequest.mutable_grasps(0)->set_grasp_value(0.0);
+    haptix::comm::msgs::hxCommand resp;
+    bool result;
+    if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                              this->lastGraspRequest,
+                              1000,
+                              resp,
+                              result) || !result)
+    {
+      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+    }
+  }
 }
 
 /////////////////////////////////////////////////
 bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 {
+  boost::mutex::scoped_lock lock(this->motorCommandMutex);
+
   char key = _event.text[0];
 
   // The first time, we need to talk to the hand.  Can't do this at startup

@@ -17,6 +17,8 @@
 #ifndef _GUI_ARAT_PLUGIN_HH_
 #define _GUI_ARAT_PLUGIN_HH_
 
+#include <boost/thread/mutex.hpp>
+
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/gui/gui.hh>
@@ -242,6 +244,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief was pause polhemus successful?
     private: bool polhemusPaused;
+
+    /// \brief a lock to hold when commanding wrist/finger positions
+    private: boost::mutex motorCommandMutex;
   };
 }
 #endif
