@@ -262,6 +262,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
 
+  // currentTaskId has default value of 0, gets set after reading SDF
   this->currentTaskId = 0;
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
@@ -632,6 +633,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     groupFrame->setLayout(groupLayout);
 
     int count = 0;
+    bool initialTab = false;
 
     // Process each task in the group
     while (task)
@@ -676,6 +678,14 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       }
 
       this->taskList[taskIndex] = taskButton;
+      if (enabled &&
+          (task->HasElement("initial")) && (task->Get<int>("initial") == 1))
+      {
+        this->currentTaskId = taskIndex;
+        taskButton->setChecked(true);
+        this->startStopButton->setDisabled(false);
+        initialTab = true;
+      }
 
       task = task->GetNextElement();
 
@@ -684,9 +694,14 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     }
 
     this->taskTab->addTab(groupFrame, QString::fromStdString(taskGroupName));
+    if (initialTab)
+      this->taskTab->setCurrentIndex(groupIndex);
     taskGroup = taskGroup->GetNextElement("task_group");
     groupIndex++;
   }
+
+  this->instructionsView->setDocument(
+      this->taskList[this->currentTaskId] ->Instructions());
 }
 
 /////////////////////////////////////////////////
