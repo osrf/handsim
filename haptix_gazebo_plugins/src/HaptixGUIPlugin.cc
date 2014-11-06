@@ -689,7 +689,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
         QPixmap iconPixmap(QString::fromStdString(iconPath));
 
         taskButton->setIcon(QIcon(iconPixmap));
-        taskButton->setIconSize(QSize(60, 60));
+        taskButton->setIconSize(QSize(60, 54));
         taskButton->setMinimumSize(80, 80);
         taskButton->setMaximumSize(100, 80);
       }
@@ -810,7 +810,7 @@ void HaptixGUIPlugin::OnResetClicked()
 
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
-  
+
   // Reset models
   this->ResetModels();
 
@@ -1024,7 +1024,9 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     for (unsigned int i = this->numWristMotors;
          i < this->deviceInfo.nmotor;
          ++i)
+    {
       this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
+    }
     return true;
   }
 
@@ -1073,7 +1075,20 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
       // And record it for next time
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
-        this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
+      {
+        if (cmd.ref_pos[i] < this->deviceInfo.limit[i][0])
+        {
+          this->lastMotorCommand.ref_pos[i] = this->deviceInfo.limit[i][0];
+        }
+        else if (cmd.ref_pos[i] > this->deviceInfo.limit[i][1])
+        {
+          this->lastMotorCommand.ref_pos[i] = this->deviceInfo.limit[i][1];
+        }
+        else
+        {
+          this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
+        }
+      }
 
       return true;
     }
