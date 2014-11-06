@@ -1038,7 +1038,8 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       // And record it for next time
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
       {
-        if (cmd.ref_pos[i] < this->deviceInfo.limit[i][0]){
+        if (cmd.ref_pos[i] < this->deviceInfo.limit[i][0])
+        {
           this->lastMotorCommand.ref_pos[i] = this->deviceInfo.limit[i][0];
         }
         else if (cmd.ref_pos[i] > this->deviceInfo.limit[i][1])
