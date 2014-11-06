@@ -235,7 +235,7 @@ namespace haptix_gazebo_plugins
     /// \brief Subscriber to pause polhemus status
     private: gazebo::transport::SubscriberPtr pausePolhemusSub;
 
-    /// \brief Reset models
+    /// \brief Reset models, signal Polhemus to pause, reset hand state
     private: void ResetModels();
 
     /// \brief Callback for subscriber to pause polhemus response
