@@ -257,7 +257,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Connect to the PreRender Gazebo signal
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
-
+  
+  //FIXME
   this->currentTaskId = 0;
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
@@ -658,9 +659,9 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       }
 
       this->taskList[taskIndex] = taskButton;
-
-      if (taskIndex == this->currentTaskId)
+      if (task->Get<int>("initial") == 1)
       {
+        this->currentTaskId = taskIndex;
         taskButton->setChecked(true);
         this->startStopButton->setDisabled(false);
       }
