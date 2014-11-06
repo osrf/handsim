@@ -257,7 +257,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Connect to the PreRender Gazebo signal
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
-  
+
   // currentTaskId has default value of 0, gets set after reading SDF
   this->currentTaskId = 0;
 
@@ -666,7 +666,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
         this->currentTaskId = taskIndex;
         taskButton->setChecked(true);
         this->startStopButton->setDisabled(false);
-	initialTab = true;
+        initialTab = true;
       }
 
       task = task->GetNextElement();
@@ -682,9 +682,8 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     groupIndex++;
   }
 
-  this->instructionsView->setDocument(this->taskList[this->currentTaskId]
-                                                      ->Instructions());
-
+  this->instructionsView->setDocument(
+      this->taskList[this->currentTaskId] ->Instructions());
 }
 
 /////////////////////////////////////////////////
