@@ -130,6 +130,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // reset all button
   QPushButton *resetButton = new QPushButton();
+  resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
   resetButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
@@ -141,6 +142,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // next scene button
   QPushButton *nextButton = new QPushButton();
+  nextButton->setFocusPolicy(Qt::NoFocus);
   nextButton->setText(QString("Next Test"));
   nextButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
@@ -152,6 +154,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // add reset scene only
   QPushButton *resetSceneButton = new QPushButton();
+  resetSceneButton->setFocusPolicy(Qt::NoFocus);
   resetSceneButton->setText(QString("Reset Scene"));
   resetSceneButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
@@ -171,9 +174,11 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Start/Stop button
   this->startStopButton = new QPushButton();
+  this->startStopButton->setFocusPolicy(Qt::NoFocus);
   this->startStopButton->setCheckable(true);
   this->startStopButton->setText(QString("Start"));
   this->startStopButton->setDisabled(true);
+
   this->startStyle =
       "QPushButton {"
         "margin: 10px;"
@@ -224,7 +229,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QSlider *posScalingSlider = new QSlider(Qt::Horizontal);
   posScalingSlider->setRange(1, 100);
   posScalingSlider->setValue(this->posScalingFactor*100);
-  posScalingSlider->setToolTip(tr("Adjust arm movement speed"));
+  posScalingSlider->setToolTip(tr("Adjust keyboard arm movement speed"));
   connect(posScalingSlider, SIGNAL(sliderMoved(int)),
           this, SLOT(OnScalingSlider(int)));
 
@@ -236,7 +241,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
           this, SLOT(OnLocalCoordMove(int)));
 
   movementLayout->addWidget(localCoordMoveCheck);
-  movementLayout->addWidget(new QLabel(tr("Move speed:")));
+  movementLayout->addWidget(new QLabel(tr("Arm move speed:")));
   movementLayout->addWidget(posScalingSlider);
 
   frameLayout->addLayout(movementLayout);
@@ -274,6 +279,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
 
+  // currentTaskId has default value of 0, gets set after reading SDF
   this->currentTaskId = 0;
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
@@ -644,6 +650,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     groupFrame->setLayout(groupLayout);
 
     int count = 0;
+    bool initialTab = false;
 
     // Process each task in the group
     while (task)
@@ -659,6 +666,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
       // Create a new button for the task
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
+      taskButton->setFocusPolicy(Qt::NoFocus);
       taskButton->SetInstructions(instructions);
       taskButton->setEnabled(enabled);
 
@@ -687,6 +695,14 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       }
 
       this->taskList[taskIndex] = taskButton;
+      if (enabled &&
+          (task->HasElement("initial")) && (task->Get<int>("initial") == 1))
+      {
+        this->currentTaskId = taskIndex;
+        taskButton->setChecked(true);
+        this->startStopButton->setDisabled(false);
+        initialTab = true;
+      }
 
       task = task->GetNextElement();
 
@@ -695,9 +711,14 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     }
 
     this->taskTab->addTab(groupFrame, QString::fromStdString(taskGroupName));
+    if (initialTab)
+      this->taskTab->setCurrentIndex(groupIndex);
     taskGroup = taskGroup->GetNextElement("task_group");
     groupIndex++;
   }
+
+  this->instructionsView->setDocument(
+      this->taskList[this->currentTaskId] ->Instructions());
 }
 
 /////////////////////////////////////////////////
