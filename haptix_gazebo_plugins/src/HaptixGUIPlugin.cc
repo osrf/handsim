@@ -672,7 +672,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
         QPixmap iconPixmap(QString::fromStdString(iconPath));
 
         taskButton->setIcon(QIcon(iconPixmap));
-        taskButton->setIconSize(QSize(60, 60));
+        taskButton->setIconSize(QSize(60, 54));
         taskButton->setMinimumSize(80, 80);
         taskButton->setMaximumSize(100, 80);
       }
@@ -793,7 +793,7 @@ void HaptixGUIPlugin::OnResetClicked()
 
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
-  
+
   // Reset models
   this->ResetModels();
 
