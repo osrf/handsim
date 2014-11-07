@@ -826,9 +826,11 @@ void HaptixGUIPlugin::ResetModels()
 
   // Also reset wrist and finger posture
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-  ::hxSensor sensor;
-  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+  //::hxSensor sensor;
+  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                    != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
+
   // And zero the grasp, if any.
   if (this->lastGraspRequest.grasps_size() > 0)
   {
@@ -864,8 +866,9 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       return false;
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-    ::hxSensor sensor;
-    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK )
+    //::hxSensor sensor;
+    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                   != ::hxOK )
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return false;
@@ -878,8 +881,9 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   if (key == '~')
   {
     // Send a motor command to hold current pose
-    ::hxSensor sensor;
-    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+    //::hxSensor sensor;
+    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                    != ::hxOK)
     {
       gzerr << "hx_update(): Request error." << std::endl;
     }
@@ -1029,8 +1033,8 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       //  for(int i = 0; i < this->deviceInfo.nmotor; i++)
       //    std::cout << cmd.ref_pos[i] << " ";
       // std::cout << std::endl;
-      ::hxSensor sensor;
-      if (::hx_update(::hxGAZEBO, &cmd, &sensor) != ::hxOK)
+      //::hxSensor sensor;
+      if (::hx_update(::hxGAZEBO, &cmd, &this->lastSensor) != ::hxOK)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }

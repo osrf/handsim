@@ -208,6 +208,9 @@ namespace haptix_gazebo_plugins
     /// \brief The last motor command that we sent
     private: ::hxCommand lastMotorCommand;
 
+    /// \brief The last sensor update that we received
+    private: ::hxSensor lastSensor;
+
     /// \brief The device info returned by the other side
     private: ::hxDeviceInfo deviceInfo;
 
