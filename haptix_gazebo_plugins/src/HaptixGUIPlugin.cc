@@ -289,6 +289,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 /////////////////////////////////////////////////
 HaptixGUIPlugin::~HaptixGUIPlugin()
 {
+  this->pollContactThread.join();
 }
 
 /////////////////////////////////////////////////
@@ -542,6 +543,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   // Request info about the mpl arm
   this->requestMsg = gazebo::msgs::CreateRequest("entity_info", "mpl");
   this->requestPub->Publish(*this->requestMsg);
+
+
+  this->pollContactThread = boost::thread(
+    boost::bind(&HaptixGUIPlugin::PollContact, this));
 }
 
 /////////////////////////////////////////////////
@@ -831,6 +836,11 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 }
 
 /////////////////////////////////////////////////
+void HaptixGUIPlugin::PollContact()
+{
+}
+
+/////////////////////////////////////////////////
 void HaptixGUIPlugin::ResetModels()
 {
   boost::mutex::scoped_lock lock(this->motorCommandMutex);
@@ -1095,6 +1105,17 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   }
 
   return false;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::UpdateSensorContact()
+{
+  for (int i = 0; i < this->deviceInfo.ncontactsensor; i++)
+  {
+    this->contactPoints[this->contactNames[i]] = this->lastSensor.contact[i];
+    gzdbg << "Setting contact: " << this->contactNames[i]
+          << ": " << this->lastSensor.contact[i] << std::endl;
+  }
 }
 
 /////////////////////////////////////////////////

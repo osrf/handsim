@@ -250,6 +250,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief a lock to hold when commanding wrist/finger positions
     private: boost::mutex motorCommandMutex;
+
+    /// \brief start a thread to poll contact sensor data
+    private: boost::thread pollContactThread;
+
+    /// \brief start a thread to poll contact sensor data
+    private: void PollContact();
   };
 }
 #endif
