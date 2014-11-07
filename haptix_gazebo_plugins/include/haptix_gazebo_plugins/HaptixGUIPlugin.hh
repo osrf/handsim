@@ -65,6 +65,7 @@ namespace haptix_gazebo_plugins
     /// \param[in] _value Force value.
     private slots: void OnSetContactForce(QString _contactName, double _value);
 
+    private: void UpdateSensorContact();
     /// \brief Handles the PreRender Gazebo signal
     private: void PreRender();
 
@@ -131,6 +132,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief All the finger contact points.
     private: std::map<std::string, gazebo::math::Vector2d > contactPoints;
+    
+    /// \brief A map of contact sensor indices to human-readable names.
+    private: std::map<int, std::string> contactNames;
 
     /// \brief The scene onto which is drawn the hand and contact
     /// force data

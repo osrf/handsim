@@ -349,6 +349,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         // Get the position of the contact
         this->contactPoints[contactName] = contactPos;
 
+        // Get the contact index
+        int index = contact->Get<int>("index");
+        this->contactNames[index] = contactName;
+
         contact = contact->GetNextElement();
       }
     }
@@ -587,6 +591,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
 
   this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
+
 }
 
 /////////////////////////////////////////////////
@@ -831,6 +836,8 @@ void HaptixGUIPlugin::ResetModels()
                                                                     != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
 
+  //this->UpdateSensorContact();
+
   // And zero the grasp, if any.
   if (this->lastGraspRequest.grasps_size() > 0)
   {
@@ -873,6 +880,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return false;
     }
+    //this->UpdateSensorContact();
 
     this->hxInitialized = true;
   }
@@ -887,6 +895,8 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     {
       gzerr << "hx_update(): Request error." << std::endl;
     }
+
+    this->UpdateSensorContact();
     if (this->graspMode)
     {
       // Send an empty grasp request, to switch modes in the control plugin
@@ -1038,6 +1048,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }
+      this->UpdateSensorContact();
 
       // And record it for next time
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
@@ -1055,12 +1066,23 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
         }
       }
-
+      
       return true;
     }
   }
 
   return false;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::UpdateSensorContact()
+{
+  for (int i = 0; i < this->deviceInfo.ncontactsensor; i++)
+  {
+    this->contactPoints[this->contactNames[i]] = this->lastSensor.contact[i];
+   gzdbg << "Setting contact: " << this->contactNames[i] << ": " <<
+            this->lastSensor.contact[i] << std::endl;
+  }
 }
 
 /////////////////////////////////////////////////
