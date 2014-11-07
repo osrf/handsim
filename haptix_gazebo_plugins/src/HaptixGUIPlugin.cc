@@ -367,6 +367,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         // Get the position of the contact
         this->contactPoints[contactName] = contactPos;
 
+        // Get the contact index
+        int index = contact->Get<int>("index");
+        this->contactNames[index] = contactName;
+
         contact = contact->GetNextElement();
       }
     }
@@ -609,6 +613,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
 
   this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
+
 }
 
 /////////////////////////////////////////////////
@@ -865,9 +870,13 @@ void HaptixGUIPlugin::ResetModels()
 
   // Also reset wrist and finger posture
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-  ::hxSensor sensor;
-  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+  //::hxSensor sensor;
+  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                    != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
+
+  //this->UpdateSensorContact();
+
   // And zero the grasp, if any.
   if (this->lastGraspRequest.grasps_size() > 0)
   {
@@ -903,12 +912,14 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       return false;
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-    ::hxSensor sensor;
-    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK )
+    //::hxSensor sensor;
+    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                   != ::hxOK )
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return false;
     }
+    //this->UpdateSensorContact();
 
     this->hxInitialized = true;
   }
@@ -917,11 +928,14 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   if (key == '~')
   {
     // Send a motor command to hold current pose
-    ::hxSensor sensor;
-    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+    //::hxSensor sensor;
+    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                    != ::hxOK)
     {
       gzerr << "hx_update(): Request error." << std::endl;
     }
+
+    //this->UpdateSensorContact();
     if (this->graspMode)
     {
       // Send an empty grasp request, to switch modes in the control plugin
@@ -1068,11 +1082,12 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       //  for(int i = 0; i < this->deviceInfo.nmotor; i++)
       //    std::cout << cmd.ref_pos[i] << " ";
       // std::cout << std::endl;
-      ::hxSensor sensor;
-      if (::hx_update(::hxGAZEBO, &cmd, &sensor) != ::hxOK)
+      //::hxSensor sensor;
+      if (::hx_update(::hxGAZEBO, &cmd, &this->lastSensor) != ::hxOK)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }
+      //this->UpdateSensorContact();
 
       // print current command for capturing into grasp
       gzdbg << "Current grasp:\n";
@@ -1099,7 +1114,6 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
         }
       }
-
       return true;
     }
   }
