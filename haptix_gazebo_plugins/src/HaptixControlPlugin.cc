@@ -401,12 +401,18 @@ void HaptixControlPlugin::LoadHandControl()
     sensors::SensorManager *mgr = sensors::SensorManager::Instance();
     // Get a pointer to the contact sensor
     sensors::ContactSensorPtr sensor =
-        boost::dynamic_pointer_cast<sensors::ContactSensor>
-        (mgr->GetSensor(this->contactSensorNames[id]));
+      boost::dynamic_pointer_cast<sensors::ContactSensor>(
+      mgr->GetSensor(this->contactSensorNames[id]));
+
     if (sensor)
     {
-      /// \TODO: assume id in order
       this->contactSensors.push_back(sensor);
+
+      // create an event for this sensor
+      event::ConnectionPtr sensorUpdate =
+        sensor->ConnectUpdated(
+        boost::bind(&HaptixControlPlugin::OnContactSensorUpdate, this));
+      this->contactSensorUpdates.push_back(sensorUpdate);
     }
     else
     {
@@ -516,6 +522,12 @@ void HaptixControlPlugin::LoadHandControl()
     angvel->set_y(0);
     angvel->set_z(0);
   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+void HaptixControlPlugin::OnContactSensorUpdate()
+{
+  // how do we know which sensor triggered this update?
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -851,17 +863,24 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     this->robotState.set_joint_vel(i, this->joints[i]->GetVelocity(0));
   }
 
+  // gzerr << "contactSensors " << this->contactSensors.size() << "\n";
   for (unsigned int i = 0; i < this->contactSensors.size(); ++i)
   {
     // for now, aggregate forces into a single scalar
     math::Vector3 contactForce;
     math::Vector3 contactTorque;
+    
     msgs::Contacts contacts = this->contactSensors[i]->GetContacts();
     // contact sensor report contact between pairs of bodies
+    if (contacts.contact().size() > 0)
+      gzerr << "  name " << this->contactSensors[i]->GetName()
+            << " contacts " << contacts.contact().size() << "\n";
     for (unsigned int j = 0; j < contacts.contact().size(); ++j)
     {
       msgs::Contact contact = contacts.contact(j);
       // each contact can have multiple wrenches
+      if (contact.wrench().size() > 0)
+        gzerr << "    wrenches " << contact.wrench().size() << "\n";
       for (unsigned int k = 0; k < contact.wrench().size(); ++k)
       {
         msgs::JointWrench wrench = contact.wrench(k);
@@ -869,6 +888,9 @@ void HaptixControlPlugin::GetRobotStateFromSim()
         // body_2_wrench should be -body_1_wrench?
         contactForce += msgs::Convert(wrench.body_1_wrench().force());
         contactTorque += msgs::Convert(wrench.body_1_wrench().torque());
+
+        gzerr << "        contact [" << i << ", " << j
+              << ", " << k << "] : [" << contactForce << "]\n";
       }
     }
 
@@ -989,10 +1011,6 @@ void HaptixControlPlugin::HaptixUpdateCallback(
       haptix::comm::msgs::hxSensor &_rep, bool &_result)
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
-
-  // is this needed?
-  // if (_service != updateTopic)
-  //   _result = false;
 
   // Read the request parameters.
   // Debug output.

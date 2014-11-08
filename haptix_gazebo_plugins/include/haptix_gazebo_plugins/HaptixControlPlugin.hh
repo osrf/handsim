@@ -361,6 +361,8 @@ namespace gazebo
     /// \brief: gazebo contact sensors
     /// create a list of contact sensors based on contactSensorNames
     private: std::vector<sensors::ContactSensorPtr> contactSensors;
+    private: std::vector<event::ConnectionPtr> contactSensorUpdates;
+    private: void OnContactSensorUpdate();
 
     /// \brief: imu sensor names
     /// Reads from plugin SDF, example:

@@ -289,7 +289,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 /////////////////////////////////////////////////
 HaptixGUIPlugin::~HaptixGUIPlugin()
 {
-  this->pollContactThread.join();
+  this->pollSensorsThread.join();
 }
 
 /////////////////////////////////////////////////
@@ -347,12 +347,6 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         std::string contactName = contact->Get<std::string>("name");
         gazebo::math::Vector2d contactPos =
           contact->Get<gazebo::math::Vector2d>("pos");
-        std::string topic = contact->Get<std::string>("topic");
-
-        // Create a subscriber that receive contact data
-        gazebo::transport::SubscriberPtr sub = this->node->Subscribe(topic,
-            &HaptixGUIPlugin::OnFingerContact, this);
-        this->contactSubscribers.push_back(sub);
 
         this->contactGraphicsItems[contactName] =
           new QGraphicsEllipseItem(contactPos.x,
@@ -548,9 +542,8 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->requestMsg = gazebo::msgs::CreateRequest("entity_info", "mpl");
   this->requestPub->Publish(*this->requestMsg);
 
-
-  this->pollContactThread = boost::thread(
-    boost::bind(&HaptixGUIPlugin::PollContact, this));
+  this->pollSensorsThread = boost::thread(
+    boost::bind(&HaptixGUIPlugin::PollSensors, this));
 }
 
 /////////////////////////////////////////////////
@@ -562,35 +555,6 @@ void HaptixGUIPlugin::OnResponse(ConstResponsePtr &_msg)
   gazebo::msgs::Model modelMsg;
   modelMsg.ParseFromString(_msg->serialized_data());
   //this->armStartPose = gazebo::msgs::Convert(modelMsg.pose());
-}
-
-/////////////////////////////////////////////////
-void HaptixGUIPlugin::OnFingerContact(ConstContactsPtr &_msg)
-{
-  // Parse out the finger name
-  if (_msg->contact_size() > 0)
-  {
-    std::string collisionName1 = _msg->contact(0).collision1();
-    std::string collisionName2 = _msg->contact(0).collision2();
-
-    // Calculate the force
-    gazebo::msgs::Vector3d forceVector = _msg->contact(0).wrench(0).
-      body_1_wrench().force();
-    double force = gazebo::math::Vector3(forceVector.x(), forceVector.y(),
-        forceVector.z()).GetLength();
-
-    if (this->contactPoints.find(collisionName1) != this->contactPoints.end())
-    {
-      // Draw the new force value
-      this->SetContactForce(QString::fromStdString(collisionName1), force);
-    }
-    else if (this->contactPoints.find(collisionName2) !=
-             this->contactPoints.end())
-    {
-      // Draw the new force value
-      this->SetContactForce(QString::fromStdString(collisionName2), force);
-    }
-  }
 }
 
 /////////////////////////////////////////////////
@@ -841,8 +805,43 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 }
 
 /////////////////////////////////////////////////
-void HaptixGUIPlugin::PollContact()
+void HaptixGUIPlugin::PollSensors()
 {
+  while(true)
+  {
+    if (this->hxInitialized)
+    {
+      gzerr << "thread\n";
+      if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                   != ::hxOK)
+      {
+        gzerr << "hx_update(): Request error." << std::endl;
+      }
+      this->UpdateSensorContact();
+    }
+    usleep(100000);  // 10Hz max
+  }
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::UpdateSensorContact()
+{
+  gzerr << "ncontact sensor [" << this->deviceInfo.ncontactsensor << "]\n";
+  for (int i = 0; i < this->deviceInfo.ncontactsensor; ++i)
+  {
+    gzerr << "force [" << i << "]: " << this->lastSensor.contact[i] << "\n";
+  }
+
+  for (std::map<int, std::string>::iterator c = this->contactNames.begin();
+       c != this->contactNames.end(); ++c)
+  {
+    int i = c->first;
+    // gzerr << "name: " << c->second << "\n"
+    //       << "index: " << i << "\n"
+    //       << "force: " << this->lastSensor.contact[i] << "\n";
+    this->SetContactForce(QString::fromStdString(this->contactNames[i]),
+      this->lastSensor.contact[i]);
+  }
 }
 
 /////////////////////////////////////////////////
@@ -872,10 +871,8 @@ void HaptixGUIPlugin::ResetModels()
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
   //::hxSensor sensor;
   if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                                    != ::hxOK)
+                                                               != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
-
-  //this->UpdateSensorContact();
 
   // And zero the grasp, if any.
   if (this->lastGraspRequest.grasps_size() > 0)
@@ -914,12 +911,11 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     //::hxSensor sensor;
     if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                                   != ::hxOK )
+                                                                != ::hxOK)
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return false;
     }
-    //this->UpdateSensorContact();
 
     this->hxInitialized = true;
   }
@@ -930,12 +926,11 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     // Send a motor command to hold current pose
     //::hxSensor sensor;
     if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                                    != ::hxOK)
+                                                                 != ::hxOK)
     {
       gzerr << "hx_update(): Request error." << std::endl;
     }
 
-    //this->UpdateSensorContact();
     if (this->graspMode)
     {
       // Send an empty grasp request, to switch modes in the control plugin
@@ -1079,7 +1074,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
       // Now command it.
       // std::cout << "Sending: " << std::endl;
-      //  for(int i = 0; i < this->deviceInfo.nmotor; i++)
+      //  for(int i = 0; i < this->deviceInfo.nmotor; ++i)
       //    std::cout << cmd.ref_pos[i] << " ";
       // std::cout << std::endl;
       //::hxSensor sensor;
@@ -1087,7 +1082,6 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }
-      //this->UpdateSensorContact();
 
       // print current command for capturing into grasp
       gzdbg << "Current grasp:\n";
@@ -1119,17 +1113,6 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   }
 
   return false;
-}
-
-/////////////////////////////////////////////////
-void HaptixGUIPlugin::UpdateSensorContact()
-{
-  for (int i = 0; i < this->deviceInfo.ncontactsensor; i++)
-  {
-    this->contactPoints[this->contactNames[i]] = this->lastSensor.contact[i];
-    gzdbg << "Setting contact: " << this->contactNames[i]
-          << ": " << this->lastSensor.contact[i] << std::endl;
-  }
 }
 
 /////////////////////////////////////////////////

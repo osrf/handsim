@@ -51,10 +51,6 @@ namespace haptix_gazebo_plugins
     // Documentation inherited
     public: void Load(sdf::ElementPtr _elem);
 
-    /// \brief Callback when a finger contact message is received.
-    /// \param[in] _msg Contact message.
-    private: void OnFingerContact(ConstContactsPtr &_msg);
-
     /// \brief Signal to set a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
     /// \param[in] _value Force value.
@@ -65,7 +61,6 @@ namespace haptix_gazebo_plugins
     /// \param[in] _value Force value.
     private slots: void OnSetContactForce(QString _contactName, double _value);
 
-    private: void UpdateSensorContact();
     /// \brief Handles the PreRender Gazebo signal
     private: void PreRender();
 
@@ -147,9 +142,7 @@ namespace haptix_gazebo_plugins
     private: std::map<std::string, QGraphicsEllipseItem*>
              contactGraphicsItems;
 
-    /// \brief Subscriber to finger contact sensors.
-    private: std::vector<gazebo::transport::SubscriberPtr> contactSubscribers;
-
+    /// \brief initial camera pose
     private: gazebo::math::Pose initialCameraPose;
 
     /// \brief Node used to establish communication with gzserver.
@@ -259,10 +252,13 @@ namespace haptix_gazebo_plugins
     private: boost::mutex motorCommandMutex;
 
     /// \brief start a thread to poll contact sensor data
-    private: boost::thread pollContactThread;
+    private: boost::thread pollSensorsThread;
 
     /// \brief start a thread to poll contact sensor data
-    private: void PollContact();
+    private: void PollSensors();
+
+    /// \brief Get contact sensor information
+    private: void UpdateSensorContact();
   };
 }
 #endif
