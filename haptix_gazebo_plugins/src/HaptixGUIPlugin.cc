@@ -811,7 +811,7 @@ void HaptixGUIPlugin::PollSensors()
   {
     if (this->hxInitialized)
     {
-      gzerr << "thread\n";
+      gzerr << "contact sensor polling thread running\n";
       if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
                                                                    != ::hxOK)
       {
@@ -819,17 +819,21 @@ void HaptixGUIPlugin::PollSensors()
       }
       this->UpdateSensorContact();
     }
-    usleep(100000);  // 10Hz max
+    // usleep(100000);  // 10Hz max
+    usleep(1000000);  // 1Hz max
   }
 }
 
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::UpdateSensorContact()
 {
+  /* debug print forces
+  */
   gzerr << "ncontact sensor [" << this->deviceInfo.ncontactsensor << "]\n";
   for (int i = 0; i < this->deviceInfo.ncontactsensor; ++i)
   {
-    gzerr << "force [" << i << "]: " << this->lastSensor.contact[i] << "\n";
+    gzerr << "sensor [" << i
+          << "]: contacts [" << this->lastSensor.contact[i] << "]\n";
   }
 
   for (std::map<int, std::string>::iterator c = this->contactNames.begin();
