@@ -102,6 +102,9 @@ namespace haptix_gazebo_plugins
     /// \param[in] _event Key press event.
     private: bool OnKeyPress(gazebo::common::KeyEvent _event);
 
+    /// \brief callback on Initialize hx connection
+    private: void OnInitialize(ConstIntPtr &_msg);
+
     /// \brief Handle request responses
     /// \param[in] _msg Response message.
     private: void OnResponse(ConstResponsePtr &_msg);
@@ -216,6 +219,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief Have we initialized our information about the device?
     private: bool hxInitialized;
+
+    /// \brief subscribe to initialize topic
+    private: gazebo::transport::SubscriberPtr initializeSub;
 
     /// \brief The number of initial degrees of freedom that are in the wrist
     private: unsigned int numWristMotors;

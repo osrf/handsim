@@ -544,6 +544,41 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 
   this->pollSensorsThread = boost::thread(
     boost::bind(&HaptixGUIPlugin::PollSensors, this));
+
+  this->initializeSub = this->node->Subscribe("~/haptix_load",
+      &HaptixGUIPlugin::OnInitialize, this);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnInitialize(ConstIntPtr &_msg)
+{
+  // The first time, we need to talk to the hand.  Can't do this at startup
+  // because the hand might not have been spawned yet.
+  if (this->hxInitialized)
+  {
+    // already initialized
+    // gzerr << "someone else initialized hxInitialized?\n";
+    return;
+  }
+  else
+  {
+    if (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
+    {
+      gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
+        << std::endl;
+      return;
+    }
+    memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+    //::hxSensor sensor;
+    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                != ::hxOK)
+    {
+      gzerr << "hx_update(): Request error.\n" << std::endl;
+      return;
+    }
+
+    this->hxInitialized = true;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -909,29 +944,13 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 {
   boost::mutex::scoped_lock lock(this->motorCommandMutex);
 
-  char key = _event.text[0];
-
-  // The first time, we need to talk to the hand.  Can't do this at startup
-  // because the hand might not have been spawned yet.
   if (!this->hxInitialized)
   {
-    if (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
-    {
-      gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
-        << std::endl;
-      return false;
-    }
-    memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-    //::hxSensor sensor;
-    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                                != ::hxOK)
-    {
-      gzerr << "hx_update(): Request error.\n" << std::endl;
-      return false;
-    }
-
-    this->hxInitialized = true;
+    gzwarn << "hxInitialized is false, waiting for arm to spawn?\n";
+    return false;
   }
+
+  char key = _event.text[0];
 
   // '~' toggles between grasp mode and motor mode
   if (key == '~')

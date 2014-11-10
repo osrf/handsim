@@ -901,6 +901,13 @@ void HaptixControlPlugin::ContactSensorUpdate()
             << "] is not a ContactSensor.\n";
     }
   }
+
+  // finished loading arm? send status
+  this->haptixStatusPub =
+    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/haptix_load");
+  gazebo::msgs::Int loadStat;
+  loadStat.set_data(1);
+  this->haptixStatusPub->Publish(loadStat);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

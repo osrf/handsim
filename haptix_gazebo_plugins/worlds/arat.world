@@ -14,7 +14,7 @@
         <circle_size>25</circle_size>
         <force_min>0</force_min>
         <force_max>5</force_max>
-        <color_min>255 150 150 255</color_min>
+        <color_min>255 120 60 255</color_min>
         <color_max>255 227 32 255</color_max>
         <!--
         <color_min>255 0 0 255</color_min>

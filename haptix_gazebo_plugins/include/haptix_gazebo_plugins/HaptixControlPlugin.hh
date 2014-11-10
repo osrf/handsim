@@ -171,6 +171,9 @@ namespace gazebo
     /// \param[in] _dt time step size.
     private: void UpdateBaseLink(double _dt);
 
+    /// \brief publish HaptixControlPlugin status
+    private: gazebo::transport::PublisherPtr haptixStatusPub;
+
     /**********************************************/
     /*                                            */
     /*   for polhemus based view point tracking   */
