@@ -13,9 +13,13 @@
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <circle_size>25</circle_size>
         <force_min>0</force_min>
-        <force_max>75</force_max>
-        <color_min>255 227 32 255</color_min>
-        <color_max>255 102 102 255</color_max>
+        <force_max>5</force_max>
+        <color_min>255 150 150 255</color_min>
+        <color_max>255 227 32 255</color_max>
+        <!--
+        <color_min>255 0 0 255</color_min>
+        <color_max>255 255 0 255</color_max>
+        -->
         <hand_side>right</hand_side>
         <timer_topic>~/timer_control</timer_topic> 
 
@@ -24,9 +28,9 @@
             <pos>302 130</pos>
             <index>21</index>
           </contact>
-          <contact name="mpl::rThProximal1::rThProximal1_collision">
+          <contact name="mpl::rThProximal1::rThProximal2_collision">
             <pos>275 195</pos>
-            <index>22</index>
+            <index>23</index>
           </contact>
 
           <contact name="mpl::rIndDistal::rIndDistal_collision">

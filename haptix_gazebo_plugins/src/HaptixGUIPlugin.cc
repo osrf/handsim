@@ -560,18 +560,28 @@ void HaptixGUIPlugin::OnResponse(ConstResponsePtr &_msg)
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
 {
-  double colorArray[3];
+  // gzerr << _contactName.toStdString() << " : " << _value << "\n";
+
+  float colorArray[3];
   float forceRange = this->forceMax - this->forceMin;
 
   for (int i = 0; i < 3; ++i)
   {
     float colorRange = this->colorMax[i] - this->colorMin[i];
-    colorArray[i] = colorRange/forceRange * _value + this->colorMin[i];
 
-    if (colorArray[i] > this->colorMin[i])
-      colorArray[i] = this->colorMin[i];
-    else if (colorArray[i] < this->colorMax[i])
-      colorArray[i] = this->colorMax[i];
+    colorArray[i] = this->colorMin[i] +
+      colorRange * (_value - forceMin)/forceRange;
+
+    if (colorMax[i] > this->colorMin[i])
+    {
+      colorArray[i] = gazebo::math::clamp(colorArray[i],
+        this->colorMin[i], this->colorMax[i]);
+    }
+    else
+    {
+      colorArray[i] = gazebo::math::clamp(colorArray[i],
+        this->colorMax[i], this->colorMin[i]);
+    }
   }
 
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
@@ -811,7 +821,7 @@ void HaptixGUIPlugin::PollSensors()
   {
     if (this->hxInitialized)
     {
-      gzerr << "contact sensor polling thread running\n";
+      // gzdbg << "contact sensor polling thread running\n";
       if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
                                                                    != ::hxOK)
       {
@@ -819,8 +829,7 @@ void HaptixGUIPlugin::PollSensors()
       }
       this->UpdateSensorContact();
     }
-    // usleep(100000);  // 10Hz max
-    usleep(1000000);  // 1Hz max
+    usleep(33333);  // 30Hz max
   }
 }
 
@@ -828,19 +837,19 @@ void HaptixGUIPlugin::PollSensors()
 void HaptixGUIPlugin::UpdateSensorContact()
 {
   /* debug print forces
-  */
   gzerr << "ncontact sensor [" << this->deviceInfo.ncontactsensor << "]\n";
   for (int i = 0; i < this->deviceInfo.ncontactsensor; ++i)
   {
     gzerr << "sensor [" << i
           << "]: contacts [" << this->lastSensor.contact[i] << "]\n";
   }
+  */
 
   for (std::map<int, std::string>::iterator c = this->contactNames.begin();
        c != this->contactNames.end(); ++c)
   {
     int i = c->first;
-    // gzerr << "name: " << c->second << "\n"
+    // gzdbg << "name: " << c->second << "\n"
     //       << "index: " << i << "\n"
     //       << "force: " << this->lastSensor.contact[i] << "\n";
     this->SetContactForce(QString::fromStdString(this->contactNames[i]),

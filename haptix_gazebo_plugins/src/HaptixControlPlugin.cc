@@ -891,6 +891,9 @@ void HaptixControlPlugin::ContactSensorUpdate()
           //       << ", " << k << "] : [" << contactForce << "]\n";
         }
       }
+      // gzerr << "contact [" << i
+      //       << "]: [" << this->contactSensorInfos[i].contactForce
+      //       << "]\n";
     }
     else
     {
