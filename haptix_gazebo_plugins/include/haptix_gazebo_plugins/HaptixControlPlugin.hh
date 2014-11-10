@@ -362,6 +362,9 @@ namespace gazebo
     /// \brief: gazebo contact sensors
     private: void ContactSensorUpdate();
 
+    /// \brief: publish HaptixControlPlugin status
+    private: void PublishHaptixControlStatus();
+
     /// \brief: imu sensor names
     /// Reads from plugin SDF, example:
     ///   <imuSensor id="0">imu_sensor_9</imuSensor>

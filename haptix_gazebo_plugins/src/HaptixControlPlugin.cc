@@ -228,11 +228,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
 
-  // this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(
-  //     boost::bind(&HaptixControlPlugin::GetRobotStateFromSim, this));
-
   this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(
-      boost::bind(&HaptixControlPlugin::ContactSensorUpdate, this));
+      boost::bind(&HaptixControlPlugin::PublishHaptixControlStatus, this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -892,7 +889,11 @@ void HaptixControlPlugin::ContactSensorUpdate()
             << "] is not a ContactSensor.\n";
     }
   }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+void HaptixControlPlugin::PublishHaptixControlStatus()
+{
   // finished loading arm? send status
   this->haptixStatusPub =
     this->gazeboNode->Advertise<gazebo::msgs::Int>("~/haptix_load");
@@ -920,7 +921,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   }
 
   // get contacts
-  // this->OnContactSensorUpdate();
+  this->ContactSensorUpdate();
 
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
