@@ -43,6 +43,7 @@ HaptixControlPlugin::~HaptixControlPlugin()
 {
   this->polhemusThread.join();
   event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+  event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -226,6 +227,12 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
+
+  // this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(
+  //     boost::bind(&HaptixControlPlugin::GetRobotStateFromSim, this));
+
+  this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(
+      boost::bind(&HaptixControlPlugin::ContactSensorUpdate, this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,7 +250,7 @@ void HaptixControlPlugin::LoadHandControl()
     joint->GetAttribute("id")->Get(id);
     this->jointNames[id] = joint->Get<std::string>();
     // get next sdf
-    gzdbg << "getting joint name [" << this->jointNames[id] << "]\n";
+    // gzdbg << "getting joint name [" << this->jointNames[id] << "]\n";
     joint = joint->GetNextElement("joint");
   }
 
@@ -253,17 +260,17 @@ void HaptixControlPlugin::LoadHandControl()
   {
     /// \TODO: this assumes id's for joints are consecutive, starting with 0
     this->joints[i] = this->model->GetJoint(this->jointNames[i]);
-    gzdbg << "got gazebo joint [" << this->joints[i]->GetName() << "]\n";
+    // gzdbg << "got gazebo joint [" << this->joints[i]->GetName() << "]\n";
   }
 
   // Get pid gains and insert into pid
   this->pids.resize(this->joints.size());
   sdf::ElementPtr pid = this->sdf->GetElement("pid");
-  gzdbg << "getting pid\n";
+  // gzdbg << "getting pid\n";
   while (pid)
   {
     pid->GetAttribute("id")->Get(id);
-    gzdbg << "getting pid [" << id << "]\n";
+    // gzdbg << "getting pid [" << id << "]\n";
     double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
     pid->GetAttribute("p")->Get(pVal);
     pid->GetAttribute("i")->Get(iVal);
@@ -283,26 +290,26 @@ void HaptixControlPlugin::LoadHandControl()
     std::string motorName;
     motorSDF->GetAttribute("id")->Get(id);
     motorSDF->GetAttribute("name")->Get(motorName);
-    gzdbg << "getting motor [" << id << "]: [" << motorName << "]\n";
+    // gzdbg << "getting motor [" << id << "]: [" << motorName << "]\n";
     this->motorInfos[id].name = motorName;
 
     // get joint name associated with this motor
     sdf::ElementPtr poweredMotorJointSDF =
       motorSDF->GetElement("powered_motor_joint");
     this->motorInfos[id].jointName = poweredMotorJointSDF->Get<std::string>();
-    gzdbg << "  joint [" << this->motorInfos[id].jointName << "]\n";
+    // gzdbg << "  joint [" << this->motorInfos[id].jointName << "]\n";
 
     // get gear ratio associated with this motor
     sdf::ElementPtr gearRatioSDF =
       motorSDF->GetElement("gear_ratio");
     this->motorInfos[id].gearRatio = gearRatioSDF->Get<double>();
-    gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
+    // gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
 
     // get max [continuous] motor torque associated with this motor
     sdf::ElementPtr motorTorqueSDF =
       motorSDF->GetElement("motor_torque");
     this->motorInfos[id].motorTorque = motorTorqueSDF->Get<double>();
-    gzdbg << "  torque [" << this->motorInfos[id].motorTorque << "]\n";
+    // gzdbg << "  torque [" << this->motorInfos[id].motorTorque << "]\n";
 
     // this should return index of the joint in this->joints
     // where this->jointNames matches motorInfos[id].jointName.
@@ -357,8 +364,8 @@ void HaptixControlPlugin::LoadHandControl()
                            this->motorInfos[i].motorTorque;
       this->pids[m].SetCmdMax(jointTorque);
       this->pids[m].SetCmdMin(-jointTorque);
-      gzdbg << " motor torque [" << m
-            << "] : " << jointTorque << "\n";
+      // gzdbg << " motor torque [" << m
+      //       << "] : " << jointTorque << "\n";
 
       /// \TODO: contemplate about using Joint::SetEffortLimit()
       /// instead of PID::SetCmdMax() and PID::SetCmdMin()
@@ -371,8 +378,8 @@ void HaptixControlPlugin::LoadHandControl()
           this->motorInfos[i].gearboxes[j].multiplier;
         this->pids[n].SetCmdMax(coupledJointTorque);
         this->pids[n].SetCmdMin(-coupledJointTorque);
-        gzdbg << " motor torque [" << n
-              << "] : " << coupledJointTorque << "\n";
+        // gzdbg << " motor torque [" << n
+        //       << "] : " << coupledJointTorque << "\n";
       }
     }
 
@@ -381,23 +388,27 @@ void HaptixControlPlugin::LoadHandControl()
   }
 
   // Get contact sensor names and insert id/name pair into map
-  sdf::ElementPtr contactSensor = this->sdf->GetElement("contactSensor");
-  while (contactSensor)
+  sdf::ElementPtr contactSensorSDF = this->sdf->GetElement("contactSensor");
+  while (contactSensorSDF)
   {
-    contactSensor->GetAttribute("id")->Get(id);
-    gzdbg << "getting contactSensor [" << id << "]\n";
-    this->contactSensorNames[id] = contactSensor->Get<std::string>();
+    contactSensorSDF->GetAttribute("id")->Get(id);
+    // gzdbg << "getting contact sensor [" << id << "]\n";
+    this->contactSensorNames[id] = contactSensorSDF->Get<std::string>();
 
     // get sensor from gazebo
     sensors::SensorManager *mgr = sensors::SensorManager::Instance();
     // Get a pointer to the contact sensor
-    sensors::ContactSensorPtr sensor =
-        boost::dynamic_pointer_cast<sensors::ContactSensor>
-        (mgr->GetSensor(this->contactSensorNames[id]));
-    if (sensor)
+    sensors::SensorPtr sensor = mgr->GetSensor(this->contactSensorNames[id]);
+
+    sensors::ContactSensorPtr contactSensor =
+      boost::dynamic_pointer_cast<sensors::ContactSensor>(sensor);
+
+    if (contactSensor)
     {
-      /// \TODO: assume id in order
-      this->contactSensors.push_back(sensor);
+      ContactSensorInfo info;
+      info.sensor = sensor;
+      // keep vector of all contact sensors
+      this->contactSensorInfos.push_back(info);
     }
     else
     {
@@ -406,7 +417,7 @@ void HaptixControlPlugin::LoadHandControl()
     }
 
     // get next sdf
-    contactSensor = contactSensor->GetNextElement("contactSensor");
+    contactSensorSDF = contactSensorSDF->GetNextElement("contactSensor");
   }
 
   // Get imuSensor names and insert id/name pair into map
@@ -415,7 +426,7 @@ void HaptixControlPlugin::LoadHandControl()
   {
     imuSensor->GetAttribute("id")->Get(id);
     this->imuSensorNames[id] = imuSensor->Get<std::string>();
-    gzdbg << "getting imuSensor [" << id << "]\n";
+    // gzdbg << "getting imuSensor [" << id << "]\n";
 
     // get sensor from gazebo
     sensors::SensorManager *mgr = sensors::SensorManager::Instance();
@@ -493,8 +504,11 @@ void HaptixControlPlugin::LoadHandControl()
     //           i, this->jointNames[i].c_str());
   }
 
-  for (int i = 0; i < this->contactSensors.size(); ++i)
+  // add a robot state contact per contactSensorInfo
+  for (int i = 0; i < this->contactSensorInfos.size(); ++i)
+  {
     this->robotState.add_contact(0);
+  }
 
   for (int i = 0; i < imuSensors.size(); ++i)
   {
@@ -527,7 +541,6 @@ void HaptixControlPlugin::Reset()
 
 ////////////////////////////////////////////////////////////////////////////////
 // Open keyboard commands
-
 void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
                      const msgs::Pose &_pose)
 {
@@ -540,6 +553,7 @@ void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
   this->staleKeyboardPose = false;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 bool HaptixControlPlugin::LoadKeyboard()
 {
   this->keyboardPose = this->initialBaseLinkPose;
@@ -707,6 +721,7 @@ void HaptixControlPlugin::UpdatePolhemus()
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
@@ -721,6 +736,7 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateBaseLink(double _dt)
 {
   math::Pose pose;
@@ -751,7 +767,6 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-//
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
   // copy command from hxCommand for motors to list of all joints
@@ -825,6 +840,68 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void HaptixControlPlugin::ContactSensorUpdate()
+{
+  // how do we know which sensor triggered this update?
+  // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
+  for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
+  {
+    // aggregate forces and torques
+    this->contactSensorInfos[i].contactForce = math::Vector3();
+    this->contactSensorInfos[i].contactTorque = math::Vector3();
+    
+    sensors::ContactSensorPtr contactSensor =
+      boost::dynamic_pointer_cast<sensors::ContactSensor>(
+      this->contactSensorInfos[i].sensor);
+
+    if (contactSensor)
+    {
+      msgs::Contacts contacts = contactSensor->GetContacts();
+      // contact sensor report contact between pairs of bodies
+      // if (contacts.contact().size() > 0)
+      //   gzerr << "  name " << contactSensor->GetName()
+      //         << " contacts " << contacts.contact().size() << "\n";
+      for (unsigned int j = 0; j < contacts.contact().size(); ++j)
+      {
+        msgs::Contact contact = contacts.contact(j);
+        // each contact can have multiple wrenches
+        // if (contact.wrench().size() > 0)
+        //   gzerr << "    wrenches " << contact.wrench().size() << "\n";
+        for (unsigned int k = 0; k < contact.wrench().size(); ++k)
+        {
+          msgs::JointWrench wrench = contact.wrench(k);
+
+          // sum up all wrenches from body_1
+          // body_2_wrench should be -body_1_wrench?
+          this->contactSensorInfos[i].contactForce +=
+            msgs::Convert(wrench.body_1_wrench().force());
+          this->contactSensorInfos[i].contactTorque +=
+            msgs::Convert(wrench.body_1_wrench().torque());
+
+          // gzerr << "        contact [" << i << ", " << j
+          //       << ", " << k << "] : [" << contactForce << "]\n";
+        }
+      }
+      // gzerr << "contact [" << i
+      //       << "]: [" << this->contactSensorInfos[i].contactForce
+      //       << "]\n";
+    }
+    else
+    {
+      gzerr << "sensor [" << this->contactSensorInfos[i].sensor->GetName()
+            << "] is not a ContactSensor.\n";
+    }
+  }
+
+  // finished loading arm? send status
+  this->haptixStatusPub =
+    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/haptix_load");
+  gazebo::msgs::Int loadStat;
+  loadStat.set_data(1);
+  this->haptixStatusPub->Publish(loadStat);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Play the trajectory, update states
 void HaptixControlPlugin::GetRobotStateFromSim()
 {
@@ -842,31 +919,15 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     this->robotState.set_joint_vel(i, this->joints[i]->GetVelocity(0));
   }
 
-  for (unsigned int i = 0; i < this->contactSensors.size(); ++i)
+  // get contacts
+  // this->OnContactSensorUpdate();
+
+  // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
+  for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
   {
-    // for now, aggregate forces into a single scalar
-    math::Vector3 contactForce;
-    math::Vector3 contactTorque;
-    msgs::Contacts contacts = this->contactSensors[i]->GetContacts();
-    // contact sensor report contact between pairs of bodies
-    for (unsigned int j = 0; j < contacts.contact().size(); ++j)
-    {
-      msgs::Contact contact = contacts.contact(j);
-      // each contact can have multiple wrenches
-      for (unsigned int k = 0; k < contact.wrench().size(); ++k)
-      {
-        msgs::JointWrench wrench = contact.wrench(k);
-        // sum up all wrenches from body_1
-        // body_2_wrench should be -body_1_wrench?
-        contactForce += msgs::Convert(wrench.body_1_wrench().force());
-        contactTorque += msgs::Convert(wrench.body_1_wrench().torque());
-      }
-    }
-
+    // get summed force from contactSensorInfos
+    double force = this->contactSensorInfos[i].contactForce.GetLength();
     // return summed force
-    double force = contactForce.GetLength();
-
-    // return force
     this->robotState.set_contact(i, force);
   }
 
@@ -958,7 +1019,7 @@ void HaptixControlPlugin::HaptixGetDeviceInfoCallback(
 
   _rep.set_nmotor(this->motorInfos.size());
   _rep.set_njoint(this->joints.size());
-  _rep.set_ncontactsensor(this->contactSensors.size());
+  _rep.set_ncontactsensor(this->contactSensorInfos.size());
   _rep.set_nimu(this->imuSensors.size());
 
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
@@ -980,10 +1041,6 @@ void HaptixControlPlugin::HaptixUpdateCallback(
       haptix::comm::msgs::hxSensor &_rep, bool &_result)
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
-
-  // is this needed?
-  // if (_service != updateTopic)
-  //   _result = false;
 
   // Read the request parameters.
   // Debug output.
