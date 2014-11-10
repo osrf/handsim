@@ -119,6 +119,9 @@ namespace haptix_gazebo_plugins
     /// \brief Maximum force value
     private: float forceMax;
 
+    /// \brief No force color value
+    private: gazebo::common::Color colorNoContact;
+
     /// \brief Minimum force color value
     private: gazebo::common::Color colorMin;
 

@@ -843,7 +843,7 @@ void HaptixControlPlugin::ContactSensorUpdate()
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
   {
-    // aggregate forces and torques
+    // reset aggregate forces and torques
     this->contactSensorInfos[i].contactForce = math::Vector3();
     this->contactSensorInfos[i].contactTorque = math::Vector3();
     

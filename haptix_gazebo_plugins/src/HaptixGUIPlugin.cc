@@ -311,6 +311,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->forceMin = _elem->Get<double>("force_min");
   this->forceMax = _elem->Get<double>("force_max");
 
+  this->colorNoContact = _elem->Get<gazebo::common::Color>("color_no_contact");
   this->colorMin = _elem->Get<gazebo::common::Color>("color_min");
   this->colorMax = _elem->Get<gazebo::common::Color>("color_max");
 
@@ -362,8 +363,14 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       new QGraphicsRectItem(scaleXPos, -40, scaleWidth, 400);
     forceScaleItem->setPen(QPen(QColor(255, 255, 255, 0)));
     QLinearGradient grad(0, 0, 0, 400);
-    grad.setColorAt(0, QColor(255, 227, 32, 255));
-    grad.setColorAt(1, QColor(255, 102, 102, 255));
+    grad.setColorAt(0, QColor(this->colorMax[0],
+                              this->colorMax[1],
+                              this->colorMax[2],
+                              this->colorMax[3]));
+    grad.setColorAt(1, QColor(this->colorMin[0],
+                              this->colorMin[1],
+                              this->colorMin[2],
+                              this->colorMin[3]));
     forceScaleItem->setBrush(grad);
     this->handScene->addItem(forceScaleItem);
 
@@ -580,25 +587,35 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
 {
   // gzerr << _contactName.toStdString() << " : " << _value << "\n";
 
-  float colorArray[3];
+  // constant for decay
+  const float epsilon = 0.01;
+
+  float colorArray[3] = {this->colorNoContact[0],
+                         this->colorNoContact[1],
+                         this->colorNoContact[2]};
+
   float forceRange = this->forceMax - this->forceMin;
 
-  for (int i = 0; i < 3; ++i)
+  // stay white if below forceMin
+  if (fabs(_value) >= forceMin)
   {
-    float colorRange = this->colorMax[i] - this->colorMin[i];
-
-    colorArray[i] = this->colorMin[i] +
-      colorRange * (_value - forceMin)/forceRange;
-
-    if (colorMax[i] > this->colorMin[i])
+    for (int i = 0; i < 3; ++i)
     {
-      colorArray[i] = gazebo::math::clamp(colorArray[i],
-        this->colorMin[i], this->colorMax[i]);
-    }
-    else
-    {
-      colorArray[i] = gazebo::math::clamp(colorArray[i],
-        this->colorMax[i], this->colorMin[i]);
+      float colorRange = this->colorMax[i] - this->colorMin[i];
+
+      colorArray[i] = this->colorMin[i] +
+        colorRange * (_value - forceMin)/forceRange;
+
+      if (colorMax[i] > this->colorMin[i])
+      {
+        colorArray[i] = gazebo::math::clamp(colorArray[i],
+          this->colorMin[i], this->colorMax[i]);
+      }
+      else
+      {
+        colorArray[i] = gazebo::math::clamp(colorArray[i],
+          this->colorMax[i], this->colorMin[i]);
+      }
     }
   }
 
