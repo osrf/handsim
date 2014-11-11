@@ -13,7 +13,7 @@
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <circle_size>25</circle_size>
         <force_min>0.001</force_min>
-        <force_max>7</force_max>
+        <force_max>20</force_max>
         <color_no_contact>255 255 255 255</color_no_contact>
         <color_min>255 102 102 255</color_min>
         <color_max>255 227 32 255</color_max>

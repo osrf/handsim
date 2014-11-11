@@ -352,6 +352,7 @@ namespace gazebo
     class ContactSensorInfo
     {
       public: sensors::SensorPtr sensor;
+      public: event::ConnectionPtr connection;
       // aggregated forces and torques from contact
       public: math::Vector3 contactForce;
       public: math::Vector3 contactTorque;
@@ -360,7 +361,7 @@ namespace gazebo
     private: std::vector<ContactSensorInfo> contactSensorInfos;
 
     /// \brief: gazebo contact sensors
-    private: void ContactSensorUpdate();
+    private: void OnContactSensorUpdate(int _i);
 
     /// \brief: publish HaptixControlPlugin status
     private: void PublishHaptixControlStatus();
