@@ -95,7 +95,7 @@
 
         <task_group name="Grasp">
           <task id="grasp_1" name="Block 10cm">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grasp_1.jpg</icon>
             <instructions>
               Instructions: Pick up the 10 cm block and place it on top of the box.
@@ -103,7 +103,7 @@
           </task>
 
           <task id="grasp_2" name="Block 2.5cm">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grasp_2.jpg</icon>
             <instructions>
               Instructions: Pick up the 2.5 cm block and place it on top of the box.
@@ -120,7 +120,7 @@
           </task>
 
           <task id="grasp_4" name="Block 7.5cm">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grasp_4.jpg</icon>
             <instructions>
               Instructions: Pick up the 7.5 cm block and place it on top of the box.
@@ -128,7 +128,7 @@
           </task>
 
           <task id="grasp_5" name="Cricket ball">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grasp_5.jpg</icon>
             <instructions>
               Instructions: Pick up the cricket ball and place it on top of the box, inside of the tin lid.
@@ -136,7 +136,7 @@
           </task>
 
           <task id="grasp_6"name="Stone">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grasp_6.jpg</icon> 
             <instructions>
               Instructions: Pick up the stone and place it on top of the box.
@@ -154,7 +154,7 @@
           </task>
 
           <task id="grip_2" name="Tube 2.25cm">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grip_2.jpg</icon>
             <instructions>
               Instructions: Pick up the 2.25cm diameter tube and place it on the wooden peg.
@@ -162,7 +162,7 @@
           </task>
 
           <task id="grip_3" name="Tube 1cm">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grip_3.jpg</icon>
             <instructions>
               Instructions: Pick up the 1cm diameter tube and place it on the metal peg.
@@ -170,7 +170,7 @@
           </task>
 
           <task id="grip_4" name="Washer">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/grip_4.jpg</icon>
             <instructions>
               Instructions: Pick up the washer and place it on the metal peg.
@@ -180,7 +180,7 @@
 
         <task_group name="Pinch">
           <task id="pinch_1" name="Ball bearing">
-            <enabled>0</enabled>
+            <enabled>1</enabled>
             <icon>file://config/arat_icons/pinch_1.jpg</icon>
             <instructions>
               Instructions: Pick up the ball bearing and place it on top of the box, inside of the tin lid.
