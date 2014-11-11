@@ -873,12 +873,16 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
         {
           msgs::JointWrench wrench = contact.wrench(k);
 
-          // sum up all wrenches from body_1
-          // body_2_wrench should be -body_1_wrench?
+          // sum up all wrenches from body_2
+          // printing out gz topic for contact, seem that
+          // body_1_wrench corresponds to object
+          // body_2_wrench corresponds to the arm
+          // not sure if this is always true.
+          // body_1_wrench should be -body_2_wrench?
           this->contactSensorInfos[_i].contactForce +=
-            msgs::Convert(wrench.body_1_wrench().force());
+            msgs::Convert(wrench.body_2_wrench().force());
           this->contactSensorInfos[_i].contactTorque +=
-            msgs::Convert(wrench.body_1_wrench().torque());
+            msgs::Convert(wrench.body_2_wrench().torque());
 
           // gzerr << "        contact [" << _i << ", " << j
           //       << ", " << k << "] : [" << contactForce << "]\n";
