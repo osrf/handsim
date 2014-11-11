@@ -237,11 +237,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
 
-  // this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(
-  //     boost::bind(&HaptixControlPlugin::GetRobotStateFromSim, this));
-
   this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(
-      boost::bind(&HaptixControlPlugin::ContactSensorUpdate, this));
+      boost::bind(&HaptixControlPlugin::PublishHaptixControlStatus, this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,6 +413,10 @@ void HaptixControlPlugin::LoadHandControl()
     {
       ContactSensorInfo info;
       info.sensor = sensor;
+
+      info.connection = sensor->ConnectUpdated(
+        boost::bind(&HaptixControlPlugin::OnContactSensorUpdate, this, id));
+
       // keep vector of all contact sensors
       this->contactSensorInfos.push_back(info);
     }
@@ -849,19 +850,15 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void HaptixControlPlugin::ContactSensorUpdate()
+void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
-  for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
+  if (_i < this->contactSensorInfos.size())
   {
-    // aggregate forces and torques
-    this->contactSensorInfos[i].contactForce = math::Vector3();
-    this->contactSensorInfos[i].contactTorque = math::Vector3();
-    
     sensors::ContactSensorPtr contactSensor =
       boost::dynamic_pointer_cast<sensors::ContactSensor>(
-      this->contactSensorInfos[i].sensor);
+      this->contactSensorInfos[_i].sensor);
 
     if (contactSensor)
     {
@@ -870,6 +867,11 @@ void HaptixControlPlugin::ContactSensorUpdate()
       // if (contacts.contact().size() > 0)
       //   gzerr << "  name " << contactSensor->GetName()
       //         << " contacts " << contacts.contact().size() << "\n";
+
+      // reset aggregate forces and torques if contacts detected
+      this->contactSensorInfos[_i].contactForce = math::Vector3();
+      this->contactSensorInfos[_i].contactTorque = math::Vector3();
+    
       for (unsigned int j = 0; j < contacts.contact().size(); ++j)
       {
         msgs::Contact contact = contacts.contact(j);
@@ -880,28 +882,42 @@ void HaptixControlPlugin::ContactSensorUpdate()
         {
           msgs::JointWrench wrench = contact.wrench(k);
 
-          // sum up all wrenches from body_1
-          // body_2_wrench should be -body_1_wrench?
-          this->contactSensorInfos[i].contactForce +=
-            msgs::Convert(wrench.body_1_wrench().force());
-          this->contactSensorInfos[i].contactTorque +=
-            msgs::Convert(wrench.body_1_wrench().torque());
+          // sum up all wrenches from body_2
+          // printing out gz topic for contact, seem that
+          // body_1_wrench corresponds to object
+          // body_2_wrench corresponds to the arm
+          // not sure if this is always true.
+          // body_1_wrench should be -body_2_wrench?
+          this->contactSensorInfos[_i].contactForce +=
+            msgs::Convert(wrench.body_2_wrench().force());
+          this->contactSensorInfos[_i].contactTorque +=
+            msgs::Convert(wrench.body_2_wrench().torque());
 
-          // gzerr << "        contact [" << i << ", " << j
+          // gzerr << "        contact [" << _i << ", " << j
           //       << ", " << k << "] : [" << contactForce << "]\n";
         }
       }
-      // gzerr << "contact [" << i
-      //       << "]: [" << this->contactSensorInfos[i].contactForce
+      // gzerr << "contact [" << _i
+      //       << "]: [" << this->contactSensorInfos[_i].contactForce
       //       << "]\n";
     }
     else
     {
-      gzerr << "sensor [" << this->contactSensorInfos[i].sensor->GetName()
+      gzerr << "sensor [" << this->contactSensorInfos[_i].sensor->GetName()
             << "] is not a ContactSensor.\n";
     }
   }
+  else
+  {
+    gzerr << "sensor [" << _i
+          << "] is out of range of contactSensorInfos["
+          << this->contactSensorInfos.size() << "].\n";
+  }
+}
 
+////////////////////////////////////////////////////////////////////////////////
+void HaptixControlPlugin::PublishHaptixControlStatus()
+{
   // finished loading arm? send status
   this->haptixStatusPub =
     this->gazeboNode->Advertise<gazebo::msgs::Int>("~/haptix_load");
@@ -928,9 +944,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     this->robotState.set_joint_vel(i, this->joints[i]->GetVelocity(0));
   }
 
-  // get contacts
-  // this->OnContactSensorUpdate();
-
+  // copy contact forces
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
   {
