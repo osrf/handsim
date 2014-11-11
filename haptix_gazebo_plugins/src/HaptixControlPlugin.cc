@@ -237,8 +237,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
 
-  this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(
-      boost::bind(&HaptixControlPlugin::PublishHaptixControlStatus, this));
+  this->PublishHaptixControlStatus();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -852,6 +851,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 ////////////////////////////////////////////////////////////////////////////////
 void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
+  // how do we know which sensor triggered this update?
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   if (_i < this->contactSensorInfos.size())

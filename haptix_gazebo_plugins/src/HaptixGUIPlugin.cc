@@ -552,8 +552,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->pollSensorsThread = boost::thread(
     boost::bind(&HaptixGUIPlugin::PollSensors, this));
 
+  // latched subscription, HaptixControlPlugin only publishes this once.
   this->initializeSub = this->node->Subscribe("~/haptix_load",
-      &HaptixGUIPlugin::OnInitialize, this);
+      &HaptixGUIPlugin::OnInitialize, this, true);
 }
 
 /////////////////////////////////////////////////
