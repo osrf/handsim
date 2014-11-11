@@ -1,4 +1,5 @@
 /*
+    math::Pose baseLinkPose = this->baseLink->GetWorldPose();
  * Copyright 2012 Open Source Robotics Foundation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -652,10 +653,9 @@ void HaptixControlPlugin::UpdatePolhemus()
         if (this->pausePolhemus)
         {
           // calibration mode, update offset
-          math::Pose baseLinkPose = this->baseLink->GetWorldPose();
           this->sourceWorldPoseArmOffset =
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
-             baseLinkPose) - this->sourceWorldPose;
+             this->targetBaseLinkPose) - this->sourceWorldPose;
         }
         else
         {
