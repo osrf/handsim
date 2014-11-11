@@ -626,7 +626,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
       float colorRange = this->colorMax[i] - this->colorMin[i];
 
       colorArray[i] = this->colorMin[i] +
-        colorRange * (_value - forceMin)/forceRange;
+        colorRange * (fabs(_value) - forceMin)/forceRange;
 
       if (colorMax[i] > this->colorMin[i])
       {
@@ -1199,6 +1199,11 @@ void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
 void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
 {
   if (!hxInitialized)
+    return;
+
+  bool engage = _msg->right().button_bumper();
+
+  if (!engage)
     return;
 
   double command = _msg->right().trigger();
