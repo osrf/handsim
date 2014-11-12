@@ -121,7 +121,7 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0.00 0 0.035"/>
+      <origin rpy="0 0 0" xyz="0.00 0 0.045"/>
       <geometry name="palm_collision_geom">
         <box size="0.08 0.02 0.10"/>
       </geometry>
@@ -184,9 +184,9 @@
       <material name="LightGrey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 1.5707 0" xyz="0 0 0"/>
       <geometry name="ffknuckle_collision_geom">
-        <box size="0.005 0.005 0.005"/>
+        <cylinder radius="0.01" length="0.01"/>
       </geometry>
     </collision>
   </link>
@@ -235,9 +235,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0 " xyz="0 0 0.025"/>
+      <origin rpy="0 0 1.5707" xyz="0 0 0.025"/>
       <geometry name="proximal_collision_geom">
-        <box size="0.008 0.008 0.04"/>
+        <cylinder radius="0.01" length="0.04"/>
       </geometry>
     </collision>
   </link>
@@ -285,9 +285,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
+      <origin rpy="0 0 1.5707" xyz="0 0 0.015"/>
       <geometry name="ffmiddle_collision_geom">
-        <box size="0.008 0.008 0.015"/>
+        <cylinder radius="0.008" length="0.028"/>
       </geometry>
     </collision>
   </link>
@@ -391,9 +391,9 @@
       <material name="LightGrey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 1.5707 0" xyz="0 0 0"/>
       <geometry name="mfknuckle_collision_geom">
-        <box size="0.005 0.005 0.005"/>
+        <cylinder radius="0.01" length="0.01"/>
       </geometry>
     </collision>
   </link>
@@ -442,9 +442,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0 " xyz="0 0 0.025"/>
+      <origin rpy="0 0 1.5707" xyz="0 0 0.025"/>
       <geometry name="proximal_collision_geom">
-        <box size="0.008 0.008 0.04"/>
+        <cylinder radius="0.01" length="0.04"/>
       </geometry>
     </collision>
   </link>
@@ -492,9 +492,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
+      <origin rpy="0 0 0" xyz="0 0 0.015"/>
       <geometry name="mfmiddle_collision_geom">
-        <box size="0.008 0.008 0.015"/>
+        <cylinder radius="0.008" length="0.028"/>
       </geometry>
     </collision>
   </link>
@@ -598,9 +598,9 @@
       <material name="LightGrey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 1.5707 0" xyz="0 0 0"/>
       <geometry name="rfknuckle_collision_geom">
-        <box size="0.005 0.005 0.005"/>
+        <cylinder radius="0.01" length="0.01"/>
       </geometry>
     </collision>
   </link>
@@ -649,9 +649,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0 " xyz="0 0 0.025"/>
+      <origin rpy="0 0 1.5707" xyz="0 0 0.025"/>
       <geometry name="proximal_collision_geom">
-        <box size="0.008 0.008 0.04"/>
+        <cylinder radius="0.01" length="0.04"/>
       </geometry>
     </collision>
   </link>
@@ -699,9 +699,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
+      <origin rpy="0 0 0" xyz="0 0 0.015"/>
       <geometry name="rfmiddle_collision_geom">
-        <box size="0.008 0.008 0.015"/>
+        <cylinder radius="0.008" length="0.028"/>
       </geometry>
     </collision>
   </link>
@@ -806,7 +806,7 @@
     <collision>
       <origin rpy="0 0 0" xyz="0 0 0.04"/>
       <geometry name="lfmetacarpal_collision_geom">
-        <box size="0.008 0.008 0.03"/>
+        <box size="0.019 0.019 0.05"/>
       </geometry>
     </collision>
   </link>
@@ -855,9 +855,9 @@
       <material name="LightGrey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 1.5707 0" xyz="0 0 0"/>
       <geometry name="lfknuckle_collision_geom">
-        <box size="0.005 0.005 0.005"/>
+        <cylinder radius="0.01" length="0.01"/>
       </geometry>
     </collision>
   </link>
@@ -906,9 +906,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0 " xyz="0 0 0.025"/>
+      <origin rpy="0 0 1.5707" xyz="0 0 0.025"/>
       <geometry name="proximal_collision_geom">
-        <box size="0.008 0.008 0.04"/>
+        <cylinder radius="0.01" length="0.04"/>
       </geometry>
     </collision>
   </link>
@@ -956,9 +956,9 @@
       <material name="Grey"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
+      <origin rpy="0 0 0" xyz="0 0 0.015"/>
       <geometry name="lfmiddle_collision_geom">
-        <box size="0.008 0.008 0.015"/>
+        <cylinder radius="0.008" length="0.028"/>
       </geometry>
     </collision>
   </link>
@@ -1063,9 +1063,9 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0 " xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
       <geometry name="thbase_collision_geom">
-        <box size="0.001 0.001 0.001"/>
+        <sphere radius="0.0125"/>
       </geometry>
     </collision>
   </link>
@@ -1115,9 +1115,9 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.019"/>
+      <origin rpy="0 0 1.5707" xyz="0 0 0.019"/>
       <geometry name="thproximal_collision_geom">
-        <box size="0.008 0.008 0.020"/>
+        <cylinder radius="0.01" length="0.04"/>
       </geometry>
     </collision>
   </link>
@@ -1169,7 +1169,7 @@
     <collision>
       <origin rpy="0 0 0 " xyz="0 0 0"/>
       <geometry name="thhub_collision_geom">
-        <box size="0.001 0.001 0.001"/>
+        <sphere radius="0.01"/>
       </geometry>
     </collision>
   </link>
@@ -1219,9 +1219,15 @@
       </material>
     </visual>
     <collision>
-      <origin rpy="0 0 0 " xyz="0 0 0.016"/>
+      <origin rpy="0 0 0" xyz="0 0 0.017"/>
       <geometry name="thmiddle_collision_geom">
-        <box size="0.008 0.008 0.015"/>
+        <cylinder radius="0.010" length="0.030"/>
+      </geometry>
+    </collision>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0.032"/>
+      <geometry name="thmiddle_collision_geom_2">
+        <sphere radius="0.01"/>
       </geometry>
     </collision>
   </link>
