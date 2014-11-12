@@ -1331,6 +1331,7 @@
       <base_link>forearm</base_link>
       <base_pid_pos cmd_max="4000.0" cmd_min="-4000.0" d="300.0" i="0" p="800.0"/>
       <base_pid_rot cmd_max="2000.0" cmd_min="-2000.0" d="100.0" i="0" p="500.0"/>
+      <base_link_to_spacenav_control_point>0 0 0 0 0 0</base_link_to_spacenav_control_point>
       <!-- order must match hxAPLJoints enumeration -->
       <joint id=" 0">WRJ2</joint>
       <joint id=" 1">WRJ1</joint>
@@ -1390,107 +1391,112 @@
         <motor_torque>0.00955</motor_torque>
         <gear_ratio>180.0</gear_ratio>
       </motor>
-      <motor id="2" name="motor_FFJ1">
-        <powered_motor_joint>FFJ1</powered_motor_joint>
+      <motor id="2" name="motor_FFJ4">
+        <powered_motor_joint>FFJ4</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
       </motor>
-      <motor id="3" name="motor_FFJ2">
-        <powered_motor_joint>FFJ2</powered_motor_joint>
+      <motor id="3" name="motor_FFJ3">
+        <powered_motor_joint>FFJ3</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
         <gearbox>
-          <joint>FFJ3</joint>
+          <joint>FFJ2</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8625</multiplier>
         </gearbox>
         <gearbox>
-          <joint>FFJ4</joint>
+          <joint>FFJ1</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8375</multiplier>
         </gearbox>
       </motor>
-      <motor id="3" name="motor_MFJ1">
-        <powered_motor_joint>MFJ1</powered_motor_joint>
+      <motor id="4" name="motor_MFJ4">
+        <powered_motor_joint>MFJ4</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
       </motor>
-      <motor id="4" name="motor_MFJ2">
-        <powered_motor_joint>MFJ2</powered_motor_joint>
+      <motor id="5" name="motor_MFJ3">
+        <powered_motor_joint>MFJ3</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
         <gearbox>
-          <joint>MFJ3</joint>
+          <joint>MFJ2</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8625</multiplier>
         </gearbox>
         <gearbox>
-          <joint>MFJ4</joint>
+          <joint>MFJ1</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8375</multiplier>
         </gearbox>
       </motor>
-      <motor id="5" name="motor_RFJ1">
-        <powered_motor_joint>RFJ1</powered_motor_joint>
+      <motor id="6" name="motor_RFJ4">
+        <powered_motor_joint>RFJ4</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
       </motor>
-      <motor id="6" name="motor_RFJ2">
-        <powered_motor_joint>RFJ2</powered_motor_joint>
+      <motor id="7" name="motor_RFJ3">
+        <powered_motor_joint>RFJ3</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
         <gearbox>
-          <joint>RFJ3</joint>
+          <joint>RFJ2</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8625</multiplier>
         </gearbox>
         <gearbox>
-          <joint>RFJ4</joint>
+          <joint>RFJ1</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8375</multiplier>
         </gearbox>
       </motor>
-      <motor id="7" name="motor_LFJ1">
-        <powered_motor_joint>LFJ1</powered_motor_joint>
+      <motor id="8" name="motor_LFJ5">
+        <powered_motor_joint>LFJ5</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
       </motor>
-      <motor id="8" name="motor_LFJ2">
-        <powered_motor_joint>LFJ2</powered_motor_joint>
+      <motor id="9" name="motor_LFJ4">
+        <powered_motor_joint>LFJ4</powered_motor_joint>
+        <motor_torque>3.82e-3</motor_torque>
+        <gear_ratio>393.0</gear_ratio>
+      </motor>
+      <motor id="10" name="motor_LFJ2">
+        <powered_motor_joint>LFJ3</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
         <gearbox>
-          <joint>LFJ3</joint>
+          <joint>LFJ2</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8625</multiplier>
         </gearbox>
         <gearbox>
-          <joint>LFJ4</joint>
+          <joint>LFJ1</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8375</multiplier>
         </gearbox>
       </motor>
-      <motor id="9" name="motor_THJ1">
-        <powered_motor_joint>THJ1</powered_motor_joint>
+      <motor id="11" name="motor_THJ5">
+        <powered_motor_joint>THJ5</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
       </motor>
-      <motor id="10" name="motor_THJ2">
-        <powered_motor_joint>THJ2</powered_motor_joint>
+      <motor id="12" name="motor_THJ4">
+        <powered_motor_joint>THJ4</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
       </motor>
-      <motor id="11" name="motor_THJ3">
+      <motor id="13" name="motor_THJ3">
         <powered_motor_joint>THJ3</powered_motor_joint>
         <motor_torque>3.82e-3</motor_torque>
         <gear_ratio>393.0</gear_ratio>
         <gearbox>
-          <joint>THJ4</joint>
+          <joint>THJ2</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8625</multiplier>
         </gearbox>
         <gearbox>
-          <joint>THJ5</joint>
+          <joint>THJ1</joint>
           <offset>0.174532925199</offset>
           <multiplier>0.8375</multiplier>
         </gearbox>
@@ -1524,15 +1530,14 @@
       <imuSensor id="0">rIndDistal_imu_sensor</imuSensor>
       -->
 
-      <!-- These grasp postures are based on information from APL
-      <grasp name="Cylindrical">0 0 0 0.8 0.8 0.85 1.8 0 0 0 0 0.05 0.85 0.75 0.75</grasp>
-      <grasp name="Spherical">0 0 0 0.9599 1.0472 0.7854 1.9199 0.3491 0.3491 0 0 0.5236 0.8727 0.8727 -0.3491</grasp>
-      <grasp name="ThreeFingerPinch">0 0 0 0.791168 0.841168 0.897955 1.95035 0 0 0 0 1.00918 0.691168 0.431986 0.172804</grasp>
-      <grasp name="FinePinch(American)">0 0 0 0.8727 1.5708 1.5708 1.3963 0 0 0 0 0.8727 1.5708 0.5236 -0.3491</grasp>
-      <grasp name="FinePinch(British)">0 0 0 0.719641 -0.294359 0.696527 1.40425 0 0 -0.4 -0.05 0.926609 -0.302359 0.31103 0.324419</grasp>
-      <grasp name="Palmar(Tray)">0 0 0 0 0 0 1.5708 0 0 0 0 1.3963 0 0.6981 -0.3491</grasp>
-      <grasp name="Hook">0 0 0 1.2217 1.2217 1.2217 0 0 0 0 0 1.0472 1.2217 0.2618 -0.3491</grasp>
-      -->
+      <!-- These grasp postures are based on information from APL -->
+      <grasp name="Cylindrical">        0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
+      <grasp name="Spherical">          0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
+      <grasp name="ThreeFingerPinch">   0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
+      <grasp name="FinePinch(American)">0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
+      <grasp name="FinePinch(British)"> 0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
+      <grasp name="Palmar(Tray)">       0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
+      <grasp name="Hook">               0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
     </plugin>
   </gazebo>
 </robot>
