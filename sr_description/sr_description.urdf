@@ -1332,6 +1332,7 @@
       <base_pid_pos cmd_max="4000.0" cmd_min="-4000.0" d="300.0" i="0" p="800.0"/>
       <base_pid_rot cmd_max="2000.0" cmd_min="-2000.0" d="100.0" i="0" p="500.0"/>
       <base_link_to_spacenav_control_point>0 0 0 0 0 0</base_link_to_spacenav_control_point>
+      <base_link_to_hydra_control_point>0 0 0 3.1416 1.5707 1.5707</base_link_to_hydra_control_point>
       <!-- order must match hxAPLJoints enumeration -->
       <joint id=" 0">WRJ2</joint>
       <joint id=" 1">WRJ1</joint>

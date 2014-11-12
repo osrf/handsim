@@ -150,7 +150,17 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // hydra sensor offset
-  this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
+  if (this->sdf->HasElement("base_link_to_hydra_control_point"))
+  {
+    sdf::ElementPtr bl2hcp =
+      this->sdf->GetElement("base_link_to_hydra_control_point");
+    this->baseLinkToHydraSensor = bl2hcp->Get<math::Pose>();
+  }
+  else
+  {
+    gzdbg << "using defaults for apl_hand.\n";
+    this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, M_PI, -0.5*M_PI);
+  }
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
