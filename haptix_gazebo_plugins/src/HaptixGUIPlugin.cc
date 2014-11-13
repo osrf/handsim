@@ -1201,7 +1201,7 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   if (!hxInitialized)
     return;
 
-  bool engage = _msg->right().button_bumper();
+  bool engage = _msg->right().button_1();
 
   if (!engage)
     return;
