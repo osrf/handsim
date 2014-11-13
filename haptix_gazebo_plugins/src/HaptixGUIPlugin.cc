@@ -16,6 +16,7 @@
 */
 
 #include <sstream>
+#include <limits>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
@@ -619,14 +620,23 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   float forceRange = this->forceMax - this->forceMin;
 
   // stay white if below forceMin
-  if (fabs(_value) >= forceMin)
+  if (fabs(_value) >= this->forceMin)
   {
+    // sometimes _value is inf, deal with that
+    // if (_value > this->forceMax)  // check this too?
+    if (_value == std::numeric_limits<double>::infinity())
+    {
+      gzdbg << "contact [" << _contactName.toStdString()
+            << "] is [" << _value << "]\n";
+      _value = this->forceMax;
+    }
+
     for (int i = 0; i < 3; ++i)
     {
       float colorRange = this->colorMax[i] - this->colorMin[i];
 
       colorArray[i] = this->colorMin[i] +
-        colorRange * (fabs(_value) - forceMin)/forceRange;
+        colorRange * (fabs(_value) - this->forceMin)/forceRange;
 
       if (colorMax[i] > this->colorMin[i])
       {
@@ -640,6 +650,11 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
       }
     }
   }
+
+  // debug
+  // if (fabs(_value) > this->forceMin)
+  //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
+  //         << ", " << colorArray[2] << ")\n";
 
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
 
