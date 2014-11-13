@@ -16,6 +16,7 @@
 */
 
 #include <sstream>
+#include <limits>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
@@ -619,6 +620,11 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
       }
     }
   }
+
+  // debug
+  // if (fabs(_value) > this->forceMin)
+  //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
+  //         << ", " << colorArray[2] << ")\n";
 
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
 
