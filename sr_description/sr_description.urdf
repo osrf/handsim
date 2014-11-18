@@ -1707,7 +1707,7 @@
       -->
 
       <!-- These grasp postures are based on information from APL -->
-      <grasp name="Cylindrical">        0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
+      <grasp name="Cylindrical">        0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 1.0 3.5 0.6</grasp>
       <grasp name="Spherical">          0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
       <grasp name="ThreeFingerPinch">   0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
       <grasp name="FinePinch(American)">0 0 0 1.0 0 1.0 0 1.0 0 0 1.0 0.5 3.5 0.3</grasp>
