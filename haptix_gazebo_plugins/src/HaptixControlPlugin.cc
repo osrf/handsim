@@ -847,7 +847,6 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
   // how do we know which sensor triggered this update?
-  // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   if (_i < this->contactSensorInfos.size())
   {
