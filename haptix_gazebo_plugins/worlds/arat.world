@@ -15,7 +15,7 @@
         <force_min>0.001</force_min>
         <force_max>20</force_max>
         <color_no_contact>255 255 255 255</color_no_contact>
-        <color_max>255 102 102 255</color_max>
+        <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
         <hand_side>right</hand_side>
         <timer_topic>~/timer_control</timer_topic> 
