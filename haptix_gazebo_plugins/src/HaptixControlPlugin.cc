@@ -107,8 +107,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // param for spacenav control, this is the point in arm base link
   // frame for which we want to control with the spacenav
   this->baseLinktoSpacenavPose = math::Pose(0, -0.4, 0, 0, 0, 0);
-  this->targetSpacenavPose = this->baseLinktoSpacenavPose
-                           + this->initialBaseLinkPose;
   // get polhemus_source model location
   // for tracking polhemus setup, where is the source in the world frame
   this->polhemusSourceModel = this->world->GetModel("polhemus_source");
@@ -513,8 +511,6 @@ void HaptixControlPlugin::LoadHandControl()
 void HaptixControlPlugin::Reset()
 {
   this->targetBaseLinkPose = this->initialBaseLinkPose;
-  this->targetSpacenavPose = this->baseLinktoSpacenavPose
-                           + this->initialBaseLinkPose;
 
   std::vector<SimRobotCommand>::iterator iter;
   for (iter = this->simRobotCommands.begin();
@@ -594,14 +590,16 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   const double rotScale = 5.0;
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
-    this->targetSpacenavPose.pos += _dt * posScale * posRate;
-    this->targetSpacenavPose.rot =
-      this->targetSpacenavPose.rot.Integrate(rotScale * rotRate, _dt);
+    math::Pose targetSpacenavPose = this->baseLinktoSpacenavPose
+                                  + this->targetBaseLinkPose;
+    targetSpacenavPose.pos += _dt * posScale * posRate;
+    targetSpacenavPose.rot =
+      targetSpacenavPose.rot.Integrate(rotScale * rotRate, _dt);
 
     // apply inverse transform from spacenav reference point
     // back to base link pose
     this->targetBaseLinkPose = this->baseLinktoSpacenavPose.GetInverse()
-                             + this->targetSpacenavPose;
+                             + targetSpacenavPose;
   }
 }
 
@@ -631,10 +629,9 @@ void HaptixControlPlugin::UpdatePolhemus()
         if (this->pausePolhemus)
         {
           // calibration mode, update offset
-          math::Pose baseLinkPose = this->baseLink->GetWorldPose();
           this->sourceWorldPoseArmOffset =
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
-             baseLinkPose) - this->sourceWorldPose;
+             this->targetBaseLinkPose) - this->sourceWorldPose;
         }
         else
         {
