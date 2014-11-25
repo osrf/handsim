@@ -33,6 +33,7 @@ GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
+  this->quit = false;
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
 
@@ -290,6 +291,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 /////////////////////////////////////////////////
 HaptixGUIPlugin::~HaptixGUIPlugin()
 {
+  this->quit = true;
   this->pollSensorsThread.join();
 }
 
@@ -888,7 +890,7 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::PollSensors()
 {
-  while(true)
+  while(!quit)
   {
     if (this->hxInitialized)
     {
@@ -900,7 +902,7 @@ void HaptixGUIPlugin::PollSensors()
       }
       this->UpdateSensorContact();
     }
-    usleep(33333);  // 30Hz max
+    usleep(1000);  // 1kHz max
   }
 }
 

@@ -274,6 +274,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief callback for subscriber to the hydra publisher
     private: void OnHydra(ConstHydraPtr &_msg);
+
+    /// \brief Get contact sensor information
+    private: bool quit;
   };
 }
 #endif
