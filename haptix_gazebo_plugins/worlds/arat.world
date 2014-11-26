@@ -290,6 +290,26 @@
       <pose>0.4 -0.7 0 0 0 -1.57</pose>
     </include>
 
+    <model name="head">
+      <pose>0 -1.0 1.5 0 0 1.57</pose>
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.005 0.005 0.005</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+
     <model name="polhemus_source">
       <pose>-.5 0 1.3 0 3.1416 1.57</pose>
       <link name="link">
