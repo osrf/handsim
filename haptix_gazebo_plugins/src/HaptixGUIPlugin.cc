@@ -127,9 +127,11 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   tabFrameLayout->addWidget(this->instructionsView);
 
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
+
+  // reset all button
   QPushButton *resetButton = new QPushButton();
   resetButton->setFocusPolicy(Qt::NoFocus);
-  resetButton->setText(QString("Reset Test"));
+  resetButton->setText(QString("Reset All"));
   resetButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
@@ -138,6 +140,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
   resetButton->setMaximumWidth(120);
 
+  // next scene button
   QPushButton *nextButton = new QPushButton();
   nextButton->setFocusPolicy(Qt::NoFocus);
   nextButton->setText(QString("Next Test"));
@@ -149,7 +152,21 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
   nextButton->setMaximumWidth(120);
 
+  // add reset scene only
+  QPushButton *resetSceneButton = new QPushButton();
+  resetSceneButton->setFocusPolicy(Qt::NoFocus);
+  resetSceneButton->setText(QString("Reset Scene"));
+  resetSceneButton->setStyleSheet(
+      "background-color: rgba(120, 120, 120, 255);"
+      "border: 0px;"
+      "border-radius: 4px;"
+      "color: #ffffff");
+  connect(resetSceneButton, SIGNAL(clicked()), this,
+    SLOT(OnResetSceneClicked()));
+  resetSceneButton->setMaximumWidth(120);
+
   cycleButtonLayout->addWidget(resetButton);
+  cycleButtonLayout->addWidget(resetSceneButton);
   cycleButtonLayout->addWidget(nextButton);
 
   QFrame *cycleButtonFrame = new QFrame;
@@ -801,6 +818,18 @@ void HaptixGUIPlugin::OnResetClicked()
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
 }
 
+////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetSceneClicked()
+{
+  this->startStopButton->setChecked(false);
+
+  // Signal to the TimerPlugin to reset the clock
+  this->PublishTimerMessage("reset");
+  
+  // place scene objects back
+  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
+}
+
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::ResetModels()
 {
@@ -1034,6 +1063,15 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }
+
+      // print current command for capturing into grasp
+      gzdbg << "Current grasp:\n";
+      for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
+      {
+        // cannot use gzdbg because extra code line info.
+        std::cout << cmd.ref_pos[i] << " ";
+      }
+      gzdbg << "\n";
 
       // And record it for next time
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)

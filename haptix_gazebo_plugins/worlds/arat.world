@@ -6,10 +6,6 @@
     </scene>
 
     <gui>
-      <camera name="user_camera">
-        <pose>0 -0.7 1.5  0 0.4 1.57</pose>
-      </camera>
-
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <circle_size>25</circle_size>
         <force_min>0</force_min>
@@ -212,6 +208,11 @@
 
       </plugin>
 
+
+      <camera name="user_camera">
+        <pose>0 -0.7 1.5  0 0.4 1.57</pose>
+      </camera>
+
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
         <size>155 30</size>
         <topic>~/timer_control</topic> 
@@ -264,6 +265,66 @@
       <max_step_size>0.001000</max_step_size>
     </physics>
 
+    <model name="walls">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual">
+          <pose>0 5 1.5 0 0 0</pose>
+          <geometry>
+            <box><size>10.0 0.2 3.0</size></box>
+          </geometry>
+          <material>
+            <script><name>Gazebo/PaintedWall</name></script>
+          </material>
+
+        </visual>
+
+        <visual name="visual2">
+          <pose>5 0 1.5 0 0 0</pose>
+          <geometry>
+            <box><size>0.2 10.0 3.0</size></box>
+          </geometry>
+          <material>
+            <script><name>Gazebo/PaintedWall</name></script>
+          </material>
+
+        </visual>
+
+        <visual name="visual3">
+          <pose>0 -5 1.5 0 0 0</pose>
+          <geometry>
+            <box><size>10.0 0.2 3.0</size></box>
+          </geometry>
+          <material>
+            <script><name>Gazebo/PaintedWall</name></script>
+          </material>
+
+        </visual>
+
+        <visual name="visual4">
+          <pose>-5 0 1.5 0 0 0</pose>
+          <geometry>
+            <box><size>0.2 10.0 3.0</size></box>
+          </geometry>
+          <material>
+            <script><name>Gazebo/PaintedWall</name></script>
+          </material>
+        </visual>
+        <!--
+        <visual name="ceiling">
+          <pose>0 0 3.1 0 0 0</pose>
+          <geometry>
+            <box><size>10 10.0 0.2</size></box>
+          </geometry>
+          <material>
+            <script><name>Gazebo/CeilingTiled</name></script>
+          </material>
+        </visual>
+-->
+
+      </link>
+    </model>
+
     <!-- A global light source -->
     <include>
       <uri>model://sun</uri>
@@ -291,13 +352,13 @@
     </include>
 
     <model name="head">
-      <pose>0 -1.0 1.5 0 0 1.57</pose>
+      <pose>0.1 -0.75 1.5 0 0 1.57</pose>
       <static>true</static>
       <link name="link">
         <visual name="visual">
           <geometry>
             <box>
-              <size>0.005 0.005 0.005</size>
+              <size>0.0005 0.0005 0.0005</size>
             </box>
           </geometry>
           <material>
@@ -522,5 +583,11 @@
       </arrangement>
 
     </plugin>
+
+    <plugin name="hydra" filename="libHydraPlugin.so">
+      <pivot>0.04 0 0</pivot>
+      <grab>0.12 0 0</grab>
+    </plugin>
+
   </world>
 </sdf>

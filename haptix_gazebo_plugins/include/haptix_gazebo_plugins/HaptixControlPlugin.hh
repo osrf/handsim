@@ -200,6 +200,17 @@ namespace gazebo
     /// \brief Mutex to protect access to userCameraPose
     private: boost::mutex userCameraPoseMessageMutex;
 
+    /// \brief subscribe to hydra
+    private: gazebo::transport::SubscriberPtr hydraSub;
+    /// \brief callback for subscriber to the hydra publisher
+    private: void OnHydra(ConstHydraPtr &_msg);
+    /// \brief store hydra pose
+    private: math::Pose hydraPose;
+    /// \brief Mutex to protect access to hydraPose
+    private: boost::mutex hydraMessageMutex;
+    /// \brief have a hydra?
+    private: bool haveHydra;
+
     /**********************************************/
     /*                                            */
     /*   for subscribing to key events published  */
@@ -250,6 +261,9 @@ namespace gazebo
     private: math::Pose baseLinkToArmSensor;
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
+
+    /// \brief Transform from hydra sensor orientation to base link frame.
+    private: math::Pose baseLinkToHydraSensor;
 
     /// \brief Update the state of the robot hand based the commanded states.
     private: void GetRobotStateFromSim();
