@@ -1504,8 +1504,8 @@
     <plugin filename="libHaptixControlPlugin.so" name="HaptixControlPlugin">
       <base_joint>arm_base_joint</base_joint>
       <base_link>forearm</base_link>
-      <base_pid_pos cmd_max="6000.0" cmd_min="-6000.0" d="200.0" i="0" p="1800.0"/>
-      <base_pid_rot cmd_max="2000.0" cmd_min="-2000.0" d="100.0" i="0" p="1200.0"/>
+      <base_pid_pos cmd_max="8000.0" cmd_min="-8000.0" d="200.0" i="0" p="4800.0"/>
+      <base_pid_rot cmd_max="3000.0" cmd_min="-3000.0" d="100.0" i="0" p="3600.0"/>
       <base_link_to_spacenav_control_point>0 0 0 0 0 0</base_link_to_spacenav_control_point>
       <base_link_to_hydra_control_point>0 0 0 3.1416 1.5707 1.5707</base_link_to_hydra_control_point>
       <!-- order must match hxAPLJoints enumeration -->

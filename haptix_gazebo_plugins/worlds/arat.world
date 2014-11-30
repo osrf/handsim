@@ -239,7 +239,8 @@
       </plugin>
 
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
-        <size>155 30</size>
+        <size>900 150</size>
+        <pos>600 200</pos>
         <topic>~/timer_control</topic> 
       </plugin>
 

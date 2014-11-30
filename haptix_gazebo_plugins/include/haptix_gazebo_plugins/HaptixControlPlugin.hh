@@ -206,14 +206,8 @@ namespace gazebo
     /// \brief Mutex to protect access to userCameraPose
     private: boost::mutex userCameraPoseMessageMutex;
 
-    /// \brief subscribe to hydra
-    private: gazebo::transport::SubscriberPtr hydraSub;
-    /// \brief callback for subscriber to the hydra publisher
-    private: void OnHydra(ConstHydraPtr &_msg);
     /// \brief store hydra pose
     private: math::Pose hydraPose;
-    /// \brief Mutex to protect access to hydraPose
-    private: boost::mutex hydraMessageMutex;
     /// \brief have a hydra?
     private: bool haveHydra;
 
@@ -487,6 +481,79 @@ namespace gazebo
     private: boost::mutex baseLinkMutex;
     private: boost::mutex pausePolhemusMutex;
     private: sdf::ElementPtr sdf;
+
+    ///////////////////////////////////////////////////////////////////
+    ///                                                             ///
+    /// \brief copy hydra here because gz transport is slow         ///
+    ///                                                             ///
+    ///////////////////////////////////////////////////////////////////
+
+    /// \brief Poll the hydra for input.
+    /// \param[in] _lowPassCornerHz Filter frequency.
+    /// \return true when there is a new update coming from the controller.
+    private: bool PollHydra(float _lowPassCornerHz = 5.0);
+
+    /// \brief Method executed in a separate thread to poll hydra for updates.
+    private: void RunHydra();
+
+    /// \brief Update the hydra.
+    /// \param[in] _info Update information.
+    private: void UpdateHydra();
+
+    /// \brief Raw controller positions.
+    private: int16_t rawPos[6];
+
+    /// \brief Raw controller orientations.
+    private: int16_t rawQuat[8];
+
+    /// \brief Raw value of the buttons.
+    private: uint8_t rawButtons[2];
+
+    /// \brief Raw values of the analog joysticks.
+    private: double rawAnalog[6];
+
+    /// \brief Device file descriptor
+    private: int hidrawFd;
+
+    /// \brief Left and right controller positions.
+    private: math::Vector3 hydraPos[2];
+
+    /// \brief Left and right controller orientations.
+    private: math::Quaternion hydraQuat[2];
+
+    /// \brief Left and right filtered positions.
+    private: math::OnePoleVector3 hydraFilterPos[2];
+
+    /// \brief Left and right filtered controller orientations.
+    private: math::OnePoleQuaternion hydraFilterQuat[2];
+
+    /// \brief Analog joysticks
+    private: float hydraAnalog[6];
+
+    /// \brief Buttons that have been pressed.
+    private: uint8_t hydraButtons[14];
+
+    /// \brief Estimate of the update period.
+    private: math::OnePole<float> periodEstimate;
+
+    /// \brief Time of the last poll cycle.
+    private: common::Time lastCycleStart;
+
+    /// \brief Mutex
+    private: boost::mutex hydraMutex;
+
+    /// \brief Additional thread
+    private: boost::thread *pollHydraThread;
+
+    /// \brief Use to stop the additional thread that the plugin uses.
+    private: bool stopHydra;
+
+    /// \brief Gazebo communication node pointer.
+    private: transport::NodePtr node;
+
+    /// \brief Publisher pointer used to publish the messages.
+    private: transport::PublisherPtr pub;
+
   };
 
 /// \}

@@ -14,6 +14,15 @@ find_package(polhemus_driver REQUIRED)
 find_package(haptix-comm REQUIRED)
 find_package(ignition-transport REQUIRED)
 
+include (FindPkgConfig)
+if (PKG_CONFIG_FOUND)
+  pkg_check_modules(OGRE OGRE)
+  pkg_check_modules(OGRE-Terrain OGRE-Terrain)
+  pkg_check_modules(OGRE-Paging OGRE-Paging)
+else()
+  message(FATAL_ERROR "pkg-config is required; please install it")
+endif()
+
 # for haptix GUI plugin
 find_package(Qt4)
 
@@ -27,6 +36,9 @@ include_directories(
   ${HAPTIX-COMM_INCLUDE_DIRS}
   ${IGNITION-TRANSPORT_INCLUDE_DIRS}
   ${polhemus_driver_INCLUDE_DIRS}
+  ${OGRE_INCLUDE_DIRS}
+  ${OGRE-Terrain_INCLUDE_DIRS}
+  ${OGRE-Paging_INCLUDE_DIRS}
 )
 
 # make below target specific?
@@ -35,6 +47,9 @@ link_directories(
   ${HAPTIX-COMM_LIBRARY_DIRS}
   ${IGNITION-TRANSPORT_LIBRARY_DIRS}
   ${polhemus_driver_LIBRARY_DIRS}
+  ${OGRE_LIBRARY_DIRS}
+  ${OGRE-Terrain_LIBRARY_DIRS}
+  ${OGRE-Paging_LIBRARY_DIRS}
 )
 
 QT4_WRAP_CPP(HaptixGUIPlugin_MOC

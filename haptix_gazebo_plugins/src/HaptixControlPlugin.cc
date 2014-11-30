@@ -15,7 +15,43 @@
  *
 */
 
+/// Hydra:
+#include <errno.h>
+#include <libusb-1.0/libusb.h>
+#include <linux/hidraw.h>
+#include <linux/input.h>
+#include <linux/types.h>
+#include <cstring>
+
 #include "haptix_gazebo_plugins/HaptixControlPlugin.hh"
+
+// Hydra: Loosely adapted from the following
+// https://github.com/ros-drivers/razer_hydra/blob/groovy-devel/src/hydra.cpp
+// Ugly hack to work around failing compilation on systems that don't
+// yet populate new version of hidraw.h to userspace.
+//
+// If you need this, please have your distro update the kernel headers.
+#ifndef HIDIOCSFEATURE
+#define HIDIOCSFEATURE(len)    _IOC(_IOC_WRITE|_IOC_READ, 'H', 0x06, len)
+#define HIDIOCGFEATURE(len)    _IOC(_IOC_WRITE|_IOC_READ, 'H', 0x07, len)
+#endif
+// Eventually crawl hidraw file system using this:
+// http://www.signal11.us/oss/udev/
+#define HYDRA_RIGHT_BUMPER 7
+#define HYDRA_RIGHT_1 8
+#define HYDRA_RIGHT_2 9
+#define HYDRA_RIGHT_3 10
+#define HYDRA_RIGHT_4 11
+#define HYDRA_RIGHT_CENTER 12
+#define HYDRA_RIGHT_JOY 13
+
+#define HYDRA_LEFT_LB 0
+#define HYDRA_LEFT_1 1
+#define HYDRA_LEFT_2 2
+#define HYDRA_LEFT_3 3
+#define HYDRA_LEFT_4 4
+#define HYDRA_LEFT_CENTER 5
+#define HYDRA_LEFT_JOY 6
 
 namespace gazebo
 {
@@ -37,6 +73,13 @@ HaptixControlPlugin::HaptixControlPlugin()
 
   this->ignNode.Advertise("/haptix/gazebo/Grasp",
     &HaptixControlPlugin::HaptixGraspCallback, this);
+
+  // Hydra:
+  this->stopHydra = false;
+  this->lastCycleStart = common::Time::GetWallTime();
+  // magic number for 50% mix at each step
+  this->periodEstimate.SetFc(0.11, 1.0);
+  this->periodEstimate.SetValue(0.004);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,6 +89,10 @@ HaptixControlPlugin::~HaptixControlPlugin()
   this->polhemusThread.join();
   event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
   event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
+
+  // Hydra:
+  this->stopHydra = true;
+  this->pollHydraThread->join();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,10 +133,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->userCameraPoseSub =
     this->gazeboNode->Subscribe("~/user_camera/pose",
       &HaptixControlPlugin::OnUserCameraPose, this);
-
-  this->hydraSub =
-    this->gazeboNode->Subscribe("~/hydra",
-      &HaptixControlPlugin::OnHydra, this);
 
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
@@ -254,6 +297,96 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
+
+  // Hydrs:
+  int res;
+  uint8_t buf[256];
+  struct hidraw_report_descriptor rptDesc;
+  struct hidraw_devinfo info;
+
+  // Find the Razer device.
+  std::string device;
+  for (int i = 0; i < 6 && device.empty(); ++i)
+  {
+    std::ostringstream stream;
+    stream << "/sys/class/hidraw/hidraw" << i << "/device/uevent";
+    std::ifstream fileIn(stream.str().c_str());
+    if (fileIn.is_open())
+    {
+      std::string line;
+      while (std::getline(fileIn, line) && device.empty())
+      {
+        if (line.find("HID_NAME=Razer Razer Hydra") != std::string::npos)
+          device = "/dev/hidraw" + boost::lexical_cast<std::string>(i);
+      }
+    }
+  }
+
+  if (device.empty())
+  {
+    gzerr << "Unable to find Razer device\n";
+    this->haveHydra = false;
+  }
+  else
+  {
+    this->hidrawFd = open(device.c_str(), O_RDWR | O_NONBLOCK);
+    if (this->hidrawFd < 0)
+    {
+      gzerr << "couldn't open hidraw device[" << device << "]\n";
+      this->haveHydra = false;
+    }
+    else
+    {
+      this->haveHydra = true;
+    }
+  }
+
+  if (this->haveHydra)
+  {
+    memset(&rptDesc, 0x0, sizeof(rptDesc));
+    memset(&info, 0x0, sizeof(info));
+    memset(buf, 0x0, sizeof(buf));
+
+    // Get Raw Name
+    res = ioctl(this->hidrawFd, HIDIOCGRAWNAME(256), buf);
+    if (res < 0)
+      gzerr << "Hydro ioctl error HIDIOCGRAWNAME: " << strerror(errno) << "\n";
+
+    // set feature to start it streaming
+    memset(buf, 0x0, sizeof(buf));
+    buf[6] = 1;
+    buf[8] = 4;
+    buf[9] = 3;
+    buf[89] = 6;
+
+    int attempt = 0;
+    for (attempt = 0; attempt < 50; ++attempt)
+    {
+      res = ioctl(this->hidrawFd, HIDIOCSFEATURE(91), buf);
+      if (res < 0)
+      {
+        gzerr << "Unable to start streaming. HIDIOCSFEATURE: "
+              << strerror(errno) << "\n";
+        common::Time::MSleep(500);
+      }
+      else
+      {
+        break;
+      }
+    }
+
+    if (attempt >= 60)
+    {
+      gzerr << "Failed to load hydra\n";
+      this->haveHydra = false;
+    }
+  }
+
+  if (this->haveHydra)
+  {
+    this->pollHydraThread = new boost::thread(
+      boost::bind(&HaptixControlPlugin::RunHydra, this));
+  }
 
   this->PublishHaptixControlStatus();
 }
@@ -782,14 +915,21 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   math::Vector3 errorRot =
     (baseLinkPose.rot * pose.rot.GetInverse()).GetAsEuler();
 
-  this->wrench.force.x = this->posPid.Update(errorPos.x, _dt);
-  this->wrench.force.y = this->posPid.Update(errorPos.y, _dt);
-  this->wrench.force.z = this->posPid.Update(errorPos.z, _dt);
-  this->wrench.torque.x = this->rotPid.Update(errorRot.x, _dt);
-  this->wrench.torque.y = this->rotPid.Update(errorRot.y, _dt);
-  this->wrench.torque.z = this->rotPid.Update(errorRot.z, _dt);
-  this->baseLink->SetForce(this->wrench.force);
-  this->baseLink->SetTorque(this->wrench.torque);
+  if (1)
+  {
+    this->baseLink->SetWorldPose(pose);
+  }
+  else
+  {
+    this->wrench.force.x = this->posPid.Update(errorPos.x, _dt);
+    this->wrench.force.y = this->posPid.Update(errorPos.y, _dt);
+    this->wrench.force.z = this->posPid.Update(errorPos.z, _dt);
+    this->wrench.torque.x = this->rotPid.Update(errorRot.x, _dt);
+    this->wrench.torque.y = this->rotPid.Update(errorRot.y, _dt);
+    this->wrench.torque.z = this->rotPid.Update(errorRot.z, _dt);
+    this->baseLink->SetForce(this->wrench.force);
+    this->baseLink->SetTorque(this->wrench.torque);
+  }
   // std::cout << "current pose: " << baseLinkPose << std::endl;
   // std::cout << "target pose: " << pose << std::endl;
   // std::cout << "wrench pos: " << this->wrench.force
@@ -1027,6 +1167,9 @@ void HaptixControlPlugin::GazeboUpdateStates()
     if (this->haveKeyboard)
       this->UpdateKeyboard(dt);
 
+    if (this->haveHydra)
+      this->UpdateHydra();
+
     // compute wrench needed
     this->UpdateBaseLink(dt);
 
@@ -1186,30 +1329,6 @@ void HaptixControlPlugin::HaptixGraspCallback(
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
-{
-  boost::mutex::scoped_lock lock(this->hydraMessageMutex);
-  this->haveHydra = true;
-  this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
-
-  math::Pose armSensorPose = this->hydraPose;
-  if (this->pausePolhemus)
-  {
-    // calibration mode, update offset
-    this->sourceWorldPoseArmOffset =
-      (armSensorPose.GetInverse() + this->baseLinkToHydraSensor +
-       this->targetBaseLinkPose) - this->sourceWorldPose;
-  }
-  else
-  {
-    boost::mutex::scoped_lock lock(this->baseLinkMutex);
-    this->targetBaseLinkPose = this->baseLinkToHydraSensor.GetInverse()
-      + armSensorPose
-      + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
-  }
-}
-
-//////////////////////////////////////////////////
 void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->joystickMessageMutex);
@@ -1268,6 +1387,239 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
     // clear
     // gzdbg << " released key [" << this->keyPressed << "]\n";
   }
+}
+
+/////////////////////////////////////////////////
+bool HaptixControlPlugin::PollHydra(float _lowPassCornerHz)
+{
+  if (this->hidrawFd < 0)
+  {
+    gzerr << "hidraw device is not open, couldn't poll.\n";
+    return false;
+  }
+
+  if (_lowPassCornerHz <= std::numeric_limits<float>::epsilon())
+  {
+    gzerr << "Corner frequency for low-pass filter must be greater than 0."
+      << "Using a default value of 2.5Hz.\n";
+    // Set a default value if the value is incorrect.
+    _lowPassCornerHz = 2.5;
+  }
+
+  uint8_t buf[64];
+  ssize_t nread = read(this->hidrawFd, buf, sizeof(buf));
+
+  // No updates.
+  if (nread <= 0)
+    return false;
+
+
+  static bool firstTime = true;
+
+  // Update average read period
+  if (!firstTime)
+  {
+    this->periodEstimate.Process(
+      (common::Time::GetWallTime() - this->lastCycleStart).Double());
+  }
+
+  this->lastCycleStart = common::Time::GetWallTime();
+
+  if (firstTime)
+    firstTime = false;
+
+  // Update filter frequencies
+  float fs = 1.0 / this->periodEstimate.GetValue();
+  float fc = _lowPassCornerHz;
+
+  for (int i = 0; i < 2; ++i)
+  {
+    this->hydraFilterPos[i].SetFc(fc, fs);
+    this->hydraFilterQuat[i].SetFc(fc, fs);
+  }
+
+  // Read data
+  this->rawPos[0] = *(reinterpret_cast<int16_t *>(buf+8));
+  this->rawPos[1] = *(reinterpret_cast<int16_t *>(buf+10));
+  this->rawPos[2] = *(reinterpret_cast<int16_t *>(buf+12));
+  this->rawQuat[0] = *(reinterpret_cast<int16_t *>(buf+14));
+  this->rawQuat[1] = *(reinterpret_cast<int16_t *>(buf+16));
+  this->rawQuat[2] = *(reinterpret_cast<int16_t *>(buf+18));
+  this->rawQuat[3] = *(reinterpret_cast<int16_t *>(buf+20));
+  this->rawButtons[0] = buf[22] & 0x7f;
+  this->rawAnalog[0] = *(reinterpret_cast<int16_t *>(buf+23));
+  this->rawAnalog[1] = *(reinterpret_cast<int16_t *>(buf+25));
+  this->rawAnalog[2] = buf[27];
+
+  this->rawPos[3] = *(reinterpret_cast<int16_t *>(buf+30));
+  this->rawPos[4] = *(reinterpret_cast<int16_t *>(buf+32));
+  this->rawPos[5] = *(reinterpret_cast<int16_t *>(buf+34));
+  this->rawQuat[4] = *(reinterpret_cast<int16_t *>(buf+36));
+  this->rawQuat[5] = *(reinterpret_cast<int16_t *>(buf+38));
+  this->rawQuat[6] = *(reinterpret_cast<int16_t *>(buf+40));
+  this->rawQuat[7] = *(reinterpret_cast<int16_t *>(buf+42));
+  this->rawButtons[1] = buf[44] & 0x7f;
+  this->rawAnalog[3] = *(reinterpret_cast<int16_t *>(buf+45));
+  this->rawAnalog[4] = *(reinterpret_cast<int16_t *>(buf+47));
+  this->rawAnalog[5] = buf[49];
+
+  boost::mutex::scoped_lock lock(this->hydraMutex);
+  // Put the raw position and orientation into Gazebo coordinate frame
+  for (int i = 0; i < 2; ++i)
+  {
+    this->hydraPos[i].x = -this->rawPos[3*i+1] * 0.001;
+    this->hydraPos[i].y = -this->rawPos[3*i+0] * 0.001;
+    this->hydraPos[i].z = -this->rawPos[3*i+2] * 0.001;
+
+    this->hydraQuat[i].w = this->rawQuat[i*4+0] / 32768.0;
+    this->hydraQuat[i].x = -this->rawQuat[i*4+2] / 32768.0;
+    this->hydraQuat[i].y = -this->rawQuat[i*4+1] / 32768.0;
+    this->hydraQuat[i].z = -this->rawQuat[i*4+3] / 32768.0;
+  }
+
+  // Apply filters
+  for (int i = 0; i < 2; ++i)
+  {
+    this->hydraQuat[i] = this->hydraFilterQuat[i].Process(this->hydraQuat[i]);
+    this->hydraPos[i] = this->hydraFilterPos[i].Process(this->hydraPos[i]);
+  }
+
+  this->hydraAnalog[0] = this->rawAnalog[0] / 32768.0;
+  this->hydraAnalog[1] = this->rawAnalog[1] / 32768.0;
+  this->hydraAnalog[2] = this->rawAnalog[2] / 255.0;
+  this->hydraAnalog[3] = this->rawAnalog[3] / 32768.0;
+  this->hydraAnalog[4] = this->rawAnalog[4] / 32768.0;
+  this->hydraAnalog[5] = this->rawAnalog[5] / 255.0;
+
+  for (int i = 0; i < 2; ++i)
+  {
+    this->hydraButtons[i*7  ] = (this->rawButtons[i] & 0x01) ? 1 : 0;
+    this->hydraButtons[i*7+1] = (this->rawButtons[i] & 0x04) ? 1 : 0;
+    this->hydraButtons[i*7+2] = (this->rawButtons[i] & 0x08) ? 1 : 0;
+    this->hydraButtons[i*7+3] = (this->rawButtons[i] & 0x02) ? 1 : 0;
+    this->hydraButtons[i*7+4] = (this->rawButtons[i] & 0x10) ? 1 : 0;
+    this->hydraButtons[i*7+5] = (this->rawButtons[i] & 0x20) ? 1 : 0;
+    this->hydraButtons[i*7+6] = (this->rawButtons[i] & 0x40) ? 1 : 0;
+  }
+
+  return true;
+}
+
+/////////////////////////////////////////////////
+void HaptixControlPlugin::RunHydra()
+{
+  double cornerHz = 200.0;
+
+  while (!this->stopHydra)
+  {
+    if (!this->PollHydra(cornerHz))
+      common::Time::NSleep(250000);
+  }
+
+  if (this->hidrawFd >= 0)
+  {
+    uint8_t buf[256];
+    memset(buf, 0, sizeof(buf));
+    buf[6] = 1;
+    buf[8] = 4;
+    buf[89] = 5;
+
+    if (ioctl(this->hidrawFd, HIDIOCSFEATURE(91), buf) < 0)
+    {
+      gzerr << "Unable to stopHydra streaming. HIDIOCSFEATURE: "
+            << strerror(errno) << "\n";
+    }
+
+    close(this->hidrawFd);
+  }
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::UpdateHydra()
+{
+  // copy hydraPos and hydraQuat to 
+  boost::mutex::scoped_lock lock(this->hydraMutex);
+
+  /* code used to construct ROS joy message
+  math::Pose origRight(this->hydraPos[1], this->hydraQuat[1]);
+
+  math::Pose pivotRight = origRight;
+  math::Pose grabRight = origRight;
+
+  pivotRight.pos += origRight.rot * math::Vector3(-0.04, 0, 0);
+  grabRight.pos += origRight.rot * math::Vector3(-0.12, 0, 0);
+
+  math::Pose origLeft(this->hydraPos[0], this->hydraQuat[0]);
+
+  math::Pose pivotLeft = origLeft;
+  math::Pose grabLeft = origLeft;
+
+  pivotLeft.pos += origLeft.rot.RotateVector(math::Vector3(-0.04, 0, 0));
+  grabLeft.pos += origLeft.rot.RotateVector(math::Vector3(-0.12, 0, 0));
+
+  msgs::Hydra msg;
+  msgs::Hydra::Paddle *rightPaddle = msg.mutable_right();
+  msgs::Hydra::Paddle *leftPaddle = msg.mutable_left();
+
+  // Analog 0: Left right(+) left(-)
+  // Analog 1: Left forward(+) back(-)
+  // Analog 2: Left trigger(0-1)
+  // Analog 3: Right right(+) left(-)
+  // Analog 4: Right forward(+) back(-)
+  // Analog 5: Right trigger(0-1)
+  rightPaddle->set_joy_y(this->hydraAnalog[3]);
+  rightPaddle->set_joy_x(this->hydraAnalog[4]);
+  rightPaddle->set_trigger(this->hydraAnalog[5]);
+
+  leftPaddle->set_joy_y(this->hydraAnalog[0]);
+  leftPaddle->set_joy_x(this->hydraAnalog[1]);
+  leftPaddle->set_trigger(this->hydraAnalog[2]);
+
+  leftPaddle->set_button_bumper(this->hydraButtons[0]);
+  leftPaddle->set_button_1(this->hydraButtons[1]);
+  leftPaddle->set_button_2(this->hydraButtons[2]);
+  leftPaddle->set_button_3(this->hydraButtons[3]);
+  leftPaddle->set_button_4(this->hydraButtons[4]);
+
+  leftPaddle->set_button_center(this->hydraButtons[5]);
+  leftPaddle->set_button_joy(this->hydraButtons[6]);
+
+  rightPaddle->set_button_bumper(this->hydraButtons[7]);
+  rightPaddle->set_button_1(this->hydraButtons[8]);
+  rightPaddle->set_button_2(this->hydraButtons[9]);
+  rightPaddle->set_button_3(this->hydraButtons[10]);
+  rightPaddle->set_button_4(this->hydraButtons[11]);
+  rightPaddle->set_button_center(this->hydraButtons[12]);
+  rightPaddle->set_button_joy(this->hydraButtons[13]);
+
+  msgs::Set(rightPaddle->mutable_pose(), grabRight);
+  msgs::Set(leftPaddle->mutable_pose(), grabLeft);
+
+  this->pub->Publish(msg);
+  */
+
+  // update target base link pose based on hydra
+  {
+    // take the right paddle pose
+    this->hydraPose = math::Pose(this->hydraPos[1], this->hydraQuat[1]);
+
+    math::Pose armSensorPose = this->hydraPose;
+    if (this->pausePolhemus)
+    {
+      // calibration mode, update offset
+      this->sourceWorldPoseArmOffset =
+        (armSensorPose.GetInverse() + this->baseLinkToHydraSensor +
+         this->targetBaseLinkPose) - this->sourceWorldPose;
+    }
+    else
+    {
+      boost::mutex::scoped_lock lock(this->baseLinkMutex);
+      this->targetBaseLinkPose = this->baseLinkToHydraSensor.GetInverse()
+        + armSensorPose
+        + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
+    }
+  }
+
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)
