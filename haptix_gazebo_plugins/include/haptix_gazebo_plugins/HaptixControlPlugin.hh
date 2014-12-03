@@ -116,6 +116,8 @@ namespace gazebo
 
     /// \brief Pointer to the update event connection
     private: event::ConnectionPtr updateConnection;
+
+    /// \brief Pointer to the connection for the end of an update
     private: event::ConnectionPtr updateConnectionEnd;
 
     /// \brief For computing dt

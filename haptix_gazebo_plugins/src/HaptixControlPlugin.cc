@@ -410,6 +410,14 @@ void HaptixControlPlugin::LoadHandControl()
     motorSDF = motorSDF->GetNextElement("motor");
   }
 
+  // get sensor manager from gazebo
+  sensors::SensorManager *mgr = sensors::SensorManager::Instance();
+  while (!mgr->SensorsInitialized())
+  {
+    gzdbg << "waiting for SensorManager to initialize.\n";
+    usleep(100000);
+  }
+
   // Get contact sensor names and insert id/name pair into map
   sdf::ElementPtr contactSensorSDF = this->sdf->GetElement("contactSensor");
   while (contactSensorSDF)
@@ -418,8 +426,6 @@ void HaptixControlPlugin::LoadHandControl()
     // gzdbg << "getting contact sensor [" << id << "]\n";
     this->contactSensorNames[id] = contactSensorSDF->Get<std::string>();
 
-    // get sensor from gazebo
-    sensors::SensorManager *mgr = sensors::SensorManager::Instance();
     // Get a pointer to the contact sensor
     sensors::SensorPtr sensor = mgr->GetSensor(this->contactSensorNames[id]);
 
@@ -455,8 +461,6 @@ void HaptixControlPlugin::LoadHandControl()
     this->imuSensorNames[id] = imuSensor->Get<std::string>();
     // gzdbg << "getting imuSensor [" << id << "]\n";
 
-    // get sensor from gazebo
-    sensors::SensorManager *mgr = sensors::SensorManager::Instance();
     // Get a pointer to the imu sensor
     sensors::ImuSensorPtr sensor =
         boost::dynamic_pointer_cast<sensors::ImuSensor>
@@ -869,7 +873,6 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
   // how do we know which sensor triggered this update?
-  // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   if (_i < this->contactSensorInfos.size())
   {
@@ -899,16 +902,37 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
         {
           msgs::JointWrench wrench = contact.wrench(k);
 
-          // sum up all wrenches from body_2
-          // printing out gz topic for contact, seem that
-          // body_1_wrench corresponds to object
-          // body_2_wrench corresponds to the arm
-          // not sure if this is always true.
-          // body_1_wrench should be -body_2_wrench?
-          this->contactSensorInfos[_i].contactForce +=
-            msgs::Convert(wrench.body_2_wrench().force());
-          this->contactSensorInfos[_i].contactTorque +=
-            msgs::Convert(wrench.body_2_wrench().torque());
+          // sum up all wrenches from body_1 or body_2
+          // check with contact corresponds to the arm and which to the arm
+          // compare body_1_name and body_2_name with model name
+          if (strncmp(this->model->GetName().c_str(),
+                      wrench.body_1_name().c_str(),
+                      this->model->GetName().size()) == 0)
+          {
+            this->contactSensorInfos[_i].contactForce +=
+              msgs::Convert(wrench.body_1_wrench().force());
+            this->contactSensorInfos[_i].contactTorque +=
+              msgs::Convert(wrench.body_1_wrench().torque());
+          }
+          else if (strncmp(this->model->GetName().c_str(),
+                           wrench.body_2_name().c_str(),
+                           this->model->GetName().size()) == 0)
+          {
+            this->contactSensorInfos[_i].contactForce +=
+              msgs::Convert(wrench.body_2_wrench().force());
+            this->contactSensorInfos[_i].contactTorque +=
+              msgs::Convert(wrench.body_2_wrench().torque());
+          }
+          else
+          {
+            gzwarn << "collision name does not match model name, averaging.\n";
+            this->contactSensorInfos[_i].contactForce +=
+              0.5*(msgs::Convert(wrench.body_2_wrench().force()) +
+                   msgs::Convert(wrench.body_2_wrench().force()));
+            this->contactSensorInfos[_i].contactTorque +=
+              0.5*(msgs::Convert(wrench.body_2_wrench().torque()) +
+                   msgs::Convert(wrench.body_2_wrench().torque()));
+          }
 
           // gzerr << "        contact [" << _i << ", " << j
           //       << ", " << k << "] : [" << contactForce << "]\n";
