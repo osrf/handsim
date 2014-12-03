@@ -1154,6 +1154,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       }
 
       // print current command for capturing into grasp
+      /*
       gzdbg << "Current grasp:\n";
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
       {
@@ -1161,6 +1162,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
         std::cout << cmd.ref_pos[i] << " ";
       }
       gzdbg << "\n";
+      */
 
       // And record it for next time
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
