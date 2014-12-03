@@ -51,10 +51,6 @@ namespace haptix_gazebo_plugins
     // Documentation inherited
     public: void Load(sdf::ElementPtr _elem);
 
-    /// \brief Callback when a finger contact message is received.
-    /// \param[in] _msg Contact message.
-    private: void OnFingerContact(ConstContactsPtr &_msg);
-
     /// \brief Signal to set a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
     /// \param[in] _value Force value.
@@ -106,6 +102,9 @@ namespace haptix_gazebo_plugins
     /// \param[in] _event Key press event.
     private: bool OnKeyPress(gazebo::common::KeyEvent _event);
 
+    /// \brief callback on Initialize hx connection
+    private: void OnInitialize(ConstIntPtr &_msg);
+
     /// \brief Handle request responses
     /// \param[in] _msg Response message.
     private: void OnResponse(ConstResponsePtr &_msg);
@@ -123,6 +122,9 @@ namespace haptix_gazebo_plugins
     /// \brief Maximum force value
     private: float forceMax;
 
+    /// \brief No force color value
+    private: gazebo::common::Color colorNoContact;
+
     /// \brief Minimum force color value
     private: gazebo::common::Color colorMin;
 
@@ -134,6 +136,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief All the finger contact points.
     private: std::map<std::string, gazebo::math::Vector2d > contactPoints;
+    
+    /// \brief A map of contact sensor indices to human-readable names.
+    private: std::map<int, std::string> contactNames;
 
     /// \brief The scene onto which is drawn the hand and contact
     /// force data
@@ -143,9 +148,7 @@ namespace haptix_gazebo_plugins
     private: std::map<std::string, QGraphicsEllipseItem*>
              contactGraphicsItems;
 
-    /// \brief Subscriber to finger contact sensors.
-    private: std::vector<gazebo::transport::SubscriberPtr> contactSubscribers;
-
+    /// \brief initial camera pose
     private: gazebo::math::Pose initialCameraPose;
 
     /// \brief Node used to establish communication with gzserver.
@@ -211,11 +214,17 @@ namespace haptix_gazebo_plugins
     /// \brief The last motor command that we sent
     private: ::hxCommand lastMotorCommand;
 
+    /// \brief The last sensor update that we received
+    private: ::hxSensor lastSensor;
+
     /// \brief The device info returned by the other side
     private: ::hxDeviceInfo deviceInfo;
 
     /// \brief Have we initialized our information about the device?
     private: bool hxInitialized;
+
+    /// \brief subscribe to initialize topic
+    private: gazebo::transport::SubscriberPtr initializeSub;
 
     /// \brief The number of initial degrees of freedom that are in the wrist
     private: unsigned int numWristMotors;
@@ -250,6 +259,18 @@ namespace haptix_gazebo_plugins
 
     /// \brief a lock to hold when commanding wrist/finger positions
     private: boost::mutex motorCommandMutex;
+
+    /// \brief start a thread to poll contact sensor data
+    private: boost::thread pollSensorsThread;
+
+    /// \brief start a thread to poll contact sensor data
+    private: void PollSensors();
+
+    /// \brief Get contact sensor information
+    private: void UpdateSensorContact();
+
+    /// \brief Get contact sensor information
+    private: bool quit;
   };
 }
 #endif

@@ -117,6 +117,9 @@ namespace gazebo
     /// \brief Pointer to the update event connection
     private: event::ConnectionPtr updateConnection;
 
+    /// \brief Pointer to the connection for the end of an update
+    private: event::ConnectionPtr updateConnectionEnd;
+
     /// \brief For computing dt
     private: common::Time lastTime;
 
@@ -167,6 +170,9 @@ namespace gazebo
     /// force to the arm base link.
     /// \param[in] _dt time step size.
     private: void UpdateBaseLink(double _dt);
+
+    /// \brief publish HaptixControlPlugin status
+    private: gazebo::transport::PublisherPtr haptixStatusPub;
 
     /**********************************************/
     /*                                            */
@@ -356,9 +362,23 @@ namespace gazebo
     ///   <contactSensor id="1">contact_sensor_5</contactSensor>
     private: std::map<unsigned int, std::string> contactSensorNames;
 
+    /// \brief: data structure for storing contact sensor infos
+    class ContactSensorInfo
+    {
+      public: sensors::SensorPtr sensor;
+      public: event::ConnectionPtr connection;
+      // aggregated forces and torques from contact
+      public: math::Vector3 contactForce;
+      public: math::Vector3 contactTorque;
+    };
+    /// \brief: create a list of contact sensors based on contactSensorNames
+    private: std::vector<ContactSensorInfo> contactSensorInfos;
+
     /// \brief: gazebo contact sensors
-    /// create a list of contact sensors based on contactSensorNames
-    private: std::vector<sensors::ContactSensorPtr> contactSensors;
+    private: void OnContactSensorUpdate(int _i);
+
+    /// \brief: publish HaptixControlPlugin status
+    private: void PublishHaptixControlStatus();
 
     /// \brief: imu sensor names
     /// Reads from plugin SDF, example:

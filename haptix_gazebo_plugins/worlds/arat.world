@@ -12,57 +12,83 @@
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <circle_size>25</circle_size>
-        <force_min>0</force_min>
-        <force_max>75</force_max>
+        <force_min>0.001</force_min>
+        <force_max>20</force_max>
+        <color_no_contact>255 255 255 255</color_no_contact>
+        <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
-        <color_max>255 102 102 255</color_max>
         <hand_side>right</hand_side>
         <timer_topic>~/timer_control</timer_topic> 
 
         <contacts>
           <contact name="mpl::rThDistal::rThDistal_collision">
             <pos>302 130</pos>
-            <topic>~/mpl/rThDistal/rThDistal_contact_sensor</topic>
+            <index>21</index>
           </contact>
-          <contact name="mpl::rThMedial::rThMedial_collision">
+          <contact name="mpl::rThProximal1::rThProximal2_collision">
             <pos>275 195</pos>
-            <topic>~/mpl/rThMedial/rThMedial_contact_sensor</topic>
+            <index>23</index>
+          </contact>
+          <contact name="mpl::rThProximal1::rThProximal1_collision">
+            <pos>245 240</pos>
+            <index>22</index>
+          </contact>
+
+          <contact name="mpl::rThProximal1::rPalm_collision">
+            <pos>125 240</pos>
+            <index>15</index>
           </contact>
 
           <contact name="mpl::rIndDistal::rIndDistal_collision">
             <pos>248 -30</pos>
-            <topic>~/mpl/rIndDistal/rIndDistal_contact_sensor</topic>
+            <index>3</index>
           </contact>
           <contact name="mpl::rIndMedial::rIndMedial_collision">
             <pos>233 43</pos>
-            <topic>~/mpl/rIndMedial/rIndMedial_contact_sensor</topic>
+            <index>4</index>
+          </contact>
+          <contact name="mpl::rIndProximal::rIndProximal_collision">
+            <pos>218 116</pos>
+            <index>6</index>
           </contact>
 
           <contact name="mpl::rMidDistal::rMidDistal_collision">
             <pos>153 -60</pos>
-            <topic>~/mpl/rMidDistal/rMidDistal_contact_sensor</topic>
+            <index>11</index>
           </contact>
           <contact name="mpl::rMidMedial::rMidMedial_collision">
             <pos>155 19</pos>
-            <topic>~/mpl/rMidMedial/rMidMedial_contact_sensor</topic>
+            <index>12</index>
+          </contact>
+          <contact name="mpl::rMidProximal::rMidProximal_collision">
+            <pos>152 98</pos>
+            <index>14</index>
           </contact>
 
           <contact name="mpl::rRingDistal::rRingDistal_collision">
             <pos>64 -19</pos>
-            <topic>~/mpl/rRingDistal/rRingDistal_contact_sensor</topic>
+            <index>17</index>
           </contact>
           <contact name="mpl::rRingMedial::rRingMedial_collision">
             <pos>74 41</pos>
-            <topic>~/mpl/rRingMedial/rRingMedial_contact_sensor</topic>
+            <index>18</index>
+          </contact>
+          <contact name="mpl::rRingProximal::rRingProximal_collision">
+            <pos>84 101</pos>
+            <index>20</index>
           </contact>
 
           <contact name="mpl::rLittleDistal::rLittleDistal_collision">
             <pos>-7 54</pos>
-            <topic>~/mpl/rLittleDistal/rLittleDistal_contact_sensor</topic>
+            <index>7</index>
           </contact>
           <contact name="mpl::rLittleMedial::rLittleMedial_collision">
             <pos>14 105</pos>
-            <topic>~/mpl/rLittleMedial/rLittleMedial_contact_sensor</topic>
+            <index>8</index>
+          </contact>
+          <contact name="mpl::rLittleProximal::rLittleProximal_collision">
+            <pos>35 156</pos>
+            <index>10</index>
           </contact>
         </contacts>
 

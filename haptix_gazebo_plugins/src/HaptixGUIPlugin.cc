@@ -16,6 +16,7 @@
 */
 
 #include <sstream>
+#include <limits>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
@@ -32,6 +33,7 @@ GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
+  this->quit = false;
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
 
@@ -289,6 +291,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 /////////////////////////////////////////////////
 HaptixGUIPlugin::~HaptixGUIPlugin()
 {
+  this->quit = true;
+  this->pollSensorsThread.join();
 }
 
 /////////////////////////////////////////////////
@@ -327,6 +331,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->forceMin = _elem->Get<double>("force_min");
   this->forceMax = _elem->Get<double>("force_max");
 
+  this->colorNoContact = _elem->Get<gazebo::common::Color>("color_no_contact");
   this->colorMin = _elem->Get<gazebo::common::Color>("color_min");
   this->colorMax = _elem->Get<gazebo::common::Color>("color_max");
 
@@ -346,12 +351,6 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         std::string contactName = contact->Get<std::string>("name");
         gazebo::math::Vector2d contactPos =
           contact->Get<gazebo::math::Vector2d>("pos");
-        std::string topic = contact->Get<std::string>("topic");
-
-        // Create a subscriber that receive contact data
-        gazebo::transport::SubscriberPtr sub = this->node->Subscribe(topic,
-            &HaptixGUIPlugin::OnFingerContact, this);
-        this->contactSubscribers.push_back(sub);
 
         this->contactGraphicsItems[contactName] =
           new QGraphicsEllipseItem(contactPos.x,
@@ -365,6 +364,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 
         // Get the position of the contact
         this->contactPoints[contactName] = contactPos;
+
+        // Get the contact index
+        int index = contact->Get<int>("index");
+        this->contactNames[index] = contactName;
 
         contact = contact->GetNextElement();
       }
@@ -380,8 +383,14 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       new QGraphicsRectItem(scaleXPos, -40, scaleWidth, 400);
     forceScaleItem->setPen(QPen(QColor(255, 255, 255, 0)));
     QLinearGradient grad(0, 0, 0, 400);
-    grad.setColorAt(0, QColor(255, 227, 32, 255));
-    grad.setColorAt(1, QColor(255, 102, 102, 255));
+    grad.setColorAt(0, QColor(this->colorMax[0],
+                              this->colorMax[1],
+                              this->colorMax[2],
+                              this->colorMax[3]));
+    grad.setColorAt(1, QColor(this->colorMin[0],
+                              this->colorMin[1],
+                              this->colorMin[2],
+                              this->colorMin[3]));
     forceScaleItem->setBrush(grad);
     this->handScene->addItem(forceScaleItem);
 
@@ -542,6 +551,45 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   // Request info about the mpl arm
   this->requestMsg = gazebo::msgs::CreateRequest("entity_info", "mpl");
   this->requestPub->Publish(*this->requestMsg);
+
+  this->pollSensorsThread = boost::thread(
+    boost::bind(&HaptixGUIPlugin::PollSensors, this));
+
+  // latched subscription, HaptixControlPlugin only publishes this once.
+  this->initializeSub = this->node->Subscribe("~/haptix_load",
+      &HaptixGUIPlugin::OnInitialize, this, true);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnInitialize(ConstIntPtr &_msg)
+{
+  // The first time, we need to talk to the hand.  Can't do this at startup
+  // because the hand might not have been spawned yet.
+  if (this->hxInitialized)
+  {
+    // already initialized
+    // gzerr << "someone else initialized hxInitialized?\n";
+    return;
+  }
+  else
+  {
+    if (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
+    {
+      gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
+        << std::endl;
+      return;
+    }
+    memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+    //::hxSensor sensor;
+    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                != ::hxOK)
+    {
+      gzerr << "hx_update(): Request error.\n" << std::endl;
+      return;
+    }
+
+    this->hxInitialized = true;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -556,54 +604,51 @@ void HaptixGUIPlugin::OnResponse(ConstResponsePtr &_msg)
 }
 
 /////////////////////////////////////////////////
-void HaptixGUIPlugin::OnFingerContact(ConstContactsPtr &_msg)
-{
-  // Parse out the finger name
-  if (_msg->contact_size() > 0)
-  {
-    std::string collisionName1 = _msg->contact(0).collision1();
-    std::string collisionName2 = _msg->contact(0).collision2();
-
-    // Calculate the force
-    gazebo::msgs::Vector3d forceVector = _msg->contact(0).wrench(0).
-      body_1_wrench().force();
-    double force = gazebo::math::Vector3(forceVector.x(), forceVector.y(),
-        forceVector.z()).GetLength();
-
-    if (this->contactPoints.find(collisionName1) != this->contactPoints.end())
-    {
-      // Draw the new force value
-      this->SetContactForce(QString::fromStdString(collisionName1), force);
-    }
-    else if (this->contactPoints.find(collisionName2) !=
-             this->contactPoints.end())
-    {
-      // Draw the new force value
-      this->SetContactForce(QString::fromStdString(collisionName2), force);
-    }
-  }
-}
-
-/////////////////////////////////////////////////
 void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
 {
-  double colorArray[3];
+  // gzerr << _contactName.toStdString() << " : " << _value << "\n";
+
+  // constant for decay
+  const float epsilon = 0.01;
+
+  float colorArray[3] = {this->colorNoContact[0],
+                         this->colorNoContact[1],
+                         this->colorNoContact[2]};
+
   float forceRange = this->forceMax - this->forceMin;
 
-  for (int i = 0; i < 3; ++i)
+  // stay white if below forceMin
+  if (fabs(_value) >= forceMin)
   {
-    float colorRange = this->colorMax[i] - this->colorMin[i];
-    colorArray[i] = colorRange/forceRange * _value + this->colorMin[i];
+    for (int i = 0; i < 3; ++i)
+    {
+      float colorRange = this->colorMax[i] - this->colorMin[i];
 
-    if (colorArray[i] > this->colorMin[i])
-      colorArray[i] = this->colorMin[i];
-    else if (colorArray[i] < this->colorMax[i])
-      colorArray[i] = this->colorMax[i];
+      colorArray[i] = this->colorMin[i] +
+        colorRange * (_value - forceMin)/forceRange;
+
+      if (colorMax[i] > this->colorMin[i])
+      {
+        colorArray[i] = gazebo::math::clamp(colorArray[i],
+          this->colorMin[i], this->colorMax[i]);
+      }
+      else
+      {
+        colorArray[i] = gazebo::math::clamp(colorArray[i],
+          this->colorMax[i], this->colorMin[i]);
+      }
+    }
   }
+
+  // debug
+  // if (fabs(_value) > this->forceMin)
+  //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
+  //         << ", " << colorArray[2] << ")\n";
 
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
 
   this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
+
 }
 
 /////////////////////////////////////////////////
@@ -831,6 +876,49 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 }
 
 /////////////////////////////////////////////////
+void HaptixGUIPlugin::PollSensors()
+{
+  while(!quit)
+  {
+    if (this->hxInitialized)
+    {
+      // gzdbg << "contact sensor polling thread running\n";
+      if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                   != ::hxOK)
+      {
+        gzerr << "hx_update(): Request error." << std::endl;
+      }
+      this->UpdateSensorContact();
+    }
+    usleep(1000);  // 1kHz max
+  }
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::UpdateSensorContact()
+{
+  /* debug print forces
+  gzerr << "ncontact sensor [" << this->deviceInfo.ncontactsensor << "]\n";
+  for (int i = 0; i < this->deviceInfo.ncontactsensor; ++i)
+  {
+    gzerr << "sensor [" << i
+          << "]: contacts [" << this->lastSensor.contact[i] << "]\n";
+  }
+  */
+
+  for (std::map<int, std::string>::iterator c = this->contactNames.begin();
+       c != this->contactNames.end(); ++c)
+  {
+    int i = c->first;
+    // gzdbg << "name: " << c->second << "\n"
+    //       << "index: " << i << "\n"
+    //       << "force: " << this->lastSensor.contact[i] << "\n";
+    this->SetContactForce(QString::fromStdString(this->contactNames[i]),
+      this->lastSensor.contact[i]);
+  }
+}
+
+/////////////////////////////////////////////////
 void HaptixGUIPlugin::ResetModels()
 {
   boost::mutex::scoped_lock lock(this->motorCommandMutex);
@@ -855,9 +943,11 @@ void HaptixGUIPlugin::ResetModels()
 
   // Also reset wrist and finger posture
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-  ::hxSensor sensor;
-  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+  //::hxSensor sensor;
+  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                               != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
+
   // And zero the grasp, if any.
   if (this->lastGraspRequest.grasps_size() > 0)
   {
@@ -880,38 +970,25 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 {
   boost::mutex::scoped_lock lock(this->motorCommandMutex);
 
-  char key = _event.text[0];
-
-  // The first time, we need to talk to the hand.  Can't do this at startup
-  // because the hand might not have been spawned yet.
   if (!this->hxInitialized)
   {
-    if (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
-    {
-      gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
-        << std::endl;
-      return false;
-    }
-    memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-    ::hxSensor sensor;
-    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK )
-    {
-      gzerr << "hx_update(): Request error.\n" << std::endl;
-      return false;
-    }
-
-    this->hxInitialized = true;
+    gzwarn << "hxInitialized is false, waiting for arm to spawn?\n";
+    return false;
   }
+
+  char key = _event.text[0];
 
   // '~' toggles between grasp mode and motor mode
   if (key == '~')
   {
     // Send a motor command to hold current pose
-    ::hxSensor sensor;
-    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &sensor) != ::hxOK)
+    //::hxSensor sensor;
+    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
+                                                                 != ::hxOK)
     {
       gzerr << "hx_update(): Request error." << std::endl;
     }
+
     if (this->graspMode)
     {
       // Send an empty grasp request, to switch modes in the control plugin
@@ -1055,11 +1132,11 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
       // Now command it.
       // std::cout << "Sending: " << std::endl;
-      //  for(int i = 0; i < this->deviceInfo.nmotor; i++)
+      //  for(int i = 0; i < this->deviceInfo.nmotor; ++i)
       //    std::cout << cmd.ref_pos[i] << " ";
       // std::cout << std::endl;
-      ::hxSensor sensor;
-      if (::hx_update(::hxGAZEBO, &cmd, &sensor) != ::hxOK)
+      //::hxSensor sensor;
+      if (::hx_update(::hxGAZEBO, &cmd, &this->lastSensor) != ::hxOK)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }
@@ -1091,7 +1168,6 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
         }
       }
-
       return true;
     }
   }
