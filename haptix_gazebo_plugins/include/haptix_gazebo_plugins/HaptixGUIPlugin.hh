@@ -87,8 +87,11 @@ namespace haptix_gazebo_plugins
     /// \brief Callback triggered when the next button is clicked
     private slots: void OnNextClicked();
 
-    /// \brief Callback triggered when the reset button is clicked
+    /// \brief Callback triggered when the reset all button is clicked
     private slots: void OnResetClicked();
+
+    /// \brief Callback triggered when the reset scene button is clicked
+    private slots: void OnResetSceneClicked();
 
     /// \brief Callback triggered when local frame checked is clicked.
     /// \param[in] _state State of the check box.

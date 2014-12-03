@@ -26,6 +26,8 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->pausePolhemus = true;
   this->gotPausePolhemusRequest = false;
 
+  this->haveHydra = false;
+
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
     &HaptixControlPlugin::HaptixGetDeviceInfoCallback, this);
@@ -84,6 +86,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Subscribe("~/user_camera/pose",
       &HaptixControlPlugin::OnUserCameraPose, this);
 
+  this->hydraSub =
+    this->gazeboNode->Subscribe("~/hydra",
+      &HaptixControlPlugin::OnHydra, this);
+
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
   if (!this->baseJoint)
@@ -131,6 +137,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // 10cm to the right of the sensor is roughly where the eyes are
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
+
+  // hydra sensor offset
+  this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
@@ -757,7 +766,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     unsigned int m = this->motorInfos[i].index;
-    // gzdbg << m << " : " << this->simRobotCommand[m].ref_pos << "\n";
+    // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
     // If we're in grasp mode, then take commands from elsewhere
     unsigned int numWristMotors = 3;
     if (this->graspMode && i >= numWristMotors)
@@ -1059,6 +1068,31 @@ void HaptixControlPlugin::HaptixGraspCallback(
     this->graspMode = true;
 
   _result = true;
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
+{
+  boost::mutex::scoped_lock lock(this->hydraMessageMutex);
+  this->haveHydra = true;
+  this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
+
+  math::Pose armSensorPose = this->hydraPose;
+  if (this->pausePolhemus)
+  {
+    // calibration mode, update offset
+    math::Pose baseLinkPose = this->baseLink->GetWorldPose();
+    this->sourceWorldPoseArmOffset =
+      (armSensorPose.GetInverse() + this->baseLinkToHydraSensor +
+       baseLinkPose) - this->sourceWorldPose;
+  }
+  else
+  {
+    boost::mutex::scoped_lock lock(this->baseLinkMutex);
+    this->targetBaseLinkPose = this->baseLinkToHydraSensor.GetInverse()
+      + armSensorPose
+      + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
+  }
 }
 
 //////////////////////////////////////////////////
