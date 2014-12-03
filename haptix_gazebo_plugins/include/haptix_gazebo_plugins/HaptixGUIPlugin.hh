@@ -268,6 +268,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief Get contact sensor information
     private: void UpdateSensorContact();
+
+    /// \brief Get contact sensor information
+    private: bool quit;
   };
 }
 #endif

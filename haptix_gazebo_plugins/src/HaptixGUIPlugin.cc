@@ -16,6 +16,7 @@
 */
 
 #include <sstream>
+#include <limits>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
@@ -32,6 +33,7 @@ GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
+  this->quit = false;
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
 
@@ -289,6 +291,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 /////////////////////////////////////////////////
 HaptixGUIPlugin::~HaptixGUIPlugin()
 {
+  this->quit = true;
   this->pollSensorsThread.join();
 }
 
@@ -637,6 +640,11 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
     }
   }
 
+  // debug
+  // if (fabs(_value) > this->forceMin)
+  //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
+  //         << ", " << colorArray[2] << ")\n";
+
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
 
   this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
@@ -869,7 +877,7 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::PollSensors()
 {
-  while(true)
+  while(!quit)
   {
     if (this->hxInitialized)
     {
@@ -881,7 +889,7 @@ void HaptixGUIPlugin::PollSensors()
       }
       this->UpdateSensorContact();
     }
-    usleep(33333);  // 30Hz max
+    usleep(1000);  // 1kHz max
   }
 }
 
@@ -1133,6 +1141,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       }
 
       // print current command for capturing into grasp
+      /*
       gzdbg << "Current grasp:\n";
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
       {
@@ -1140,6 +1149,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
         std::cout << cmd.ref_pos[i] << " ";
       }
       gzdbg << "\n";
+      */
 
       // And record it for next time
       for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
