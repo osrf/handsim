@@ -622,14 +622,14 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   float forceRange = this->forceMax - this->forceMin;
 
   // stay white if below forceMin
-  if (fabs(_value) >= forceMin)
+  if (std::abs(_value) >= forceMin)
   {
     for (int i = 0; i < 3; ++i)
     {
       float colorRange = this->colorMax[i] - this->colorMin[i];
 
       colorArray[i] = this->colorMin[i] +
-        colorRange * (fabs(_value) - forceMin)/forceRange;
+        colorRange * (std::abs(_value) - forceMin)/forceRange;
 
       if (colorMax[i] > this->colorMin[i])
       {
@@ -645,7 +645,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   }
 
   // debug
-  // if (fabs(_value) > this->forceMin)
+  // if (std::abs(_value) > this->forceMin)
   //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
   //         << ", " << colorArray[2] << ")\n";
 
@@ -873,7 +873,7 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
-  
+
   // place scene objects back
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 }
