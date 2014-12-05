@@ -271,6 +271,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief Get contact sensor information
     private: bool quit;
+
+    /// \brief subscribe to hydra
+    private: gazebo::transport::SubscriberPtr hydraSub;
+
+    /// \brief callback for subscriber to the hydra publisher
+    private: void OnHydra(ConstHydraPtr &_msg);
   };
 }
 #endif

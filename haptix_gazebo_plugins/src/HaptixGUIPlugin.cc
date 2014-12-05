@@ -536,6 +536,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   gazebo::gui::KeyEventHandler::Instance()->AddPressFilter("arat_gui",
                           boost::bind(&HaptixGUIPlugin::OnKeyPress, this, _1));
 
+  // hydra trigger maps to grasp
+  this->hydraSub = this->node->Subscribe("~/hydra",
+      &HaptixGUIPlugin::OnHydra, this);
+
   // Setup default arm starting pose
   this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 
@@ -618,14 +622,14 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   float forceRange = this->forceMax - this->forceMin;
 
   // stay white if below forceMin
-  if (fabs(_value) >= forceMin)
+  if (std::abs(_value) >= forceMin)
   {
     for (int i = 0; i < 3; ++i)
     {
       float colorRange = this->colorMax[i] - this->colorMin[i];
 
       colorArray[i] = this->colorMin[i] +
-        colorRange * (_value - forceMin)/forceRange;
+        colorRange * (std::abs(_value) - forceMin)/forceRange;
 
       if (colorMax[i] > this->colorMin[i])
       {
@@ -641,14 +645,13 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   }
 
   // debug
-  // if (fabs(_value) > this->forceMin)
+  // if (std::abs(_value) > this->forceMin)
   //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
   //         << ", " << colorArray[2] << ")\n";
 
   QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
 
   this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
-
 }
 
 /////////////////////////////////////////////////
@@ -870,7 +873,7 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
-  
+
   // place scene objects back
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 }
@@ -1200,4 +1203,47 @@ void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
     gzdbg << "polhemus paused successfully.\n";
   }
   this->polhemusPaused = true;
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
+{
+  if (!hxInitialized)
+    return;
+
+  bool engage = _msg->right().button_1();
+
+  if (!engage)
+    return;
+
+  double command = _msg->right().trigger();
+
+  std::string name = "Spherical";
+  haptix::comm::msgs::hxGrasp grasp;
+  haptix::comm::msgs::hxGrasp::hxGraspValue* gv = grasp.add_grasps();
+  gv->set_grasp_name(name);
+  gv->set_grasp_value(command);
+
+  bool result;
+  // std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
+  haptix::comm::msgs::hxCommand resp;
+  if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                            grasp,
+                            1000,
+                            resp,
+                            result) || !result)
+  {
+    gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+  }
+
+  // gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
+  // gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
+
+  this->lastGraspRequest = grasp;
+  // Assign to lastMotorCommand, because now we're tracking the target based
+  // purely on grasp poses.
+  for (unsigned int i = this->numWristMotors; i < this->deviceInfo.nmotor; ++i)
+  {
+    this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
+  }
 }

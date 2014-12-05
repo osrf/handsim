@@ -1176,10 +1176,9 @@ void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
   if (this->pausePolhemus)
   {
     // calibration mode, update offset
-    math::Pose baseLinkPose = this->baseLink->GetWorldPose();
     this->sourceWorldPoseArmOffset =
       (armSensorPose.GetInverse() + this->baseLinkToHydraSensor +
-       baseLinkPose) - this->sourceWorldPose;
+       this->targetBaseLinkPose) - this->sourceWorldPose;
   }
   else
   {
