@@ -1,0 +1,8 @@
+add_executable(polhemus_example example.c)
+target_link_libraries(polhemus_example polhemus_driver)
+
+add_executable(polhemus_example_continuous example_continuous.c)
+target_link_libraries(polhemus_example_continuous polhemus_driver)
+
+add_executable(polhemus_example_multiple_sensors example_multiple_sensors.c)
+target_link_libraries(polhemus_example_multiple_sensors polhemus_driver)
