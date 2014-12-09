@@ -488,6 +488,8 @@ namespace gazebo
     private: boost::mutex baseLinkMutex;
     private: boost::mutex pausePolhemusMutex;
     private: sdf::ElementPtr sdf;
+
+    private: bool hydraCenterButton;
   };
 
 /// \}

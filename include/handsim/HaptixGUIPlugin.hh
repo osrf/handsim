@@ -36,6 +36,7 @@ namespace haptix_gazebo_plugins
 {
   // Forward declare task button
   class TaskButton;
+  class OculusCamera;
 
   /// \brief A graphical interface for the HAPTIX project
   class HaptixGUIPlugin : public gazebo::GUIPlugin
@@ -55,6 +56,9 @@ namespace haptix_gazebo_plugins
     /// \param[in] _contactName Name of the contact sensor.
     /// \param[in] _value Force value.
     signals: void SetContactForce(QString _contactName, double _value);
+
+    /// \brief Pointer to the next button
+    signals: void NextTask();
 
     /// \brief Handles setting a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
@@ -163,6 +167,9 @@ namespace haptix_gazebo_plugins
     /// \brief Publisher for signaling WorldControl node.
     private: gazebo::transport::PublisherPtr worldControlPub;
 
+    /// \brief Publish message to control the pose of the oculus camera.
+    private: gazebo::transport::PublisherPtr oculusPosePub;
+
     // \brief Set of Gazebo signal connections.
     private: std::vector<gazebo::event::ConnectionPtr> connections;
 
@@ -269,14 +276,30 @@ namespace haptix_gazebo_plugins
     /// \brief Get contact sensor information
     private: void UpdateSensorContact();
 
+    /// \brief callback for subscriber to the hydra publisher
+    private: void OnHydra(ConstHydraPtr &_msg);
+
     /// \brief Get contact sensor information
     private: bool quit;
 
     /// \brief subscribe to hydra
     private: gazebo::transport::SubscriberPtr hydraSub;
 
-    /// \brief callback for subscriber to the hydra publisher
-    private: void OnHydra(ConstHydraPtr &_msg);
+    /// \brief Name of the current grasp
+    private: std::string graspName;
+
+    /// \brief Keeps track the of the right bumper
+    private: bool rightBumperPressed;
+
+    /// \brief Keeps track the of the right center button
+    private: bool hydraCenterButton;
+
+    /// \brief True if hydra control is enable
+    private: bool hydraEnabled;
+
+    private: gazebo::rendering::ScenePtr scene;
+
+    private: gazebo::rendering::OculusCameraPtr oculusCamera;
   };
 }
 #endif

@@ -5,6 +5,84 @@
       <shadows>1</shadows>
     </scene>
 
+    <model name="oculus">
+      <static>true</static>
+      <pose>0 -1.1 1.6 0 0 1.5707</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>.001 .001 .001</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+    <model name="walls">
+      <static>true</static>
+      <link name="link">
+        <visual name="visual_1">
+          <pose>0 5 1.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>10 0.1 3.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/PaintedWall</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_2">
+          <pose>5 0 1.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 10 3.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/PaintedWall</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_3">
+          <pose>0 -5 1.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>10 0.1 3.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/PaintedWall</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_4">
+          <pose>-5 0 1.5 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.1 10 3.0</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <name>Gazebo/PaintedWall</name>
+            </script>
+          </material>
+        </visual>
+
+
+      </link>
+    </model>
+
+
     <gui>
       <camera name="user_camera">
         <pose>0 -0.7 1.5  0 0.4 1.57</pose>
@@ -240,6 +318,7 @@
 
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
         <size>155 30</size>
+        <pos>1390 10</pos>
         <topic>~/timer_control</topic> 
       </plugin>
 
@@ -291,9 +370,19 @@
     </physics>
 
     <!-- A global light source -->
-    <include>
-      <uri>model://sun</uri>
-    </include>
+      <light type="directional" name="sun">
+        <cast_shadows>true</cast_shadows>
+        <pose>0 0 100 0 0 0</pose>
+        <diffuse>0.8 0.8 0.8 1</diffuse>
+        <specular>0.2 0.2 0.2 1</specular>
+        <attenuation>
+          <range>1000</range>
+          <constant>0.9</constant>
+          <linear>0.01</linear>
+          <quadratic>0.001</quadratic>
+        </attenuation>
+        <direction>-0.1 0.1 -0.9</direction>
+      </light>
 
     <!-- A ground plane -->
     <include>

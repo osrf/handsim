@@ -23,6 +23,7 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
+  this->hydraCenterButton = false;
   this->pausePolhemus = true;
   this->gotPausePolhemusRequest = false;
 
@@ -1170,6 +1171,16 @@ void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
   boost::mutex::scoped_lock lock(this->hydraMessageMutex);
   this->haveHydra = true;
   this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
+
+  if (!this->hydraCenterButton && _msg->right().button_center())
+  {
+    this->hydraCenterButton = true;
+    this->pausePolhemus = !this->pausePolhemus;
+  }
+  else if (this->hydraCenterButton && !_msg->right().button_center())
+  {
+    this->hydraCenterButton = false;
+  }
 
   math::Pose armSensorPose = this->hydraPose;
   if (this->pausePolhemus)

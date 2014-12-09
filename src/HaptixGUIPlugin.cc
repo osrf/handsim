@@ -19,6 +19,9 @@
 #include <limits>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
+#include <gazebo/rendering/OculusCamera.hh>
+#include <gazebo/rendering/Scene.hh>
+#include <gazebo/rendering/Visual.hh>
 #include <gazebo/gui/GuiEvents.hh>
 
 #include "handsim/TaskButton.hh"
@@ -36,6 +39,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->quit = false;
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
+  this->graspName = "Spherical";
+  this->rightBumperPressed = false;
+  this->hydraCenterButton = false;
+  this->hydraEnabled = false;
 
   // Read parameters
   std::string handImgFilename =
@@ -64,7 +71,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QGraphicsView *handView = new QGraphicsView(this->handScene);
   handView->setStyleSheet("border: 0px");
   handView->setSizePolicy(QSizePolicy::Expanding,
-                          QSizePolicy::MinimumExpanding);
+                          QSizePolicy::Minimum);
+  handView->fitInView(200, 200, 700, 700);
 
   // Load the hand image
   QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
@@ -264,7 +272,11 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   this->setLayout(mainLayout);
   this->move(10, 10);
-  this->resize(480, 830);
+  this->resize(480, 730);
+
+  // Create a QueuedConnection to trigger the next task.
+  connect(this, SIGNAL(NextTask()),
+          this, SLOT(OnNextClicked()), Qt::QueuedConnection);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -273,6 +285,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Create a node for transportation
   this->node = gazebo::transport::NodePtr(new gazebo::transport::Node());
   this->node->Init();
+
+  this->oculusPosePub = this->node->Advertise<gazebo::msgs::Pose>
+                                        ("~/oculus_camera/joy_pose");
 
   // Create the publisher that communicates with the arrange plugin
   this->taskPub = this->node->Advertise<gazebo::msgs::GzString>("~/arrange");
@@ -299,9 +314,14 @@ HaptixGUIPlugin::~HaptixGUIPlugin()
 void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 {
   gazebo::rendering::UserCameraPtr userCamera =
-                                            gazebo::gui::get_active_camera();
+    gazebo::gui::get_active_camera();
+
+  this->scene = userCamera->GetScene();
+
   if (userCamera)
     userCamera->SetHFOV(GZ_DTOR(120));
+
+
   this->initialCameraPose = userCamera->GetWorldPose();
 
   // Hide the scene tree.
@@ -549,6 +569,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->worldControlPub = this->node->Advertise<gazebo::msgs::WorldControl>
                                         ("~/world_control");
 
+
   this->responseSub = this->node->Subscribe("~/response",
       &HaptixGUIPlugin::OnResponse, this, true);
 
@@ -556,8 +577,8 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->requestMsg = gazebo::msgs::CreateRequest("entity_info", "mpl");
   this->requestPub->Publish(*this->requestMsg);
 
-  this->pollSensorsThread = boost::thread(
-    boost::bind(&HaptixGUIPlugin::PollSensors, this));
+  //this->pollSensorsThread = boost::thread(
+    //boost::bind(&HaptixGUIPlugin::PollSensors, this));
 
   // latched subscription, HaptixControlPlugin only publishes this once.
   this->initializeSub = this->node->Subscribe("~/haptix_load",
@@ -1206,20 +1227,67 @@ void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
 {
+  if (!this->oculusCamera)
+  {
+    this->oculusCamera = this->scene->GetOculusCamera(0);
+    if (!this->oculusCamera)
+      std::cerr << "Unable to get camera\n";
+  }
+
   if (!hxInitialized)
     return;
 
-  bool engage = _msg->right().button_1();
+  gazebo::math::Pose ocPose = this->oculusCamera->GetWorldPose();
 
-  if (!engage)
+  if (!gazebo::math::equal(_msg->right().joy_x(), 0.0) ||
+      !gazebo::math::equal(_msg->right().joy_y(), 0.0))
+  {
+    gazebo::math::Vector3 trans(_msg->right().joy_x(),
+        -_msg->right().joy_y(), 0);
+    trans *= 0.005;
+
+    gazebo::msgs::Pose poseMsg;
+    poseMsg = gazebo::msgs::Convert(
+        gazebo::math::Pose(trans, gazebo::math::Quaternion()));
+    this->oculusPosePub->Publish(poseMsg);
+  }
+
+  if (!this->hydraCenterButton && _msg->right().button_center())
+  {
+    this->hydraCenterButton = true;
+    this->hydraEnabled = !this->hydraEnabled;
+  }
+  else if (this->hydraCenterButton && !_msg->right().button_center())
+  {
+    this->hydraCenterButton = false;
+  }
+
+  if (!this->hydraEnabled)
     return;
+  if (_msg->right().button_1())
+    this->graspName = "Spherical";
+  else if (_msg->right().button_2())
+    this->graspName = "Cylindrical";
+  else if (_msg->right().button_3())
+    this->graspName = "FinePinch(British)";
+  else if (_msg->right().button_4())
+   this->graspName = "FinePinch(American)";
+
+  if (!this->rightBumperPressed && _msg->right().button_bumper())
+  {
+    this->rightBumperPressed = true;
+    this->NextTask();
+  }
+  else if (this->rightBumperPressed && !_msg->right().button_bumper())
+  {
+    this->rightBumperPressed = false;
+  }
 
   double command = _msg->right().trigger();
 
-  std::string name = "Spherical";
   haptix::comm::msgs::hxGrasp grasp;
   haptix::comm::msgs::hxGrasp::hxGraspValue* gv = grasp.add_grasps();
-  gv->set_grasp_name(name);
+  gv->set_grasp_name(this->graspName);
   gv->set_grasp_value(command);
 
   bool result;
@@ -1237,7 +1305,7 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   // gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
   // gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
 
-  this->lastGraspRequest = grasp;
+  // this->lastGraspRequest = grasp;
   // Assign to lastMotorCommand, because now we're tracking the target based
   // purely on grasp poses.
   for (int i = this->numWristMotors; i < this->deviceInfo.nmotor; ++i)
