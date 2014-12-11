@@ -16,7 +16,7 @@ sudo make install
 To run:
 
 ~~~
-gazebo worlds/arat_test.world
+gazebo worlds/arat.world
 ~~~
 
 ![handsim_startup.png](https://bitbucket.org/repo/rnoXja/images/2595820742-handsim_startup.png)
