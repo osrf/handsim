@@ -33,8 +33,8 @@ namespace haptix
       /// from the Optitrack server containing the tracking information.
       /// \param[in] _server IP address of the optitrack server. This might be
       /// needed for requesting commands for tweaking the tracking behavior. The
-      /// server IP is not needed for receiving tracking messages. These messages
-      /// are received via multicast.
+      /// server IP is not needed for receiving tracking messages. These
+      /// messages are received via multicast.
       public: Optitrack(const std::string &_serverIP = "");
 
       /// \brief Default destructor.
@@ -93,6 +93,9 @@ namespace haptix
 
       /// \brief Thread used for receiving tracking updates.
       private: std::thread *dataThread = nullptr;
+
+      /// \brief 
+      private: std::map<std::string, gazebo::math::Pose> lastModelMap;
     };
   }
 }

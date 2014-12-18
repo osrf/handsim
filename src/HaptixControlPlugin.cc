@@ -197,7 +197,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
   // Start receiving Optitrack tracking updates.
-  optitrack.StartReception();
+  this->optitrack.StartReception();
 
   // initialize polhemus
   this->havePolhemus = false;
