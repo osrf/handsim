@@ -64,7 +64,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     gazebo::transport::NodePtr(new gazebo::transport::Node());
   fprintf(stderr, "world name: [%s]\n", this->world->GetName().c_str());
   this->gazeboNode->Init(this->world->GetName());
-  this->polhemusJoyPub =
+  this->viewpointJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
   this->pausePolhemusPub =
@@ -198,6 +198,38 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // Start receiving Optitrack tracking updates.
   this->optitrack.StartReception();
+
+  // TODO: reasonable initial values for these poses
+  const float degToRad = M_PI/180;
+  this->monitorOptitrackFrame = gazebo::math::Pose(
+                            gazebo::math::Vector3(0.312, 0.363, -1.351),
+                            gazebo::math::Quaternion(0, 0, 0));
+
+  this->monitorWorldFrame = gazebo::math::Pose(
+                            gazebo::math::Vector3(0, 0.037, 1.015),
+                            gazebo::math::Quaternion(0, 0, 0));
+
+  // Hack for missing pose values
+  gazebo::math::Pose defaultOptitrackHead(
+                            gazebo::math::Vector3(-0.238, 0.267, -0.749),
+                            gazebo::math::Quaternion(0, 0, 0));
+  gazebo::math::Pose defaultOptitrackArm(
+                            gazebo::math::Vector3(-0.0834, -0.009237, -0.7464),
+                            gazebo::math::Quaternion(-35.13*degToRad, 13.71*degToRad,
+                                                      40.44*degToRad));
+  this->UpdateOptitrackHead(defaultOptitrackHead);
+  this->UpdateOptitrackArm(defaultOptitrackArm);
+
+  // Subscribe to Optitrack update topics: head, arm and origin
+  this->optitrackHeadSub = this->gazeboNode->Subscribe
+              ("~/optitrack/" + haptix::tracking::Optitrack::headTrackerName,
+              &HaptixControlPlugin::OnUpdateOptitrackHead, this);
+  this->optitrackArmSub = this->gazeboNode->Subscribe
+              ("~/optitrack/" + haptix::tracking::Optitrack::armTrackerName,
+              &HaptixControlPlugin::OnUpdateOptitrackArm, this);
+  this->optitrackMonitorSub = this->gazeboNode->Subscribe
+              ("~/optitrack/" + haptix::tracking::Optitrack::originTrackerName,
+              &HaptixControlPlugin::OnUpdateOptitrackMonitor, this);
 
   // initialize polhemus
   this->havePolhemus = false;
@@ -690,7 +722,7 @@ void HaptixControlPlugin::UpdatePolhemus()
             + (this->sourceWorldPoseHeadOffset + this->sourceWorldPose);
 
           gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
-          this->polhemusJoyPub->Publish(this->joyMsg);
+          this->viewpointJoyPub->Publish(this->joyMsg);
         }
       }
 
@@ -1250,6 +1282,38 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
     // clear
     // gzdbg << " released key [" << this->keyPressed << "]\n";
   }
+}
+
+void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
+{
+  this->optitrackHead = _pose + -this->monitorOptitrackFrame +
+                          this->monitorWorldFrame;
+  this->viewpointJoyPub->Publish(gazebo::msgs::Convert(this->optitrackHead));
+}
+
+void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
+{
+  this->optitrackArm = _pose + -this->monitorOptitrackFrame +
+                         this->monitorWorldFrame;
+  this->targetBaseLinkPose = this->optitrackArm;
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
+{
+  UpdateOptitrackHead(gazebo::msgs::Convert(*_msg));
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
+{
+  UpdateOptitrackHead(gazebo::msgs::Convert(*_msg));
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPosePtr &_msg)
+{
+  this->monitorOptitrackFrame = gazebo::msgs::Convert(*_msg);
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)

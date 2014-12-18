@@ -32,15 +32,25 @@
 #include <iostream>
 #include <string>
 
+#include <ignition/transport/NetUtils.hh>
+#include <gazebo/msgs/msgs.hh>
+
 #include "handsim/Optitrack.hh"
 
 using namespace haptix;
 using namespace tracking;
 
+const std::string Optitrack::headTrackerName = "HeadTracker";
+const std::string Optitrack::armTrackerName = "ArmTracker";
+const std::string Optitrack::originTrackerName = "MonitorTracker";
+
 /////////////////////////////////////////////////
 Optitrack::Optitrack(const std::string &_serverIP)
   : serverIP(_serverIP)
 {
+  this->active = false;
+  this->myIPAddress = ignition::transport::determineHost();
+
   // Create a socket for receiving tracking updates.
   this->dataSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -78,6 +88,13 @@ Optitrack::Optitrack(const std::string &_serverIP)
     return;
   }
 
+  this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
+  this->headPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+                    ("~/optitrack/"+headTrackerName);
+  this->armPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+                    ("~/optitrack/"+armTrackerName);
+  this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+                    ("~/optitrack/"+originTrackerName);
   //std::thread DataListenThread_Handle(DataListenThread);
 }
 
@@ -85,7 +102,16 @@ Optitrack::Optitrack(const std::string &_serverIP)
 void Optitrack::StartReception()
 {
   if (!this->dataThread)
+  {
     this->dataThread = new std::thread(&Optitrack::RunReceptionTask, this);
+    this->active = true;
+  }
+}
+
+/////////////////////////////////////////////////
+bool Optitrack::IsActive()
+{
+  return this->active;
 }
 
 /////////////////////////////////////////////////
@@ -109,8 +135,31 @@ void Optitrack::RunReceptionTask()
     // Dispach the data received.
     this->Unpack(buffer);
 
+    // Publish messages
 
-    this->lastBodyVector.clear();
+    for (ModelPoses::iterator it = this->lastModelMap.begin();
+         it != this->lastModelMap.end(); it++)
+    {
+      if (it->first.compare(headTrackerName) == 0)
+      {
+        this->headPub->Publish(gazebo::msgs::Convert(it->second));
+      }
+      else if (it->first.compare(armTrackerName) == 0)
+      {
+        this->armPub->Publish(gazebo::msgs::Convert(it->second));
+      }
+      else if (it->first.compare(originTrackerName) == 0)
+      {
+        this->originPub->Publish(gazebo::msgs::Convert(it->second));
+      }
+      else
+      {
+        std::cout << "Model name " << it->first << " not found!" << std::endl;
+      }
+    }
+
+    this->lastModelMap.clear();
+    // probably want to sleep here
   }
 }
 
@@ -122,17 +171,13 @@ void Optitrack::Unpack(char *pData)
 
   char *ptr = pData;
 
-  printf("Begin Packet\n-------\n");
-
   // message ID
   int MessageID = 0;
   memcpy(&MessageID, ptr, 2); ptr += 2;
-  printf("Message ID : %d\n", MessageID);
 
   // size
   int nBytes = 0;
   memcpy(&nBytes, ptr, 2); ptr += 2;
-  printf("Byte count : %d\n", nBytes);
 
   if(MessageID == 7)      // FRAME OF MOCAP DATA packet
   {
@@ -144,6 +189,8 @@ void Optitrack::Unpack(char *pData)
     int nMarkerSets = 0; memcpy(&nMarkerSets, ptr, 4); ptr += 4;
     printf("Marker Set Count : %d\n", nMarkerSets);
 
+    ModelMarkers markerSets;
+
     for (int i=0; i < nMarkerSets; i++)
     {
       // Markerset name
@@ -152,6 +199,7 @@ void Optitrack::Unpack(char *pData)
       int nDataBytes = (int) strlen(ptr) + 1;
       ptr += nDataBytes;
       std::cout << "Model Name: " << szName << std::endl;
+      markerSets[szName] = std::vector<gazebo::math::Vector3>();
 
       // marker data
       int nMarkers = 0;
@@ -165,18 +213,17 @@ void Optitrack::Unpack(char *pData)
         float y = 0; memcpy(&y, ptr, 4); ptr += 4;
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
         printf("\tMarker %d : [x=%3.2f,y=%3.2f,z=%3.2f]\n",j,x,y,z);
+        markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
       }
     }
 
     // unidentified markers
     int nOtherMarkers = 0; memcpy(&nOtherMarkers, ptr, 4); ptr += 4;
-    printf("Unidentified Marker Count : %d\n", nOtherMarkers);
     for(int j=0; j < nOtherMarkers; j++)
     {
       float x = 0.0f; memcpy(&x, ptr, 4); ptr += 4;
       float y = 0.0f; memcpy(&y, ptr, 4); ptr += 4;
       float z = 0.0f; memcpy(&z, ptr, 4); ptr += 4;
-      printf("\tMarker %d : pos = [%3.2f,%3.2f,%3.2f]\n",j,x,y,z);
     }
 
     // rigid bodies
@@ -197,6 +244,9 @@ void Optitrack::Unpack(char *pData)
       printf("ID : %d\n", ID);
       printf("pos: [%3.2f,%3.2f,%3.2f]\n", x,y,z);
       printf("ori: [%3.2f,%3.2f,%3.2f,%3.2f]\n", qx,qy,qz,qw);
+
+      gazebo::math::Pose rigidBodyPose(gazebo::math::Vector3(x, y, z),
+                             gazebo::math::Quaternion(qw, qx, qy, qz));
 
       // associated marker positions
       int nRigidMarkers = 0; 
@@ -222,15 +272,42 @@ void Optitrack::Unpack(char *pData)
         memcpy(markerSizes, ptr, nBytes);
         ptr += nBytes;
 
-        for(int k=0; k < nRigidMarkers; k++)
+        /*for(int k=0; k < nRigidMarkers; k++)
         {
-            printf("\tMarker %d: id=%d\tsize=%3.1f\tpos=[%3.2f,%3.2f,%3.2f]\n", k, markerIDs[k], markerSizes[k], markerData[k*3], markerData[k*3+1],markerData[k*3+2]);
-        }
+          printf("\tMarker %d: id=%d\tsize=%3.1f\tpos=[%3.2f,%3.2f,%3.2f]\n",
+                 k, markerIDs[k], markerSizes[k],
+                 markerData[k*3], markerData[k*3+1],markerData[k*3+2]);
+        }*/
 
         if(markerIDs)
-            free(markerIDs);
+          free(markerIDs);
         if(markerSizes)
-            free(markerSizes);
+          free(markerSizes);
+
+        // This is terrible and the NatNet packet format sucks
+        for (ModelMarkers::iterator it = markerSets.begin();
+             it != markerSets.end(); it++)
+        {
+          if (it->second.size() == nRigidMarkers)
+          {
+            // Compare all the points
+            int k = 0;
+            for (k = 0; k < nRigidMarkers; k++)
+            {
+              if (std::fabs(it->second[k][0] - markerData[k*3]) > FLT_EPSILON ||
+                std::fabs(it->second[k][1] - markerData[k*3+1]) > FLT_EPSILON ||
+                std::fabs(it->second[k][2] - markerData[k*3+2]) > FLT_EPSILON)
+              {
+                break;
+              }
+            }
+            if (k == nRigidMarkers)
+            {
+              this->lastModelMap[it->first] = rigidBodyPose;
+              break;
+            }
+          }
+        }
 
       }
       else

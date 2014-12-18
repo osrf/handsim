@@ -184,7 +184,7 @@ namespace gazebo
     /// \brief gazebo gz transport node for commanding gazebo UserCamera
     private: gazebo::transport::NodePtr gazeboNode;
     /// \brief gazebo gz transport node publisher handle
-    private: gazebo::transport::PublisherPtr polhemusJoyPub;
+    private: gazebo::transport::PublisherPtr viewpointJoyPub;
     /// \brief gazebo gz transport message
     private: gazebo::msgs::Pose joyMsg;
     /// \brief initial UserCamera pose in world frame, not used.
@@ -491,6 +491,33 @@ namespace gazebo
     private: sdf::ElementPtr sdf;
 
     private: haptix::tracking::Optitrack optitrack;
+
+    private: gazebo::transport::SubscriberPtr optitrackHeadSub;
+
+    private: gazebo::transport::SubscriberPtr optitrackArmSub;
+
+    private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
+
+    private: void UpdateOptitrackHead(const gazebo::math::Pose &_pose);
+    private: void UpdateOptitrackArm(const gazebo::math::Pose &_pose);
+
+    private: void OnUpdateOptitrackHead(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+
+    // TODO: Mutex for optitrack pose updatMonitores
+
+    /// \brief Pose of the optitrack head tracker in the world frame
+    private: gazebo::math::Pose optitrackHead;
+
+    /// \brief Pose of the optitrack arm tracker in the world frame
+    private: gazebo::math::Pose optitrackArm;
+
+    /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
+    private: gazebo::math::Pose monitorOptitrackFrame;
+
+    /// \brief Pose of the monitor in the world frame
+    private: gazebo::math::Pose monitorWorldFrame;
   };
 
 /// \}

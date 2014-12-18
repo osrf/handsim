@@ -18,13 +18,22 @@
 #ifndef _HANDSIM_OPTITRACK_HH_
 #define _HANDSIM_OPTITRACK_HH_
 
+#include <map>
 #include <string>
 #include <thread>
+#include <vector>
+#include <gazebo/transport/transport.hh>
+#include <gazebo/math/Pose.hh>
+#include <gazebo/math/Vector3.hh>
 
 namespace haptix
 {
   namespace tracking
   {
+    typedef std::map<std::string, std::vector<gazebo::math::Vector3> >
+              ModelMarkers;
+    typedef std::map<std::string, gazebo::math::Pose> ModelPoses;
+
     class Optitrack
     {
       #define MAX_NAMELENGTH              256
@@ -41,7 +50,7 @@ namespace haptix
       public: ~Optitrack() = default;
 
       /// \brief Start receiving tracking updates. Each tracking update will be
-      /// published as a Gazebo message on topic '~/haptix/optitrack'.
+      /// published as a Gazebo message on topic '~/optitrack'.
       public: void StartReception();
 
       /// \brief Receive tracking updates and publish them using Gazebo messages.
@@ -50,6 +59,10 @@ namespace haptix
       /// \brief Unpack the data received from the network.
       /// \param[in] _data Buffer received.
       private: void Unpack(char *_data);
+
+      /// \brief Return the status of the Optitrack client initialization
+      /// \return True if Optitrack data reception is active..
+      public: bool IsActive();
 
       /// ToDo.
       private: bool TimecodeStringify(unsigned int _inTimecode,
@@ -64,6 +77,9 @@ namespace haptix
                                    int *_second,
                                    int *_frame,
                                    int *_subframe);
+
+      /// \brief True if Optitrack data reception is active
+      private: bool active;
 
       /// \brief Optitrack multicast address.
       private: const std::string MulticastAddress = "239.255.42.99";
@@ -87,15 +103,26 @@ namespace haptix
       private: int dataSocket;
 
       /// \brief IP address associated to the multicast socket.
-      /// ToDo: For now, this is hardcoded but we should read it using
-      /// ign-transport, environment variable, etc.
-      private: const std::string myIPAddress = "172.23.2.37";
+      private: std::string myIPAddress;
 
       /// \brief Thread used for receiving tracking updates.
       private: std::thread *dataThread = nullptr;
 
+      /// \brief Gazebo transport node used to publish tracker poses.
+      private: gazebo::transport::NodePtr gzNode;
+
+      private: gazebo::transport::PublisherPtr headPub;
+      private: gazebo::transport::PublisherPtr armPub;
+      private: gazebo::transport::PublisherPtr originPub;
+
+      public: static const std::string headTrackerName;
+                      
+      public: static const std::string armTrackerName;
+                      
+      public: static const std::string originTrackerName;
+
       /// \brief 
-      private: std::map<std::string, gazebo::math::Pose> lastModelMap;
+      private: ModelPoses lastModelMap;
     };
   }
 }

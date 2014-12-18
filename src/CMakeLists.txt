@@ -15,7 +15,9 @@ link_directories(
 #################################################
 # Build tracking library (Polhemus + Optitrack).
 add_library(HaptixTracking SHARED polhemus_driver.c Optitrack.cc)
-target_link_libraries(HaptixTracking usb-1.0)
+target_link_libraries(HaptixTracking usb-1.0
+  ${GAZEBO_LIBRARIES}
+  ${IGNITION-TRANSPORT_LIBRARIES})
 install(TARGETS HaptixTracking DESTINATION
   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 
