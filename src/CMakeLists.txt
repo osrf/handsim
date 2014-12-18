@@ -13,12 +13,11 @@ link_directories(
 )
 
 #################################################
-# Build Polhemus driver
-add_library(polhemus_driver SHARED polhemus_driver.c)
-target_link_libraries(polhemus_driver usb-1.0)
-install(TARGETS polhemus_driver DESTINATION
+# Build tracking library (Polhemus + Optitrack).
+add_library(HaptixTracking SHARED polhemus_driver.c Optitrack.cc)
+target_link_libraries(HaptixTracking usb-1.0)
+install(TARGETS HaptixTracking DESTINATION
   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
-
 
 #################################################
 # Build Gazebo plugins
@@ -50,9 +49,9 @@ add_dependencies(HaptixControlPlugin
 target_link_libraries(HaptixControlPlugin
   ${GAZEBO_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES}
-  polhemus_driver)
+  HaptixTracking)
 
-target_link_libraries(HaptixGUIPlugin ${GAZEBO_LIBRARIES} 
+target_link_libraries(HaptixGUIPlugin ${GAZEBO_LIBRARIES}
   ${QT_LIBRARIES} ${PROTOBUF_LIBRARIES} ${IGNITION-TRANSPORT_LIBRARIES}
   haptix-comm)
 

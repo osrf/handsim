@@ -44,6 +44,7 @@
 #include <ignition/transport.hh>
 
 #include "polhemus_driver.h"
+#include "Optitrack.hh"
 
 namespace gazebo
 {
@@ -488,6 +489,8 @@ namespace gazebo
     private: boost::mutex baseLinkMutex;
     private: boost::mutex pausePolhemusMutex;
     private: sdf::ElementPtr sdf;
+
+    private: haptix::tracking::Optitrack optitrack;
   };
 
 /// \}
