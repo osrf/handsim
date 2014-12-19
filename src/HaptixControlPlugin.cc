@@ -215,10 +215,18 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                             gazebo::math::Quaternion(0, 0, 0));
   gazebo::math::Pose defaultOptitrackArm(
                             gazebo::math::Vector3(-0.0834, -0.009237, -0.7464),
-                            gazebo::math::Quaternion(-35.13*degToRad, 13.71*degToRad,
-                                                      40.44*degToRad));
+                            gazebo::math::Quaternion(-35.13*degToRad,
+                                                     13.71*degToRad,
+                                                     40.44*degToRad));
+
+  this->armOffsetInitialized = false;
+  
   this->UpdateOptitrackHead(defaultOptitrackHead);
+
+  // Calculate an offset
   this->UpdateOptitrackArm(defaultOptitrackArm);
+
+  //this->targetBaseLinkPose = this->optitrackArm;
 
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
@@ -1294,8 +1302,10 @@ void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
 void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
 {
   gzdbg << "updating Optitrack arm" << std::endl;
-  this->optitrackArm = _pose + -this->monitorOptitrackFrame +
-                         this->monitorWorldFrame;
+  this->optitrackArm = this->optitrackArmOffset +
+                       (_pose + -this->monitorOptitrackFrame +
+                         this->monitorWorldFrame);
+
   this->targetBaseLinkPose = this->optitrackArm;
 }
 
@@ -1309,6 +1319,11 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
   UpdateOptitrackArm(gazebo::msgs::Convert(*_msg));
+  if (!this->armOffsetInitialized)
+  {
+    this->optitrackArmOffset = this->initialBaseLinkPose - this->optitrackArm;
+    this->armOffsetInitialized = true;
+  }
 }
 
 //////////////////////////////////////////////////

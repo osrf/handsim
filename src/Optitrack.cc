@@ -50,7 +50,7 @@ Optitrack::Optitrack(const std::string &_serverIP)
 {
   this->active = false;
   //this->myIPAddress = ignition::transport::determineHost();
-  this->myIPAddress = "172.23.1.64";
+  this->myIPAddress = "172.23.3.172";
 
   // Create a socket for receiving tracking updates.
   this->dataSocket = socket(AF_INET, SOCK_DGRAM, 0);

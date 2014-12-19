@@ -513,11 +513,15 @@ namespace gazebo
     /// \brief Pose of the optitrack arm tracker in the world frame
     private: gazebo::math::Pose optitrackArm;
 
+    private: gazebo::math::Pose optitrackArmOffset;
+
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
     private: gazebo::math::Pose monitorOptitrackFrame;
 
     /// \brief Pose of the monitor in the world frame
     private: gazebo::math::Pose monitorWorldFrame;
+
+    private: bool armOffsetInitialized;
   };
 
 /// \}
