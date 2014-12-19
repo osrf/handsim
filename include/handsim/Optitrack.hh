@@ -51,7 +51,7 @@ namespace haptix
 
       /// \brief Start receiving tracking updates. Each tracking update will be
       /// published as a Gazebo message on topic '~/optitrack'.
-      public: void StartReception();
+      public: void StartReception(const std::string &_world="");
 
       /// \brief Receive tracking updates and publish them using Gazebo messages.
       private: void RunReceptionTask();

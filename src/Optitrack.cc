@@ -49,7 +49,8 @@ Optitrack::Optitrack(const std::string &_serverIP)
   : serverIP(_serverIP)
 {
   this->active = false;
-  this->myIPAddress = ignition::transport::determineHost();
+  //this->myIPAddress = ignition::transport::determineHost();
+  this->myIPAddress = "172.23.1.64";
 
   // Create a socket for receiving tracking updates.
   this->dataSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -87,20 +88,25 @@ Optitrack::Optitrack(const std::string &_serverIP)
               << std::endl;
     return;
   }
-
   this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
+  //std::thread DataListenThread_Handle(DataListenThread);
+}
+
+/////////////////////////////////////////////////
+void Optitrack::StartReception(const std::string &_world)
+{
+  if (_world.size() > 0)
+  {
+    this->gzNode->Init(_world);
+  }
+
   this->headPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+headTrackerName);
   this->armPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+armTrackerName);
   this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+originTrackerName);
-  //std::thread DataListenThread_Handle(DataListenThread);
-}
 
-/////////////////////////////////////////////////
-void Optitrack::StartReception()
-{
   if (!this->dataThread)
   {
     this->dataThread = new std::thread(&Optitrack::RunReceptionTask, this);
@@ -160,7 +166,9 @@ void Optitrack::RunReceptionTask()
 
     this->lastModelMap.clear();
     // probably want to sleep here
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
   }
+  this->active = false;
 }
 
 /////////////////////////////////////////////////
@@ -258,6 +266,32 @@ void Optitrack::Unpack(char *pData)
       memcpy(markerData, ptr, nBytes);
       ptr += nBytes;
 
+
+      // This is terrible and the NatNet packet format sucks
+      for (ModelMarkers::iterator it = markerSets.begin();
+           it != markerSets.end(); it++)
+      {
+        if (it->second.size() == nRigidMarkers)
+        {
+          // Compare all the points
+          int k = 0;
+          for (k = 0; k < nRigidMarkers; k++)
+          {
+            if (std::fabs(it->second[k][0] - markerData[k*3]) > FLT_EPSILON ||
+              std::fabs(it->second[k][1] - markerData[k*3+1]) > FLT_EPSILON ||
+              std::fabs(it->second[k][2] - markerData[k*3+2]) > FLT_EPSILON)
+            {
+              break;
+            }
+          }
+          if (k == nRigidMarkers)
+          {
+            std::cout << "Pushing back to map: " << it->first << std::endl;
+            this->lastModelMap[it->first] = rigidBodyPose;
+          }
+        }
+      }
+
       if(major >= 2)
       {
         // associated marker IDs
@@ -283,31 +317,6 @@ void Optitrack::Unpack(char *pData)
           free(markerIDs);
         if(markerSizes)
           free(markerSizes);
-
-        // This is terrible and the NatNet packet format sucks
-        for (ModelMarkers::iterator it = markerSets.begin();
-             it != markerSets.end(); it++)
-        {
-          if (it->second.size() == nRigidMarkers)
-          {
-            // Compare all the points
-            int k = 0;
-            for (k = 0; k < nRigidMarkers; k++)
-            {
-              if (std::fabs(it->second[k][0] - markerData[k*3]) > FLT_EPSILON ||
-                std::fabs(it->second[k][1] - markerData[k*3+1]) > FLT_EPSILON ||
-                std::fabs(it->second[k][2] - markerData[k*3+2]) > FLT_EPSILON)
-              {
-                break;
-              }
-            }
-            if (k == nRigidMarkers)
-            {
-              this->lastModelMap[it->first] = rigidBodyPose;
-              break;
-            }
-          }
-        }
 
       }
       else

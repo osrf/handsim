@@ -197,7 +197,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
   // Start receiving Optitrack tracking updates.
-  this->optitrack.StartReception();
+  this->optitrack.StartReception(this->world->GetName());
 
   // TODO: reasonable initial values for these poses
   const float degToRad = M_PI/180;
@@ -206,7 +206,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                             gazebo::math::Quaternion(0, 0, 0));
 
   this->monitorWorldFrame = gazebo::math::Pose(
-                            gazebo::math::Vector3(0, 0.037, 1.015),
+                            gazebo::math::Vector3(0.5, 0.037, 1.015),
                             gazebo::math::Quaternion(0, 0, 0));
 
   // Hack for missing pose values
@@ -1293,6 +1293,7 @@ void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
 
 void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
 {
+  gzdbg << "updating Optitrack arm" << std::endl;
   this->optitrackArm = _pose + -this->monitorOptitrackFrame +
                          this->monitorWorldFrame;
   this->targetBaseLinkPose = this->optitrackArm;
@@ -1307,7 +1308,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
-  UpdateOptitrackHead(gazebo::msgs::Convert(*_msg));
+  UpdateOptitrackArm(gazebo::msgs::Convert(*_msg));
 }
 
 //////////////////////////////////////////////////
