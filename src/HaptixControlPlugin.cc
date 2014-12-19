@@ -211,7 +211,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // Hack for missing pose values
   gazebo::math::Pose defaultOptitrackHead(
-                            gazebo::math::Vector3(-0.238, 0.267, -0.749),
+                            gazebo::math::Vector3(-0.238, 1.5, -0.749),
                             gazebo::math::Quaternion(0, 0, 0));
   gazebo::math::Pose defaultOptitrackArm(
                             gazebo::math::Vector3(-0.0834, -0.009237, -0.7464),
@@ -219,6 +219,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                                                      13.71*degToRad,
                                                      40.44*degToRad));
 
+  this->optitrackArmOffset = gazebo::math::Pose::Zero;
   this->armOffsetInitialized = false;
   
   this->UpdateOptitrackHead(defaultOptitrackHead);
@@ -1294,6 +1295,7 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 
 void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
 {
+  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
   this->optitrackHead = _pose + -this->monitorOptitrackFrame +
                           this->monitorWorldFrame;
   this->viewpointJoyPub->Publish(gazebo::msgs::Convert(this->optitrackHead));
@@ -1301,12 +1303,21 @@ void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
 
 void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
 {
-  gzdbg << "updating Optitrack arm" << std::endl;
   this->optitrackArm = this->optitrackArmOffset +
                        (_pose + -this->monitorOptitrackFrame +
                          this->monitorWorldFrame);
 
-  this->targetBaseLinkPose = this->optitrackArm;
+  if (this->pausePolhemus)
+  {
+    this->optitrackArmOffset = this->targetBaseLinkPose - 
+                                 (_pose + -this->monitorOptitrackFrame +
+                                   this->monitorWorldFrame);
+    this->armOffsetInitialized = true;
+  }
+  else
+  {
+    this->targetBaseLinkPose = this->optitrackArm;
+  }
 }
 
 //////////////////////////////////////////////////
