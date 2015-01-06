@@ -50,8 +50,6 @@ Optitrack::Optitrack(const std::string &_serverIP)
 {
   this->active = false;
   this->myIPAddress = ignition::transport::determineHost();
-  std::cout << "Got IP: " << this->myIPAddress;
-  //this->myIPAddress = "172.23.3.172";
 
   // Create a socket for receiving tracking updates.
   this->dataSocket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -61,7 +59,7 @@ Optitrack::Optitrack(const std::string &_serverIP)
   if (setsockopt(this->dataSocket, SOL_SOCKET, SO_REUSEADDR,
     reinterpret_cast<const char *>(&value), sizeof(value)) != 0)
   {
-    std::cerr << "Error setting socket option (SO_REUSEADDR)." << std::endl;
+    gzerr << "Error setting socket option (SO_REUSEADDR)." << std::endl;
     close(this->dataSocket);
     return;
   }
@@ -75,7 +73,7 @@ Optitrack::Optitrack(const std::string &_serverIP)
   if (bind(this->dataSocket, (struct sockaddr *)&mySocketAddr,
     sizeof(struct sockaddr)) < 0)
   {
-    std::cerr << "Binding to a local port failed." << std::endl;
+    gzerr << "Binding to a local port failed." << std::endl;
     return;
   }
   // Join the multicast group.
@@ -85,7 +83,7 @@ Optitrack::Optitrack(const std::string &_serverIP)
   if (setsockopt(this->dataSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
     reinterpret_cast<const char*>(&mreq), sizeof(mreq)) != 0)
   {
-    std::cerr << "Error setting socket option (IP_ADD_MEMBERSHIP)."
+    gzerr << "Error setting socket option (IP_ADD_MEMBERSHIP)."
               << std::endl;
     return;
   }
@@ -135,7 +133,7 @@ void Optitrack::RunReceptionTask()
     if (recvfrom(this->dataSocket, buffer, sizeof(buffer), 0,
          (sockaddr *)&theirAddress, &addr_len) < 0)
     {
-      std::cerr << "Optitrack::RunReceptionTask() Recvfrom failed" << std::endl;
+      gzerr << "Optitrack::RunReceptionTask() Recvfrom failed" << std::endl;
       continue;
     }
 
@@ -192,43 +190,43 @@ void Optitrack::Unpack(char *pData)
   {
     // frame number
     int frameNumber = 0; memcpy(&frameNumber, ptr, 4); ptr += 4;
-    printf("Frame # : %d\n", frameNumber);
+    gzmsg << "Frame # :" << frameNumber << std::endl;
 
     // number of data sets (markersets, rigidbodies, etc)
     int nMarkerSets = 0; memcpy(&nMarkerSets, ptr, 4); ptr += 4;
-    printf("Marker Set Count : %d\n", nMarkerSets);
+    gzmsg << "Marker Set Count : " << nMarkerSets << std::endl;
 
     ModelMarkers markerSets;
 
-    for (int i=0; i < nMarkerSets; i++)
+    for (int i = 0; i < nMarkerSets; i++)
     {
       // Markerset name
       std::string szName(ptr);
-      //strcpy_s(szName, ptr);
       int nDataBytes = (int) strlen(ptr) + 1;
       ptr += nDataBytes;
-      std::cout << "Model Name: " << szName << std::endl;
+      gzmsg << "Model Name: " << szName << std::endl;
       markerSets[szName] = std::vector<gazebo::math::Vector3>();
 
       // marker data
       int nMarkers = 0;
       memcpy(&nMarkers, ptr, 4);
       ptr += 4;
-      printf("Marker Count : %d\n", nMarkers);
+      gzmsg << "Marker Count: " << nMarkers << std::endl;
 
-      for(int j=0; j < nMarkers; j++)
+      for(int j = 0; j < nMarkers; j++)
       {
         float x = 0; memcpy(&x, ptr, 4); ptr += 4;
         float y = 0; memcpy(&y, ptr, 4); ptr += 4;
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
-        printf("\tMarker %d : [x=%3.2f,y=%3.2f,z=%3.2f]\n",j,x,y,z);
+        gzmsg << "\tMarker " << j << " : [x="
+              << x << ",y=" << y << ",z=" << z << "]" << std::endl;
         markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
       }
     }
 
     // unidentified markers
     int nOtherMarkers = 0; memcpy(&nOtherMarkers, ptr, 4); ptr += 4;
-    for(int j=0; j < nOtherMarkers; j++)
+    for(int j = 0; j < nOtherMarkers; j++)
     {
       float x = 0.0f; memcpy(&x, ptr, 4); ptr += 4;
       float y = 0.0f; memcpy(&y, ptr, 4); ptr += 4;
@@ -238,8 +236,8 @@ void Optitrack::Unpack(char *pData)
     // rigid bodies
     int nRigidBodies = 0;
     memcpy(&nRigidBodies, ptr, 4); ptr += 4;
-    printf("Rigid Body Count : %d\n", nRigidBodies);
-    for (int j=0; j < nRigidBodies; j++)
+    gzmsg << "Rigid Body Count : " << nRigidBodies << std::endl;
+    for (int j = 0; j < nRigidBodies; j++)
     {
       // rigid body pos/ori
       int ID = 0; memcpy(&ID, ptr, 4); ptr += 4;
@@ -250,32 +248,31 @@ void Optitrack::Unpack(char *pData)
       float qy = 0; memcpy(&qy, ptr, 4); ptr += 4;
       float qz = 0; memcpy(&qz, ptr, 4); ptr += 4;
       float qw = 0; memcpy(&qw, ptr, 4); ptr += 4;
-      printf("ID : %d\n", ID);
-      printf("pos: [%3.2f,%3.2f,%3.2f]\n", x,y,z);
-      printf("ori: [%3.2f,%3.2f,%3.2f,%3.2f]\n", qx,qy,qz,qw);
+      gzmsg << "ID : " << ID << std::endl;
+      gzmsg << "pos: [" << x << "," << y << "," << z << "]" << std::endl;
+      gzmsg << "ori: [" << qx << "," << qy << ","
+                        << qz << "," << qw << "]" << std::endl;
 
       gazebo::math::Pose rigidBodyPose(gazebo::math::Vector3(x, y, z),
                              gazebo::math::Quaternion(qw, qx, qy, qz));
 
       // associated marker positions
-      int nRigidMarkers = 0; 
+      unsigned int nRigidMarkers = 0; 
       memcpy(&nRigidMarkers, ptr, 4);
       ptr += 4;
-      printf("Marker Count: %d\n", nRigidMarkers);
-      int nBytes = nRigidMarkers*3*sizeof(float);
-      float* markerData = (float*)malloc(nBytes);
-      memcpy(markerData, ptr, nBytes);
-      ptr += nBytes;
+      gzmsg << "Rigid Marker Count: " << nRigidMarkers << std::endl;
+      int nMarkerBytes = nRigidMarkers*3*sizeof(float);
+      float* markerData = (float*)malloc(nMarkerBytes);
+      memcpy(markerData, ptr, nMarkerBytes);
+      ptr += nMarkerBytes;
 
-
-      // This is terrible and the NatNet packet format sucks
       for (ModelMarkers::iterator it = markerSets.begin();
            it != markerSets.end(); it++)
       {
         if (it->second.size() == nRigidMarkers)
         {
           // Compare all the points
-          int k = 0;
+          unsigned int k = 0;
           for (k = 0; k < nRigidMarkers; k++)
           {
             if (std::fabs(it->second[k][0] - markerData[k*3]) > FLT_EPSILON ||
@@ -287,7 +284,6 @@ void Optitrack::Unpack(char *pData)
           }
           if (k == nRigidMarkers)
           {
-            std::cout << "Pushing back to map: " << it->first << std::endl;
             this->lastModelMap[it->first] = rigidBodyPose;
           }
         }
@@ -307,63 +303,65 @@ void Optitrack::Unpack(char *pData)
         memcpy(markerSizes, ptr, nBytes);
         ptr += nBytes;
 
-        /*for(int k=0; k < nRigidMarkers; k++)
+        for (unsigned int k=0; k < nRigidMarkers; k++)
         {
-          printf("\tMarker %d: id=%d\tsize=%3.1f\tpos=[%3.2f,%3.2f,%3.2f]\n",
-                 k, markerIDs[k], markerSizes[k],
-                 markerData[k*3], markerData[k*3+1],markerData[k*3+2]);
-        }*/
+          gzmsg << "\tMarker " << k << ": id=" << markerIDs[k]
+                << "\tsize=" << markerSizes[k]
+                << "\tpos=[" << markerData[k*3] << "," << markerData[k*3+1]
+                << "," << markerData[k*3+2] << std::endl;
+        }
 
-        if(markerIDs)
+        if (markerIDs)
           free(markerIDs);
-        if(markerSizes)
+        if (markerSizes)
           free(markerSizes);
-
       }
       else
       {
-        for(int k=0; k < nRigidMarkers; k++)
+        for (unsigned int k = 0; k < nRigidMarkers; k++)
         {
-            printf("\tMarker %d: pos = [%3.2f,%3.2f,%3.2f]\n", k, markerData[k*3], markerData[k*3+1],markerData[k*3+2]);
+          gzmsg << "\tMarker " << k << ": "
+                << "pos=[" << markerData[k*3] << "," << markerData[k*3+1]
+                << "," << markerData[k*3+2] << std::endl;
         }
       }
-      if(markerData)
+      if (markerData)
         free(markerData);
 
-      if(major >= 2)
+      if (major >= 2)
       {
         // Mean marker error
         float fError = 0.0f; memcpy(&fError, ptr, 4); ptr += 4;
-        printf("Mean marker error: %3.2f\n", fError);
+        gzmsg << "Mean marker error: " << fError << std::endl;
       }
 
       // 2.6 and later
-      if( ((major == 2)&&(minor >= 6)) || (major > 2) || (major == 0) )
+      if (((major == 2) && (minor >= 6)) || (major > 2) || (major == 0) )
       {
         // params
         short params = 0; memcpy(&params, ptr, 2); ptr += 2;
-        bool bTrackingValid = params & 0x01; // 0x01 : rigid body was successfully tracked in this frame
+        // 0x01 : rigid body was successfully tracked in this frame
+        bool bTrackingValid = params & 0x01;
+        gzmsg << "Tracking valid?: " << bTrackingValid << std::endl;
       }
-
     } // next rigid body
 
-
     // skeletons (version 2.1 and later)
-    if( ((major == 2)&&(minor>0)) || (major>2))
+    if (((major == 2) && (minor>0)) || (major>2))
     {
       int nSkeletons = 0;
       memcpy(&nSkeletons, ptr, 4); ptr += 4;
-      printf("Skeleton Count : %d\n", nSkeletons);
-      for (int j=0; j < nSkeletons; j++)
+      gzmsg << "Skeleton Count : " << nSkeletons << std::endl;;
+      for (int j = 0; j < nSkeletons; j++)
       {
         // skeleton id
         int skeletonID = 0;
         memcpy(&skeletonID, ptr, 4); ptr += 4;
         // # of rigid bodies (bones) in skeleton
-        int nRigidBodies = 0;
+        nRigidBodies = 0;
         memcpy(&nRigidBodies, ptr, 4); ptr += 4;
-        printf("Rigid Body Count : %d\n", nRigidBodies);
-        for (int j=0; j < nRigidBodies; j++)
+        gzmsg << "Rigid Body Count : " << nRigidBodies << std::endl;
+        for (int b = 0; b < nRigidBodies; b++)
         {
           // rigid body pos/ori
           int ID = 0; memcpy(&ID, ptr, 4); ptr += 4;
@@ -374,38 +372,42 @@ void Optitrack::Unpack(char *pData)
           float qy = 0; memcpy(&qy, ptr, 4); ptr += 4;
           float qz = 0; memcpy(&qz, ptr, 4); ptr += 4;
           float qw = 0; memcpy(&qw, ptr, 4); ptr += 4;
-          printf("ID : %d\n", ID);
-          printf("pos: [%3.2f,%3.2f,%3.2f]\n", x,y,z);
-          printf("ori: [%3.2f,%3.2f,%3.2f,%3.2f]\n", qx,qy,qz,qw);
+          gzmsg << "ID : " << ID << std::endl;
+          gzmsg << "pos: [" << x << "," << y << "," << z << "]" << std::endl;
+          gzmsg << "ori: [" << qx << "," << qy << ","
+                            << qz << "," << qw << "]" << std::endl;
 
           // associated marker positions
           int nRigidMarkers = 0;  memcpy(&nRigidMarkers, ptr, 4); ptr += 4;
-          printf("Marker Count: %d\n", nRigidMarkers);
-          int nBytes = nRigidMarkers*3*sizeof(float);
-          float* markerData = (float*)malloc(nBytes);
-          memcpy(markerData, ptr, nBytes);
-          ptr += nBytes;
+          gzmsg << "Marker Count: " << nRigidMarkers << std::endl;
+          int nMarkerBytes = nRigidMarkers*3*sizeof(float);
+          float* markerData = (float*)malloc(nMarkerBytes);
+          memcpy(markerData, ptr, nMarkerBytes);
+          ptr += nMarkerBytes;
 
           // associated marker IDs
-          nBytes = nRigidMarkers*sizeof(int);
-          int* markerIDs = (int*)malloc(nBytes);
-          memcpy(markerIDs, ptr, nBytes);
-          ptr += nBytes;
+          nMarkerBytes = nRigidMarkers*sizeof(int);
+          int* markerIDs = (int*)malloc(nMarkerBytes);
+          memcpy(markerIDs, ptr, nMarkerBytes);
+          ptr += nMarkerBytes;
 
           // associated marker sizes
-          nBytes = nRigidMarkers*sizeof(float);
-          float* markerSizes = (float*)malloc(nBytes);
-          memcpy(markerSizes, ptr, nBytes);
-          ptr += nBytes;
+          nMarkerBytes = nRigidMarkers*sizeof(float);
+          float* markerSizes = (float*)malloc(nMarkerBytes);
+          memcpy(markerSizes, ptr, nMarkerBytes);
+          ptr += nMarkerBytes;
 
-          for(int k=0; k < nRigidMarkers; k++)
+          for (int k = 0; k < nRigidMarkers; k++)
           {
-            printf("\tMarker %d: id=%d\tsize=%3.1f\tpos=[%3.2f,%3.2f,%3.2f]\n", k, markerIDs[k], markerSizes[k], markerData[k*3], markerData[k*3+1],markerData[k*3+2]);
+            gzmsg << "\tMarker " << k << ": id=" << markerIDs[k]
+                  << "\tsize=" << markerSizes[k]
+                  << "\tpos=[" << markerData[k*3] << "," << markerData[k*3+1]
+                  << "," << markerData[k*3+2] << std::endl;
           }
 
           // Mean marker error
           float fError = 0.0f; memcpy(&fError, ptr, 4); ptr += 4;
-          printf("Mean marker error: %3.2f\n", fError);
+          gzmsg << "Mean marker error: " << fError << std::endl;
 
           // release resources
           if(markerIDs)
@@ -414,197 +416,192 @@ void Optitrack::Unpack(char *pData)
             free(markerSizes);
           if(markerData)
             free(markerData);
-
         } // next rigid body
-
       } // next skeleton
     }
 
-  // labeled markers (version 2.3 and later)
-  if( ((major == 2)&&(minor>=3)) || (major>2))
-  {
-    int nLabeledMarkers = 0;
-    memcpy(&nLabeledMarkers, ptr, 4); ptr += 4;
-    printf("Labeled Marker Count : %d\n", nLabeledMarkers);
-    for (int j=0; j < nLabeledMarkers; j++)
+    // labeled markers (version 2.3 and later)
+    if (((major == 2) && (minor>=3)) || (major>2))
     {
-      // id
-      int ID = 0; memcpy(&ID, ptr, 4); ptr += 4;
-      // x
-      float x = 0.0f; memcpy(&x, ptr, 4); ptr += 4;
-      // y
-      float y = 0.0f; memcpy(&y, ptr, 4); ptr += 4;
-      // z
-      float z = 0.0f; memcpy(&z, ptr, 4); ptr += 4;
-      // size
-      float size = 0.0f; memcpy(&size, ptr, 4); ptr += 4;
+      int nLabeledMarkers = 0;
+      memcpy(&nLabeledMarkers, ptr, 4); ptr += 4;
+      gzmsg << "Labeled Marker Count : " << nLabeledMarkers << std::endl;
+      for (int j = 0; j < nLabeledMarkers; j++)
+      {
+        int ID = 0; memcpy(&ID, ptr, 4); ptr += 4;
+        float x = 0.0f; memcpy(&x, ptr, 4); ptr += 4;
+        float y = 0.0f; memcpy(&y, ptr, 4); ptr += 4;
+        float z = 0.0f; memcpy(&z, ptr, 4); ptr += 4;
+        float size = 0.0f; memcpy(&size, ptr, 4); ptr += 4;
 
-              // 2.6 and later
-              if( ((major == 2)&&(minor >= 6)) || (major > 2) || (major == 0) )
-              {
-                  // marker params
-                  short params = 0; memcpy(&params, ptr, 2); ptr += 2;
-                  bool bOccluded = params & 0x01;     // marker was not visible (occluded) in this frame
-                  bool bPCSolved = params & 0x02;     // position provided by point cloud solve
-                  bool bModelSolved = params & 0x04;  // position provided by model solve
-              }
+        // 2.6 and later
+        if (((major == 2) && (minor >= 6)) || (major > 2) || (major == 0) )
+        {
+          // marker params
+          short params = 0; memcpy(&params, ptr, 2); ptr += 2;
+          gzmsg << "Params: " << params << std::endl;
+          // marker was not visible (occluded) in this frame
+          /* bool bOccluded = params & 0x01;
+          // position provided by point cloud solve
+          bool bPCSolved = params & 0x02;
+          // position provided by model solve
+          bool bModelSolved = params & 0x04; */
+        }
 
-      printf("ID  : %d\n", ID);
-      printf("pos : [%3.2f,%3.2f,%3.2f]\n", x,y,z);
-      printf("size: [%3.2f]\n", size);
+        gzmsg << "ID  : " << ID << std::endl;
+        gzmsg << "pos : [" << x << "," << y << "," << z<< "]" << std::endl;
+        gzmsg << "size: [" << size << "]" << std::endl;
+      }
     }
+
+    // latency
+    float latency = 0.0f; memcpy(&latency, ptr, 4); ptr += 4;
+    gzmsg << "latency : " << latency << std::endl;
+
+    // timecode
+    unsigned int timecode = 0;  memcpy(&timecode, ptr, 4);  ptr += 4;
+    unsigned int timecodeSub = 0; memcpy(&timecodeSub, ptr, 4); ptr += 4;
+    char szTimecode[128] = "";
+    this->TimecodeStringify(timecode, timecodeSub, szTimecode, 128);
+
+    // timestamp
+    double timestamp = 0.0f;
+    // 2.7 and later - increased from single to double precision
+    if( ((major == 2)&&(minor>=7)) || (major>2))
+    {
+        memcpy(&timestamp, ptr, 8); ptr += 8;
+    }
+    else
+    {
+      float fTemp = 0.0f;
+      memcpy(&fTemp, ptr, 4); ptr += 4;
+      timestamp = (double)fTemp;
+    }
+
+    // frame params
+    short params = 0;  memcpy(&params, ptr, 2); ptr += 2;
+    gzmsg << "Params: " << params << std::endl;
+    // 0x01 Motive is recording
+    /* bool bIsRecording = params & 0x01;
+    // 0x02 Actively tracked model list has changed
+    bool bTrackedModelsChanged = params & 0x02; */
+
+    // end of data tag
+    int eod = 0; memcpy(&eod, ptr, 4); ptr += 4;
+    gzmsg << "End Packet\n-------------" << std::endl;
   }
-
-  // latency
-      float latency = 0.0f; memcpy(&latency, ptr, 4); ptr += 4;
-      printf("latency : %3.3f\n", latency);
-
-  // timecode
-  unsigned int timecode = 0;  memcpy(&timecode, ptr, 4);  ptr += 4;
-  unsigned int timecodeSub = 0; memcpy(&timecodeSub, ptr, 4); ptr += 4;
-  char szTimecode[128] = "";
-  this->TimecodeStringify(timecode, timecodeSub, szTimecode, 128);
-
-      // timestamp
-      double timestamp = 0.0f;
-      // 2.7 and later - increased from single to double precision
-      if( ((major == 2)&&(minor>=7)) || (major>2))
-      {
-          memcpy(&timestamp, ptr, 8); ptr += 8;
-      }
-      else
-      {
-          float fTemp = 0.0f;
-          memcpy(&fTemp, ptr, 4); ptr += 4;
-          timestamp = (double)fTemp;
-      }
-
-      // frame params
-      short params = 0;  memcpy(&params, ptr, 2); ptr += 2;
-      bool bIsRecording = params & 0x01;                  // 0x01 Motive is recording
-      bool bTrackedModelsChanged = params & 0x02;         // 0x02 Actively tracked model list has changed
-
-
-  // end of data tag
-      int eod = 0; memcpy(&eod, ptr, 4); ptr += 4;
-      printf("End Packet\n-------------\n");
-
-  }
-  else if(MessageID == 5) // Data Descriptions
+  else if (MessageID == 5) // Data Descriptions
   {
-      // number of datasets
-      int nDatasets = 0; memcpy(&nDatasets, ptr, 4); ptr += 4;
-      printf("Dataset Count : %d\n", nDatasets);
+    // number of datasets
+    int nDatasets = 0; memcpy(&nDatasets, ptr, 4); ptr += 4;
+    gzmsg << "Dataset Count : " << nDatasets << std::endl;
 
-      for(int i=0; i < nDatasets; i++)
+    for (int i = 0; i < nDatasets; i++)
+    {
+      gzmsg << "Dataset " << i << std::endl;
+
+      int type = 0; memcpy(&type, ptr, 4); ptr += 4;
+      gzmsg << "Type : " << type << std::endl;
+
+      if (type == 0)   // markerset
       {
-        printf("Dataset %d\n", i);
+        // name
+        std::string szName(ptr);
+        int nDataBytes = (int) strlen(ptr) + 1;
+        ptr += nDataBytes;
+        gzmsg << "Markerset Name: " << szName << std::endl;
 
-        int type = 0; memcpy(&type, ptr, 4); ptr += 4;
-        printf("Type : %d %d\n", i, type);
+        // marker data
+        int nMarkers = 0; memcpy(&nMarkers, ptr, 4); ptr += 4;
+        gzmsg << "Marker Count : " << nMarkers << std::endl;
 
-        if(type == 0)   // markerset
+        for (int j = 0; j < nMarkers; j++)
+        {
+          std::string markerName(ptr);
+          int nMarkerDataBytes = (int) strlen(ptr) + 1;
+          ptr += nMarkerDataBytes;
+          gzmsg << "Marker Name: " << markerName << std::endl;
+        }
+      }
+      else if (type == 1)   // rigid body
+      {
+        if (major >= 2)
         {
           // name
-          std::string szName(ptr);
-          int nDataBytes = (int) strlen(ptr) + 1;
-          ptr += nDataBytes;
-          std::cout << "Markerset Name: " << szName << std::endl;
-
-          // marker data
-          int nMarkers = 0; memcpy(&nMarkers, ptr, 4); ptr += 4;
-          printf("Marker Count : %d\n", nMarkers);
-
-          for(int j=0; j < nMarkers; j++)
-          {
-              std::string szName(ptr);
-              int nDataBytes = (int) strlen(ptr) + 1;
-              ptr += nDataBytes;
-              std::cout << "Marker Name: " << szName << std::endl;
-          }
-        }
-        else if(type ==1)   // rigid body
-        {
-          if(major >= 2)
-          {
-              // name
-              char szName[MAX_NAMELENGTH];
-              strcpy(szName, ptr);
-              ptr += strlen(ptr) + 1;
-              printf("Name: %s\n", szName);
-          }
-
-          int ID = 0; memcpy(&ID, ptr, 4); ptr +=4;
-          printf("ID : %d\n", ID);
-
-          int parentID = 0; memcpy(&parentID, ptr, 4); ptr +=4;
-          printf("Parent ID : %d\n", parentID);
-
-          float xoffset = 0; memcpy(&xoffset, ptr, 4); ptr +=4;
-          printf("X Offset : %3.2f\n", xoffset);
-
-          float yoffset = 0; memcpy(&yoffset, ptr, 4); ptr +=4;
-          printf("Y Offset : %3.2f\n", yoffset);
-
-          float zoffset = 0; memcpy(&zoffset, ptr, 4); ptr +=4;
-          printf("Z Offset : %3.2f\n", zoffset);
-
-        }
-        else if(type ==2)   // skeleton
-        {
           char szName[MAX_NAMELENGTH];
           strcpy(szName, ptr);
           ptr += strlen(ptr) + 1;
-          printf("Name: %s\n", szName);
-
-          int ID = 0; memcpy(&ID, ptr, 4); ptr +=4;
-          printf("ID : %d\n", ID);
-
-          int nRigidBodies = 0; memcpy(&nRigidBodies, ptr, 4); ptr +=4;
-          printf("RigidBody (Bone) Count : %d\n", nRigidBodies);
-
-          for(int i=0; i< nRigidBodies; i++)
-          {
-            if(major >= 2)
-            {
-              // RB name
-              char szName[MAX_NAMELENGTH];
-              strcpy(szName, ptr);
-              ptr += strlen(ptr) + 1;
-              printf("Rigid Body Name: %s\n", szName);
-            }
-
-            int ID = 0; memcpy(&ID, ptr, 4); ptr +=4;
-            printf("RigidBody ID : %d\n", ID);
-
-            int parentID = 0; memcpy(&parentID, ptr, 4); ptr +=4;
-            printf("Parent ID : %d\n", parentID);
-
-            float xoffset = 0; memcpy(&xoffset, ptr, 4); ptr +=4;
-            printf("X Offset : %3.2f\n", xoffset);
-
-            float yoffset = 0; memcpy(&yoffset, ptr, 4); ptr +=4;
-            printf("Y Offset : %3.2f\n", yoffset);
-
-            float zoffset = 0; memcpy(&zoffset, ptr, 4); ptr +=4;
-            printf("Z Offset : %3.2f\n", zoffset);
-          }
+          gzmsg << "Name: " << szName << std::endl;
         }
 
-      }   // next dataset
+        int ID = 0; memcpy(&ID, ptr, 4); ptr +=4;
+        gzmsg << "ID : " << ID << std::endl;
 
-     printf("End Packet\n-------------\n");
+        int parentID = 0; memcpy(&parentID, ptr, 4); ptr +=4;
+        gzmsg << "Parent ID : " << parentID << std::endl;
 
+        float xoffset = 0; memcpy(&xoffset, ptr, 4); ptr +=4;
+        gzmsg << "X Offset : " << xoffset << std::endl;
+
+        float yoffset = 0; memcpy(&yoffset, ptr, 4); ptr +=4;
+        gzmsg << "Y Offset : " << yoffset << std::endl;;
+
+        float zoffset = 0; memcpy(&zoffset, ptr, 4); ptr +=4;
+        gzmsg << "Z Offset : " << zoffset << std::endl;
+      }
+      else if (type == 2)   // skeleton
+      {
+        char szName[MAX_NAMELENGTH];
+        strcpy(szName, ptr);
+        ptr += strlen(ptr) + 1;
+        gzmsg << "Name: " << szName << std::endl;
+
+        int ID = 0; memcpy(&ID, ptr, 4); ptr +=4;
+        gzmsg << "ID : " << ID << std::endl;
+
+        int nRigidBodies = 0; memcpy(&nRigidBodies, ptr, 4); ptr +=4;
+        gzmsg << "RigidBody (Bone) Count : " << nRigidBodies << std::endl;
+
+        for (int j = 0; j < nRigidBodies; j++)
+        {
+          if (major >= 2)
+          {
+            // RB name
+            char rigidBodyName[MAX_NAMELENGTH];
+            strcpy(rigidBodyName, ptr);
+            ptr += strlen(ptr) + 1;
+            gzmsg << "Rigid Body Name: " << rigidBodyName << std::endl;
+          }
+
+          int rigidBodyID = 0; memcpy(&rigidBodyID, ptr, 4); ptr +=4;
+          gzmsg << "RigidBody ID : " << rigidBodyID << std::endl;
+
+          int parentID = 0; memcpy(&parentID, ptr, 4); ptr +=4;
+          gzmsg << "Parent ID : " << parentID << std::endl;
+
+          float xoffset = 0; memcpy(&xoffset, ptr, 4); ptr +=4;
+          gzmsg << "X Offset : " << xoffset << std::endl;
+
+          float yoffset = 0; memcpy(&yoffset, ptr, 4); ptr +=4;
+          gzmsg << "Y Offset : " << yoffset << std::endl;;
+
+          float zoffset = 0; memcpy(&zoffset, ptr, 4); ptr +=4;
+          gzmsg << "Z Offset : " << zoffset << std::endl;
+        }
+      }
+    }   // next dataset
+
+    gzmsg <<"End Packet\n-------------" << std::endl;
   }
   else
   {
-      printf("Unrecognized Packet Type.\n");
+    gzmsg << "Unrecognized Packet Type." << std::endl;
   }
 }
 
 /////////////////////////////////////////////////
 bool Optitrack::TimecodeStringify(unsigned int _inTimecode,
-  unsigned int _inTimecodeSubframe, char *_buffer, int _bufferSize)
+  unsigned int _inTimecodeSubframe, char * /*_buffer*/, int /*_bufferSize*/)
 {
   bool bValid;
   int hour, minute, second, frame, subframe;
