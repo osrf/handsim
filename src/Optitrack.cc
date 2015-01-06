@@ -186,7 +186,7 @@ void Optitrack::Unpack(char *pData)
   int nBytes = 0;
   memcpy(&nBytes, ptr, 2); ptr += 2;
 
-  if(MessageID == 7)      // FRAME OF MOCAP DATA packet
+  if (MessageID == 7)      // FRAME OF MOCAP DATA packet
   {
     // frame number
     int frameNumber = 0; memcpy(&frameNumber, ptr, 4); ptr += 4;
@@ -213,7 +213,7 @@ void Optitrack::Unpack(char *pData)
       ptr += 4;
       gzmsg << "Marker Count: " << nMarkers << std::endl;
 
-      for(int j = 0; j < nMarkers; j++)
+      for (int j = 0; j < nMarkers; j++)
       {
         float x = 0; memcpy(&x, ptr, 4); ptr += 4;
         float y = 0; memcpy(&y, ptr, 4); ptr += 4;
@@ -226,7 +226,7 @@ void Optitrack::Unpack(char *pData)
 
     // unidentified markers
     int nOtherMarkers = 0; memcpy(&nOtherMarkers, ptr, 4); ptr += 4;
-    for(int j = 0; j < nOtherMarkers; j++)
+    for (int j = 0; j < nOtherMarkers; j++)
     {
       float x = 0.0f; memcpy(&x, ptr, 4); ptr += 4;
       float y = 0.0f; memcpy(&y, ptr, 4); ptr += 4;
@@ -289,7 +289,7 @@ void Optitrack::Unpack(char *pData)
         }
       }
 
-      if(major >= 2)
+      if (major >= 2)
       {
         // associated marker IDs
         nBytes = nRigidMarkers*sizeof(int);
