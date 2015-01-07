@@ -219,7 +219,7 @@ namespace gazebo
     /// \brief have a hydra?
     private: bool haveHydra;
 
-    /**********************************************/
+    /**************initialCameraPose - this->optitrackHead********************************/
     /*                                            */
     /*   for subscribing to key events published  */
     /*   by gzclient window                       */
@@ -515,6 +515,8 @@ namespace gazebo
 
     private: gazebo::math::Pose optitrackArmOffset;
 
+    private: gazebo::math::Pose optitrackHeadOffset;
+
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
     private: gazebo::math::Pose monitorOptitrackFrame;
 
@@ -522,6 +524,7 @@ namespace gazebo
     private: gazebo::math::Pose monitorWorldFrame;
 
     private: bool armOffsetInitialized;
+    private: bool headOffsetInitialized;
   };
 
 /// \}

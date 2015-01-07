@@ -210,22 +210,24 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                             gazebo::math::Quaternion(0, 0, 0));
 
   // Hack for missing pose values
-  gazebo::math::Pose defaultOptitrackHead(
+  /*gazebo::math::Pose defaultOptitrackHead(
                             gazebo::math::Vector3(-0.238, 1.5, -0.749),
                             gazebo::math::Quaternion(0, 0, 0));
   gazebo::math::Pose defaultOptitrackArm(
                             gazebo::math::Vector3(-0.0834, -0.009237, -0.7464),
                             gazebo::math::Quaternion(-35.13*degToRad,
                                                      13.71*degToRad,
-                                                     40.44*degToRad));
+                                                     40.44*degToRad));*/
 
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
+  this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->armOffsetInitialized = false;
+  this->headOffsetInitialized = false;
   
-  this->UpdateOptitrackHead(defaultOptitrackHead);
+  //this->UpdateOptitrackHead(defaultOptitrackHead);
 
   // Calculate an offset
-  this->UpdateOptitrackArm(defaultOptitrackArm);
+  //this->UpdateOptitrackArm(defaultOptitrackArm);
 
   //this->targetBaseLinkPose = this->optitrackArm;
 
@@ -1295,10 +1297,19 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 
 void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
 {
+  this->optitrackHead = this->optitrackHeadOffset +
+                  _pose + -this->monitorOptitrackFrame +
+                        this->monitorWorldFrame;
+
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
-  this->optitrackHead = _pose + -this->monitorOptitrackFrame +
-                          this->monitorWorldFrame;
-  this->viewpointJoyPub->Publish(gazebo::msgs::Convert(this->optitrackHead));
+
+  if (this->pausePolhemus)
+  {
+    this->optitrackHeadOffset = this->userCameraPose - (_pose + -this->monitorOptitrackFrame + this->monitorWorldFrame);
+  }
+  else {
+    this->viewpointJoyPub->Publish(gazebo::msgs::Convert(this->optitrackHead));
+  }
 }
 
 void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
@@ -1324,6 +1335,11 @@ void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
   UpdateOptitrackHead(gazebo::msgs::Convert(*_msg));
+  if (!this->headOffsetInitialized)
+  {
+    this->optitrackHeadOffset = this->initialCameraPose - this->optitrackHead ;
+    this->headOffsetInitialized = true;
+  }
 }
 
 //////////////////////////////////////////////////

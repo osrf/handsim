@@ -44,7 +44,9 @@ namespace haptix
       /// needed for requesting commands for tweaking the tracking behavior. The
       /// server IP is not needed for receiving tracking messages. These
       /// messages are received via multicast.
-      public: Optitrack(const std::string &_serverIP = "");
+      /// \param[i] _verbose Whether or not to print incoming packets.
+      public: Optitrack(const std::string &_serverIP = "",
+                        const bool _verbose = false);
 
       /// \brief Default destructor.
       public: ~Optitrack() = default;
@@ -91,13 +93,16 @@ namespace haptix
       private: const int PortData = 1511;
 
       /// \brief NatNet major version.
-      private: const int NatNetVersionMajor = 0;
+      private: const int NatNetVersionMajor = 2;
 
       /// \brief NatNet minor version.
-      private: const int NatNetVersionMinor = 0;
+      private: const int NatNetVersionMinor = 7;
 
       /// \brief IP address of the optitrack server.
       private: std::string serverIP;
+
+      /// \brief True if incoming packets will be printed
+      private: bool verbose;
 
       /// \brief UDP socket used to received tracking updates.
       private: int dataSocket;
