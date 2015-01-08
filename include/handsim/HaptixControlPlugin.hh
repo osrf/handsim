@@ -44,7 +44,6 @@
 #include <ignition/transport.hh>
 
 #include "polhemus_driver.h"
-#include "Optitrack.hh"
 
 namespace gazebo
 {
@@ -184,7 +183,7 @@ namespace gazebo
     /// \brief gazebo gz transport node for commanding gazebo UserCamera
     private: gazebo::transport::NodePtr gazeboNode;
     /// \brief gazebo gz transport node publisher handle
-    private: gazebo::transport::PublisherPtr viewpointJoyPub;
+    private: gazebo::transport::PublisherPtr polhemusJoyPub;
     /// \brief gazebo gz transport message
     private: gazebo::msgs::Pose joyMsg;
     /// \brief initial UserCamera pose in world frame, not used.
@@ -219,7 +218,7 @@ namespace gazebo
     /// \brief have a hydra?
     private: bool haveHydra;
 
-    /**************initialCameraPose - this->optitrackHead********************************/
+    /**********************************************/
     /*                                            */
     /*   for subscribing to key events published  */
     /*   by gzclient window                       */
@@ -505,7 +504,8 @@ namespace gazebo
     private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
     private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
 
-    // TODO: Mutex for optitrack pose updatMonitores
+    // TODO: Mutex for optitrack pose updateMonitors
+    private: boost::mutex optitrackArmMutex;
 
     /// \brief Pose of the optitrack head tracker in the world frame
     private: gazebo::math::Pose optitrackHead;
@@ -522,6 +522,8 @@ namespace gazebo
 
     /// \brief Pose of the monitor in the world frame
     private: gazebo::math::Pose monitorWorldFrame;
+
+    private: gazebo::math::Quaternion optitrackRotation;
 
     private: bool armOffsetInitialized;
     private: bool headOffsetInitialized;
