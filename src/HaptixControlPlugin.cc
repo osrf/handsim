@@ -206,14 +206,17 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->monitorWorldFrame = gazebo::math::Pose(
                             gazebo::math::Vector3(0, 0, 0),
-                            gazebo::math::Quaternion(0, M_PI/2, -M_PI/2));
+                            gazebo::math::Quaternion(-M_PI/2, 0, 0));
+                            //gazebo::math::Quaternion(0, M_PI/2, -M_PI/2));
+                            //gazebo::math::Quaternion(0, -M_PI/2, 0));
+                            //gazebo::math::Quaternion(0, 0, 0));
 
   // Hack for missing pose values
   /*gazebo::math::Pose defaultOptitrackHead(
                             gazebo::math::Vector3(-0.238, 1.5, -0.749),
                             gazebo::math::Quaternion(0, 0, 0));
   gazebo::math::Pose defaultOptitrackArm(
-                            gazebo::math::Vector3(-0.0834, -0.009237, -0.7464),
+                            gazebo::math::Vector3(-0.0834, -0.00923, -0.7464),
                             gazebo::math::Quaternion(-35.13*degToRad,
                                                      13.71*degToRad,
                                                      40.44*degToRad));*/
