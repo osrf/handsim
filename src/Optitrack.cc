@@ -144,7 +144,7 @@ void Optitrack::RunReceptionTask()
     // Publish messages
 
     for (ModelPoses::iterator it = this->lastModelMap.begin();
-         it != this->lastModelMap.end(); it++)
+         it != this->lastModelMap.end(); ++it)
     {
       if (it->first.compare(headTrackerName) == 0)
       {
@@ -270,7 +270,7 @@ void Optitrack::Unpack(char *pData)
       ptr += nMarkerBytes;
 
       for (ModelMarkers::iterator it = markerSets.begin();
-           it != markerSets.end(); it++)
+           it != markerSets.end(); ++it)
       {
         if (it->second.size() == nRigidMarkers)
         {

@@ -27,6 +27,9 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->gotPausePolhemusRequest = false;
 
   this->haveHydra = false;
+  this->haveKeyboard = false;
+  this->armOffsetInitialized = false;
+  this->headOffsetInitialized = false;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -1346,11 +1349,6 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
   UpdateOptitrackArm(gazebo::msgs::Convert(*_msg));
-  /*if (!this->armOffsetInitialized)
-  {
-    this->optitrackArmOffset = this->initialBaseLinkPose - this->optitrackArm;
-    this->armOffsetInitialized = true;
-  }*/
 }
 
 //////////////////////////////////////////////////
