@@ -577,11 +577,17 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
   }
   else
   {
-    if (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
+    int tries = 0;
+    const int timeout = 10;
+    while (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
     {
-      gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
-        << std::endl;
-      return;
+      if (tries >= timeout)
+      {
+        gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
+          << std::endl;
+        return;
+      }
+      tries++;
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     //::hxSensor sensor;
