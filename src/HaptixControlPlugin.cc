@@ -210,6 +210,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
+
+  this->headPosFilter.SetFc(0.002, 0.2);
+  this->headOriFilter.SetFc(0.002, 0.2);
   
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
@@ -1279,6 +1282,8 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
   gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg);
+  pose.pos = this->headPosFilter.Process(pose.pos);  
+  pose.rot = this->headOriFilter.Process(pose.rot);  
   
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
@@ -1306,8 +1311,8 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
   gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg);
   
-  this->optitrackArm =(pose - this->monitorOptitrackFrame) +
-                      this->optitrackArmOffset;
+  this->optitrackArm = (pose - this->monitorOptitrackFrame) +
+                       this->optitrackArmOffset;
 
   if (this->pausePolhemus)
   {

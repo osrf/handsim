@@ -528,6 +528,12 @@ namespace gazebo
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
     private: gazebo::math::Pose monitorOptitrackFrame;
 
+    /// \brief Low-pass filter for head position (reduces jitter)
+    private: gazebo::math::OnePoleVector3 headPosFilter;
+
+    /// \brief Low-pass filter for head orientation (reduces jitter)
+    private: gazebo::math::OnePoleQuaternion headOriFilter;
+
     /// \brief True if optitrackArmOffset has been initialized
     private: bool armOffsetInitialized;
 
