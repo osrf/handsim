@@ -1275,14 +1275,10 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
   }
 }
 
-void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
-{
-}
-
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
-  gazebo::math::pose = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg);
   
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
@@ -1308,7 +1304,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
-  gazebo::math::pose = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg);
   
   this->optitrackArm =(pose - this->monitorOptitrackFrame) +
                       this->optitrackArmOffset;
