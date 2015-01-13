@@ -521,7 +521,8 @@ namespace gazebo
     private: gazebo::math::Pose monitorOptitrackFrame;
 
     /// \brief Pose of the monitor in the world frame
-    private: gazebo::math::Pose monitorWorldFrame;
+    private: gazebo::math::Pose monitorWorldFrameArm;
+    private: gazebo::math::Pose monitorWorldFrameHead;
 
     private: bool armOffsetInitialized;
     private: bool headOffsetInitialized;
