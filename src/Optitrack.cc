@@ -165,8 +165,9 @@ void Optitrack::RunReceptionTask()
     }
 
     this->lastModelMap.clear();
-    // probably want to sleep here
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    std::this_thread::sleep_for(
+        std::chrono::milliseconds(this->sleepMilliseconds));
   }
   this->active = false;
 }
@@ -480,6 +481,7 @@ void Optitrack::Unpack(char *pData)
       memcpy(&fTemp, ptr, 4); ptr += 4;
       timestamp = (double)fTemp;
     }
+    output << "Timestamp: " << timestamp;
 
     // frame params
     short params = 0;  memcpy(&params, ptr, 2); ptr += 2;
@@ -615,12 +617,6 @@ bool Optitrack::TimecodeStringify(unsigned int _inTimecode,
   int hour, minute, second, frame, subframe;
   bValid = this->DecodeTimecode(_inTimecode, _inTimecodeSubframe,
     &hour, &minute, &second, &frame, &subframe);
-
-  //ToDo(caguero): Fix this.
-  /*sprintf(Buffer, BufferSize, "%2d:%2d:%2d:%2d.%d", hour, minute, second, frame, subframe);
-  for (unsigned int i=0; i<strlen(Buffer); i++)
-    if (Buffer[i]==' ')
-      Buffer[i]='0';*/
 
   return bValid;
 }

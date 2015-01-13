@@ -32,6 +32,7 @@ namespace haptix
   {
     typedef std::map<std::string, std::vector<gazebo::math::Vector3> >
               ModelMarkers;
+
     typedef std::map<std::string, gazebo::math::Pose> ModelPoses;
 
     class Optitrack
@@ -98,6 +99,9 @@ namespace haptix
       /// \brief NatNet minor version.
       private: const int NatNetVersionMinor = 7;
 
+      /// \brief How long to sleep between packet updates
+      private: const float sleepMilliseconds = 1;
+
       /// \brief IP address of the optitrack server.
       private: std::string serverIP;
 
@@ -116,17 +120,25 @@ namespace haptix
       /// \brief Gazebo transport node used to publish tracker poses.
       private: gazebo::transport::NodePtr gzNode;
 
+      /// \brief Gazebo publisher for head tracker pose
       private: gazebo::transport::PublisherPtr headPub;
+
+      /// \brief Gazebo publisher for arm tracker pose
       private: gazebo::transport::PublisherPtr armPub;
+
+      /// \brief Gazebo publisher for monitor tracker pose
       private: gazebo::transport::PublisherPtr originPub;
 
+      /// \brief Name of head tracker rigid body
       public: static const std::string headTrackerName;
                       
+      /// \brief Name of arm tracker rigid body
       public: static const std::string armTrackerName;
                       
+      /// \brief Name of monitor tracker rigid body
       public: static const std::string originTrackerName;
 
-      /// \brief 
+      /// \brief Store names and poses of tracker models to be published
       private: ModelPoses lastModelMap;
     };
   }

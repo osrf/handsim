@@ -202,44 +202,15 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // Start receiving Optitrack tracking updates.
   this->optitrack.StartReception(this->world->GetName());
 
-  //const float degToRad = M_PI/180;
   this->optitrackHead = gazebo::math::Pose::Zero;
   this->optitrackArm = gazebo::math::Pose::Zero;
   this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
-
-  /*this->monitorWorldFrameArm = gazebo::math::Pose(
-                            gazebo::math::Vector3(0, 0, 0),
-                            gazebo::math::Quaternion(0, 0, 0));
-
-  this->monitorWorldFrameHead = gazebo::math::Pose(
-                            gazebo::math::Vector3(0, 0, 0),
-                            gazebo::math::Quaternion(0, 0, 0));*/
-                            //gazebo::math::Quaternion(0, M_PI/2, -M_PI/2));
-                            //gazebo::math::Quaternion(0, -M_PI/2, 0));
-                            //gazebo::math::Quaternion(0, 0, 0));
-
-  // Hack for missing pose values
-  /*gazebo::math::Pose defaultOptitrackHead(
-                            gazebo::math::Vector3(-0.238, 1.5, -0.749),
-                            gazebo::math::Quaternion(0, 0, 0));
-  gazebo::math::Pose defaultOptitrackArm(
-                            gazebo::math::Vector3(-0.0834, -0.00923, -0.7464),
-                            gazebo::math::Quaternion(-35.13*degToRad,
-                                                     13.71*degToRad,
-                                                     40.44*degToRad));*/
 
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
   
-  //this->UpdateOptitrackHead(defaultOptitrackHead);
-
-  // Calculate an offset
-  //this->UpdateOptitrackArm(defaultOptitrackArm);
-
-  //this->targetBaseLinkPose = this->optitrackArm;
-
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
               ("~/optitrack/" + haptix::tracking::Optitrack::headTrackerName,
@@ -1306,15 +1277,24 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 
 void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
 {
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
+{
+  gazebo::math::pose = gazebo::msgs::Convert(*_msg);
+  
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
-  this->optitrackHead = (_pose - this->monitorOptitrackFrame)  + this->optitrackHeadOffset;
+  this->optitrackHead = (pose - this->monitorOptitrackFrame) +
+                        this->optitrackHeadOffset;
 
   if (this->pausePolhemus)
   {
     if (this->userCameraPoseValid)
     {
-      this->optitrackHeadOffset = -(_pose - this->monitorOptitrackFrame) + this->userCameraPose;
+      this->optitrackHeadOffset = -(pose - this->monitorOptitrackFrame) +
+                                  this->userCameraPose;
       this->headOffsetInitialized = true;
     }
   }
@@ -1325,36 +1305,24 @@ void HaptixControlPlugin::UpdateOptitrackHead(const gazebo::math::Pose &_pose)
   }
 }
 
-void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
-  this->optitrackArm =(_pose - this->monitorOptitrackFrame) + this->optitrackArmOffset;
+  gazebo::math::pose = gazebo::msgs::Convert(*_msg);
+  
+  this->optitrackArm =(pose - this->monitorOptitrackFrame) +
+                      this->optitrackArmOffset;
 
   if (this->pausePolhemus)
   {
-    this->optitrackArmOffset = -(_pose - this->monitorOptitrackFrame) + this->targetBaseLinkPose;
+    this->optitrackArmOffset = -(pose - this->monitorOptitrackFrame) +
+                               this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
   }
   else if (this->armOffsetInitialized)
   {
     this->targetBaseLinkPose = this->optitrackArm;
   }
-}
-
-//////////////////////////////////////////////////
-void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
-{
-  UpdateOptitrackHead(gazebo::msgs::Convert(*_msg));
-  /*if (!this->headOffsetInitialized)
-  {
-    this->optitrackHeadOffset = this->initialCameraPose - this->optitrackHead;
-    this->headOffsetInitialized = true;
-  }*/
-}
-
-//////////////////////////////////////////////////
-void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
-{
-  UpdateOptitrackArm(gazebo::msgs::Convert(*_msg));
 }
 
 //////////////////////////////////////////////////
