@@ -199,9 +199,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_erp", 0, 0.0);
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
-  // Start receiving Optitrack tracking updates.
-  this->optitrack.StartReception(this->world->GetName());
-
   this->optitrackHead = gazebo::math::Pose::Zero;
   this->optitrackArm = gazebo::math::Pose::Zero;
   this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
@@ -265,6 +262,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
 
   this->PublishHaptixControlStatus();
+
+  // Start receiving Optitrack tracking updates.
+  this->optitrack.StartReception(this->world->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -167,7 +167,7 @@ void Optitrack::RunReceptionTask()
     this->lastModelMap.clear();
 
     std::this_thread::sleep_for(
-        std::chrono::milliseconds(this->sleepMilliseconds));
+        std::chrono::microseconds(this->sleepMicroseconds));
   }
   this->active = false;
 }

@@ -100,7 +100,7 @@ namespace haptix
       private: const int NatNetVersionMinor = 7;
 
       /// \brief How long to sleep between packet updates
-      private: const int sleepMilliseconds = 1;
+      private: const int sleepMicroseconds = 500;
 
       /// \brief IP address of the optitrack server.
       private: std::string serverIP;
