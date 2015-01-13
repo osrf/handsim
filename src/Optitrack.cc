@@ -138,7 +138,7 @@ void Optitrack::RunReceptionTask()
       continue;
     }
 
-    // Dispach the data received.
+    // Dispatch the data received.
     this->Unpack(buffer);
 
     // Publish messages
@@ -166,8 +166,8 @@ void Optitrack::RunReceptionTask()
 
     this->lastModelMap.clear();
 
-    std::this_thread::sleep_for(
-        std::chrono::microseconds(this->sleepMicroseconds));
+    //std::this_thread::sleep_for(
+    //    std::chrono::microseconds(this->sleepMicroseconds));
   }
   this->active = false;
 }
