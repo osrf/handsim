@@ -219,7 +219,7 @@ namespace gazebo
     /// \brief have a hydra?
     private: bool haveHydra;
 
-    /**************initialCameraPose - this->optitrackHead********************************/
+    /**********************************************/
     /*                                            */
     /*   for subscribing to key events published  */
     /*   by gzclient window                       */
