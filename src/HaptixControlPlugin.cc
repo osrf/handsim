@@ -208,8 +208,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
 
-  this->headPosFilter.SetFc(0.002, 0.2);
-  this->headOriFilter.SetFc(0.002, 0.2);
+  this->headPosFilter.SetFc(0.002, 0.3);
+  this->headOriFilter.SetFc(0.002, 0.3);
   
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
