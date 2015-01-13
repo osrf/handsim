@@ -47,14 +47,14 @@ namespace haptix
       /// messages are received via multicast.
       /// \param[i] _verbose Whether or not to print incoming packets.
       public: Optitrack(const std::string &_serverIP = "",
-                        const bool _verbose = false);
+                        const bool _verbose = false, const std::string &_world="");
 
       /// \brief Default destructor.
       public: ~Optitrack() = default;
 
       /// \brief Start receiving tracking updates. Each tracking update will be
       /// published as a Gazebo message on topic '~/optitrack'.
-      public: void StartReception(const std::string &_world="");
+      public: void StartReception();
 
       /// \brief Receive tracking updates and publish them using Gazebo messages.
       private: void RunReceptionTask();
@@ -80,6 +80,8 @@ namespace haptix
                                    int *_second,
                                    int *_frame,
                                    int *_subframe);
+
+      public: void SetWorld(const std::string &_world);
 
       /// \brief True if Optitrack data reception is active
       private: bool active;
@@ -114,8 +116,10 @@ namespace haptix
       /// \brief IP address associated to the multicast socket.
       private: std::string myIPAddress;
 
+      private: std::string world;
+
       /// \brief Thread used for receiving tracking updates.
-      private: std::thread *dataThread = nullptr;
+      //private: std::thread *dataThread = nullptr;
 
       /// \brief Gazebo transport node used to publish tracker poses.
       private: gazebo::transport::NodePtr gzNode;

@@ -46,12 +46,17 @@ const std::string Optitrack::armTrackerName = "ArmTracker";
 const std::string Optitrack::originTrackerName = "MonitorTracker";
 
 /////////////////////////////////////////////////
-Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose)
-  : serverIP(_serverIP), verbose(_verbose)
+Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose, const std::string &_world)
+  : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
   this->active = false;
   this->myIPAddress = ignition::transport::determineHost();
+  //std::thread DataListenThread_Handle(DataListenThread);
+}
 
+/////////////////////////////////////////////////
+void Optitrack::StartReception()
+{
   // Create a socket for receiving tracking updates.
   this->dataSocket = socket(AF_INET, SOCK_DGRAM, 0);
 
@@ -88,16 +93,12 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose)
               << std::endl;
     return;
   }
-  this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
-  //std::thread DataListenThread_Handle(DataListenThread);
-}
 
-/////////////////////////////////////////////////
-void Optitrack::StartReception(const std::string &_world)
-{
-  if (_world.size() > 0)
+  this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
+
+  if (this->world.size() > 0)
   {
-    this->gzNode->Init(_world);
+    this->gzNode->Init(this->world);
   }
 
   this->headPub = this->gzNode->Advertise<gazebo::msgs::Pose>
@@ -107,11 +108,13 @@ void Optitrack::StartReception(const std::string &_world)
   this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+originTrackerName);
 
-  if (!this->dataThread)
+  this->active = true;
+  this->RunReceptionTask();
+  /*if (!this->dataThread)
   {
     this->dataThread = new std::thread(&Optitrack::RunReceptionTask, this);
     this->active = true;
-  }
+  }*/
 }
 
 /////////////////////////////////////////////////
@@ -635,4 +638,10 @@ bool Optitrack::DecodeTimecode(unsigned int _inTimecode,
   *_subframe = _inTimecodeSubframe;
 
   return bValid;
+}
+
+/////////////////////////////////////////////////
+void Optitrack::SetWorld(const std::string &_world)
+{
+  this->world = _world;
 }

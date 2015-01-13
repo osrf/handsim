@@ -222,6 +222,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
               ("~/optitrack/" + haptix::tracking::Optitrack::originTrackerName,
               &HaptixControlPlugin::OnUpdateOptitrackMonitor, this);
 
+  this->optitrack.SetWorld(this->world->GetName());
+  this->optitrackThread = new std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack);
   // initialize polhemus
   this->havePolhemus = false;
   if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
@@ -264,7 +266,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->PublishHaptixControlStatus();
 
   // Start receiving Optitrack tracking updates.
-  this->optitrack.StartReception(this->world->GetName());
+  
+  //this->optitrack.StartReception(this->world->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

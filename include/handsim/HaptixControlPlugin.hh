@@ -493,6 +493,8 @@ namespace gazebo
     /// \brief Optitrack packet receiver, used to start an optitrack thread
     private: haptix::tracking::Optitrack optitrack;
 
+    private: std::thread *optitrackThread;
+
     /// \brief Subscriber to Optitrack head tracker updates
     private: gazebo::transport::SubscriberPtr optitrackHeadSub;
 
