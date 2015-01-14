@@ -1167,6 +1167,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
   _result = true;
 }
 
+//////////////////////////////////////////////////
 void HaptixControlPlugin::HaptixReadCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxSensor &/*_req*/,
