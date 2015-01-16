@@ -695,7 +695,7 @@ void HaptixControlPlugin::UpdatePolhemus()
         gzdbg << "have polhemus, responding to pause request\n";
         // signal pause completion
         msgs::Int res;
-        res.set_data(1);
+        res.set_data(this->pausePolhemus);
         this->pausePolhemusPub->Publish(res);
         // reset flag
         this->gotPausePolhemusRequest = false;

@@ -983,9 +983,19 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
   if (key == 'p' || key == ' ')
   {
-    gazebo::msgs::Int pause;
-    pause.set_data(!this->polhemusPaused);
-    this->pausePolhemusPub->Publish(pause);
+    gazebo::msgs::Int pauseState;
+    bool oldPauseState = this->polhemusPaused;
+    pauseState.set_data(!oldPauseState);
+    this->pausePolhemusPub->Publish(pauseState);
+
+    int maxTries = 30;
+    while (maxTries > 0 && this->polhemusPaused == oldPauseState)
+    {
+      // Wait for ControlPlugin to pause
+      gzdbg << "waiting for polhemus to pause (max wait 3 sec).\n";
+      --maxTries;
+      usleep(100000);
+    }
     return true;
   }
 
@@ -1202,13 +1212,18 @@ void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
   gzdbg << "got pause polhemus response [" << _msg->data() << "]\n";
   if (_msg->data() == 0)
   {
-    gzdbg << "no polhemus to pause.\n";
+    gzdbg << "polhemus unpaused successfully.\n";
+    this->polhemusPaused = false;
+  }
+  else if (_msg->data() == 1)
+  {
+    gzdbg << "polhemus paused successfully.\n";
+    this->polhemusPaused = true;
   }
   else
   {
-    gzdbg << "polhemus paused successfully.\n";
+    gzdbg << "no polhemus to pause.\n";
   }
-  this->polhemusPaused = true;
 }
 
 //////////////////////////////////////////////////
