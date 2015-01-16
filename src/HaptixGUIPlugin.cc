@@ -33,6 +33,7 @@ GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
+  this->polhemusPaused = true;
   this->quit = false;
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
