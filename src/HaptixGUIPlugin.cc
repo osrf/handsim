@@ -981,6 +981,14 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
   char key = _event.text[0];
 
+  if (key == 'p' || key == ' ')
+  {
+    gazebo::msgs::Int pause;
+    pause.set_data(!this->polhemusPaused);
+    this->pausePolhemusPub->Publish(pause);
+    return true;
+  }
+
   // '~' toggles between grasp mode and motor mode
   if (key == '~')
   {

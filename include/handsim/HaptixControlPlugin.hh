@@ -29,6 +29,7 @@
 #include <gazebo/sensors/sensors.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
+#include <gazebo/common/KeyEvent.hh>
 #include <gazebo/common/Time.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/Events.hh>
@@ -220,14 +221,10 @@ namespace gazebo
 
     /**********************************************/
     /*                                            */
-    /*   for subscribing to key events published  */
-    /*   by gzclient window                       */
+    /*   for polhemus related events              */
     /*                                            */
     /**********************************************/
-    /// \brief gazebo key event subscriber handle
-    private: gazebo::transport::SubscriberPtr keySub;
-    /// \brief gazebo key event subscriber callback function
-    private: void OnKey(ConstRequestPtr &_msg);
+
     /// \brief pause polhemus updates
     private: bool pausePolhemus;
     /// \brief got command to pause polhemus updates
