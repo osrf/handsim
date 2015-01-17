@@ -15,6 +15,8 @@
  *
 */
 
+#include <gazebo/common/Time.hh>
+#include <gazebo/common/Timer.hh>
 #include "handsim/HaptixControlPlugin.hh"
 
 namespace gazebo
@@ -222,7 +224,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
-  
+
   //this->UpdateOptitrackHead(defaultOptitrackHead);
 
   // Calculate an offset
@@ -1319,9 +1321,34 @@ void HaptixControlPlugin::UpdateOptitrackArm(const gazebo::math::Pose &_pose)
                        (_pose + -this->monitorOptitrackFrame +
                          this->monitorWorldFrame);
 
+  static int counter = 0;
+  static gazebo::common::Timer timer;
+  static std::vector<double> v;
+
+  if (counter == 0)
+  {
+    timer.Reset();
+    timer.Start();
+  }
+  counter++;
+  v.push_back(timer.GetElapsed().Double());
+  if (counter == 1000)
+  {
+    counter = 0;
+    std::cout << "Update optitrack arm at "
+              << 1000 / timer.GetElapsed().Double() << "Hz"
+              << std::endl;
+    for (int i = 1; i < v.size(); ++i)
+      std::cout << v.at(i) - v.at(i - 1) << std::endl;
+
+    std::cout << "----" << std::endl;
+
+    v.clear();
+  }
+
   if (this->pausePolhemus)
   {
-    this->optitrackArmOffset = this->targetBaseLinkPose - 
+    this->optitrackArmOffset = this->targetBaseLinkPose -
                                  (_pose + -this->monitorOptitrackFrame +
                                    this->monitorWorldFrame);
     this->armOffsetInitialized = true;

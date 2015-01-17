@@ -34,6 +34,8 @@
 #include <sstream>
 
 #include <ignition/transport/NetUtils.hh>
+#include <gazebo/common/Time.hh>
+#include <gazebo/common/Timer.hh>
 #include <gazebo/msgs/msgs.hh>
 
 #include "handsim/Optitrack.hh"
@@ -140,6 +142,23 @@ void Optitrack::RunReceptionTask()
 
     // Dispach the data received.
     this->Unpack(buffer);
+
+    static int counter = 0;
+    static gazebo::common::Timer timer;
+    if (counter == 0)
+    {
+      timer.Reset();
+      timer.Start();
+    }
+    counter++;
+    if (counter == 1000)
+    {
+      counter = 0;
+      std::cout << "Optitrack received at "
+                << 1000 / timer.GetElapsed().Double() << "msgs/sec."
+                << std::endl;
+    }
+
 
     // Publish messages
 
@@ -260,7 +279,7 @@ void Optitrack::Unpack(char *pData)
                              gazebo::math::Quaternion(qw, qx, qy, qz));
 
       // associated marker positions
-      int nRigidMarkers = 0; 
+      int nRigidMarkers = 0;
       memcpy(&nRigidMarkers, ptr, 4);
       ptr += 4;
       output << "Rigid Marker Count: " << nRigidMarkers << std::endl;
