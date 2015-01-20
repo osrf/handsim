@@ -226,6 +226,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
               &HaptixControlPlugin::OnUpdateOptitrackMonitor, this);
 
   this->optitrack.SetWorld(this->world->GetName());
+
+  // Start receiving Optitrack tracking updates.
   this->optitrackThread = new std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack);
   // initialize polhemus
   this->havePolhemus = false;
@@ -267,10 +269,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
       boost::bind(&HaptixControlPlugin::GazeboUpdateStates, this));
 
   this->PublishHaptixControlStatus();
-
-  // Start receiving Optitrack tracking updates.
-  
-  //this->optitrack.StartReception(this->world->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
