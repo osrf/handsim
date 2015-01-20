@@ -527,6 +527,8 @@ namespace gazebo
     /// viewpoint pose 
     private: gazebo::math::Pose optitrackHeadOffset;
 
+    private: gazebo::math::Pose optitrackWorldRot;
+
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
     private: gazebo::math::Pose monitorOptitrackFrame;
 

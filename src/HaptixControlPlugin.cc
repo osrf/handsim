@@ -203,6 +203,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackArm = gazebo::math::Pose::Zero;
   this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
 
+  this->optitrackWorldRot = gazebo::math::Pose(gazebo::math::Vector3(0, 0, 0),
+                                         gazebo::math::Quaternion(-M_PI/2, M_PI/2, 0));
+
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->armOffsetInitialized = false;
@@ -1284,21 +1287,19 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
-  gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose pose = this->optitrackWorldRot + gazebo::msgs::Convert(*_msg);
   pose.pos = this->headPosFilter.Process(pose.pos);  
   pose.rot = this->headOriFilter.Process(pose.rot);  
   
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
-  this->optitrackHead = (pose - this->monitorOptitrackFrame) +
-                        this->optitrackHeadOffset;
+  this->optitrackHead = pose + this->optitrackHeadOffset;
 
   if (this->pausePolhemus)
   {
     if (this->userCameraPoseValid)
     {
-      this->optitrackHeadOffset = -(pose - this->monitorOptitrackFrame) +
-                                  this->userCameraPose;
+      this->optitrackHeadOffset = -pose + this->userCameraPose;
       this->headOffsetInitialized = true;
     }
   }
@@ -1312,15 +1313,13 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
-  gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose pose = this->optitrackWorldRot + gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
   
-  this->optitrackArm = (pose - this->monitorOptitrackFrame) +
-                       this->optitrackArmOffset;
+  this->optitrackArm = pose + this->optitrackArmOffset;
 
   if (this->pausePolhemus)
   {
-    this->optitrackArmOffset = -(pose - this->monitorOptitrackFrame) +
-                               this->targetBaseLinkPose;
+    this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
   }
   else if (this->armOffsetInitialized)
