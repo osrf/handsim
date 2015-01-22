@@ -460,11 +460,8 @@ void Optitrack::Unpack(char *pData)
     float latency = 0.0f; memcpy(&latency, ptr, 4); ptr += 4;
     output << "latency : " << latency << std::endl;
 
-    // timecode
-    unsigned int timecode = 0;  memcpy(&timecode, ptr, 4);  ptr += 4;
-    unsigned int timecodeSub = 0; memcpy(&timecodeSub, ptr, 4); ptr += 4;
-    char szTimecode[128] = "";
-    this->TimecodeStringify(timecode, timecodeSub, szTimecode, 128);
+    // skip over timecode
+    ptr += 8;
 
     // timestamp
     double timestamp = 0.0f;
@@ -605,34 +602,6 @@ void Optitrack::Unpack(char *pData)
   {
     std::cout << output.str();
   }
-}
-
-/////////////////////////////////////////////////
-bool Optitrack::TimecodeStringify(unsigned int _inTimecode,
-  unsigned int _inTimecodeSubframe, char * /*_buffer*/, int /*_bufferSize*/)
-{
-  bool bValid;
-  int hour, minute, second, frame, subframe;
-  bValid = this->DecodeTimecode(_inTimecode, _inTimecodeSubframe,
-    &hour, &minute, &second, &frame, &subframe);
-
-  return bValid;
-}
-
-/////////////////////////////////////////////////
-bool Optitrack::DecodeTimecode(unsigned int _inTimecode,
-  unsigned int _inTimecodeSubframe, int *_hour, int *_minute, int *_second,
-  int *_frame, int *_subframe)
-{
-  bool bValid = true;
-
-  *_hour     = (_inTimecode >> 24) & 255;
-  *_minute   = (_inTimecode >> 16) & 255;
-  *_second   = (_inTimecode >> 8) & 255;
-  *_frame    = _inTimecode & 255;
-  *_subframe = _inTimecodeSubframe;
-
-  return bValid;
 }
 
 /////////////////////////////////////////////////

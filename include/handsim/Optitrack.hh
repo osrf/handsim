@@ -67,20 +67,6 @@ namespace haptix
       /// \return True if Optitrack data reception is active..
       public: bool IsActive();
 
-      /// ToDo.
-      private: bool TimecodeStringify(unsigned int _inTimecode,
-                                      unsigned int _inTimecodeSubframe,
-                                      char *_buffer,
-                                      int _bufferSize);
-      /// ToDo.
-      private: bool DecodeTimecode(unsigned int _inTimecode,
-                                   unsigned int _inTimecodeSubframe,
-                                   int *_hour,
-                                   int *_minute,
-                                   int *_second,
-                                   int *_frame,
-                                   int *_subframe);
-
       /// \brief Set the name of the world associated with the gz publishers.
       public: void SetWorld(const std::string &_world);
 
