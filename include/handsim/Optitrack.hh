@@ -81,7 +81,11 @@ namespace haptix
                                    int *_frame,
                                    int *_subframe);
 
+      /// \brief Set the name of the world associated with the gz publishers.
       public: void SetWorld(const std::string &_world);
+
+      /// \brief Set whether or not to print packets as they come.
+      public: void SetVerbose(const bool _verbose);
 
       /// \brief True if Optitrack data reception is active
       private: bool active;
@@ -116,10 +120,8 @@ namespace haptix
       /// \brief IP address associated to the multicast socket.
       private: std::string myIPAddress;
 
+      /// \brief Name of the world associated with the Gazebo publishers.
       private: std::string world;
-
-      /// \brief Thread used for receiving tracking updates.
-      //private: std::thread *dataThread = nullptr;
 
       /// \brief Gazebo transport node used to publish tracker poses.
       private: gazebo::transport::NodePtr gzNode;

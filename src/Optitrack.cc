@@ -110,11 +110,6 @@ void Optitrack::StartReception()
 
   this->active = true;
   this->RunReceptionTask();
-  /*if (!this->dataThread)
-  {
-    this->dataThread = new std::thread(&Optitrack::RunReceptionTask, this);
-    this->active = true;
-  }*/
 }
 
 /////////////////////////////////////////////////
@@ -474,9 +469,9 @@ void Optitrack::Unpack(char *pData)
     // timestamp
     double timestamp = 0.0f;
     // 2.7 and later - increased from single to double precision
-    if( ((major == 2)&&(minor>=7)) || (major>2))
+    if (((major == 2)&&(minor>=7)) || (major>2))
     {
-        memcpy(&timestamp, ptr, 8); ptr += 8;
+      memcpy(&timestamp, ptr, 8); ptr += 8;
     }
     else
     {
@@ -644,4 +639,10 @@ bool Optitrack::DecodeTimecode(unsigned int _inTimecode,
 void Optitrack::SetWorld(const std::string &_world)
 {
   this->world = _world;
+}
+
+/////////////////////////////////////////////////
+void Optitrack::SetVerbose(const bool _verbose)
+{
+  this->verbose = _verbose;
 }
