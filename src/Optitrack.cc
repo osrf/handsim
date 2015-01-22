@@ -259,7 +259,7 @@ void Optitrack::Unpack(char *pData)
                              gazebo::math::Quaternion(qw, qx, qy, qz));
 
       // associated marker positions
-      int nRigidMarkers = 0; 
+      unsigned int nRigidMarkers = 0; 
       memcpy(&nRigidMarkers, ptr, 4);
       ptr += 4;
       output << "Rigid Marker Count: " << nRigidMarkers << std::endl;
@@ -274,7 +274,7 @@ void Optitrack::Unpack(char *pData)
         if (it->second.size() == nRigidMarkers)
         {
           // Compare all the points
-          int k = 0;
+          unsigned int k = 0;
           for (k = 0; k < nRigidMarkers; k++)
           {
             if (std::fabs(it->second[k][0] - markerData[k*3]) > FLT_EPSILON ||
@@ -305,7 +305,7 @@ void Optitrack::Unpack(char *pData)
         memcpy(markerSizes, ptr, nFloatBytes);
         ptr += nFloatBytes;
 
-        for (int k = 0; k < nRigidMarkers; k++)
+        for (unsigned int k = 0; k < nRigidMarkers; k++)
         {
           output << "\tMarker " << k << ": id=" << markerIDs[k]
                 << "\tsize=" << markerSizes[k]
@@ -320,7 +320,7 @@ void Optitrack::Unpack(char *pData)
       }
       else
       {
-        for (int k = 0; k < nRigidMarkers; k++)
+        for (unsigned int k = 0; k < nRigidMarkers; k++)
         {
           output << "\tMarker " << k << ": "
                 << "pos=[" << markerData[k*3] << "," << markerData[k*3+1]
