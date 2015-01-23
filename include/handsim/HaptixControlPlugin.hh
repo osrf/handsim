@@ -493,6 +493,7 @@ namespace gazebo
     /// \brief Optitrack packet receiver, used to start an optitrack thread
     private: haptix::tracking::Optitrack optitrack;
 
+    /// \brief OptiTrack receiving thread
     private: std::thread *optitrackThread;
 
     /// \brief Subscriber to Optitrack head tracker updates
@@ -524,7 +525,7 @@ namespace gazebo
     private: gazebo::math::Pose optitrackArmOffset;
 
     /// \brief Pose offset between initial Optitrack head and desired initial
-    /// viewpoint pose 
+    /// viewpoint pose
     private: gazebo::math::Pose optitrackHeadOffset;
 
     /// \brief Orthonormal transformation between Optitrack axes and world axes

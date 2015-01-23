@@ -51,7 +51,6 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose, const st
 {
   this->active = false;
   this->myIPAddress = ignition::transport::determineHost();
-  //std::thread DataListenThread_Handle(DataListenThread);
 }
 
 /////////////////////////////////////////////////
@@ -128,7 +127,7 @@ void Optitrack::RunReceptionTask()
   while (1)
   {
     // Block until we receive a datagram from the network (from anyone
-    //  including ourselves)
+    // including ourselves)
     if (recvfrom(this->dataSocket, buffer, sizeof(buffer), 0,
          (sockaddr *)&theirAddress, &addr_len) < 0)
     {
@@ -140,7 +139,6 @@ void Optitrack::RunReceptionTask()
     this->Unpack(buffer);
 
     // Publish messages
-
     for (ModelPoses::iterator it = this->lastModelMap.begin();
          it != this->lastModelMap.end(); ++it)
     {
@@ -158,14 +156,11 @@ void Optitrack::RunReceptionTask()
       }
       else
       {
-        std::cout << "Model name " << it->first << " not found!" << std::endl;
+        gzerr << "Model name " << it->first << " not found!" << std::endl;
       }
     }
 
     this->lastModelMap.clear();
-
-    //std::this_thread::sleep_for(
-    //    std::chrono::microseconds(this->sleepMicroseconds));
   }
   this->active = false;
 }
@@ -221,7 +216,7 @@ void Optitrack::Unpack(char *pData)
         float y = 0; memcpy(&y, ptr, 4); ptr += 4;
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
         output << "\tMarker " << j << " : [x="
-              << x << ",y=" << y << ",z=" << z << "]" << std::endl;
+               << x << ",y=" << y << ",z=" << z << "]" << std::endl;
         markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
       }
     }
@@ -259,7 +254,7 @@ void Optitrack::Unpack(char *pData)
                              gazebo::math::Quaternion(qw, qx, qy, qz));
 
       // associated marker positions
-      unsigned int nRigidMarkers = 0; 
+      unsigned int nRigidMarkers = 0;
       memcpy(&nRigidMarkers, ptr, 4);
       ptr += 4;
       output << "Rigid Marker Count: " << nRigidMarkers << std::endl;
@@ -423,7 +418,7 @@ void Optitrack::Unpack(char *pData)
     }
 
     // labeled markers (version 2.3 and later)
-    if (((major == 2) && (minor>=3)) || (major>2))
+    if (((major == 2) && (minor >= 3)) || (major > 2))
     {
       int nLabeledMarkers = 0;
       memcpy(&nLabeledMarkers, ptr, 4); ptr += 4;
@@ -466,7 +461,7 @@ void Optitrack::Unpack(char *pData)
     // timestamp
     double timestamp = 0.0f;
     // 2.7 and later - increased from single to double precision
-    if (((major == 2)&&(minor>=7)) || (major>2))
+    if (((major == 2) && (minor>=7)) || (major>2))
     {
       memcpy(&timestamp, ptr, 8); ptr += 8;
     }
