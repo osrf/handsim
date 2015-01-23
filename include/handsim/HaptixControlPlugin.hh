@@ -528,9 +528,10 @@ namespace gazebo
     /// viewpoint pose
     private: gazebo::math::Pose optitrackHeadOffset;
 
-    /// \brief Orthonormal transformation between Optitrack axes and world axes
+    /// \brief Orthonormal transformation between Optitrack head and world axes
     private: gazebo::math::Pose optitrackWorldHeadRot;
-    /// \brief Orthonormal transformation between Optitrack axes and world axes
+
+    /// \brief Orthonormal transformation between Optitrack arm and world axes
     private: gazebo::math::Pose optitrackWorldArmRot;
 
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne

@@ -203,11 +203,13 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackArm = gazebo::math::Pose::Zero;
   this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
 
-  this->optitrackWorldHeadRot = gazebo::math::Pose(gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(M_PI/2, 0, M_PI/2));
+  this->optitrackWorldHeadRot = gazebo::math::Pose(
+                                gazebo::math::Vector3(0, 0, 0),
+                                gazebo::math::Quaternion(M_PI/2, 0, M_PI/2));
 
 
-  this->optitrackWorldArmRot = gazebo::math::Pose(gazebo::math::Vector3(0, 0, 0),
+  this->optitrackWorldArmRot = gazebo::math::Pose(
+                               gazebo::math::Vector3(0, 0, 0),
                                gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
 
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
@@ -1289,7 +1291,8 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
-  gazebo::math::Pose pose = this->optitrackWorldHeadRot + gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+  gazebo::math::Pose pose = this->optitrackWorldHeadRot +
+      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
   pose.pos = this->headPosFilter.Process(pose.pos);
   pose.rot = this->headOriFilter.Process(pose.rot);  
   
@@ -1317,7 +1320,8 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   
-  gazebo::math::Pose pose = this->optitrackWorldArmRot + gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+  gazebo::math::Pose pose = this->optitrackWorldArmRot +
+      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
