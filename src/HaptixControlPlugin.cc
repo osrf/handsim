@@ -1311,6 +1311,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
+  boost::mutex::scoped_lock lock(this->baseLinkMutex);
   gazebo::math::Pose pose = this->optitrackWorldRot + gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
   
   this->optitrackArm = pose + this->optitrackArmOffset;
