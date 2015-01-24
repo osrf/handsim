@@ -25,8 +25,8 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->pausePolhemus = true;
-  this->gotPausePolhemusRequest = false;
+  this->pauseTracking = true;
+  this->gotPauseRequest = false;
 
   this->haveHydra = false;
 
@@ -69,16 +69,16 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->polhemusJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
-  this->pausePolhemusPub =
+  this->pausePub =
     this->gazeboNode->Advertise<gazebo::msgs::Int>("~/polhemus/pause_response");
 
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
       &HaptixControlPlugin::OnJoy, this);
 
-  this->pausePolhemusSub =
+  this->pauseSub =
     this->gazeboNode->Subscribe("~/polhemus/pause_request",
-      &HaptixControlPlugin::OnPausePolhemus, this);
+      &HaptixControlPlugin::OnPause, this);
 
   this->userCameraPoseValid = false;
   this->userCameraPoseSub =
@@ -642,7 +642,7 @@ void HaptixControlPlugin::UpdatePolhemus()
     int numPoses = 8;  // fill with max poses to read, returns actual poses
     if (!polhemus_get_poses(this->polhemusConn, poses, &numPoses, 100))
     {
-      boost::mutex::scoped_lock pauseLock(this->pausePolhemusMutex);
+      boost::mutex::scoped_lock pauseLock(this->pauseMutex);
 
       int armId = 0;  // some number between 0 and numPoses
       if (armId < numPoses)
@@ -650,7 +650,7 @@ void HaptixControlPlugin::UpdatePolhemus()
         // lock in case we are receiving a pause polhemus message over
         // gz transport
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
-        if (this->pausePolhemus)
+        if (this->pauseTracking)
         {
           // calibration mode, update offset
           this->sourceWorldPoseArmOffset =
@@ -670,7 +670,7 @@ void HaptixControlPlugin::UpdatePolhemus()
       if (headId < numPoses)
       {
         math::Pose headSensorPose = this->convertPolhemusToPose(poses[headId]);
-        if (this->pausePolhemus)
+        if (this->pauseTracking)
         {
           boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
           // calibration mode, update offset
@@ -1002,15 +1002,15 @@ void HaptixControlPlugin::GazeboUpdateStates()
     this->UpdateHandControl(dt);
 
     // report back if polhemus is paused
-    if (this->gotPausePolhemusRequest)
+    if (this->gotPauseRequest)
     {
       gzdbg << "have polhemus, responding to pause request\n";
       // signal pause completion
       msgs::Int res;
-      res.set_data(this->pausePolhemus);
-      this->pausePolhemusPub->Publish(res);
+      res.set_data(this->pauseTracking);
+      this->pausePub->Publish(res);
       // reset flag
-      this->gotPausePolhemusRequest = false;
+      this->gotPauseRequest = false;
     }
 
     this->lastTime = curTime;
@@ -1170,7 +1170,7 @@ void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
   this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
 
   math::Pose armSensorPose = this->hydraPose;
-  if (this->pausePolhemus)
+  if (this->pauseTracking)
   {
     // calibration mode, update offset
     this->sourceWorldPoseArmOffset =
@@ -1195,9 +1195,9 @@ void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::OnPausePolhemus(ConstIntPtr &_msg)
+void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 {
-  boost::mutex::scoped_lock pauseLock(this->pausePolhemusMutex);
+  boost::mutex::scoped_lock pauseLock(this->pauseMutex);
   if (!this->havePolhemus)
   {
     gzdbg << "no polhemus, but responding to pause request\n";
@@ -1206,24 +1206,15 @@ void HaptixControlPlugin::OnPausePolhemus(ConstIntPtr &_msg)
   gzerr << "got " << _msg->data() << "\n";
   if (_msg->data() == 0)
   {
-    this->pausePolhemus = false;
+    this->pauseTracking = false;
   }
   else
   {
-    this->pausePolhemus = true;
+    this->pauseTracking = true;
   }
   // set request flag
-  this->gotPausePolhemusRequest = true;
-  gzdbg << "got request, set flag " << this->gotPausePolhemusRequest << "\n";
-  
-/*  else
-  {
-    // if there's no polhemus
-    // signal pause completion
-    msgs::Int res;
-    res.set_data(0);
-    this->pausePolhemusPub->Publish(res);
-  }*/
+  this->gotPauseRequest = true;
+  gzdbg << "got request, set flag " << this->gotPauseRequest << "\n";
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)
