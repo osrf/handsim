@@ -1173,6 +1173,7 @@ void HaptixControlPlugin::HaptixReadCallback(
       const haptix::comm::msgs::hxSensor &/*_req*/,
       haptix::comm::msgs::hxSensor &_rep, bool &_result)
 {
+  boost::mutex::scoped_lock lock(this->updateMutex);
   _rep.Clear();
 
   _rep = this->robotState;

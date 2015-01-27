@@ -454,7 +454,8 @@ namespace gazebo
     /// \brief Simulation responder to sensor read command
     /// \param[in] _service Service name
     /// \param[in] _req Request sensor (unused)
-    /// \param[in] _result True if command was successful
+    /// \param[out] _rep Reply sensor
+    /// \param[out] _result True if command was successful
     private: void HaptixReadCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxSensor &_req,
