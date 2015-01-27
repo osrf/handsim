@@ -47,7 +47,8 @@ namespace haptix
       /// messages are received via multicast.
       /// \param[i] _verbose Whether or not to print incoming packets.
       public: Optitrack(const std::string &_serverIP = "",
-                        const bool _verbose = false, const std::string &_world="");
+                        const bool _verbose = false,
+                        const std::string &_world="");
 
       /// \brief Default destructor.
       public: ~Optitrack() = default;
@@ -56,14 +57,14 @@ namespace haptix
       /// published as a Gazebo message on topic '~/optitrack'.
       public: void StartReception();
 
-      /// \brief Receive tracking updates and publish them using Gazebo messages.
+      /// \brief Receive tracking updates and publish them using Gazebo messages
       private: void RunReceptionTask();
 
       /// \brief Unpack the data received from the network.
       /// \param[in] _data Buffer received.
       private: void Unpack(char *_data);
 
-      /// \brief Return the status of the Optitrack client initialization
+      /// \brief Return the status of the Optitrack client initialization.
       /// \return True if Optitrack data reception is active..
       public: bool IsActive();
 
@@ -123,10 +124,10 @@ namespace haptix
 
       /// \brief Name of head tracker rigid body
       public: static const std::string headTrackerName;
-                      
+
       /// \brief Name of arm tracker rigid body
       public: static const std::string armTrackerName;
-                      
+
       /// \brief Name of monitor tracker rigid body
       public: static const std::string originTrackerName;
 

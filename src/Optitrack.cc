@@ -46,7 +46,8 @@ const std::string Optitrack::armTrackerName = "ArmTracker";
 const std::string Optitrack::originTrackerName = "MonitorTracker";
 
 /////////////////////////////////////////////////
-Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose, const std::string &_world)
+Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
+  const std::string &_world)
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
   this->active = false;
