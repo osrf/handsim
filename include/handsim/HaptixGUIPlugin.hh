@@ -241,21 +241,21 @@ namespace haptix_gazebo_plugins
     /// \brief Position movement scaling factor.
     private: double posScalingFactor;
 
-    /// \brief Publish command to pause polhemus
-    private: gazebo::transport::PublisherPtr pausePolhemusPub;
+    /// \brief Publish command to pause motion tracking
+    private: gazebo::transport::PublisherPtr pausePub;
 
-    /// \brief Subscriber to pause polhemus status
-    private: gazebo::transport::SubscriberPtr pausePolhemusSub;
+    /// \brief Subscriber to pause status
+    private: gazebo::transport::SubscriberPtr pauseSub;
 
-    /// \brief Reset models, signal Polhemus to pause, reset hand state
+    /// \brief Reset models, signal motion tracking to pause, reset hand state
     private: void ResetModels();
 
-    /// \brief Callback for subscriber to pause polhemus response
+    /// \brief Callback for subscriber to pause response
     /// \param[in] _msg pause state
-    private: void OnPausePolhemus(ConstIntPtr &_msg);
+    private: void OnPauseRequest(ConstIntPtr &_msg);
 
-    /// \brief was pause polhemus successful?
-    private: bool polhemusPaused;
+    /// \brief was pausing motion tracking successful?
+    private: bool trackingPaused;
 
     /// \brief a lock to hold when commanding wrist/finger positions
     private: boost::mutex motorCommandMutex;
@@ -269,7 +269,7 @@ namespace haptix_gazebo_plugins
     /// \brief Get contact sensor information
     private: void UpdateSensorContact();
 
-    /// \brief Get contact sensor information
+    /// \brief True if received a signal to quit
     private: bool quit;
 
     /// \brief subscribe to hydra

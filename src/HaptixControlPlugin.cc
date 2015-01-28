@@ -1270,7 +1270,6 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
   }
   // set request flag
   this->gotPauseRequest = true;
-  gzdbg << "got request, set flag " << this->gotPauseRequest << "\n";
 }
 
 //////////////////////////////////////////////////
@@ -1285,7 +1284,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 
   this->optitrackHead = pose + this->optitrackHeadOffset;
 
-  if (this->pausePolhemus)
+  if (this->pauseTracking)
   {
     if (this->userCameraPoseValid)
     {
@@ -1310,7 +1309,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
-  if (this->pausePolhemus)
+  if (this->pauseTracking)
   {
     this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
