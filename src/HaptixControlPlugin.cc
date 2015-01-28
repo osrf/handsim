@@ -76,14 +76,14 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
   this->pausePub =
-    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/polhemus/pause_response");
+    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_response");
 
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
       &HaptixControlPlugin::OnJoy, this);
 
   this->pauseSub =
-    this->gazeboNode->Subscribe("~/polhemus/pause_request",
+    this->gazeboNode->Subscribe("~/motion_tracking/pause_request",
       &HaptixControlPlugin::OnPause, this);
 
   this->userCameraPoseValid = false;

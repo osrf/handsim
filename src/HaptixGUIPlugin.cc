@@ -321,10 +321,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   }
 
   this->pausePub =
-    this->node->Advertise<gazebo::msgs::Int>("~/polhemus/pause_request");
+    this->node->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_request");
 
   this->pauseSub =
-    this->node->Subscribe("~/polhemus/pause_response",
+    this->node->Subscribe("~/motion_tracking/pause_response",
       &HaptixGUIPlugin::OnPauseRequest, this);
 
   this->circleSize = _elem->Get<int>("circle_size");
@@ -926,15 +926,15 @@ void HaptixGUIPlugin::ResetModels()
 {
   boost::mutex::scoped_lock lock(this->motorCommandMutex);
 
-  // Signal to HaptixControlPlugin to pause polhemus tracking
+  // Signal to HaptixControlPlugin to pause motion tracking
   this->trackingPaused = false;
   gazebo::msgs::Int pause;
   pause.set_data(1);
   this->pausePub->Publish(pause);
   int maxTries = 30;
+  gzdbg << "waiting for response from motion tracker (max wait 3 sec).\n";
   while (maxTries > 0 && !this->trackingPaused)
   {
-    gzdbg << "waiting for polhemus to pause (max wait 3 sec).\n";
     --maxTries;
     usleep(100000);
   }
