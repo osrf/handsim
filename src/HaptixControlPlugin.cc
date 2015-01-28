@@ -37,6 +37,9 @@ HaptixControlPlugin::HaptixControlPlugin()
 
   this->ignNode.Advertise("/haptix/gazebo/Grasp",
     &HaptixControlPlugin::HaptixGraspCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/Read",
+    &HaptixControlPlugin::HaptixReadCallback, this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1160,6 +1163,20 @@ void HaptixControlPlugin::HaptixGraspCallback(
     this->graspMode = false;
   else
     this->graspMode = true;
+
+  _result = true;
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::HaptixReadCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxSensor &/*_req*/,
+      haptix::comm::msgs::hxSensor &_rep, bool &_result)
+{
+  boost::mutex::scoped_lock lock(this->updateMutex);
+  _rep.Clear();
+
+  _rep = this->robotState;
 
   _result = true;
 }

@@ -451,6 +451,16 @@ namespace gazebo
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result);
 
+    /// \brief Simulation responder to sensor read command
+    /// \param[in] _service Service name
+    /// \param[in] _req Request sensor (unused)
+    /// \param[out] _rep Reply sensor
+    /// \param[out] _result True if command was successful
+    private: void HaptixReadCallback(
+      const std::string &_service,
+      const haptix::comm::msgs::hxSensor &_req,
+      haptix::comm::msgs::hxSensor &_rep, bool &_result);
+
     /// \brief: initialize gazebo controllers
     private: void LoadHandControl();
 
