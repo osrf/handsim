@@ -74,7 +74,7 @@ void Optitrack::StartReception()
   struct sockaddr_in mySocketAddr;
   memset(&mySocketAddr, 0, sizeof(mySocketAddr));
   mySocketAddr.sin_family = AF_INET;
-  mySocketAddr.sin_port = htons(this->PortData);
+  mySocketAddr.sin_port = htons(this->portData);
   mySocketAddr.sin_addr.s_addr = htonl(INADDR_ANY);;
   if (bind(this->dataSocket, (struct sockaddr *)&mySocketAddr,
     sizeof(struct sockaddr)) < 0)
@@ -84,7 +84,7 @@ void Optitrack::StartReception()
   }
   // Join the multicast group.
   struct ip_mreq mreq;
-  mreq.imr_multiaddr.s_addr = inet_addr(this->MulticastAddress.c_str());
+  mreq.imr_multiaddr.s_addr = inet_addr(this->multicastAddress.c_str());
   mreq.imr_interface.s_addr = inet_addr(this->myIPAddress.c_str());
   if (setsockopt(this->dataSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
     reinterpret_cast<const char*>(&mreq), sizeof(mreq)) != 0)
@@ -169,8 +169,8 @@ void Optitrack::RunReceptionTask()
 /////////////////////////////////////////////////
 void Optitrack::Unpack(char *pData)
 {
-  int major = this->NatNetVersionMajor;
-  int minor = this->NatNetVersionMinor;
+  int major = this->natNetVersionMajor;
+  int minor = this->natNetVersionMinor;
 
   std::stringstream output;
 

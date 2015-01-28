@@ -78,19 +78,19 @@ namespace haptix
       private: bool active;
 
       /// \brief Optitrack multicast address.
-      private: const std::string MulticastAddress = "239.255.42.99";
+      private: const std::string multicastAddress = "239.255.42.99";
 
       /// \brief Port used for sending/receiving commands.
-      private: const int PortCommand = 1510;
+      private: const int portCommand = 1510;
 
       /// \brief Port used for sending/receiving tracking updates.
-      private: const int PortData = 1511;
+      private: const int portData = 1511;
 
       /// \brief NatNet major version.
-      private: const int NatNetVersionMajor = 2;
+      private: const int natNetVersionMajor = 2;
 
       /// \brief NatNet minor version.
-      private: const int NatNetVersionMinor = 7;
+      private: const int natNetVersionMinor = 7;
 
       /// \brief How long to sleep between packet updates
       private: const int sleepMicroseconds = 500;

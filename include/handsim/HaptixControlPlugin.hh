@@ -19,6 +19,8 @@
 
 #include <string>
 #include <map>
+#include <memory>
+#include <thread>
 #include <vector>
 #include <math.h>
 
@@ -494,7 +496,7 @@ namespace gazebo
     private: haptix::tracking::Optitrack optitrack;
 
     /// \brief OptiTrack receiving thread
-    private: std::thread *optitrackThread;
+    private: std::shared_ptr<std::thread> optitrackThread;
 
     /// \brief Subscriber to Optitrack head tracker updates
     private: gazebo::transport::SubscriberPtr optitrackHeadSub;
