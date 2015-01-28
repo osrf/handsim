@@ -1043,10 +1043,9 @@ void HaptixControlPlugin::GazeboUpdateStates()
     // control finger joints
     this->UpdateHandControl(dt);
 
-    // report back if polhemus is paused
+    // report back if motion tracking system is paused
     if (this->gotPauseRequest)
     {
-      gzdbg << "have polhemus, responding to pause request\n";
       // signal pause completion
       msgs::Int res;
       res.set_data(this->pauseTracking);
