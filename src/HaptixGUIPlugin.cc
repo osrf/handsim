@@ -887,8 +887,7 @@ void HaptixGUIPlugin::PollSensors()
     if (this->hxInitialized)
     {
       // gzdbg << "contact sensor polling thread running\n";
-      if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                                   != ::hxOK)
+      if (::hx_readsensors(::hxGAZEBO, &this->lastSensor) != ::hxOK)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }
