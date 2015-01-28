@@ -27,6 +27,9 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->gotPausePolhemusRequest = false;
 
   this->haveHydra = false;
+  this->haveKeyboard = false;
+  this->armOffsetInitialized = false;
+  this->headOffsetInitialized = false;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
@@ -67,7 +70,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     gazebo::transport::NodePtr(new gazebo::transport::Node());
   fprintf(stderr, "world name: [%s]\n", this->world->GetName().c_str());
   this->gazeboNode->Init(this->world->GetName());
-  this->polhemusJoyPub =
+  this->viewpointJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
   this->pausePolhemusPub =
@@ -199,6 +202,42 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_erp", 0, 0.0);
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
+  this->optitrackHead = gazebo::math::Pose::Zero;
+  this->optitrackArm = gazebo::math::Pose::Zero;
+  this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
+
+  this->optitrackWorldHeadRot = gazebo::math::Pose(
+                                gazebo::math::Vector3(0, 0, 0),
+                                gazebo::math::Quaternion(M_PI/2, 0, M_PI/2));
+
+
+  this->optitrackWorldArmRot = gazebo::math::Pose(
+                               gazebo::math::Vector3(0, 0, 0),
+                               gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
+
+  this->optitrackArmOffset = gazebo::math::Pose::Zero;
+  this->optitrackHeadOffset = gazebo::math::Pose::Zero;
+  this->armOffsetInitialized = false;
+  this->headOffsetInitialized = false;
+
+  this->headPosFilter.SetFc(0.002, 0.3);
+  this->headOriFilter.SetFc(0.002, 0.3);
+  
+  // Subscribe to Optitrack update topics: head, arm and origin
+  this->optitrackHeadSub = this->gazeboNode->Subscribe
+              ("~/optitrack/" + haptix::tracking::Optitrack::headTrackerName,
+              &HaptixControlPlugin::OnUpdateOptitrackHead, this);
+  this->optitrackArmSub = this->gazeboNode->Subscribe
+              ("~/optitrack/" + haptix::tracking::Optitrack::armTrackerName,
+              &HaptixControlPlugin::OnUpdateOptitrackArm, this);
+  this->optitrackMonitorSub = this->gazeboNode->Subscribe
+              ("~/optitrack/" + haptix::tracking::Optitrack::originTrackerName,
+              &HaptixControlPlugin::OnUpdateOptitrackMonitor, this);
+
+  this->optitrack.SetWorld(this->world->GetName());
+
+  // Start receiving Optitrack tracking updates.
+  this->optitrackThread = std::make_shared<std::thread>(std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack));
   // initialize polhemus
   this->havePolhemus = false;
   if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
@@ -690,7 +729,7 @@ void HaptixControlPlugin::UpdatePolhemus()
             + (this->sourceWorldPoseHeadOffset + this->sourceWorldPose);
 
           gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
-          this->polhemusJoyPub->Publish(this->joyMsg);
+          this->viewpointJoyPub->Publish(this->joyMsg);
         }
       }
 
@@ -1264,6 +1303,60 @@ void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
     // clear
     // gzdbg << " released key [" << this->keyPressed << "]\n";
   }
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
+{
+  gazebo::math::Pose pose = this->optitrackWorldHeadRot +
+      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+  pose.pos = this->headPosFilter.Process(pose.pos);
+  pose.rot = this->headOriFilter.Process(pose.rot);  
+  
+  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+
+  this->optitrackHead = pose + this->optitrackHeadOffset;
+
+  if (this->pausePolhemus)
+  {
+    if (this->userCameraPoseValid)
+    {
+      this->optitrackHeadOffset = -pose + this->userCameraPose;
+      this->headOffsetInitialized = true;
+    }
+  }
+  else if (this->headOffsetInitialized)
+  {
+    gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
+    this->viewpointJoyPub->Publish(this->joyMsg);
+  }
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
+{
+  boost::mutex::scoped_lock lock(this->baseLinkMutex);
+  
+  gazebo::math::Pose pose = this->optitrackWorldArmRot +
+      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+    
+  this->optitrackArm = pose + this->optitrackArmOffset;
+
+  if (this->pausePolhemus)
+  {
+    this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
+    this->armOffsetInitialized = true;
+  }
+  else if (this->armOffsetInitialized)
+  {
+    this->targetBaseLinkPose = this->optitrackArm;
+  }
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPosePtr &_msg)
+{
+  this->monitorOptitrackFrame = gazebo::msgs::Convert(*_msg);
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)

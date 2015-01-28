@@ -19,6 +19,8 @@
 
 #include <string>
 #include <map>
+#include <memory>
+#include <thread>
 #include <vector>
 #include <math.h>
 
@@ -44,6 +46,7 @@
 #include <ignition/transport.hh>
 
 #include "polhemus_driver.h"
+#include "Optitrack.hh"
 
 namespace gazebo
 {
@@ -183,7 +186,7 @@ namespace gazebo
     /// \brief gazebo gz transport node for commanding gazebo UserCamera
     private: gazebo::transport::NodePtr gazeboNode;
     /// \brief gazebo gz transport node publisher handle
-    private: gazebo::transport::PublisherPtr polhemusJoyPub;
+    private: gazebo::transport::PublisherPtr viewpointJoyPub;
     /// \brief gazebo gz transport message
     private: gazebo::msgs::Pose joyMsg;
     /// \brief initial UserCamera pose in world frame, not used.
@@ -498,6 +501,65 @@ namespace gazebo
     private: boost::mutex baseLinkMutex;
     private: boost::mutex pausePolhemusMutex;
     private: sdf::ElementPtr sdf;
+
+    /// \brief Optitrack packet receiver, used to start an optitrack thread
+    private: haptix::tracking::Optitrack optitrack;
+
+    /// \brief OptiTrack receiving thread
+    private: std::shared_ptr<std::thread> optitrackThread;
+
+    /// \brief Subscriber to Optitrack head tracker updates
+    private: gazebo::transport::SubscriberPtr optitrackHeadSub;
+
+    /// \brief Subscriber to Optitrack arm tracker updates
+    private: gazebo::transport::SubscriberPtr optitrackArmSub;
+
+    /// \brief Subscriber to Optitrack monitor tracker updates
+    private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
+
+    /// \brief Callback on Optitrack head tracker update
+    private: void OnUpdateOptitrackHead(ConstPosePtr &_pose);
+
+    /// \brief Callback on Optitrack arm tracker update
+    private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
+
+    /// \brief Callback on Optitrack monitor tracker update
+    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+
+    /// \brief Pose of the optitrack head tracker in the world frame
+    private: gazebo::math::Pose optitrackHead;
+
+    /// \brief Pose of the optitrack arm tracker in the world frame
+    private: gazebo::math::Pose optitrackArm;
+
+    /// \brief Pose offset between initial Optitrack arm and desired initial
+    /// pose of arm
+    private: gazebo::math::Pose optitrackArmOffset;
+
+    /// \brief Pose offset between initial Optitrack head and desired initial
+    /// viewpoint pose
+    private: gazebo::math::Pose optitrackHeadOffset;
+
+    /// \brief Orthonormal transformation between Optitrack head and world axes
+    private: gazebo::math::Pose optitrackWorldHeadRot;
+
+    /// \brief Orthonormal transformation between Optitrack arm and world axes
+    private: gazebo::math::Pose optitrackWorldArmRot;
+
+    /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
+    private: gazebo::math::Pose monitorOptitrackFrame;
+
+    /// \brief Low-pass filter for head position (reduces jitter)
+    private: gazebo::math::OnePoleVector3 headPosFilter;
+
+    /// \brief Low-pass filter for head orientation (reduces jitter)
+    private: gazebo::math::OnePoleQuaternion headOriFilter;
+
+    /// \brief True if optitrackArmOffset has been initialized
+    private: bool armOffsetInitialized;
+
+    /// \brief True if optitrackHeadOffset has been initialized
+    private: bool headOffsetInitialized;
   };
 
 /// \}
