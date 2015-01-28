@@ -33,6 +33,7 @@ GZ_REGISTER_GUI_PLUGIN(HaptixGUIPlugin)
 HaptixGUIPlugin::HaptixGUIPlugin()
   : GUIPlugin()
 {
+  this->trackingPaused = true;
   this->quit = false;
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
@@ -319,12 +320,12 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       this->node->Advertise<gazebo::msgs::GzString>("~/timer_control");
   }
 
-  this->pausePolhemusPub =
-    this->node->Advertise<gazebo::msgs::Int>("~/polhemus/pause_request");
+  this->pausePub =
+    this->node->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_request");
 
-  this->pausePolhemusSub =
-    this->node->Subscribe("~/polhemus/pause_response",
-      &HaptixGUIPlugin::OnPausePolhemus, this);
+  this->pauseSub =
+    this->node->Subscribe("~/motion_tracking/pause_response",
+      &HaptixGUIPlugin::OnPauseRequest, this);
 
   this->circleSize = _elem->Get<int>("circle_size");
 
@@ -925,15 +926,15 @@ void HaptixGUIPlugin::ResetModels()
 {
   boost::mutex::scoped_lock lock(this->motorCommandMutex);
 
-  // Signal to HaptixControlPlugin to pause polhemus tracking
-  this->polhemusPaused = false;
+  // Signal to HaptixControlPlugin to pause motion tracking
+  this->trackingPaused = false;
   gazebo::msgs::Int pause;
   pause.set_data(1);
-  this->pausePolhemusPub->Publish(pause);
+  this->pausePub->Publish(pause);
   int maxTries = 30;
-  while (maxTries > 0 && !this->polhemusPaused)
+  gzdbg << "waiting for response from motion tracker (max wait 3 sec).\n";
+  while (maxTries > 0 && !this->trackingPaused)
   {
-    gzdbg << "waiting for polhemus to pause (max wait 3 sec).\n";
     --maxTries;
     usleep(100000);
   }
@@ -979,6 +980,23 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   }
 
   char key = _event.text[0];
+
+  if (key == 'p' || key == ' ')
+  {
+    gazebo::msgs::Int pauseState;
+    bool oldPauseState = this->trackingPaused;
+    pauseState.set_data(!oldPauseState);
+    this->pausePub->Publish(pauseState);
+
+    int maxTries = 30;
+    while (maxTries > 0 && this->trackingPaused == oldPauseState)
+    {
+      // Wait for ControlPlugin to pause
+      --maxTries;
+      usleep(100000);
+    }
+    return true;
+  }
 
   // '~' toggles between grasp mode and motor mode
   if (key == '~')
@@ -1188,18 +1206,20 @@ void HaptixGUIPlugin::OnScalingSlider(int _state)
 }
 
 //////////////////////////////////////////////////
-void HaptixGUIPlugin::OnPausePolhemus(ConstIntPtr &_msg)
+void HaptixGUIPlugin::OnPauseRequest(ConstIntPtr &_msg)
 {
-  gzdbg << "got pause polhemus response [" << _msg->data() << "]\n";
   if (_msg->data() == 0)
   {
-    gzdbg << "no polhemus to pause.\n";
+    this->trackingPaused = false;
+  }
+  else if (_msg->data() == 1)
+  {
+    this->trackingPaused = true;
   }
   else
   {
-    gzdbg << "polhemus paused successfully.\n";
+    gzwarn << "Got unexpected message data in";
   }
-  this->polhemusPaused = true;
 }
 
 //////////////////////////////////////////////////

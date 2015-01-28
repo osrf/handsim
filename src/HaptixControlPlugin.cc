@@ -15,6 +15,8 @@
  *
 */
 
+#include <gazebo/gui/KeyEventHandler.hh>
+
 #include "handsim/HaptixControlPlugin.hh"
 
 namespace gazebo
@@ -23,8 +25,8 @@ namespace gazebo
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
-  this->pausePolhemus = true;
-  this->gotPausePolhemusRequest = false;
+  this->pauseTracking = true;
+  this->gotPauseRequest = false;
 
   this->haveHydra = false;
   this->haveKeyboard = false;
@@ -73,20 +75,16 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->viewpointJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
-  this->pausePolhemusPub =
-    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/polhemus/pause_response");
-
-  this->keySub =
-    this->gazeboNode->Subscribe("~/qtKeyEvent",
-      &HaptixControlPlugin::OnKey, this);
+  this->pausePub =
+    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_response");
 
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
       &HaptixControlPlugin::OnJoy, this);
 
-  this->pausePolhemusSub =
-    this->gazeboNode->Subscribe("~/polhemus/pause_request",
-      &HaptixControlPlugin::OnPausePolhemus, this);
+  this->pauseSub =
+    this->gazeboNode->Subscribe("~/motion_tracking/pause_request",
+      &HaptixControlPlugin::OnPause, this);
 
   this->userCameraPoseValid = false;
   this->userCameraPoseSub =
@@ -686,7 +684,7 @@ void HaptixControlPlugin::UpdatePolhemus()
     int numPoses = 8;  // fill with max poses to read, returns actual poses
     if (!polhemus_get_poses(this->polhemusConn, poses, &numPoses, 100))
     {
-      boost::mutex::scoped_lock pauseLock(this->pausePolhemusMutex);
+      boost::mutex::scoped_lock pauseLock(this->pauseMutex);
 
       int armId = 0;  // some number between 0 and numPoses
       if (armId < numPoses)
@@ -694,7 +692,7 @@ void HaptixControlPlugin::UpdatePolhemus()
         // lock in case we are receiving a pause polhemus message over
         // gz transport
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
-        if (this->pausePolhemus)
+        if (this->pauseTracking)
         {
           // calibration mode, update offset
           this->sourceWorldPoseArmOffset =
@@ -714,7 +712,7 @@ void HaptixControlPlugin::UpdatePolhemus()
       if (headId < numPoses)
       {
         math::Pose headSensorPose = this->convertPolhemusToPose(poses[headId]);
-        if (this->pausePolhemus)
+        if (this->pauseTracking)
         {
           boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
           // calibration mode, update offset
@@ -731,18 +729,6 @@ void HaptixControlPlugin::UpdatePolhemus()
           gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
           this->viewpointJoyPub->Publish(this->joyMsg);
         }
-      }
-
-      // report back if polhemus is paused
-      if (this->gotPausePolhemusRequest)
-      {
-        gzdbg << "have polhemus, responding to pause request\n";
-        // signal pause completion
-        msgs::Int res;
-        res.set_data(1);
-        this->pausePolhemusPub->Publish(res);
-        // reset flag
-        this->gotPausePolhemusRequest = false;
       }
     }
     else
@@ -1057,6 +1043,17 @@ void HaptixControlPlugin::GazeboUpdateStates()
     // control finger joints
     this->UpdateHandControl(dt);
 
+    // report back if motion tracking system is paused
+    if (this->gotPauseRequest)
+    {
+      // signal pause completion
+      msgs::Int res;
+      res.set_data(this->pauseTracking);
+      this->pausePub->Publish(res);
+      // reset flag
+      this->gotPauseRequest = false;
+    }
+
     this->lastTime = curTime;
   }
   else if (dt < 0)
@@ -1228,7 +1225,7 @@ void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
   this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
 
   math::Pose armSensorPose = this->hydraPose;
-  if (this->pausePolhemus)
+  if (this->pauseTracking)
   {
     // calibration mode, update offset
     this->sourceWorldPoseArmOffset =
@@ -1253,56 +1250,25 @@ void HaptixControlPlugin::OnJoy(ConstJoystickPtr &_msg)
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::OnPausePolhemus(ConstIntPtr &_msg)
+void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 {
-  boost::mutex::scoped_lock pauseLock(this->pausePolhemusMutex);
-  if (this->havePolhemus)
+  boost::mutex::scoped_lock pauseLock(this->pauseMutex);
+  if (!this->havePolhemus)
   {
-    gzerr << "got " << _msg->data() << "\n";
-    if (_msg->data() == 0)
-    {
-      this->pausePolhemus = false;
-    }
-    else
-    {
-      this->pausePolhemus = true;
-    }
-    // set request flag
-    this->gotPausePolhemusRequest = true;
-    gzdbg << "got request, set flag " << this->gotPausePolhemusRequest << "\n";
-  }
-  else
-  {
-    // if there's no polhemus
     gzdbg << "no polhemus, but responding to pause request\n";
-    // signal pause completion
-    msgs::Int res;
-    res.set_data(0);
-    this->pausePolhemusPub->Publish(res);
   }
-}
 
-//////////////////////////////////////////////////
-void HaptixControlPlugin::OnKey(ConstRequestPtr &_msg)
-{
-  boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  // gzdbg << "got key [" << _msg->data()
-  //           << "] press [" << _msg->dbl_data() << "]\n";
-  // char key = _msg->data().c_str()[0];
-  // if (strcmp(&key, &this->lastKeyPressed) != 0)
-  if (_msg->dbl_data() > 0.0)
+  gzerr << "got " << _msg->data() << "\n";
+  if (_msg->data() == 0)
   {
-    // pressed "p" or spacebar?
-    if (strcmp(_msg->data().c_str(), "p") == 0 ||
-        strcmp(_msg->data().c_str(), " ") == 0)
-      this->pausePolhemus = !this->pausePolhemus;
-    gzdbg << " pausing polhemus [" << this->pausePolhemus << "]\n";
+    this->pauseTracking = false;
   }
   else
   {
-    // clear
-    // gzdbg << " released key [" << this->keyPressed << "]\n";
+    this->pauseTracking = true;
   }
+  // set request flag
+  this->gotPauseRequest = true;
 }
 
 //////////////////////////////////////////////////
@@ -1317,7 +1283,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 
   this->optitrackHead = pose + this->optitrackHeadOffset;
 
-  if (this->pausePolhemus)
+  if (this->pauseTracking)
   {
     if (this->userCameraPoseValid)
     {
@@ -1342,7 +1308,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
-  if (this->pausePolhemus)
+  if (this->pauseTracking)
   {
     this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;

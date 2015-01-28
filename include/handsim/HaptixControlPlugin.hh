@@ -31,13 +31,12 @@
 #include <gazebo/sensors/sensors.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
+#include <gazebo/common/KeyEvent.hh>
 #include <gazebo/common/Time.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/PID.hh>
 
-
-// #include <haptix/comm/Comm.h>
 #include <haptix/comm/haptix.h>
 #include <haptix/comm/msg/hxCommand.pb.h>
 #include <haptix/comm/msg/hxDevice.pb.h>
@@ -192,7 +191,7 @@ namespace gazebo
     /// \brief initial UserCamera pose in world frame, not used.
     private: math::Pose initialCameraPose;
     /// \brief respond to successful pausing of polhemus
-    private: gazebo::transport::PublisherPtr pausePolhemusPub;
+    private: gazebo::transport::PublisherPtr pausePub;
 
     /**********************************************/
     /*                                            */
@@ -223,24 +222,21 @@ namespace gazebo
 
     /**********************************************/
     /*                                            */
-    /*   for subscribing to key events published  */
-    /*   by gzclient window                       */
+    /*   variables for pause management           */
     /*                                            */
     /**********************************************/
-    /// \brief gazebo key event subscriber handle
-    private: gazebo::transport::SubscriberPtr keySub;
-    /// \brief gazebo key event subscriber callback function
-    private: void OnKey(ConstRequestPtr &_msg);
-    /// \brief pause polhemus updates
-    private: bool pausePolhemus;
+
+    /// \brief true if motion tracking is paused 
+    private: bool pauseTracking;
+
     /// \brief got command to pause polhemus updates
-    private: bool gotPausePolhemusRequest;
+    private: bool gotPauseRequest;
 
     /// \brief Subscriber to spacenav messages.
     private: gazebo::transport::SubscriberPtr joySub;
 
     /// \brief Subscriber to pause polhemus
-    private: gazebo::transport::SubscriberPtr pausePolhemusSub;
+    private: gazebo::transport::SubscriberPtr pauseSub;
 
     /// \brief Callback for subscriber to spacenav messages.
     /// \param[in] _msg Joystick data.
@@ -248,7 +244,7 @@ namespace gazebo
 
     /// \brief Callback for subscriber to pause polhemus
     /// \param[in] _msg pause state
-    private: void OnPausePolhemus(ConstIntPtr &_msg);
+    private: void OnPause(ConstIntPtr &_msg);
 
     /// \brief Copy of latest Joystick message.
     private: msgs::Joystick latestJoystickMessage;
@@ -499,7 +495,7 @@ namespace gazebo
 
     private: boost::mutex updateMutex;
     private: boost::mutex baseLinkMutex;
-    private: boost::mutex pausePolhemusMutex;
+    private: boost::mutex pauseMutex;
     private: sdf::ElementPtr sdf;
 
     /// \brief Optitrack packet receiver, used to start an optitrack thread
