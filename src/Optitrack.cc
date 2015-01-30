@@ -105,7 +105,7 @@ void Optitrack::StartReception()
                     ("~/optitrack/"+headTrackerName);
   this->armPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+armTrackerName);
-  this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+  this->originPub = this->gzNode->Advertise<gazebo::msgs::PointCloud>
                     ("~/optitrack/"+originTrackerName);
 
   this->active = true;
@@ -151,16 +151,26 @@ void Optitrack::RunReceptionTask()
       {
         this->armPub->Publish(gazebo::msgs::Convert(it->second));
       }
-      else if (it->first.compare(originTrackerName) == 0)
+      /*else if (it->first.compare(originTrackerName) == 0)
       {
         this->originPub->Publish(gazebo::msgs::Convert(it->second));
-      }
+      }*/
       else
       {
         gzerr << "Model name " << it->first << " not found!" << std::endl;
       }
     }
 
+    gazebo::msgs::PointCloud pc;
+    for (unsigned int i = 0; i < this->originMarkers.size(); i++)
+    {
+      gazebo::msgs::Vector3d* point = pc.add_points();
+      point = new gazebo::msgs::Vector3d(
+          gazebo::msgs::Convert(this->originMarkers[i]));
+    }
+    this->originPub->Publish(pc);
+
+    this->originMarkers.clear();
     this->lastModelMap.clear();
   }
   this->active = false;
@@ -218,6 +228,10 @@ void Optitrack::Unpack(char *pData)
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
         output << "\tMarker " << j << " : [x="
                << x << ",y=" << y << ",z=" << z << "]" << std::endl;
+        if (szName == originTrackerName)
+        {
+          originMarkers.push_back(gazebo::math::Vector3(x, y, z));
+        }
         markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
       }
     }

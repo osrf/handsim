@@ -520,7 +520,7 @@ namespace gazebo
     private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
 
     /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
     /// \brief Pose of the optitrack head tracker in the world frame
     private: gazebo::math::Pose optitrackHead;

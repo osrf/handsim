@@ -1320,9 +1320,30 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPosePtr &_msg)
+void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 {
-  this->monitorOptitrackFrame = gazebo::msgs::Convert(*_msg);
+  std::vector<gazebo::math::Vector3> points;
+  for (int i = 0; i < _msg->points_size(); i++)
+  {
+    points.push_back(msgs::Convert(_msg->points(i)));
+  }
+
+  gazebo::math::Vector3 gx = points[1] - points[0];
+  gazebo::math::Vector3 gz = points[2] - points[1];
+
+  // gy = gz X gx
+  gazebo::math::Vector3 gy(gz[1]*gx[2] - gz[2]*gx[1],
+      gz[2]*gx[0] - gz[0]*gx[2], gz[0]*gx[1] - gz[1]*gx[0]);
+
+  // The rotational matrix from Gazebo to Optitrack can be represented with
+  // gx, gy, gz as its column vectors
+
+  // Calculate RPY angles from them: http://planning.cs.uiuc.edu/node103.html
+
+  gazebo::math::Quaternion monitorRot(atan2(gx[1], gx[0]),
+      atan2(-gz[0], sqrt(pow(gz[1], 2) + pow(gz[2], 2))), atan2(gz[1], gz[2]));
+
+  this->monitorOptitrackFrame = gazebo::math::Pose(points[2], -monitorRot);
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)
