@@ -2,7 +2,7 @@
 <sdf version="1.5">
   <world name="default">
     <scene>
-      <shadows>0</shadows>
+      <shadows>1</shadows>
     </scene>
 
     <gui>
