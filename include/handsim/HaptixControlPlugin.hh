@@ -542,8 +542,8 @@ namespace gazebo
     /// \brief Orthonormal transformation between Optitrack arm and world axes
     private: gazebo::math::Pose optitrackWorldArmRot;
 
-    /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
-    private: gazebo::math::Pose monitorOptitrackFrame;
+    /// \brief Pose of the optitrack origin in the monitor (gazebo) frame
+    private: gazebo::math::Pose optitrackMonitorFrame;
 
     /// \brief Low-pass filter for head position (reduces jitter)
     private: gazebo::math::OnePoleVector3 headPosFilter;

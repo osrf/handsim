@@ -41,9 +41,9 @@
 using namespace haptix;
 using namespace tracking;
 
-const std::string Optitrack::headTrackerName = "HeadTracker";
-const std::string Optitrack::armTrackerName = "ArmTracker";
-const std::string Optitrack::originTrackerName = "MonitorTracker";
+const std::string Optitrack::headTrackerName = "Rigid Body 2";
+const std::string Optitrack::armTrackerName = "Rigid Body 3";
+const std::string Optitrack::originTrackerName = "Rigid Body 1";
 
 /////////////////////////////////////////////////
 Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
@@ -154,19 +154,19 @@ void Optitrack::RunReceptionTask()
       /*else if (it->first.compare(originTrackerName) == 0)
       {
         this->originPub->Publish(gazebo::msgs::Convert(it->second));
-      }*/
+      }
       else
       {
         gzerr << "Model name " << it->first << " not found!" << std::endl;
-      }
+      }*/
     }
 
     gazebo::msgs::PointCloud pc;
     for (unsigned int i = 0; i < this->originMarkers.size(); i++)
     {
-      gazebo::msgs::Vector3d* point = pc.add_points();
-      point = new gazebo::msgs::Vector3d(
-          gazebo::msgs::Convert(this->originMarkers[i]));
+      pc.add_points();
+      gazebo::msgs::Vector3d* pt = pc.mutable_points(i);
+      pt->CopyFrom(gazebo::msgs::Convert(this->originMarkers[i]));
     }
     this->originPub->Publish(pc);
 
@@ -228,9 +228,9 @@ void Optitrack::Unpack(char *pData)
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
         output << "\tMarker " << j << " : [x="
                << x << ",y=" << y << ",z=" << z << "]" << std::endl;
-        if (szName == originTrackerName)
+        if (szName.compare(originTrackerName) == 0)
         {
-          originMarkers.push_back(gazebo::math::Vector3(x, y, z));
+          this->originMarkers.push_back(gazebo::math::Vector3(x, y, z));
         }
         markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
       }
