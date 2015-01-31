@@ -205,8 +205,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackMonitorFrame = gazebo::math::Pose::Zero;
 
   this->optitrackWorldHeadRot = gazebo::math::Pose(0, 0, 0,
-                                                   0, 0, 0);
-                                                  //0, 0, M_PI/2);
+                                                  -M_PI/2, 0, 0);
 
   this->optitrackWorldArmRot = gazebo::math::Pose(0, 0, 0,
                                                   -M_PI/2, M_PI/2, 0);
@@ -1341,10 +1340,6 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   {
     gzdbg << "Basis vectors are not orthogonal!!!" << std::endl;
   }
-
-  gzdbg << "Gx: " << gx << std::endl;
-  gzdbg << "Gy: " << gy << std::endl;
-  gzdbg << "Gz: " << gz << std::endl;
 
   // The rotational matrix from Gazebo/monitor frame to Optitrack can be
   // represented with gx, gy, gz as its column vectors
