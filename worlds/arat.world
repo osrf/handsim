@@ -21,77 +21,109 @@
         <timer_topic>~/timer_control</timer_topic> 
 
         <contacts>
-          <contact name="mpl::rThDistal::rThDistal_collision">
-            <pos>302 130</pos>
-            <index>21</index>
+          <contact name="mpl::rPalm0">
+            <pos>80 240</pos>
+            <index>0</index>
           </contact>
-          <contact name="mpl::rThProximal1::rThProximal2_collision">
-            <pos>275 195</pos>
-            <index>23</index>
+          <contact name="mpl::rPalm1">
+            <pos>155 240</pos>
+            <index>1</index>
           </contact>
-          <contact name="mpl::rThProximal1::rThProximal1_collision">
+
+          <contact name="mpl::rPlanetaryAsm">
+            <pos>220 270</pos>
+            <index>2</index>
+          </contact>
+          <contact name="mpl::rThProximal1">
             <pos>245 240</pos>
-            <index>22</index>
-          </contact>
-
-          <contact name="mpl::rThProximal1::rPalm_collision">
-            <pos>125 240</pos>
-            <index>15</index>
-          </contact>
-
-          <contact name="mpl::rIndDistal::rIndDistal_collision">
-            <pos>248 -30</pos>
             <index>3</index>
           </contact>
-          <contact name="mpl::rIndMedial::rIndMedial_collision">
-            <pos>233 43</pos>
+          <contact name="mpl::rThProximal2">
+            <pos>275 195</pos>
             <index>4</index>
           </contact>
-          <contact name="mpl::rIndProximal::rIndProximal_collision">
-            <pos>218 116</pos>
+          <contact name="mpl::rThDistal">
+            <pos>302 130</pos>
+            <index>5</index>
+          </contact>
+
+          <contact name="mpl::rIndMetaCarpal">
+            <pos>210 156</pos>
             <index>6</index>
           </contact>
-
-          <contact name="mpl::rMidDistal::rMidDistal_collision">
-            <pos>153 -60</pos>
-            <index>11</index>
+          <contact name="mpl::rIndProximal">
+            <pos>218 116</pos>
+            <index>7</index>
           </contact>
-          <contact name="mpl::rMidMedial::rMidMedial_collision">
-            <pos>155 19</pos>
+          <contact name="mpl::rIndMedial">
+            <pos>233 43</pos>
+            <index>8</index>
+          </contact>
+          <contact name="mpl::rIndDistal">
+            <pos>248 -30</pos>
+            <index>9</index>
+          </contact>
+
+          <contact name="mpl::rMidMetaCarpal">
+            <pos>150 140</pos>
+            <index>10</index>
+          </contact>
+          <contact name="mpl::rMidProximal">
+            <pos>152 98</pos>
             <index>12</index>
           </contact>
-          <contact name="mpl::rMidProximal::rMidProximal_collision">
-            <pos>152 98</pos>
-            <index>14</index>
+          <contact name="mpl::rMidMedial">
+            <pos>155 19</pos>
+            <index>11</index>
+          </contact>
+          <contact name="mpl::rMidDistal">
+            <pos>153 -60</pos>
+            <index>13</index>
           </contact>
 
-          <contact name="mpl::rRingDistal::rRingDistal_collision">
+          <contact name="mpl::rRingMetaCarpal">
+            <pos>92 145</pos>
+            <index>14</index>
+          </contact>
+          <contact name="mpl::rRingProximal">
+            <pos>84 101</pos>
+            <index>15</index>
+          </contact>
+          <contact name="mpl::rRingMedial">
+            <pos>74 41</pos>
+            <index>16</index>
+          </contact>
+          <contact name="mpl::rRingDistal">
             <pos>64 -19</pos>
             <index>17</index>
           </contact>
-          <contact name="mpl::rRingMedial::rRingMedial_collision">
-            <pos>74 41</pos>
+
+          <contact name="mpl::rLittleMetaCarpal">
+            <pos>43 196</pos>
             <index>18</index>
           </contact>
-          <contact name="mpl::rRingProximal::rRingProximal_collision">
-            <pos>84 101</pos>
+          <contact name="mpl::rLittleProximal">
+            <pos>35 156</pos>
+            <index>19</index>
+          </contact>
+          <contact name="mpl::rLittleMedial">
+            <pos>14 105</pos>
             <index>20</index>
           </contact>
-
-          <contact name="mpl::rLittleDistal::rLittleDistal_collision">
+          <contact name="mpl::rLittleDistal">
             <pos>-7 54</pos>
-            <index>7</index>
+            <index>21</index>
           </contact>
-          <contact name="mpl::rLittleMedial::rLittleMedial_collision">
-            <pos>14 105</pos>
-            <index>8</index>
+
+          <contact name="mpl::rUlnarEdge">
+            <pos>17 250</pos>
+            <index>22</index>
           </contact>
-          <contact name="mpl::rLittleProximal::rLittleProximal_collision">
-            <pos>35 156</pos>
-            <index>10</index>
+          <contact name="mpl::rDorsalSurface">
+            <pos>298 55</pos>
+            <index>23</index>
           </contact>
         </contacts>
-
 
         <task_group name="Grasp">
           <task id="grasp_1" name="Block 10cm">
