@@ -881,86 +881,79 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
-  if (_i < static_cast<int>(this->contactSensorInfos.size()))
-  {
-    sensors::ContactSensorPtr contactSensor =
-      boost::dynamic_pointer_cast<sensors::ContactSensor>(
-      this->contactSensorInfos[_i].sensor);
-
-    if (contactSensor)
-    {
-      msgs::Contacts contacts = contactSensor->GetContacts();
-      // contact sensor report contact between pairs of bodies
-      // if (contacts.contact().size() > 0)
-      //   gzerr << "  name " << contactSensor->GetName()
-      //         << " contacts " << contacts.contact().size() << "\n";
-
-      // reset aggregate forces and torques if contacts detected
-      this->contactSensorInfos[_i].contactForce = math::Vector3();
-      this->contactSensorInfos[_i].contactTorque = math::Vector3();
-
-      for (int j = 0; j < contacts.contact().size(); ++j)
-      {
-        msgs::Contact contact = contacts.contact(j);
-        // each contact can have multiple wrenches
-        // if (contact.wrench().size() > 0)
-        //   gzerr << "    wrenches " << contact.wrench().size() << "\n";
-        for (int k = 0; k < contact.wrench().size(); ++k)
-        {
-          msgs::JointWrench wrenchMsg = contact.wrench(k);
-
-          // sum up all wrenches from body_1 or body_2
-          // check with contact corresponds to the arm and which to the arm
-          // compare body_1_name and body_2_name with model name
-          if (strncmp(this->model->GetName().c_str(),
-                      wrenchMsg.body_1_name().c_str(),
-                      this->model->GetName().size()) == 0)
-          {
-            this->contactSensorInfos[_i].contactForce +=
-              msgs::Convert(wrenchMsg.body_1_wrench().force());
-            this->contactSensorInfos[_i].contactTorque +=
-              msgs::Convert(wrenchMsg.body_1_wrench().torque());
-          }
-          else if (strncmp(this->model->GetName().c_str(),
-                           wrenchMsg.body_2_name().c_str(),
-                           this->model->GetName().size()) == 0)
-          {
-            this->contactSensorInfos[_i].contactForce +=
-              msgs::Convert(wrenchMsg.body_2_wrench().force());
-            this->contactSensorInfos[_i].contactTorque +=
-              msgs::Convert(wrenchMsg.body_2_wrench().torque());
-          }
-          else
-          {
-            gzwarn << "collision name does not match model name, averaging.\n";
-            this->contactSensorInfos[_i].contactForce +=
-              0.5*(msgs::Convert(wrenchMsg.body_2_wrench().force()) +
-                   msgs::Convert(wrenchMsg.body_2_wrench().force()));
-            this->contactSensorInfos[_i].contactTorque +=
-              0.5*(msgs::Convert(wrenchMsg.body_2_wrench().torque()) +
-                   msgs::Convert(wrenchMsg.body_2_wrench().torque()));
-          }
-
-          // gzerr << "        contact [" << _i << ", " << j
-          //       << ", " << k << "] : [" << contactForce << "]\n";
-        }
-      }
-      // gzerr << "contact [" << _i
-      //       << "]: [" << this->contactSensorInfos[_i].contactForce
-      //       << "]\n";
-    }
-    else
-    {
-      gzerr << "sensor [" << this->contactSensorInfos[_i].sensor->GetName()
-            << "] is not a ContactSensor.\n";
-    }
-  }
-  else
-  {
+  if (_i >= static_cast<int>(this->contactSensorInfos.size()))
+  {   
     gzerr << "sensor [" << _i
           << "] is out of range of contactSensorInfos["
           << this->contactSensorInfos.size() << "].\n";
+    return;
   }
+  sensors::ContactSensorPtr contactSensor =
+    boost::dynamic_pointer_cast<sensors::ContactSensor>(
+    this->contactSensorInfos[_i].sensor);
+
+  if (!contactSensor)
+  {
+    gzerr << "sensor [" << this->contactSensorInfos[_i].sensor->GetName()
+          << "] is not a ContactSensor.\n";
+    return;
+  }
+  msgs::Contacts contacts = contactSensor->GetContacts();
+  // contact sensor report contact between pairs of bodies
+  // if (contacts.contact().size() > 0)
+  //   gzerr << "  name " << contactSensor->GetName()
+  //         << " contacts " << contacts.contact().size() << "\n";
+
+  // reset aggregate forces and torques if contacts detected
+  this->contactSensorInfos[_i].contactForce = math::Vector3();
+  this->contactSensorInfos[_i].contactTorque = math::Vector3();
+
+  for (int j = 0; j < contacts.contact().size(); ++j)
+  {
+    msgs::Contact contact = contacts.contact(j);
+    // each contact can have multiple wrenches
+    // if (contact.wrench().size() > 0)
+    //   gzerr << "    wrenches " << contact.wrench().size() << "\n";
+    for (int k = 0; k < contact.wrench().size(); ++k)
+    {
+      msgs::JointWrench wrenchMsg = contact.wrench(k);
+
+      // sum up all wrenches from body_1 or body_2
+      // check with contact corresponds to the arm and which to the arm
+      // compare body_1_name and body_2_name with model name
+
+      if (strncmp(this->model->GetName().c_str(),
+                  wrenchMsg.body_1_name().c_str(),
+                  this->model->GetName().size()) == 0)
+      {
+        this->contactSensorInfos[_i].contactForce +=
+          msgs::Convert(wrenchMsg.body_1_wrench().force());
+        this->contactSensorInfos[_i].contactTorque +=
+          msgs::Convert(wrenchMsg.body_1_wrench().torque());
+      }
+      else if (strncmp(this->model->GetName().c_str(),
+                       wrenchMsg.body_2_name().c_str(),
+                       this->model->GetName().size()) == 0)
+      {
+        this->contactSensorInfos[_i].contactForce +=
+          msgs::Convert(wrenchMsg.body_2_wrench().force());
+        this->contactSensorInfos[_i].contactTorque +=
+          msgs::Convert(wrenchMsg.body_2_wrench().torque());
+      }
+      else
+      {
+        gzerr << "collision name does not match model name. This should "
+               << "never happen." << std::endl;
+        return;
+      }
+
+      // gzerr << "        contact [" << _i << ", " << j
+      //       << ", " << k << "] : [" << contactForce << "]\n";
+    }
+  }
+  // gzerr << "contact [" << _i
+  //       << "]: [" << this->contactSensorInfos[_i].contactForce
+  //       << "]\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
