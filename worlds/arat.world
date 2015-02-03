@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <world name="default">
+4 <world name="default">
     <scene>
       <shadows>1</shadows>
     </scene>
@@ -11,10 +11,10 @@
       </camera>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
-        <circle_size>25</circle_size>
+        <default_size>25 25</default_size>
         <force_min>0.001</force_min>
         <force_max>20</force_max>
-        <color_no_contact>255 255 255 255</color_no_contact>
+        <color_no_contact>255 255 255 0</color_no_contact>
         <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
         <hand_side>right</hand_side>
@@ -22,12 +22,14 @@
 
         <contacts>
           <contact name="mpl::rPalm0">
-            <pos>80 240</pos>
+            <pos>85 200</pos>
             <index>0</index>
+            <size>50 100</size>
           </contact>
           <contact name="mpl::rPalm1">
-            <pos>155 240</pos>
+            <pos>150 200</pos>
             <index>1</index>
+            <size>50 100</size>
           </contact>
 
           <contact name="mpl::rPlanetaryAsm">
@@ -116,12 +118,14 @@
           </contact>
 
           <contact name="mpl::rUlnarEdge">
-            <pos>17 250</pos>
+            <pos>10 235</pos>
             <index>22</index>
+            <size>40 70</size>
           </contact>
           <contact name="mpl::rDorsalSurface">
-            <pos>298 55</pos>
+            <pos>299 55</pos>
             <index>23</index>
+            <size>25 31</size>
           </contact>
         </contacts>
 

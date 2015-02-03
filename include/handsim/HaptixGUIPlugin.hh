@@ -113,8 +113,8 @@ namespace haptix_gazebo_plugins
     /// \param[in] _state State of the slider
     private slots: void OnScalingSlider(int _state);
 
-    /// \brief Size of the contact sensor display circle, in pixels.
-    private: int circleSize;
+    /// \brief Size of the contact sensor display rectangle, in pixels.
+    private: gazebo::math::Vector2d defaultContactSize;
 
     /// \brief Minimum force value
     private: float forceMin;
@@ -145,7 +145,7 @@ namespace haptix_gazebo_plugins
     private: QGraphicsScene *handScene;
 
     /// \brief Contact force visualization items.
-    private: std::map<std::string, QGraphicsEllipseItem*>
+    private: std::map<std::string, QGraphicsRectItem*>
              contactGraphicsItems;
 
     /// \brief initial camera pose
