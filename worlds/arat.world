@@ -117,12 +117,12 @@
             <index>21</index>
           </contact>
 
-          <contact name="mpl::rUlnarEdge">
+          <contact name="mpl::rHandEdge">
             <pos>10 235</pos>
             <index>22</index>
             <size>40 70</size>
           </contact>
-          <contact name="mpl::rDorsalSurface">
+          <contact name="mpl::rHandTop">
             <pos>299 55</pos>
             <index>23</index>
             <size>25 31</size>
