@@ -1300,8 +1300,6 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   
   gazebo::math::Pose pose = this->optitrackWorldArmRot +
       (gazebo::msgs::Convert(*_msg) + this->optitrackMonitorFrame);
-
-  //gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg) + this->optitrackMonitorFrame;
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
@@ -1336,7 +1334,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 
   if (abs(gx.Dot(gy)) > 1e-6 || abs(gx.Dot(gz)) > 1e-6 || abs(gz.Dot(gy)) > 1e-6)
   {
-    gzdbg << "Basis vectors are not orthogonal!!!" << std::endl;
+    gzwarn << "Basis vectors are not orthogonal!" << std::endl;
   }
 
   // The rotational matrix from Gazebo/monitor frame to Optitrack can be

@@ -41,9 +41,9 @@
 using namespace haptix;
 using namespace tracking;
 
-const std::string Optitrack::headTrackerName = "Rigid Body 2";
-const std::string Optitrack::armTrackerName = "Rigid Body 3";
-const std::string Optitrack::originTrackerName = "Rigid Body 1";
+const std::string Optitrack::headTrackerName = "head";
+const std::string Optitrack::armTrackerName = "hand";
+const std::string Optitrack::originTrackerName = "monitor";
 
 /////////////////////////////////////////////////
 Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
@@ -151,18 +151,10 @@ void Optitrack::RunReceptionTask()
       {
         this->armPub->Publish(gazebo::msgs::Convert(it->second));
       }
-      /*else if (it->first.compare(originTrackerName) == 0)
-      {
-        this->originPub->Publish(gazebo::msgs::Convert(it->second));
-      }
-      else
-      {
-        gzerr << "Model name " << it->first << " not found!" << std::endl;
-      }*/
     }
 
     gazebo::msgs::PointCloud pc;
-    for (unsigned int i = 0; i < this->originMarkers.size(); i++)
+    for (unsigned int i = 0; i < this->originMarkers.size(); ++i)
     {
       pc.add_points();
       gazebo::msgs::Vector3d* pt = pc.mutable_points(i);

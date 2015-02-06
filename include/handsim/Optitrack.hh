@@ -134,6 +134,7 @@ namespace haptix
       /// \brief Store names and poses of tracker models to be published
       private: ModelPoses lastModelMap;
 
+      /// \brief Store relevant markers
       private: std::vector<gazebo::math::Vector3> originMarkers;
     };
   }
