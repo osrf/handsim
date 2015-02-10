@@ -218,7 +218,7 @@ namespace haptix_gazebo_plugins
     private: ::hxSensor lastSensor;
 
     /// \brief The device info returned by the other side
-    private: ::hxDeviceInfo deviceInfo;
+    private: ::hxRobotInfo robotInfo;
 
     /// \brief Have we initialized our information about the device?
     private: bool hxInitialized;
