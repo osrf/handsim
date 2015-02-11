@@ -94,8 +94,11 @@ int main(int argc, char **argv)
     {
       if (optitrack.Update(trackingInfo))
       {
-        if (!comms.Send(trackingInfo))
-          std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;
+        if (!trackingInfo.empty())
+        {
+          if (!comms.Send(trackingInfo))
+            std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;
+        }
       }
       else
         std::cerr << "OptitrackBridge: Error processing a frame." << std::endl;
