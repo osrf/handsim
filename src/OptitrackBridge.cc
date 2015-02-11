@@ -285,10 +285,7 @@ bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
 
 #ifdef _WIN32
   if (TT_Update() != NPRESULT_SUCCESS)
-  {
-    std::cerr << "TT_Update() error" << std::endl;
     return false;
-  }
 
   // Ignore this frame if we are not tracking all the objects.
   /*if (TT_TrackableCount() != 3)
