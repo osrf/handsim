@@ -186,7 +186,7 @@ void Optitrack::Unpack(char *pData)
   int nBytes = 0;
   memcpy(&nBytes, ptr, 2); ptr += 2;
 
-  if (MessageID == 666)      // FRAME OF OptiTrack bridge packet
+  if (MessageID == 666)      // Frame from OptiTrack bridge.
   {
     TrackingInfo_t trackingInfo;
     if (!this->comms.Unpack(pData, trackingInfo))
@@ -195,17 +195,8 @@ void Optitrack::Unpack(char *pData)
       return;
     }
 
-    std::cout << "Timestamp: " << trackingInfo.timestamp << std::endl;
-
     for (const auto &body : trackingInfo.bodies)
     {
-      std::cout << "Rigid body: " << body.first << std::endl;
-      std::cout << "\t ( ";
-      RigidBody_A pose = body.second;
-      for (int i = 0; i < 7; ++i)
-        std::cout << float(pose.at(i)) << " ";
-      std::cout << ")" << std::endl;
-
       float x  = body.second.at(0);
       float y  = body.second.at(1);
       float z  = body.second.at(2);
@@ -217,8 +208,6 @@ void Optitrack::Unpack(char *pData)
         gazebo::math::Vector3(x, y, z),
         gazebo::math::Quaternion(qw, qx, qy, qz));
     }
-
-    std::cout << "Message from OptiTrack bridge received" << std::endl;
   }
   else if (MessageID == 7)      // FRAME OF MOCAP DATA packet
   {
