@@ -203,6 +203,17 @@ void Optitrack::Unpack(char *pData)
       for (int i = 0; i < 7; ++i)
         std::cout << float(pose.at(i)) << " ";
       std::cout << ")" << std::endl;
+
+      float x  = body.second.at(0);
+      float y  = body.second.at(1);
+      float z  = body.second.at(2);
+      float qx = body.second.at(3);
+      float qy = body.second.at(4);
+      float qz = body.second.at(5);
+      float qw = body.second.at(6);
+      this->lastModelMap[body.first] = gazebo::math::Pose(
+        gazebo::math::Vector3(x, y, z),
+        gazebo::math::Quaternion(qw, qx, qy, qz));
     }
 
     std::cout << "Message from OptiTrack bridge received" << std::endl;
