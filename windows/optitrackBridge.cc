@@ -24,7 +24,7 @@
 using namespace haptix;
 using namespace tracking;
 
-static bool terminate = false;
+static bool hxTerminate = false;
 
 //////////////////////////////////////////////////
 /// \brief Function callback executed when a SIGINT or SIGTERM signals are
@@ -33,7 +33,7 @@ static bool terminate = false;
 void signal_handler(int _signal)
 {
   if (_signal == SIGINT || _signal == SIGTERM)
-    terminate = true;
+    hxTerminate = true;
 }
 
 //////////////////////////////////////////////////
@@ -72,8 +72,8 @@ void test()
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-  test();
-  return 0;
+  // test();
+  // return 0;
 
   // Sanity check: Verify that we have the expected command line args.
   if (argc != 2)
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
     RigidBody_M trackingInfo;
 
     // Get the tracking information from Optitrack and send it over the network.
-    while (!terminate)
+    while (!hxTerminate)
     {
       if (optitrack.Update(trackingInfo))
       {
@@ -103,7 +103,7 @@ int main(int argc, char **argv)
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
-  catch (const std::runtime_error &_excep)
+  catch (const std::runtime_error &/*_excep*/)
   {
     return -1;
   }

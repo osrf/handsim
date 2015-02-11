@@ -39,6 +39,7 @@
   // Type used for raw data on this platform
   typedef void raw_type;
 #endif
+#include <stdint.h>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
@@ -86,7 +87,11 @@ OptitrackBridgeComms::OptitrackBridgeComms()
 /////////////////////////////////////////////////
 OptitrackBridgeComms::~OptitrackBridgeComms()
 {
+#ifdef _WIN32
+  closesocket(this->sock);
+#else 
   close(this->sock);
+#endif
 }
 
 /////////////////////////////////////////////////
@@ -250,13 +255,13 @@ bool OptitrackBridgeComms::Send(const RigidBody_M &_trackingInfo)
 OptitrackBridge::OptitrackBridge(const std::string &_motiveConfFile)
 {
 #ifdef _WIN32
-  if (TT_Initialize() != NPRESULT_SUCCESS))
+  if (TT_Initialize() != NPRESULT_SUCCESS)
   {
     std::cerr << "TT_Initialize() error" << std::endl;
     throw std::runtime_error("OptiTrack exception");
   }
 
-  if (TT_LoadProject(_motiveConfFile))
+  if (TT_LoadProject(_motiveConfFile.c_str()))
   {
     std::cerr << "TT_LoadProject() error" << std::endl;
     throw std::runtime_error("OptiTrack exception");
@@ -286,18 +291,23 @@ bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
   }
 
   // Ignore this frame if we are not tracking all the objects.
-  if (TT_TrackableCount() != 3)
+  /*if (TT_TrackableCount() != 3)
   {
     return false;
-  }
+  }*/
 
   for (int i = 0; i < TT_TrackableCount(); ++i)
   {
-    float x, y, z, qx, qy, qz, qw, yaw, pitch, roll;
-    TT_TrackableLocation(i, &x, &y, &z, &qz, &qy, &qz, &qw, &yaw &pitch, &roll);
+    if(TT_IsTrackableTracked(i))
+    {
+      float x, y, z;
+      float qx, qy, qz, qw;
+      float yaw, pitch, roll;
+      TT_TrackableLocation(i, &x, &y, &z, &qx, &qy, &qz, &qw, &yaw, &pitch, &roll);
 
-    // Store the rigid body pose.
-    _trackingInfo[TT_TrackableName(i)] = {x, y, z, qx, qy, qz, qw};
+      // Store the rigid body pose.
+      _trackingInfo[TT_TrackableName(i)] = {x, y, z, qx, qy, qz, qw};
+    }
   }
 #endif
 

@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} -std=c++11")
+if (UNIX)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} -std=c++11")
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/../include)
 
@@ -24,10 +26,10 @@ endif ()
 # Find the NPTrackingTools library
 # ToDo.
 
-#include_directories($ENV{NPTRACKINGTOOLS_INC})
-#link_directories($ENV{NPTRACKINGTOOLS_LIB})
+include_directories($ENV{NPTRACKINGTOOLS_INC})
+link_directories($ENV{NPTRACKINGTOOLS_LIB})
 
 add_executable(optitrackBridge optitrackBridge.cc ../src/OptitrackBridge.cc)
 if(WIN32)
-  target_link_libraries(optitrackBridge NPTrackingTools)
+  target_link_libraries(optitrackBridge NPTrackingToolsx64 ws2_32)
 endif()
