@@ -281,6 +281,8 @@ OptitrackBridge::OptitrackBridge(const std::string &_motiveConfFile)
     std::cerr << "TT_LoadProject() error" << std::endl;
     throw std::runtime_error("OptiTrack exception");
   }
+#elif __linux__
+  (void)_motiveConfFile;
 #endif
 }
 
