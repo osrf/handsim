@@ -46,8 +46,38 @@ void usage()
 }
 
 //////////////////////////////////////////////////
+void test()
+{
+  TrackingInfo_t trackingInfo;
+  OptitrackBridgeComms comms;
+
+  std::string head        = "head";
+  std::string monitor     = "monitor";
+  std::string hand        = "hand";
+  RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
+  RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
+  RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
+  trackingInfo.timestamp        = 0.5;
+  trackingInfo.bodies [head]    = headPose;
+  trackingInfo.bodies [monitor] = monitorPose;
+  trackingInfo.bodies [hand]    = handPose;
+
+  // Send some data.
+  if (!comms.Send(trackingInfo))
+    std::cerr << "FAIL: Send fake tracking info failed" << std::endl;
+
+  std::cout << "Press any key to exit." << std::endl;
+  getchar();
+}
+
+//////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+#ifdef __linux__
+  // We keep this fragment for testing on Linux.
+  test();
+  return 0;
+#endif
   // Sanity check: Verify that we have the expected command line args.
   if (argc != 2)
   {
