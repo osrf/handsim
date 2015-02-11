@@ -26,7 +26,7 @@
 #include <gazebo/math/Pose.hh>
 #include <gazebo/math/Vector3.hh>
 
-#include <handsim/handsim/OptitrackBridge.hh>
+#include "handsim/OptitrackBridge.hh"
 
 namespace haptix
 {

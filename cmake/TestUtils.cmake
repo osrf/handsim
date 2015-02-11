@@ -19,6 +19,7 @@ macro (handsim_build_tests)
       libgtest.a
       libgtest_main.a
       pthread
+      HaptixTracking
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}

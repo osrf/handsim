@@ -15,47 +15,84 @@
  *
 */
 
-#include <array>
-#include <map>
+#include <string>
+#include <vector>
 #include "handsim/OptitrackBridge.hh"
 #include "gtest/gtest.h"
 
+using namespace haptix;
+using namespace tracking;
+
 //////////////////////////////////////////////////
-/// \brief Check the serialization and unserialization of a header.
+/// \brief Check the OptitrackBridgeComms API.
 TEST(OptitrackBridgeTest, IO)
 {
-  std::map<std::string, std::array<float, 7>> trackingInfo;
-  //Comms comms;
+  RigidBody_M trackingInfo;
+  OptitrackBridgeComms comms;
 
   // Try to send an empty map.
-  //EXPECT_FALSE(comms.Send(trackingInfo));
+  EXPECT_FALSE(comms.Send(trackingInfo));
 
-  /*uint16_t numRigidBodies = 3;*/
+  std::string head        = "head";
+  std::string monitor     = "monitor";
+  std::string hand        = "hand";
+  RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
+  RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
+  RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
+  trackingInfo[head]      = headPose;
+  trackingInfo[monitor]   = monitorPose;
+  trackingInfo[hand]      = handPose;
 
-  /*std::vector<char> buffer(emptyHeader.GetHeaderLength());
-  EXPECT_EQ(emptyHeader.Pack(&buffer[0]), 0u);
+  // Create a buffer.
+  std::vector<char> buffer;
 
-  // Pack a Header.
-  transport::Header header(version, pUuid, transport::AdvSrvType, 2);
+  size_t expectedSize = sizeof(uint16_t) + sizeof(uint16_t) + sizeof(uint16_t) +
+      sizeof(uint64_t) + head.size() + (headPose.size() * sizeof(float)) +
+      sizeof(uint64_t) + monitor.size() + (monitorPose.size() * sizeof(float)) +
+      sizeof(uint64_t) + hand.size() + (handPose.size() * sizeof(float));
 
-  buffer.resize(header.GetHeaderLength());
-  int bytes = header.Pack(&buffer[0]);
-  EXPECT_EQ(bytes, header.GetHeaderLength());
+  EXPECT_EQ(comms.MsgLength(trackingInfo), expectedSize);
 
-  // Unpack the Header.
-  transport::Header otherHeader;
-  otherHeader.Unpack(&buffer[0]);
+  // Allocate and serialize.
+  int msgLength = comms.Pack(trackingInfo, buffer);
+  ASSERT_EQ(msgLength, expectedSize);
 
-  // Check that after Pack() and Unpack() the Header remains the same.
-  EXPECT_EQ(header.GetVersion(), otherHeader.GetVersion());
-  EXPECT_EQ(header.GetPUuid(), otherHeader.GetPUuid());
-  EXPECT_EQ(header.GetType(), otherHeader.GetType());
-  EXPECT_EQ(header.GetFlags(), otherHeader.GetFlags());
-  EXPECT_EQ(header.GetHeaderLength(), otherHeader.GetHeaderLength());
+  RigidBody_M anotherTrackingInfo;
+  EXPECT_TRUE(comms.Unpack(&buffer[0], anotherTrackingInfo));
+  ASSERT_EQ(anotherTrackingInfo.size(), 3);
 
-  // Try to pack a header passing a NULL buffer.
-  EXPECT_EQ(otherHeader.Pack(nullptr), 0u);
+  // Send some data.
+  EXPECT_TRUE(comms.Send(trackingInfo));
 
-  // Try to unpack a header passing a NULL buffer.
-  EXPECT_EQ(otherHeader.Unpack(nullptr), 0u);*/
+  // Unpack data.
+  EXPECT_TRUE(trackingInfo.find(head) != trackingInfo.end());
+  EXPECT_TRUE(trackingInfo.find(monitor) != trackingInfo.end());
+  EXPECT_TRUE(trackingInfo.find(hand) != trackingInfo.end());
+  auto pose = trackingInfo[head];
+  ASSERT_EQ(pose.size(), 7);
+
+  float value = 1.0;
+  for (size_t i = 0; i < pose.size(); ++i)
+  {
+    ASSERT_FLOAT_EQ(pose.at(i), value);
+    value += 1.0;
+  }
+  pose = trackingInfo[monitor];
+  ASSERT_EQ(pose.size(), 7);
+
+  value = 11.0;
+  for (size_t i = 0; i < pose.size(); ++i)
+  {
+    ASSERT_FLOAT_EQ(pose.at(i), value);
+    value += 1.0;
+  }
+  pose = trackingInfo[hand];
+  ASSERT_EQ(pose.size(), 7);
+
+  value = 21.0;
+  for (size_t i = 0; i < pose.size(); ++i)
+  {
+    ASSERT_FLOAT_EQ(pose.at(i), value);
+    value += 1.0;
+  }
 }

@@ -39,18 +39,16 @@
   // Type used for raw data on this platform
   typedef void raw_type;
 #endif
-#include <array>
-#include <chrono>
-#include <csignal>
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
-#include <thread>
-#include <map>
 #include <vector>
 
-//#include "NPTrackingTools.h"
 #include "handsim/OptitrackBridge.hh"
+
+#ifdef _WIN32
+  #include "NPTrackingTools.h"
+#endif
 
 using namespace haptix;
 using namespace tracking;
@@ -166,7 +164,6 @@ size_t OptitrackBridgeComms::Pack(const RigidBody_M &_trackingInfo,
     // Pack the rigid body pose.
     for (const auto &elem : body.second)
     {
-      std::cout << "Packing " << elem << std::endl;
       memcpy(ptr, &elem, sizeof(float));
       ptr += sizeof(float);
     }
@@ -186,6 +183,8 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
               << std::endl;
     return false;
   }
+
+  _trackingInfo.clear();
 
   // Unpack the Message ID (NatNet compatibility).
   uint16_t messageId;
@@ -213,7 +212,7 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
     std::string name = std::string(_buffer, _buffer + nameLength);
     _buffer += nameLength;
 
-    std::array<float, 7> pose;
+    RigidBody_A pose;
     for (int j = 0; j < 7; ++j)
     {
       // Unpack an element of the array.
@@ -259,27 +258,28 @@ bool OptitrackBridgeComms::Send(const RigidBody_M &_trackingInfo)
   return true;
 }
 
+#ifdef _WIN32
 /////////////////////////////////////////////////
-OptitrackBridge::OptitrackBridge(const std::string &/*_configFile*/)
+OptitrackBridge::OptitrackBridge(const std::string &_motiveConfFile)
 {
-  /*if (TT_Initialize() != NPRESULT_SUCCESS))
+  if (TT_Initialize() != NPRESULT_SUCCESS))
   {
     std::cerr << "TT_Initialize() error" << std::endl;
     throw std::runtime_error("OptiTrack exception");
-  }*/
+  }
 
-  /*if (TT_LoadProject(_confFile))
+  if (TT_LoadProject(_motiveConfFile))
   {
     std::cerr << "TT_LoadProject() error" << std::endl;
     throw std::runtime_error("OptiTrack exception");
-  }*/
+  }
 }
 
 /////////////////////////////////////////////////
 OptitrackBridge::~OptitrackBridge()
 {
-  /*TT_Shutdown();
-  TT_FinalCleanup();*/
+  TT_Shutdown();
+  TT_FinalCleanup();
 }
 
 /////////////////////////////////////////////////
@@ -287,7 +287,7 @@ bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
 {
   _trackingInfo.clear();
 
-  /*if (TT_Update() != NPRESULT_SUCCESS)
+  if (TT_Update() != NPRESULT_SUCCESS)
   {
     std::cerr << "TT_Update() error" << std::endl;
     return false;
@@ -302,104 +302,12 @@ bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
   for (int i = 0; i < TT_TrackableCount(); ++i)
   {
     float x, y, z, qx, qy, qz, qw, yaw, pitch, roll;
-    TT_TrackableLocation(i, &x, &y, &z, &qz, &qy, &qz, &qw,
-      &yaw &pitch, &roll);
+    TT_TrackableLocation(i, &x, &y, &z, &qz, &qy, &qz, &qw, &yaw &pitch, &roll);
 
     // Store the rigid body pose.
     _trackingInfo[TT_TrackableName(i)] = {x, y, z, qx, qy, qz, qw};
   }
-  */
 
-  std::cout << "Update()" << std::endl;
   return true;
 }
-
-//////////////////////////////////////////////////
-/// \brief Function callback executed when a SIGINT or SIGTERM signals are
-/// captured. This is used to break the infinite loop that processes frames
-/// and exit the program smoothly.
-/*void signal_handler(int _signal)
-{
-  if (_signal == SIGINT || _signal == SIGTERM)
-    terminate = true;
-}
-
-//////////////////////////////////////////////////
-void usage()
-{
-  std::cerr << "Usage: optitrackBridge <configFile>" << std::endl
-            << std::endl
-            << "\t<configFile>   Motive configuration file."
-            << std::endl;
-}
-
-//////////////////////////////////////////////////
-void test()
-{
-   std::map<std::string, std::array<float, 7>> trackingInfo;
-   Comms comms;
-
-   // Try to send an empty map.
-   if (comms.Send(trackingInfo))
-    std::cerr << "FAIL: Send an empty map test failed" << std::endl;
-
-  std::string head = "head";
-  std::string monitor = "monitor";
-  std::string hand = "hand";
-  std::array<float, 7> headPose = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0};
-  std::array<float, 7> monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
-  std::array<float, 7> handPose = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
-  std::map<std::string, std::array<float, 7>> m;
-  m[head] = headPose;
-  m[monitor] = monitorPose;
-  m[hand] = handPose;
-
-  // Send some data.
-  comms.Send(m);
-}
-
-//////////////////////////////////////////////////
-int main(int argc, char **argv)
-{
-  test();
-  return 0;
-
-  // Sanity check: Verify that we have the expected command line args.
-  if (argc != 2)
-  {
-    usage();
-    return -1;
-  }
-
-  try
-  {
-    Comms comms;
-    std::string confFile = std::string(argv[1]);
-    Optitrack optitrack(confFile);
-
-    // \brief We will store in this variable all the tracking information.
-    // Each element of the vector is a tracked rigid body. For each rigid body
-    // we store 7 floats (x, y, z, qx, qy, qz, qw).
-    std::map<std::string, std::array<float, 7>> trackingInfo;
-
-    // Get the tracking information from Optitrack and send it over the network.
-    while (!terminate)
-    {
-      if (optitrack.Update(trackingInfo))
-      {
-        if (!comms.Send(trackingInfo))
-          std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;
-      }
-      else
-        std::cerr << "OptitrackBridge: Error processing a frame." << std::endl;
-
-      std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-  }
-  catch (const std::runtime_error &_excep)
-  {
-    return -1;
-  }
-
-  return 0;
-}*/
+#endif
