@@ -80,11 +80,13 @@ namespace haptix
       /// network.
       ///
       /// Wire protocol:
-      /// 1. Message ID (666 - this runs on Windows, you know). This field is
-      //// here to make this protocol compatible with the NatNet header.
-      /// 2. Size (not used). This field is
-      //// here to make this protocol compatible with the NatNet header.
-      /// 3. Number of rigid bodies tracked.
+      /// 1. Message ID (666 - this runs on Windows, you know).
+      ///    This field is here to make this protocol compatible with the NatNet
+      ///    header (uint16_t)
+      /// 2. Size (not used).
+      ///    This field is here to make this protocol compatible with the NatNet
+      ///    header (uint16_t).
+      /// 3. Number of rigid bodies tracked (uint16_t).
       /// For each rigid body:
       ///   4.  Name's length (uint64_t).
       ///   5.  Name (size in octets).
@@ -97,8 +99,11 @@ namespace haptix
       ///   12. qw (float).
       public: bool Send(const RigidBody_M &_trackingInfo);
 
+      /// \brief Optitrack multicast address.
+      private: const std::string zMulticastAddress = "239.255.42.99";
+
       /// \brief Port used for sending/receiving tracking updates.
-      private: static const int zPortData = 1511;
+      private: const int zPortData = 1511;
 
       /// \brief UDP socket used for sending tracking updates.
       private: int sock;
@@ -107,7 +112,6 @@ namespace haptix
       private: struct sockaddr_in mySocketAddr;
     };
 
-#ifdef _WIN32
     /// \brief Class that implements some utilites to interact with an Optitrack
     /// device.
     class OptitrackBridge
@@ -128,7 +132,6 @@ namespace haptix
       /// Each rigid body contains six floats (x, y, z, roll, pitch, yaw).
       public: bool Update(RigidBody_M &_trackingInfo);
     };
-#endif
   }
 }
 #endif

@@ -53,9 +53,6 @@
 using namespace haptix;
 using namespace tracking;
 
-/// \brief Optitrack multicast address.
-static const std::string zMulticastAddress = "239.255.42.99";
-
 /////////////////////////////////////////////////
 OptitrackBridgeComms::OptitrackBridgeComms()
 {
@@ -162,11 +159,9 @@ size_t OptitrackBridgeComms::Pack(const RigidBody_M &_trackingInfo,
     ptr += nameLength;
 
     // Pack the rigid body pose.
-    for (const auto &elem : body.second)
-    {
-      memcpy(ptr, &elem, sizeof(float));
-      ptr += sizeof(float);
-    }
+    RigidBody_A pose = body.second;
+    memcpy(ptr, &pose[0], sizeof(float) * pose.size());
+    ptr += sizeof(float) * pose.size();
   }
 
   return len;
@@ -212,17 +207,10 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
     std::string name = std::string(_buffer, _buffer + nameLength);
     _buffer += nameLength;
 
+    // Unpack the rigid body pose.
     RigidBody_A pose;
-    for (int j = 0; j < 7; ++j)
-    {
-      // Unpack an element of the array.
-      float v;
-      memcpy(&v, _buffer, sizeof(v));
-      _buffer += sizeof(v);
-
-      // Update the array.
-      pose[i] = v;
-    }
+    memcpy(&pose[0], _buffer, pose.size() * sizeof(float));
+    _buffer += pose.size() * sizeof(float);
 
     // Add the new rigid body entry to the output.
     _trackingInfo[name] = pose;
@@ -258,10 +246,10 @@ bool OptitrackBridgeComms::Send(const RigidBody_M &_trackingInfo)
   return true;
 }
 
-#ifdef _WIN32
 /////////////////////////////////////////////////
 OptitrackBridge::OptitrackBridge(const std::string &_motiveConfFile)
 {
+#ifdef _WIN32
   if (TT_Initialize() != NPRESULT_SUCCESS))
   {
     std::cerr << "TT_Initialize() error" << std::endl;
@@ -273,13 +261,16 @@ OptitrackBridge::OptitrackBridge(const std::string &_motiveConfFile)
     std::cerr << "TT_LoadProject() error" << std::endl;
     throw std::runtime_error("OptiTrack exception");
   }
+#endif
 }
 
 /////////////////////////////////////////////////
 OptitrackBridge::~OptitrackBridge()
 {
+#ifdef _WIN32
   TT_Shutdown();
   TT_FinalCleanup();
+#endif
 }
 
 /////////////////////////////////////////////////
@@ -287,6 +278,7 @@ bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
 {
   _trackingInfo.clear();
 
+#ifdef _WIN32
   if (TT_Update() != NPRESULT_SUCCESS)
   {
     std::cerr << "TT_Update() error" << std::endl;
@@ -307,7 +299,7 @@ bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
     // Store the rigid body pose.
     _trackingInfo[TT_TrackableName(i)] = {x, y, z, qx, qy, qz, qw};
   }
+#endif
 
   return true;
 }
-#endif

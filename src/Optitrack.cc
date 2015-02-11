@@ -199,8 +199,9 @@ void Optitrack::Unpack(char *pData)
     {
       std::cout << "Rigid body: " << body.first << std::endl;
       std::cout << "\t ( ";
-      for (const auto &elem : body.second)
-        std::cout << elem << " ";
+      RigidBody_A pose = body.second;
+      for (int i = 0; i < 7; ++i)
+        std::cout << float(pose.at(i)) << " ";
       std::cout << ")" << std::endl;
     }
 

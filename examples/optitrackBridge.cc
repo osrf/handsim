@@ -48,12 +48,8 @@ void usage()
 //////////////////////////////////////////////////
 void test()
 {
-   RigidBody_M trackingInfo;
-   OptitrackBridgeComms comms;
-
-   // Try to send an empty map.
-   if (comms.Send(trackingInfo))
-    std::cerr << "FAIL: Send an empty map test failed" << std::endl;
+  RigidBody_M trackingInfo;
+  OptitrackBridgeComms comms;
 
   std::string head        = "head";
   std::string monitor     = "monitor";
@@ -61,9 +57,9 @@ void test()
   RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
   RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
   RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
-  trackingInfo[head] = headPose;
-  trackingInfo[monitor] = monitorPose;
-  trackingInfo[hand] = handPose;
+  trackingInfo[head]      = headPose;
+  trackingInfo[monitor]   = monitorPose;
+  trackingInfo[hand]      = handPose;
 
   // Send some data.
   if (!comms.Send(trackingInfo))

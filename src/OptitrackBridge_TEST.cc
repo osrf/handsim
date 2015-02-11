@@ -57,18 +57,16 @@ TEST(OptitrackBridgeTest, IO)
   int msgLength = comms.Pack(trackingInfo, buffer);
   ASSERT_EQ(msgLength, expectedSize);
 
+  // Unpack data.
   RigidBody_M anotherTrackingInfo;
   EXPECT_TRUE(comms.Unpack(&buffer[0], anotherTrackingInfo));
   ASSERT_EQ(anotherTrackingInfo.size(), 3);
 
-  // Send some data.
-  EXPECT_TRUE(comms.Send(trackingInfo));
-
-  // Unpack data.
-  EXPECT_TRUE(trackingInfo.find(head) != trackingInfo.end());
-  EXPECT_TRUE(trackingInfo.find(monitor) != trackingInfo.end());
-  EXPECT_TRUE(trackingInfo.find(hand) != trackingInfo.end());
-  auto pose = trackingInfo[head];
+  // Check data.
+  EXPECT_TRUE(anotherTrackingInfo.find(head)    != trackingInfo.end());
+  EXPECT_TRUE(anotherTrackingInfo.find(monitor) != trackingInfo.end());
+  EXPECT_TRUE(anotherTrackingInfo.find(hand)    != trackingInfo.end());
+  auto pose = anotherTrackingInfo[head];
   ASSERT_EQ(pose.size(), 7);
 
   float value = 1.0;
@@ -77,7 +75,7 @@ TEST(OptitrackBridgeTest, IO)
     ASSERT_FLOAT_EQ(pose.at(i), value);
     value += 1.0;
   }
-  pose = trackingInfo[monitor];
+  pose = anotherTrackingInfo[monitor];
   ASSERT_EQ(pose.size(), 7);
 
   value = 11.0;
@@ -86,7 +84,7 @@ TEST(OptitrackBridgeTest, IO)
     ASSERT_FLOAT_EQ(pose.at(i), value);
     value += 1.0;
   }
-  pose = trackingInfo[hand];
+  pose = anotherTrackingInfo[hand];
   ASSERT_EQ(pose.size(), 7);
 
   value = 21.0;
@@ -95,4 +93,7 @@ TEST(OptitrackBridgeTest, IO)
     ASSERT_FLOAT_EQ(pose.at(i), value);
     value += 1.0;
   }
+
+  // Send some data.
+  EXPECT_TRUE(comms.Send(trackingInfo));
 }
