@@ -48,7 +48,7 @@ void usage()
 //////////////////////////////////////////////////
 void test()
 {
-  RigidBody_M trackingInfo;
+  TrackingInfo_t trackingInfo;
   OptitrackBridgeComms comms;
 
   std::string head        = "head";
@@ -57,9 +57,10 @@ void test()
   RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
   RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
   RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
-  trackingInfo[head]      = headPose;
-  trackingInfo[monitor]   = monitorPose;
-  trackingInfo[hand]      = handPose;
+  trackingInfo.timestamp        = 0.5;
+  trackingInfo.bodies [head]    = headPose;
+  trackingInfo.bodies [monitor] = monitorPose;
+  trackingInfo.bodies [hand]    = handPose;
 
   // Send some data.
   if (!comms.Send(trackingInfo))
@@ -72,8 +73,8 @@ void test()
 //////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-  // test();
-  // return 0;
+  test();
+  return 0;
 
   // Sanity check: Verify that we have the expected command line args.
   if (argc != 2)
@@ -87,14 +88,14 @@ int main(int argc, char **argv)
     OptitrackBridgeComms comms;
     std::string confFile = std::string(argv[1]);
     OptitrackBridge optitrack(confFile);
-    RigidBody_M trackingInfo;
+    TrackingInfo_t trackingInfo;
 
     // Get the tracking information from Optitrack and send it over the network.
     while (!hxTerminate)
     {
       if (optitrack.Update(trackingInfo))
       {
-        if (!trackingInfo.empty())
+        if (!trackingInfo.bodies.empty())
         {
           if (!comms.Send(trackingInfo))
             std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;

@@ -37,13 +37,27 @@ namespace haptix
     /// tracked by OptiTrack with the following format:
     /// (x, y, z, qx, qy, qz, qw).
     typedef std::array<float, 7> RigidBody_A;
+
     /// \brief Map that contains rigid body information received from OptiTrack.
     /// The number of elements stored in the map are the number of rigid bodies
     /// tracked. For each element in the map, the key is a string with the name
     /// of the rigid body and the value is an array with floats storing the
     /// position and orientation of the object with the following format:
     /// (x, y, z, qx, qy, qz, qw).
+    /// \sa RigidBody_A.
     typedef std::map<std::string, RigidBody_A> RigidBody_M;
+
+    /// \brief Snapshot of all the information captured from Optitrack.
+    /// It contains a timestamp and information about rigid bodies.
+    /// \sa RigidBody_M.
+    struct TrackingInfo_t
+    {
+      /// \brief Timestamp that shows when the data was captured.
+      double timestamp;
+
+      /// \brief Rigid body information.
+      RigidBody_M bodies;
+    };
 
     /// \brief Class that implements some utilities to communicate with the
     /// Optitrack bridge.
@@ -59,21 +73,21 @@ namespace haptix
       /// \brief Get the length of a serialized message.
       /// \param[in] _trackingInfo Tracking information.
       /// \return Length in bytes.
-      public: size_t MsgLength(const RigidBody_M &_trackingInfo);
+      public: size_t MsgLength(const TrackingInfo_t &_trackingInfo);
 
-      /// \brief Serialize a message containing rigid body information.
+      /// \brief Serialize a message containing tracking information.
       /// \param[in] _trackingInfo Tracking information to serialize.
       /// \param[out] _buffer Output buffer with the information serialized.
       /// \return Length of the serialized data in bytes or 0 if there was
       /// any error during serialization.
-      public: size_t Pack(const RigidBody_M &_trackingInfo,
+      public: size_t Pack(const TrackingInfo_t &_trackingInfo,
                           std::vector<char> &_buffer);
 
       /// \brief Unserialize a buffer containing tracking information.
       /// \param[in] _buffer Buffer containing the serialized message.
       /// \param[out] _trackingInfo Tracking information.
       public: bool Unpack(const char *_buffer,
-                          RigidBody_M &_trackingInfo);
+                          TrackingInfo_t &_trackingInfo);
 
       /// \brief Send a new message over the network.
       /// \param[in] _trackingInfo Tracking information to send over the
@@ -86,18 +100,19 @@ namespace haptix
       /// 2. Size (not used).
       ///    This field is here to make this protocol compatible with the NatNet
       ///    header (uint16_t).
-      /// 3. Number of rigid bodies tracked (uint16_t).
+      /// 3. Timestamp (double)
+      /// 4. Number of rigid bodies tracked (uint16_t).
       /// For each rigid body:
-      ///   4.  Name's length (uint64_t).
-      ///   5.  Name (size in octets).
-      ///   6.  x  (float).
-      ///   7.  y  (float).
-      ///   8.  z  (float).
-      ///   9.  qx (float).
-      ///   10. qy (float).
-      ///   11. qz (float).
-      ///   12. qw (float).
-      public: bool Send(const RigidBody_M &_trackingInfo);
+      ///   5.  Name's length (uint64_t).
+      ///   6.  Name (size in octets).
+      ///   7.  x  (float).
+      ///   8.  y  (float).
+      ///   9.  z  (float).
+      ///   10. qx (float).
+      ///   11. qy (float).
+      ///   12. qz (float).
+      ///   13. qw (float).
+      public: bool Send(const TrackingInfo_t &_trackingInfo);
 
       /// \brief Optitrack multicast address.
       private: const std::string zMulticastAddress = "239.255.42.99";
@@ -130,7 +145,7 @@ namespace haptix
       /// rigid body tracking.
       /// \param[out] _trackingInfo Return the vector of rigid bodies tracked.
       /// Each rigid body contains six floats (x, y, z, roll, pitch, yaw).
-      public: bool Update(RigidBody_M &_trackingInfo);
+      public: bool Update(TrackingInfo_t &_trackingInfo);
     };
   }
 }

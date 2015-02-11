@@ -89,13 +89,13 @@ OptitrackBridgeComms::~OptitrackBridgeComms()
 {
 #ifdef _WIN32
   closesocket(this->sock);
-#else 
+#else
   close(this->sock);
 #endif
 }
 
 /////////////////////////////////////////////////
-size_t OptitrackBridgeComms::MsgLength(const RigidBody_M &_trackingInfo)
+size_t OptitrackBridgeComms::MsgLength(const TrackingInfo_t &_trackingInfo)
 {
   size_t len = 0;
 
@@ -105,10 +105,13 @@ size_t OptitrackBridgeComms::MsgLength(const RigidBody_M &_trackingInfo)
   // Size (NatNet compatibility).
   len += sizeof(uint16_t);
 
+  // Timestamp.
+  len += sizeof(double);
+
   // Number of objects.
   len += sizeof(uint16_t);
 
-  for (const auto &body : _trackingInfo)
+  for (const auto &body : _trackingInfo.bodies)
   {
     // Rigid body name length.
     len += sizeof(uint64_t);
@@ -121,11 +124,11 @@ size_t OptitrackBridgeComms::MsgLength(const RigidBody_M &_trackingInfo)
 }
 
 /////////////////////////////////////////////////
-size_t OptitrackBridgeComms::Pack(const RigidBody_M &_trackingInfo,
+size_t OptitrackBridgeComms::Pack(const TrackingInfo_t &_trackingInfo,
   std::vector<char> &_buffer)
 {
-  // Empty map.
-  if (_trackingInfo.size() == 0)
+  // No rigid body information.
+  if (_trackingInfo.bodies.size() == 0)
   {
     std::cerr << "OptitrackBridgeComms::Pack() error: empty input" << std::endl;
     return 0;
@@ -147,12 +150,16 @@ size_t OptitrackBridgeComms::Pack(const RigidBody_M &_trackingInfo,
   memcpy(ptr, &notused, sizeof(notused));
   ptr += sizeof(notused);
 
+  // Pack the timestamp.
+  memcpy(ptr, &_trackingInfo.timestamp, sizeof(_trackingInfo.timestamp));
+  ptr += sizeof(_trackingInfo.timestamp);
+
   // Pack the number of rigid bodies, which is a uint16_t
-  uint16_t numBodies = _trackingInfo.size();
+  uint16_t numBodies = _trackingInfo.bodies.size();
   memcpy(ptr, &numBodies, sizeof(numBodies));
   ptr += sizeof(numBodies);
 
-  for (const auto &body : _trackingInfo)
+  for (const auto &body : _trackingInfo.bodies)
   {
     // Pack the Rigid body name length.
     uint64_t nameLength = body.first.size();
@@ -174,7 +181,7 @@ size_t OptitrackBridgeComms::Pack(const RigidBody_M &_trackingInfo,
 
 /////////////////////////////////////////////////
 bool OptitrackBridgeComms::Unpack(const char *_buffer,
-  RigidBody_M &_trackingInfo)
+  TrackingInfo_t &_trackingInfo)
 {
   // null buffer.
   if (!_buffer)
@@ -184,7 +191,7 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
     return false;
   }
 
-  _trackingInfo.clear();
+  _trackingInfo.bodies.clear();
 
   // Unpack the Message ID (NatNet compatibility).
   uint16_t messageId;
@@ -195,6 +202,14 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
   uint16_t notused;
   memcpy(&notused, _buffer, sizeof(notused));
   _buffer += sizeof(notused);
+
+  // Unpack the timestamp.
+  double timestamp;
+  memcpy(&timestamp, _buffer, sizeof(timestamp));
+  _buffer += sizeof(timestamp);
+
+  // Add the new timestamp.
+  _trackingInfo.timestamp = timestamp;
 
   // Unpack the number of rigid bodies.
   uint16_t numBodies;
@@ -218,14 +233,14 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
     _buffer += pose.size() * sizeof(float);
 
     // Add the new rigid body entry to the output.
-    _trackingInfo[name] = pose;
+    _trackingInfo.bodies[name] = pose;
   }
 
   return true;
 }
 
 /////////////////////////////////////////////////
-bool OptitrackBridgeComms::Send(const RigidBody_M &_trackingInfo)
+bool OptitrackBridgeComms::Send(const TrackingInfo_t &_trackingInfo)
 {
   // Create a buffer.
   std::vector<char> buffer;
@@ -279,19 +294,16 @@ OptitrackBridge::~OptitrackBridge()
 }
 
 /////////////////////////////////////////////////
-bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
+bool OptitrackBridge::Update(TrackingInfo_t &_trackingInfo)
 {
-  _trackingInfo.clear();
+  _trackingInfo.bodies.clear();
 
 #ifdef _WIN32
   if (TT_Update() != NPRESULT_SUCCESS)
     return false;
 
-  // Ignore this frame if we are not tracking all the objects.
-  /*if (TT_TrackableCount() != 3)
-  {
-    return false;
-  }*/
+  // Store the timestamp.
+  _trackingInfo.timestamp = TT_FrameTimeStamp();
 
   for (int i = 0; i < TT_TrackableCount(); ++i)
   {
@@ -300,7 +312,8 @@ bool OptitrackBridge::Update(RigidBody_M &_trackingInfo)
       float x, y, z;
       float qx, qy, qz, qw;
       float yaw, pitch, roll;
-      TT_TrackableLocation(i, &x, &y, &z, &qx, &qy, &qz, &qw, &yaw, &pitch, &roll);
+      TT_TrackableLocation(i, &x, &y, &z, &qx, &qy, &qz, &qw,
+        &yaw, &pitch, &roll);
 
       // Store the rigid body pose.
       _trackingInfo[TT_TrackableName(i)] = {-x, y, z, -qx, qy, qz, -qw};

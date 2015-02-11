@@ -188,14 +188,16 @@ void Optitrack::Unpack(char *pData)
 
   if (MessageID == 666)      // FRAME OF OptiTrack bridge packet
   {
-    RigidBody_M trackingInfo;
+    TrackingInfo_t trackingInfo;
     if (!this->comms.Unpack(pData, trackingInfo))
     {
       std::cerr << "Error unpacking" << std::endl;
       return;
     }
 
-    for (const auto &body : trackingInfo)
+    std::cout << "Timestamp: " << trackingInfo.timestamp << std::endl;
+
+    for (const auto &body : trackingInfo.bodies)
     {
       std::cout << "Rigid body: " << body.first << std::endl;
       std::cout << "\t ( ";
