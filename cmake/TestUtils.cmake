@@ -15,7 +15,6 @@ macro (handsim_build_tests)
       )
 
     target_link_libraries(${BINARY_NAME}
-      #lib${PROJECT_NAME_LOWER}
       libgtest.a
       libgtest_main.a
       pthread

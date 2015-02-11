@@ -23,9 +23,7 @@ else ()
     message(FATAL_ERROR "Your C++ compiler does not support C++11.")
 endif ()
 
-# Find the NPTrackingTools library
-# ToDo.
-
+# ToDo: Make sure that the library and header are installed.
 include_directories($ENV{NPTRACKINGTOOLS_INC})
 link_directories($ENV{NPTRACKINGTOOLS_LIB})
 

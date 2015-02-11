@@ -130,7 +130,6 @@ void Optitrack::RunReceptionTask()
   {
     // Block until we receive a datagram from the network (from anyone
     // including ourselves)
-    std::cout << "Receiving" << std::endl;
     if (recvfrom(this->dataSocket, buffer, sizeof(buffer), 0,
          (sockaddr *)&theirAddress, &addr_len) < 0)
     {
