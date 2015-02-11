@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
 # Find the Handsim libraries
-find_package(handsim QUIET REQUIRED)
+find_package(polhemus_driver QUIET REQUIRED)
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${HANDSIM_CXX_FLAGS}")
 
 include_directories(${HANDSIM_INCLUDE_DIRS})
