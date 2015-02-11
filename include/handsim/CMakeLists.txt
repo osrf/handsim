@@ -1,6 +1,7 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (headers
+  OptitrackBridge.hh
 )
 
 set (handsim_headers "" CACHE INTERNAL "Ignition headers" FORCE)

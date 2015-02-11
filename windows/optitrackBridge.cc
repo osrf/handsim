@@ -35,68 +35,27 @@
   // For sockaddr_in
   #include <netinet/in.h>
 #endif
+
 #include <chrono>
-#include <exception>
 #include <iostream>
 #include <vector>
 //#include "NPTrackingTools.h"
 
 static bool terminate = false;
 
-/// \brief New exception.
-class SocketException : public std::runtime_error
-{
-  public: SocketException() : std::runtime_error("SocketException") = default;
-};
-
 /// \brief Class that implements a simple multicast sender.
-class Comms: public exception
+class Comms
 {
   /// \brief Constructor.
   /// \throw SocketException If a socket error occurs during initialization.
-  Comms()
-  {
-    WSADATA wsaData;
-
-    // Request WinSock v2.0.
-    WORD wVersionRequested = MAKEWORD(2, 0);
-    // Load WinSock DLL.
-    if (WSAStartup(wVersionRequested, &wsaData) != 0)
-    {
-     std::cerr << "Unable to load WinSock DLL" << std::endl;
-     throw SocketException();
-    }
-
-    // Make a new socket for sending OptiTrack updates.
-    if ((socket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-    {
-      std::cerr << "Socket creation failed." << std::endl;
-      throw SocketException();
-    }
-
-    // Set up the destination address.
-    struct sockaddr_in mySocketAddr;
-    memset(&mySocketAddr, 0, sizeof(mySocketAddr));
-    mySocketAddr.sin_family = AF_INET;
-    mySocketAddr.sin_port = htons(zPortData);
-    mySocketAddr.sin_addr.s_addr = inet_addr(zMulticastAddress);
-  }
+  public: Comms();
 
   /// \brief Destructor.
-  ~Comms()
-  {
-    close(socket);
-  }
+  public: ~Comms();
 
   /// \brief Send a new message over the network.
-  public: bool Send(const std::vector<float> &_data)
-  {
-    // Wire protocol:
-    // 1. Number of rigid bodies tracked (int16_t)
-    // For each rigid body:
-    //   2. x, y, z, roll, pitch, yaw
-    std::cout << "Send" << std::endl;
-  }
+  /// \param[in] _data
+  public: bool Send(const std::vector<float> &_data);
 
   /// \brief Optitrack multicast address.
   private: static const std::string zMulticastAddress = "239.255.42.99";
@@ -108,12 +67,51 @@ class Comms: public exception
   private: int socket;
 };
 
-/// \brief New exception.
-class OptitrackException : public std::runtime_error
+
+Comms::Comms()
 {
-  public: OptitrackException()
-    : std::runtime_error("OptiTrackException") = default;
-};
+  WSADATA wsaData;
+
+  // Request WinSock v2.0.
+  WORD wVersionRequested = MAKEWORD(2, 0);
+  // Load WinSock DLL.
+  if (WSAStartup(wVersionRequested, &wsaData) != 0)
+  {
+   std::cerr << "Unable to load WinSock DLL" << std::endl;
+   throw std::runtime_error("Socket exception");
+  }
+
+  // Make a new socket for sending OptiTrack updates.
+  if ((socket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+  {
+    std::cerr << "Socket creation failed." << std::endl;
+    throw std::runtime_error("Socket exception");
+  }
+
+  // Set up the destination address.
+  struct sockaddr_in mySocketAddr;
+  memset(&mySocketAddr, 0, sizeof(mySocketAddr));
+  mySocketAddr.sin_family = AF_INET;
+  mySocketAddr.sin_port = htons(zPortData);
+  mySocketAddr.sin_addr.s_addr = inet_addr(zMulticastAddress);
+}
+
+
+Comms::~Comms()
+{
+  close(socket);
+}
+
+
+bool Comms::Send(const std::vector<float> &_data)
+{
+  // Wire protocol:
+  // 1. Number of rigid bodies tracked (int16_t)
+  // For each rigid body:
+  //   2. x, y, z, roll, pitch, yaw
+  std::cout << "Send" << std::endl;
+}
+
 
 /// \brief Class that implements a simple multicast sender.
 class Optitrack
@@ -127,13 +125,13 @@ class Optitrack
     /*if (TT_Initialize() != NPRESULT_SUCCESS))
     {
       std::cerr << "TT_Initialize() error" << std::endl;
-      throw OptitrackException();
+      throw std::runtime_error("OptiTrack exception");
     }*/
 
     /*if (TT_LoadProject(_confFile))
     {
       std::cerr << "TT_LoadProject() error" << std::endl;
-      throw OptitrackException();
+      throw std::runtime_error("OptiTrack exception");
     }*/
   }
 

@@ -37,6 +37,7 @@
 #include <gazebo/msgs/msgs.hh>
 
 #include "handsim/Optitrack.hh"
+#include "handsim/OptitrackBridge.hh"
 
 using namespace haptix;
 using namespace tracking;
@@ -129,6 +130,7 @@ void Optitrack::RunReceptionTask()
   {
     // Block until we receive a datagram from the network (from anyone
     // including ourselves)
+    std::cout << "Receiving" << std::endl;
     if (recvfrom(this->dataSocket, buffer, sizeof(buffer), 0,
          (sockaddr *)&theirAddress, &addr_len) < 0)
     {
@@ -184,7 +186,27 @@ void Optitrack::Unpack(char *pData)
   int nBytes = 0;
   memcpy(&nBytes, ptr, 2); ptr += 2;
 
-  if (MessageID == 7)      // FRAME OF MOCAP DATA packet
+  if (MessageID == 666)      // FRAME OF OptiTrack bridge packet
+  {
+    RigidBody_M trackingInfo;
+    if (!this->comms.Unpack(pData, trackingInfo))
+    {
+      std::cerr << "Error unpacking" << std::endl;
+      return;
+    }
+
+    for (const auto &body : trackingInfo)
+    {
+      std::cout << "Rigid body: " << body.first << std::endl;
+      std::cout << "\t ( ";
+      for (const auto &elem : body.second)
+        std::cout << elem << " ";
+      std::cout << ")" << std::endl;
+    }
+
+    std::cout << "Message from OptiTrack bridge received" << std::endl;
+  }
+  else if (MessageID == 7)      // FRAME OF MOCAP DATA packet
   {
     // frame number
     int frameNumber = 0; memcpy(&frameNumber, ptr, 4); ptr += 4;
