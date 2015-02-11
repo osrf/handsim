@@ -15,151 +15,16 @@
  *
 */
 
-#ifdef _WIN32
-  // For socket(), connect(), send(), and recv().
-  #include <Winsock2.h>
-  #include <Ws2def.h>
-  #include <Ws2ipdef.h>
-  #include <Ws2tcpip.h>
-#else
-  // For data types
-  #include <sys/types.h>
-  // For socket(), connect(), send(), and recv()
-  #include <sys/socket.h>
-  // For gethostbyname()
-  #include <netdb.h>
-  // For inet_addr()
-  #include <arpa/inet.h>
-  // For close()
-  #include <unistd.h>
-  // For sockaddr_in
-  #include <netinet/in.h>
-#endif
-
 #include <chrono>
+#include <csignal>
 #include <iostream>
-#include <vector>
-//#include "NPTrackingTools.h"
+#include <thread>
+#include "handsim/OptitrackBridge.hh"
+
+using namespace haptix;
+using namespace tracking;
 
 static bool terminate = false;
-
-/// \brief Class that implements a simple multicast sender.
-class Comms
-{
-  /// \brief Constructor.
-  /// \throw SocketException If a socket error occurs during initialization.
-  public: Comms();
-
-  /// \brief Destructor.
-  public: ~Comms();
-
-  /// \brief Send a new message over the network.
-  /// \param[in] _data
-  public: bool Send(const std::vector<float> &_data);
-
-  /// \brief Optitrack multicast address.
-  private: static const std::string zMulticastAddress = "239.255.42.99";
-
-  /// \brief Port used for sending/receiving tracking updates.
-  private: static const int zPortData = 1511;
-
-  /// \brief UDP socket used for sending tracking updates.
-  private: int socket;
-};
-
-
-Comms::Comms()
-{
-  WSADATA wsaData;
-
-  // Request WinSock v2.0.
-  WORD wVersionRequested = MAKEWORD(2, 0);
-  // Load WinSock DLL.
-  if (WSAStartup(wVersionRequested, &wsaData) != 0)
-  {
-   std::cerr << "Unable to load WinSock DLL" << std::endl;
-   throw std::runtime_error("Socket exception");
-  }
-
-  // Make a new socket for sending OptiTrack updates.
-  if ((socket = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
-  {
-    std::cerr << "Socket creation failed." << std::endl;
-    throw std::runtime_error("Socket exception");
-  }
-
-  // Set up the destination address.
-  struct sockaddr_in mySocketAddr;
-  memset(&mySocketAddr, 0, sizeof(mySocketAddr));
-  mySocketAddr.sin_family = AF_INET;
-  mySocketAddr.sin_port = htons(zPortData);
-  mySocketAddr.sin_addr.s_addr = inet_addr(zMulticastAddress);
-}
-
-
-Comms::~Comms()
-{
-  close(socket);
-}
-
-
-bool Comms::Send(const std::vector<float> &_data)
-{
-  // Wire protocol:
-  // 1. Number of rigid bodies tracked (int16_t)
-  // For each rigid body:
-  //   2. x, y, z, roll, pitch, yaw
-  std::cout << "Send" << std::endl;
-}
-
-
-/// \brief Class that implements a simple multicast sender.
-class Optitrack
-{
-  /// \brief Initializes the OptiTrack device and loads its configuration.
-  /// \param[in] _confFile Motive project file containing camera
-  /// parameters and rigid body configuration.
-  /// \throw OptitrackException If a socket error occurs during initialization.
-  Optitrack(const std::string &_configFile)
-  {
-    /*if (TT_Initialize() != NPRESULT_SUCCESS))
-    {
-      std::cerr << "TT_Initialize() error" << std::endl;
-      throw std::runtime_error("OptiTrack exception");
-    }*/
-
-    /*if (TT_LoadProject(_confFile))
-    {
-      std::cerr << "TT_LoadProject() error" << std::endl;
-      throw std::runtime_error("OptiTrack exception");
-    }*/
-  }
-
-  /// \brief Destructor.
-  ~Optitrack()
-  {
-    /*TT_Shutdown();
-    TT_FinalCleanup();*/
-  }
-
-  /// \brief Process a new camera frame and apply 3D reconstruction and rigid
-  /// body tracking.
-  /// \param[out] _data Return the vector of rigid bodies tracked.
-  /// Each rigid body contains six floats (x, y, z, roll, pitch, yaw).
-  public: bool Update(std::vector<std::array<float, 6>> &_data)
-  {
-    _data.clear();
-
-    /*if (TT_Update() != NPRESULT_SUCCESS)
-    {
-      std::cerr << "TT_Update() error" << std::endl;
-      return false;
-    }*/
-
-    std::cout << "Update()" << std::endl;
-    return true;
-  }
-};
 
 //////////////////////////////////////////////////
 /// \brief Function callback executed when a SIGINT or SIGTERM signals are
@@ -181,8 +46,35 @@ void usage()
 }
 
 //////////////////////////////////////////////////
+void test()
+{
+  RigidBody_M trackingInfo;
+  OptitrackBridgeComms comms;
+
+  std::string head        = "head";
+  std::string monitor     = "monitor";
+  std::string hand        = "hand";
+  RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
+  RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
+  RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
+  trackingInfo[head]      = headPose;
+  trackingInfo[monitor]   = monitorPose;
+  trackingInfo[hand]      = handPose;
+
+  // Send some data.
+  if (!comms.Send(trackingInfo))
+    std::cerr << "FAIL: Send fake tracking info failed" << std::endl;
+
+  std::cout << "Press any key to exit." << std::endl;
+  getchar();
+}
+
+//////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
+  test();
+  return 0;
+
   // Sanity check: Verify that we have the expected command line args.
   if (argc != 2)
   {
@@ -192,31 +84,28 @@ int main(int argc, char **argv)
 
   try
   {
-    Comms comms;
-    Optitrack optitrack(std::string(argv[1]));
-  }
-  catch (const &std::runtime_error)
-  {
-    return -=1;
-  }
+    OptitrackBridgeComms comms;
+    std::string confFile = std::string(argv[1]);
+    OptitrackBridge optitrack(confFile);
+    RigidBody_M trackingInfo;
 
-  // \brief We will store in this variable all the tracking information.
-  // Each element of the vector is a tracked rigid body. For each rigid body
-  // we store 6 floats (x, y, z, roll, pitch, yaw).
-  std::vector<std::array<float, 6>> trackingInfo;
-
-  // Get the tracking information from Optitrack and send it over the network.
-  while (!terminate)
-  {
-    if (optitrack.Update(trackinfInfo))
+    // Get the tracking information from Optitrack and send it over the network.
+    while (!terminate)
     {
-      if (!comms.Send(trackingInfo))
-        std::cerr << "Error sending a frame over the network." << std::endl;
-    }
-    else
-      std::cerr << "Error processing a frame." << std::endl;
+      if (optitrack.Update(trackingInfo))
+      {
+        if (!comms.Send(trackingInfo))
+          std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;
+      }
+      else
+        std::cerr << "OptitrackBridge: Error processing a frame." << std::endl;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+  }
+  catch (const std::runtime_error &_excep)
+  {
+    return -1;
   }
 
   return 0;

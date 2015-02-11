@@ -17,6 +17,3 @@ target_link_libraries(polhemus_example_continuous polhemus_driver)
 
 add_executable(polhemus_example_multiple_sensors polhemus_example_multiple_sensors.c)
 target_link_libraries(polhemus_example_multiple_sensors polhemus_driver)
-
-add_executable(optitrackBridge optitrackBridge.cc)
-target_link_libraries(optitrackBridge HaptixTracking)
