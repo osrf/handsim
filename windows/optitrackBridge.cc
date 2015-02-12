@@ -104,7 +104,7 @@ int main(int argc, char **argv)
         }
       }
 
-      // We're running at 5Hz. According to Natural Point we should call
+      // We're running at 500Hz. According to Natural Point we should call
       // TT_Update() periodically every 1ms to 10ms.
       // https://www.naturalpoint.com/optitrack/static/documents/Tracking%20Tools%202.0%20User%20Guide.pdf
       std::this_thread::sleep_for(std::chrono::milliseconds(2));
