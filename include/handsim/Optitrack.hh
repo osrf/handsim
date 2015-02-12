@@ -136,6 +136,7 @@ namespace haptix
       /// \brief Store names and poses of tracker models to be published
       private: ModelPoses lastModelMap;
 
+      /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
     };
   }
