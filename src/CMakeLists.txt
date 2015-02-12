@@ -44,7 +44,7 @@ add_library(HaptixGUIPlugin SHARED ${HaptixGUIPlugin_MOC}
 add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxGrasp.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSensor.pb.cc
-  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxDevice.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxRobot.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)
 
 # additional library dependencies
