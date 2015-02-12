@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "polhemus_driver/polhemus_driver.h"
+#include <handsim/handsim/polhemus_driver.h>
 
 int
 main(void)
@@ -47,7 +47,7 @@ main(void)
     //printf("Received %d poses\n", num_poses);
     int i;
     for(i=0; i<num_poses; i++)
-      printf("%d %lf %lf %lf %lf %lf %lf\n", poses[i].station_id, 
+      printf("%d %lf %lf %lf %lf %lf %lf\n", poses[i].station_id,
              poses[i].x, poses[i].y, poses[i].z,
              poses[i].roll, poses[i].pitch, poses[i].yaw);
   }

@@ -268,7 +268,7 @@ else (build_errors)
   ########################################
   # Make the cmake config files
   set(PKG_NAME ${PROJECT_NAME_UPPER})
-  set(PKG_LIBRARIES ${PROJECT_NAME_LOWER})
+  set(PKG_LIBRARIES HaptixTracking)
 
   set(PKG_DEPENDS)
 
