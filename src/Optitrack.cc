@@ -37,6 +37,7 @@
 #include <gazebo/msgs/msgs.hh>
 
 #include "handsim/Optitrack.hh"
+#include "handsim/OptitrackBridge.hh"
 
 using namespace haptix;
 using namespace tracking;
@@ -186,7 +187,30 @@ void Optitrack::Unpack(char *pData)
   int nBytes = 0;
   memcpy(&nBytes, ptr, 2); ptr += 2;
 
-  if (MessageID == 7)      // FRAME OF MOCAP DATA packet
+  if (MessageID == 666)      // Frame from OptiTrack bridge.
+  {
+    TrackingInfo_t trackingInfo;
+    if (!this->comms.Unpack(pData, trackingInfo))
+    {
+      std::cerr << "Error unpacking" << std::endl;
+      return;
+    }
+
+    for (const auto &body : trackingInfo.bodies)
+    {
+      float x  = body.second.at(0);
+      float y  = body.second.at(1);
+      float z  = body.second.at(2);
+      float qx = body.second.at(3);
+      float qy = body.second.at(4);
+      float qz = body.second.at(5);
+      float qw = body.second.at(6);
+      this->lastModelMap[body.first] = gazebo::math::Pose(
+        gazebo::math::Vector3(x, y, z),
+        gazebo::math::Quaternion(qw, qx, qy, qz));
+    }
+  }
+  else if (MessageID == 7)      // FRAME OF MOCAP DATA packet
   {
     // frame number
     int frameNumber = 0; memcpy(&frameNumber, ptr, 4); ptr += 4;
