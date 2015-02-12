@@ -230,7 +230,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrack.SetWorld(this->world->GetName());
 
   // Start receiving Optitrack tracking updates.
-  this->optitrackThread = std::make_shared<std::thread>(std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack));
+  this->optitrackThread = std::make_shared<std::thread>(std::thread(
+      &haptix::tracking::Optitrack::StartReception, this->optitrack));
   // initialize polhemus
   this->havePolhemus = false;
   if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
@@ -1330,6 +1331,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   if (abs(gx.Dot(gy)) > 1e-6 || abs(gx.Dot(gz)) > 1e-6 || abs(gz.Dot(gy)) > 1e-6)
   {
     gzwarn << "Basis vectors are not orthogonal!" << std::endl;
+    return;
   }
 
   // The rotational matrix from Gazebo/monitor frame to Optitrack can be
