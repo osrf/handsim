@@ -26,8 +26,8 @@ to download the 32 bit Motive version and setup your compiler for working in
 
 ## Installation
 
-Totally experimental, using pre-compiled binaries in a local workspace. To make things easier, use a MinGW shell for your editing work, and only use the
-Windows `cmd` for configuring and building.  You might also need to [disable the Windows firewall](http://windows.microsoft.com/en-us/windows/turn-windows-firewall-on-off#turn-windows-firewall-on-off=windows-7). Not sure about that.
+To make things easier, use a Git Bash shell for your editing work, and only use the
+Windows `cmd` for configuring and building. You might also need to [disable the Windows firewall](http://windows.microsoft.com/en-us/windows/turn-windows-firewall-on-off#turn-windows-firewall-on-off=windows-7).
 
 1. Make a directory to work in, e.g.:
 
