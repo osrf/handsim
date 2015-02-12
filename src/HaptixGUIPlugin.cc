@@ -578,16 +578,15 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
   }
   else
   {
-    if (::hx_getdeviceinfo(::hxGAZEBO, &this->deviceInfo) != ::hxOK)
+    if (::hx_robot_info(&this->robotInfo) != ::hxOK)
     {
-      gzerr << "hx_getdeviceinfo(): Request error. Cannot control hand."
+      gzerr << "hx_robot_info(): Request error. Cannot control hand."
         << std::endl;
       return;
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     //::hxSensor sensor;
-    if(::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                                != ::hxOK)
+    if(::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return;
@@ -887,9 +886,9 @@ void HaptixGUIPlugin::PollSensors()
     if (this->hxInitialized)
     {
       // gzdbg << "contact sensor polling thread running\n";
-      if (::hx_readsensors(::hxGAZEBO, &this->lastSensor) != ::hxOK)
+      if (::hx_read_sensors(&this->lastSensor) != ::hxOK)
       {
-        gzerr << "hx_update(): Request error." << std::endl;
+        gzerr << "hx_read_sensors(): Request error." << std::endl;
       }
       this->UpdateSensorContact();
     }
@@ -901,8 +900,8 @@ void HaptixGUIPlugin::PollSensors()
 void HaptixGUIPlugin::UpdateSensorContact()
 {
   /* debug print forces
-  gzerr << "ncontact sensor [" << this->deviceInfo.ncontactsensor << "]\n";
-  for (int i = 0; i < this->deviceInfo.ncontactsensor; ++i)
+  gzerr << "ncontact sensor [" << this->robotInfo.ncontactsensor << "]\n";
+  for (int i = 0; i < this->robotInfo.ncontactsensor; ++i)
   {
     gzerr << "sensor [" << i
           << "]: contacts [" << this->lastSensor.contact[i] << "]\n";
@@ -947,8 +946,7 @@ void HaptixGUIPlugin::ResetModels()
   // Also reset wrist and finger posture
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
   //::hxSensor sensor;
-  if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                               != ::hxOK)
+  if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
 
   // And zero the grasp, if any.
@@ -1003,8 +1001,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   {
     // Send a motor command to hold current pose
     //::hxSensor sensor;
-    if (::hx_update(::hxGAZEBO, &this->lastMotorCommand, &this->lastSensor)
-                                                                 != ::hxOK)
+    if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error." << std::endl;
     }
@@ -1118,7 +1115,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     this->lastGraspRequest = graspTmp;
     // Assign to lastMotorCommand, because now we're tracking the target based
     // purely on grasp poses.
-    for (int i = this->numWristMotors; i < this->deviceInfo.nmotor; ++i)
+    for (int i = this->numWristMotors; i < this->robotInfo.motor_count; ++i)
     {
       this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
     }
@@ -1132,7 +1129,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   if (motor != this->motorKeys.end())
   {
     int index = motor->second.first;
-    if (index >= this->deviceInfo.nmotor)
+    if (index >= this->robotInfo.motor_count)
     {
       gzerr << "Index out of bounds for motor control." << std::endl;
       return false;
@@ -1142,7 +1139,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     {
       // Start with the last direct motor command.
       ::hxCommand cmd;
-      for (int i=0; i < this->deviceInfo.nmotor; ++i)
+      for (int i=0; i < this->robotInfo.motor_count; ++i)
         cmd.ref_pos[i] = this->lastMotorCommand.ref_pos[i];
 
       // Now add in the new diff
@@ -1150,11 +1147,11 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
       // Now command it.
       // std::cout << "Sending: " << std::endl;
-      //  for(int i = 0; i < this->deviceInfo.nmotor; ++i)
+      //  for(int i = 0; i < this->robotInfo.motor_count; ++i)
       //    std::cout << cmd.ref_pos[i] << " ";
       // std::cout << std::endl;
       //::hxSensor sensor;
-      if (::hx_update(::hxGAZEBO, &cmd, &this->lastSensor) != ::hxOK)
+      if (::hx_update(&cmd, &this->lastSensor) != ::hxOK)
       {
         gzerr << "hx_update(): Request error." << std::endl;
       }
@@ -1162,7 +1159,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       // print current command for capturing into grasp
       /*
       gzdbg << "Current grasp:\n";
-      for (unsigned int i=0; i<this->deviceInfo.nmotor; ++i)
+      for (unsigned int i=0; i<this->robotInfo.motor_count; ++i)
       {
         // cannot use gzdbg because extra code line info.
         std::cout << cmd.ref_pos[i] << " ";
@@ -1171,15 +1168,17 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       */
 
       // And record it for next time
-      for (int i=0; i<this->deviceInfo.nmotor; ++i)
+      for (int i=0; i<this->robotInfo.motor_count; ++i)
       {
-        if (cmd.ref_pos[i] < this->deviceInfo.limit[i][0])
+        if (cmd.ref_pos[i] < this->robotInfo.motor_limit[i][0])
         {
-          this->lastMotorCommand.ref_pos[i] = this->deviceInfo.limit[i][0];
+          this->lastMotorCommand.ref_pos[i] =
+              this->robotInfo.motor_limit[i][0];
         }
-        else if (cmd.ref_pos[i] > this->deviceInfo.limit[i][1])
+        else if (cmd.ref_pos[i] > this->robotInfo.motor_limit[i][1])
         {
-          this->lastMotorCommand.ref_pos[i] = this->deviceInfo.limit[i][1];
+          this->lastMotorCommand.ref_pos[i] =
+              this->robotInfo.motor_limit[i][1];
         }
         else
         {
@@ -1259,7 +1258,7 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   this->lastGraspRequest = grasp;
   // Assign to lastMotorCommand, because now we're tracking the target based
   // purely on grasp poses.
-  for (int i = this->numWristMotors; i < this->deviceInfo.nmotor; ++i)
+  for (int i = this->numWristMotors; i < this->robotInfo.motor_count; ++i)
   {
     this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
   }

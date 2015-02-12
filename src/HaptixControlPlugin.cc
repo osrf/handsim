@@ -34,8 +34,8 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->headOffsetInitialized = false;
 
   // Advertise haptix services.
-  this->ignNode.Advertise("/haptix/gazebo/GetDeviceInfo",
-    &HaptixControlPlugin::HaptixGetDeviceInfoCallback, this);
+  this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
+    &HaptixControlPlugin::HaptixGetRobotInfoCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/Update",
     &HaptixControlPlugin::HaptixUpdateCallback, this);
@@ -522,7 +522,7 @@ void HaptixControlPlugin::LoadHandControl()
 
     // initialize position command.
     this->robotCommand.add_ref_pos(0.0);
-    this->robotCommand.add_ref_vel(0.0);
+    this->robotCommand.add_ref_vel_max(0.0);
 
     // default position and velocity gains
     this->robotCommand.add_gain_pos(1.0);
@@ -537,7 +537,7 @@ void HaptixControlPlugin::LoadHandControl()
     // internal command of all joints controller here (not just motors)
     SimRobotCommand c;
     c.ref_pos = 0.0;
-    c.ref_vel = 0.0;
+    c.ref_vel_max = 0.0;
     c.gain_pos = 1.0;
     c.gain_vel = 0.0;
     this->simRobotCommands.push_back(c);
@@ -557,11 +557,11 @@ void HaptixControlPlugin::LoadHandControl()
 
   for (unsigned int i = 0; i < imuSensors.size(); ++i)
   {
-    haptix::comm::msgs::imu *linacc = this->robotState.add_imu_linacc();
+    haptix::comm::msgs::imu *linacc = this->robotState.add_imu_linear_acc();
     linacc->set_x(0);
     linacc->set_y(0);
     linacc->set_z(0);
-    haptix::comm::msgs::imu *angvel = this->robotState.add_imu_angvel();
+    haptix::comm::msgs::imu *angvel = this->robotState.add_imu_angular_vel();
     angvel->set_x(0);
     angvel->set_y(0);
     angvel->set_z(0);
@@ -578,7 +578,7 @@ void HaptixControlPlugin::Reset()
       iter != this->simRobotCommands.end(); ++iter)
   {
     iter->ref_pos = 0.0;
-    iter->ref_vel = 0.0;
+    iter->ref_vel_max = 0.0;
   }
 }
 
@@ -813,12 +813,12 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     if (this->graspMode && i >= numWristMotors)
     {
       this->simRobotCommands[m].ref_pos = this->graspPositions[i];
-      this->simRobotCommands[m].ref_vel = 0.0;
+      this->simRobotCommands[m].ref_vel_max = 0.0;
     }
     else
     {
       this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
-      this->simRobotCommands[m].ref_vel = this->robotCommand.ref_vel(i);
+      this->simRobotCommands[m].ref_vel_max = this->robotCommand.ref_vel_max(i);
     }
     /// \TODO: fix by implementing better models
     // this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
@@ -834,8 +834,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
         (this->simRobotCommands[m].ref_pos +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
-      this->simRobotCommands[n].ref_vel =
-        (this->simRobotCommands[m].ref_vel +
+      this->simRobotCommands[n].ref_vel_max =
+        (this->simRobotCommands[m].ref_vel_max +
          this->motorInfos[i].gearboxes[j].offset)
         * this->motorInfos[i].gearboxes[j].multiplier;
 
@@ -854,7 +854,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 
     // compute position and velocity error
     double errorPos = position - this->simRobotCommands[i].ref_pos;
-    double errorVel = velocity - this->simRobotCommands[i].ref_vel;
+    double errorVel = velocity - this->simRobotCommands[i].ref_vel_max;
 
     // compute overall error
     double error = this->simRobotCommands[i].gain_pos * errorPos
@@ -876,86 +876,79 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
-  if (_i < static_cast<int>(this->contactSensorInfos.size()))
-  {
-    sensors::ContactSensorPtr contactSensor =
-      boost::dynamic_pointer_cast<sensors::ContactSensor>(
-      this->contactSensorInfos[_i].sensor);
-
-    if (contactSensor)
-    {
-      msgs::Contacts contacts = contactSensor->GetContacts();
-      // contact sensor report contact between pairs of bodies
-      // if (contacts.contact().size() > 0)
-      //   gzerr << "  name " << contactSensor->GetName()
-      //         << " contacts " << contacts.contact().size() << "\n";
-
-      // reset aggregate forces and torques if contacts detected
-      this->contactSensorInfos[_i].contactForce = math::Vector3();
-      this->contactSensorInfos[_i].contactTorque = math::Vector3();
-
-      for (int j = 0; j < contacts.contact().size(); ++j)
-      {
-        msgs::Contact contact = contacts.contact(j);
-        // each contact can have multiple wrenches
-        // if (contact.wrench().size() > 0)
-        //   gzerr << "    wrenches " << contact.wrench().size() << "\n";
-        for (int k = 0; k < contact.wrench().size(); ++k)
-        {
-          msgs::JointWrench wrenchMsg = contact.wrench(k);
-
-          // sum up all wrenches from body_1 or body_2
-          // check with contact corresponds to the arm and which to the arm
-          // compare body_1_name and body_2_name with model name
-          if (strncmp(this->model->GetName().c_str(),
-                      wrenchMsg.body_1_name().c_str(),
-                      this->model->GetName().size()) == 0)
-          {
-            this->contactSensorInfos[_i].contactForce +=
-              msgs::Convert(wrenchMsg.body_1_wrench().force());
-            this->contactSensorInfos[_i].contactTorque +=
-              msgs::Convert(wrenchMsg.body_1_wrench().torque());
-          }
-          else if (strncmp(this->model->GetName().c_str(),
-                           wrenchMsg.body_2_name().c_str(),
-                           this->model->GetName().size()) == 0)
-          {
-            this->contactSensorInfos[_i].contactForce +=
-              msgs::Convert(wrenchMsg.body_2_wrench().force());
-            this->contactSensorInfos[_i].contactTorque +=
-              msgs::Convert(wrenchMsg.body_2_wrench().torque());
-          }
-          else
-          {
-            gzwarn << "collision name does not match model name, averaging.\n";
-            this->contactSensorInfos[_i].contactForce +=
-              0.5*(msgs::Convert(wrenchMsg.body_2_wrench().force()) +
-                   msgs::Convert(wrenchMsg.body_2_wrench().force()));
-            this->contactSensorInfos[_i].contactTorque +=
-              0.5*(msgs::Convert(wrenchMsg.body_2_wrench().torque()) +
-                   msgs::Convert(wrenchMsg.body_2_wrench().torque()));
-          }
-
-          // gzerr << "        contact [" << _i << ", " << j
-          //       << ", " << k << "] : [" << contactForce << "]\n";
-        }
-      }
-      // gzerr << "contact [" << _i
-      //       << "]: [" << this->contactSensorInfos[_i].contactForce
-      //       << "]\n";
-    }
-    else
-    {
-      gzerr << "sensor [" << this->contactSensorInfos[_i].sensor->GetName()
-            << "] is not a ContactSensor.\n";
-    }
-  }
-  else
-  {
+  if (_i >= static_cast<int>(this->contactSensorInfos.size()))
+  {   
     gzerr << "sensor [" << _i
           << "] is out of range of contactSensorInfos["
           << this->contactSensorInfos.size() << "].\n";
+    return;
   }
+  sensors::ContactSensorPtr contactSensor =
+    boost::dynamic_pointer_cast<sensors::ContactSensor>(
+    this->contactSensorInfos[_i].sensor);
+
+  if (!contactSensor)
+  {
+    gzerr << "sensor [" << this->contactSensorInfos[_i].sensor->GetName()
+          << "] is not a ContactSensor.\n";
+    return;
+  }
+  msgs::Contacts contacts = contactSensor->GetContacts();
+  // contact sensor report contact between pairs of bodies
+  // if (contacts.contact().size() > 0)
+  //   gzerr << "  name " << contactSensor->GetName()
+  //         << " contacts " << contacts.contact().size() << "\n";
+
+  // reset aggregate forces and torques if contacts detected
+  this->contactSensorInfos[_i].contactForce = math::Vector3();
+  this->contactSensorInfos[_i].contactTorque = math::Vector3();
+
+  for (int j = 0; j < contacts.contact().size(); ++j)
+  {
+    msgs::Contact contact = contacts.contact(j);
+    // each contact can have multiple wrenches
+    // if (contact.wrench().size() > 0)
+    //   gzerr << "    wrenches " << contact.wrench().size() << "\n";
+    for (int k = 0; k < contact.wrench().size(); ++k)
+    {
+      msgs::JointWrench wrenchMsg = contact.wrench(k);
+
+      // sum up all wrenches from body_1 or body_2
+      // check with contact corresponds to the arm and which to the arm
+      // compare body_1_name and body_2_name with model name
+
+      if (strncmp(this->model->GetName().c_str(),
+                  wrenchMsg.body_1_name().c_str(),
+                  this->model->GetName().size()) == 0)
+      {
+        this->contactSensorInfos[_i].contactForce +=
+          msgs::Convert(wrenchMsg.body_1_wrench().force());
+        this->contactSensorInfos[_i].contactTorque +=
+          msgs::Convert(wrenchMsg.body_1_wrench().torque());
+      }
+      else if (strncmp(this->model->GetName().c_str(),
+                       wrenchMsg.body_2_name().c_str(),
+                       this->model->GetName().size()) == 0)
+      {
+        this->contactSensorInfos[_i].contactForce +=
+          msgs::Convert(wrenchMsg.body_2_wrench().force());
+        this->contactSensorInfos[_i].contactTorque +=
+          msgs::Convert(wrenchMsg.body_2_wrench().torque());
+      }
+      else
+      {
+        gzerr << "collision name does not match model name. This should "
+               << "never happen." << std::endl;
+        return;
+      }
+
+      // gzerr << "        contact [" << _i << ", " << j
+      //       << ", " << k << "] : [" << contactForce << "]\n";
+    }
+  }
+  // gzerr << "contact [" << _i
+  //       << "]: [" << this->contactSensorInfos[_i].contactForce
+  //       << "]\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -999,13 +992,15 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 
   for (unsigned int i = 0; i < this->imuSensors.size(); ++i)
   {
-    haptix::comm::msgs::imu *linacc = this->robotState.mutable_imu_linacc(i);
+    haptix::comm::msgs::imu *linacc =
+        this->robotState.mutable_imu_linear_acc(i);
     math::Vector3 acc = this->imuSensors[i]->GetLinearAcceleration();
     math::Vector3 vel = this->imuSensors[i]->GetAngularVelocity();
     linacc->set_x(acc.x);
     linacc->set_y(acc.y);
     linacc->set_z(acc.z);
-    haptix::comm::msgs::imu *angvel = this->robotState.mutable_imu_angvel(i);
+    haptix::comm::msgs::imu *angvel =
+        this->robotState.mutable_imu_angular_vel(i);
     angvel->set_x(vel.x);
     angvel->set_y(vel.y);
     angvel->set_z(vel.z);
@@ -1085,23 +1080,23 @@ math::Pose HaptixControlPlugin::convertPolhemusToPose(
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::HaptixGetDeviceInfoCallback(
+void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       const std::string &/*_service*/,
-      const haptix::comm::msgs::hxDevice &/*_req*/,
-      haptix::comm::msgs::hxDevice &_rep, bool &_result)
+      const haptix::comm::msgs::hxRobot &/*_req*/,
+      haptix::comm::msgs::hxRobot &_rep, bool &_result)
 {
   // is this needed?
   // if (_service != deviceInfoTopic)
   //   _result = false;
 
-  _rep.set_nmotor(this->motorInfos.size());
-  _rep.set_njoint(this->joints.size());
-  _rep.set_ncontactsensor(this->contactSensorInfos.size());
-  _rep.set_nimu(this->imuSensors.size());
+  _rep.set_motor_count(this->motorInfos.size());
+  _rep.set_joint_count(this->joints.size());
+  _rep.set_contact_sensor_count(this->contactSensorInfos.size());
+  _rep.set_imu_count(this->imuSensors.size());
 
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    haptix::comm::msgs::hxJointAngle *joint = _rep.add_limit();
+    haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_motor_limit();
     unsigned int m = this->motorInfos[i].index;
     joint->set_minimum(this->joints[m]->GetLowerLimit(0).Radian());
     joint->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
@@ -1126,7 +1121,7 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   {
     std::cout << "\tMotor " << i << ":" << std::endl;
     std::cout << "\t\t" << _req.ref_pos(i) << std::endl;
-    std::cout << "\t\t" << _req.ref_vel(i) << std::endl;
+    std::cout << "\t\t" << _req.ref_vel_max(i) << std::endl;
     std::cout << "\t\t" << _req.gain_pos(i) << std::endl;
     std::cout << "\t\t" << _req.gain_vel(i) << std::endl;
   }*/

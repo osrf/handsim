@@ -39,7 +39,7 @@
 
 #include <haptix/comm/haptix.h>
 #include <haptix/comm/msg/hxCommand.pb.h>
-#include <haptix/comm/msg/hxDevice.pb.h>
+#include <haptix/comm/msg/hxRobot.pb.h>
 #include <haptix/comm/msg/hxSensor.pb.h>
 #include <haptix/comm/msg/hxGrasp.pb.h>
 #include <ignition/transport.hh>
@@ -284,7 +284,7 @@ namespace gazebo
     private: class SimRobotCommand
     {
       public: double ref_pos;
-      public: double ref_vel;
+      public: double ref_vel_max;
       public: double gain_pos;
       public: double gain_vel;
     };
@@ -420,15 +420,15 @@ namespace gazebo
     /// \brief: ignition transport node for talking to haptix comm
     private: ignition::transport::Node ignNode;
 
-    /// \brief: Provide device info through haptix_comm
+    /// \brief: Provide robot info through haptix_comm
     /// \param[in] _service service name
     /// \param[in] _req request data, not used here.
-    /// \param[out] _rep respond data, returns info in haptix::comm::hxDevice.
+    /// \param[out] _rep respond data, returns info in haptix::comm::hxRobot.
     /// \param[out] _result returns true if request was successful
-    private: void HaptixGetDeviceInfoCallback(
+    private: void HaptixGetRobotInfoCallback(
       const std::string &_service,
-      const haptix::comm::msgs::hxDevice &_req,
-      haptix::comm::msgs::hxDevice &_rep, bool &_result);
+      const haptix::comm::msgs::hxRobot &_req,
+      haptix::comm::msgs::hxRobot &_rep, bool &_result);
 
     /// \brief: Simulation responder to team controller client nodes
     /// \param[in] _service service name
