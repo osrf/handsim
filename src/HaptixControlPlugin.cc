@@ -401,11 +401,18 @@ void HaptixControlPlugin::LoadHandControl()
     for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
     {
       unsigned int m = this->motorInfos[i].index;
+
+      // compute total multiplier for all coupled joints
+      double totalMultiplier = 1.0;
+      for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+        totalMultiplier += this->motorInfos[i].gearboxes[j].multiplier;
+      
       // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
       double jointTorque = this->motorInfos[i].gearRatio *
                            this->motorInfos[i].motorTorque;
-      this->pids[m].SetCmdMax(jointTorque);
-      this->pids[m].SetCmdMin(-jointTorque);
+
+      this->pids[m].SetCmdMax(jointTorque / totalMultiplier);
+      this->pids[m].SetCmdMin(-jointTorque / totalMultiplier);
       // gzdbg << " motor torque [" << m
       //       << "] : " << jointTorque << "\n";
 
@@ -417,7 +424,7 @@ void HaptixControlPlugin::LoadHandControl()
       {
         unsigned int n = this->motorInfos[i].gearboxes[j].index;
         double coupledJointTorque = jointTorque *
-          this->motorInfos[i].gearboxes[j].multiplier;
+          this->motorInfos[i].gearboxes[j].multiplier / totalMultiplier;
         this->pids[n].SetCmdMax(coupledJointTorque);
         this->pids[n].SetCmdMin(-coupledJointTorque);
         // gzdbg << " motor torque [" << n
