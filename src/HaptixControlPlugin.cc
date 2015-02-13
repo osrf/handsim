@@ -1318,6 +1318,10 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   {
     points.push_back(msgs::Convert(_msg->points(i)));
   }
+  if (points.size() < 3)
+  {
+    return;
+  }
   
   gazebo::math::Vector3 gx = (points[1] - points[0]).Normalize();
   gazebo::math::Vector3 gz = (points[1] - points[2]).Normalize();
