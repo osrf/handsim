@@ -353,7 +353,7 @@ bool OptitrackBridge::Update(TrackingInfo_t &_trackingInfo)
       auto name = TT_TrackableName(i);
 
       // Store the rigid body pose.
-      _trackingInfo.bodies[TT_TrackableName(i)] = {-x, y, z, -qx, qy, qz, -qw};
+      _trackingInfo.bodies[name].body = {-x, y, z, -qx, qy, qz, -qw};
 
       // Markers for this rigid body.
       auto numMarkers = TT_TrackableMarkerCount(i);
