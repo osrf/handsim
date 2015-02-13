@@ -227,7 +227,6 @@ void Optitrack::Unpack(char *pData)
       int nDataBytes = (int) strlen(ptr) + 1;
       ptr += nDataBytes;
       output << "Model Name: " << szName << std::endl;
-      std::cout << "Model name: " << szName << std::endl;
       markerSets[szName] = std::vector<gazebo::math::Vector3>();
 
       // marker data
@@ -241,8 +240,6 @@ void Optitrack::Unpack(char *pData)
         float x = 0; memcpy(&x, ptr, 4); ptr += 4;
         float y = 0; memcpy(&y, ptr, 4); ptr += 4;
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
-        std::cout << "\tMarker " << j << " : [x="
-               << x << ",y=" << y << ",z=" << z << "]" << std::endl;
         output << "\tMarker " << j << " : [x="
                << x << ",y=" << y << ",z=" << z << "]" << std::endl;
         markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
