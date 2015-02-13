@@ -5,7 +5,7 @@ if (WIN32)
   include_directories($ENV{NPTRACKINGTOOLS_INC})
   link_directories($ENV{NPTRACKINGTOOLS_LIB})
 
-  add_executable(optitrackBridge optitrackBridge.cc ../src/OptitrackBridge.cc)
+  add_executable(optitrackBridge optitrackBridge.cc)
   target_link_libraries(optitrackBridge NPTrackingToolsx64 ws2_32)
 else ()
   message(FATAL_ERROR "This program is only supported on Windows.")
