@@ -19,10 +19,7 @@
 #include <csignal>
 #include <iostream>
 #include <thread>
-#include "handsim/OptitrackBridge.hh"
-
-using namespace haptix;
-using namespace tracking;
+#include "NPTrackingTools.h"
 
 static bool hxTerminate = false;
 
@@ -46,50 +43,9 @@ void usage()
 }
 
 //////////////////////////////////////////////////
-void test()
-{
-  TrackingInfo_t trackingInfo;
-  OptitrackBridgeComms comms;
-
-  std::string head        = "head";
-  std::string monitor     = "monitor";
-  std::string hand        = "hand";
-  RigidBody_A headPose    = { 1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f};
-  Marker_A    headM1      = { 1.1f,  2.1f,  3.1f};
-  Marker_A    headM2      = { 4.1f,  5.1f,  6.1f};
-  Marker_A    headM3      = { 7.1f,  8.1f,  9.1f};
-  RigidBody_A monitorPose = {11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
-  Marker_A    monitorM1   = {11.1f, 12.1f, 13.1f};
-  Marker_A    monitorM2   = {14.1f, 15.1f, 16.1f};
-  Marker_A    monitorM3   = {17.1f, 18.1f, 19.1f};
-  RigidBody_A handPose    = {21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f};
-  Marker_A    handM1      = {21.1f, 22.1f, 23.1f};
-  Marker_A    handM2      = {24.1f, 25.1f, 26.1f};
-  Marker_A    handM3      = {27.1f, 28.1f, 29.1f};
-  trackingInfo.timestamp               = 0.5;
-  trackingInfo.bodies[head].body       = headPose;
-  trackingInfo.bodies[head].markers    = {headM1, headM2, headM3};
-  trackingInfo.bodies[monitor].body    = monitorPose;
-  trackingInfo.bodies[monitor].markers = {monitorM1, monitorM2, monitorM3};
-  trackingInfo.bodies[hand].body       = handPose;
-  trackingInfo.bodies[hand].markers    = {handM1, handM2, handM3};
-
-  // Send some data.
-  if (!comms.Send(trackingInfo))
-    std::cerr << "FAIL: Send fake tracking info failed" << std::endl;
-
-  std::cout << "Press any key to exit." << std::endl;
-  getchar();
-}
-
-//////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
-#ifdef __linux__
-  // We keep this fragment for testing on Linux.
-  test();
-  return 0;
-#endif
+
   // Sanity check: Verify that we have the expected command line args.
   if (argc != 2)
   {
@@ -97,34 +53,28 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  try
+  if (TT_Initialize() != NPRESULT_SUCCESS)
   {
-    OptitrackBridgeComms comms;
-    std::string confFile = std::string(argv[1]);
-    OptitrackBridge optitrack(confFile);
-    TrackingInfo_t trackingInfo;
-
-    // Get the tracking information from Optitrack and send it over the network.
-    while (!hxTerminate)
-    {
-      if (optitrack.Update(trackingInfo))
-      {
-        if (!trackingInfo.bodies.empty())
-        {
-          if (!comms.Send(trackingInfo))
-            std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;
-        }
-      }
-
-      // We're running at 500Hz. According to Natural Point we should call
-      // TT_Update() periodically every 1ms to 10ms.
-      // https://www.naturalpoint.com/optitrack/static/documents/Tracking%20Tools%202.0%20User%20Guide.pdf
-      std::this_thread::sleep_for(std::chrono::milliseconds(2));
-    }
-  }
-  catch (const std::runtime_error &/*_excep*/)
-  {
+    std::cerr << "TT_Initialize() error" << std::endl;
     return -1;
+  }
+
+  std::string confFile = std::string(argv[1]);
+  if (TT_LoadProject(confFile.c_str()))
+  {
+    std::cerr << "TT_LoadProject() error" << std::endl;
+    return -1;
+  }
+
+  // Get the tracking information from Optitrack and send it over the network.
+  while (!hxTerminate)
+  {
+    TT_Update()
+
+    // We're running at 500Hz. According to Natural Point we should call
+    // TT_Update() periodically every 1ms to 10ms.
+    // https://www.naturalpoint.com/optitrack/static/documents/Tracking%20Tools%202.0%20User%20Guide.pdf
+    std::this_thread::sleep_for(std::chrono::milliseconds(2));
   }
 
   return 0;
