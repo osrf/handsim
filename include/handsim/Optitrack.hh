@@ -138,6 +138,8 @@ namespace haptix
 
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
+      /// \brief Store relevant markers
+      private: std::vector<gazebo::math::Vector3> originMarkers;
     };
   }
 }

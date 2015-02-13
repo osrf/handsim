@@ -520,7 +520,7 @@ namespace gazebo
     private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
 
     /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
     /// \brief Pose of the optitrack head tracker in the world frame
     private: gazebo::math::Pose optitrackHead;
@@ -542,8 +542,8 @@ namespace gazebo
     /// \brief Orthonormal transformation between Optitrack arm and world axes
     private: gazebo::math::Pose optitrackWorldArmRot;
 
-    /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
-    private: gazebo::math::Pose monitorOptitrackFrame;
+    /// \brief Pose of the optitrack origin in the monitor (gazebo) frame
+    private: gazebo::math::Pose optitrackMonitorFrame;
 
     /// \brief Low-pass filter for head position (reduces jitter)
     private: gazebo::math::OnePoleVector3 headPosFilter;

@@ -202,16 +202,11 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->optitrackHead = gazebo::math::Pose::Zero;
   this->optitrackArm = gazebo::math::Pose::Zero;
-  this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
+  this->optitrackMonitorFrame = gazebo::math::Pose::Zero;
 
-  this->optitrackWorldHeadRot = gazebo::math::Pose(
-                                gazebo::math::Vector3(0, 0, 0),
-                                gazebo::math::Quaternion(M_PI/2, 0, M_PI/2));
+  this->optitrackWorldHeadRot = gazebo::math::Pose(0, 0, 0, -M_PI/2, 0, 0);
 
-
-  this->optitrackWorldArmRot = gazebo::math::Pose(
-                               gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
+  this->optitrackWorldArmRot = gazebo::math::Pose(0, 0, 0, -M_PI/2, M_PI/2, 0);
 
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
@@ -235,7 +230,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrack.SetWorld(this->world->GetName());
 
   // Start receiving Optitrack tracking updates.
-  this->optitrackThread = std::make_shared<std::thread>(std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack));
+  this->optitrackThread = std::make_shared<std::thread>(std::thread(
+      &haptix::tracking::Optitrack::StartReception, this->optitrack));
   // initialize polhemus
   this->havePolhemus = false;
   if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
@@ -1270,7 +1266,7 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
   gazebo::math::Pose pose = this->optitrackWorldHeadRot +
-      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+      (gazebo::msgs::Convert(*_msg) + this->optitrackMonitorFrame);
   pose.pos = this->headPosFilter.Process(pose.pos);
   pose.rot = this->headOriFilter.Process(pose.rot);  
   
@@ -1299,7 +1295,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   
   gazebo::math::Pose pose = this->optitrackWorldArmRot +
-      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+      (gazebo::msgs::Convert(*_msg) + this->optitrackMonitorFrame);
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
@@ -1315,9 +1311,41 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPosePtr &_msg)
+void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 {
-  this->monitorOptitrackFrame = gazebo::msgs::Convert(*_msg);
+  std::vector<gazebo::math::Vector3> points;
+  for (int i = 0; i < _msg->points_size(); i++)
+  {
+    points.push_back(msgs::Convert(_msg->points(i)));
+  }
+  
+  gazebo::math::Vector3 gx = (points[1] - points[0]).Normalize();
+  gazebo::math::Vector3 gz = (points[1] - points[2]).Normalize();
+
+  // gy = gz X gx
+  gazebo::math::Vector3 gy = gz.Cross(gx).Normalize();
+
+  gx = gy.Cross(gz).Normalize();
+  gz = gx.Cross(gy).Normalize();
+
+  if (abs(gx.Dot(gy)) > 1e-6 || abs(gx.Dot(gz)) > 1e-6 || abs(gz.Dot(gy)) > 1e-6)
+  {
+    gzwarn << "Basis vectors are not orthogonal!" << std::endl;
+    return;
+  }
+
+  // The rotational matrix from Gazebo/monitor frame to Optitrack can be
+  // represented with gx, gy, gz as its column vectors
+
+  // Calculate RPY angles: http://planning.cs.uiuc.edu/node103.html
+
+  float alpha = atan2(gx[1], gx[0]);
+  float beta = atan2(-gx[2], sqrt(pow(gy[2], 2) + pow(gz[2], 2)));
+  float gamma = atan2(gy[2], gz[2]);
+
+  gazebo::math::Quaternion monitorRot(gamma, beta, alpha);
+
+  this->optitrackMonitorFrame = gazebo::math::Pose(monitorRot*points[1], monitorRot);
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)
