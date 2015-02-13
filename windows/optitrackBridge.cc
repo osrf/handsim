@@ -55,12 +55,24 @@ void test()
   std::string monitor     = "monitor";
   std::string hand        = "hand";
   RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
+  Marker_A    headM1      = { 1.1,  2.1,  3.1};
+  Marker_A    headM2      = { 4.1,  5.1,  6.1};
+  Marker_A    headM3      = { 7.1,  8.1,  9.1};
   RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
+  Marker_A    monitorM1   = {11.1, 12.1, 13.1};
+  Marker_A    monitorM2   = {14.1, 15.1, 16.1};
+  Marker_A    monitorM3   = {17.1, 18.1, 19.1};
   RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
-  trackingInfo.timestamp        = 0.5;
-  trackingInfo.bodies [head]    = headPose;
-  trackingInfo.bodies [monitor] = monitorPose;
-  trackingInfo.bodies [hand]    = handPose;
+  Marker_A    handM1      = {21.1, 22.1, 23.1};
+  Marker_A    handM2      = {24.1, 25.1, 26.1};
+  Marker_A    handM3      = {27.1, 28.1, 29.1};
+  trackingInfo.timestamp               = 0.5;
+  trackingInfo.bodies[head].body       = headPose;
+  trackingInfo.bodies[head].markers    = {headM1, headM2, headM3};
+  trackingInfo.bodies[monitor].body    = monitorPose;
+  trackingInfo.bodies[monitor].markers = {monitorM1, monitorM2, monitorM3};
+  trackingInfo.bodies[hand].body       = handPose;
+  trackingInfo.bodies[hand].markers    = {handM1, handM2, handM3};
 
   // Send some data.
   if (!comms.Send(trackingInfo))

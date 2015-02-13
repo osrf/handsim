@@ -118,7 +118,11 @@ size_t OptitrackBridgeComms::MsgLength(const TrackingInfo_t &_trackingInfo)
     // Rigid body name
     len += body.first.size();
     // All the stored fields for each rigid body.
-    len += sizeof(float) * body.second.size();
+    len += sizeof(float) * body.second.body.size();
+    // Number of markers for this rigid body.
+    len += sizeof(uint64_t);
+    // All the marker positions for each rigid body.
+    len += body.second.markers.size() * sizeof(Marker_A);
   }
   return len;
 }
@@ -171,9 +175,22 @@ size_t OptitrackBridgeComms::Pack(const TrackingInfo_t &_trackingInfo,
     ptr += nameLength;
 
     // Pack the rigid body pose.
-    RigidBody_A pose = body.second;
+    RigidBody_A pose = body.second.body;
     memcpy(ptr, &pose[0], sizeof(float) * pose.size());
     ptr += sizeof(float) * pose.size();
+
+    // Pack the number of markers for this rigid body.
+    uint64_t numMarkers = body.second.markers.size();
+    memcpy(ptr, &numMarkers, sizeof(numMarkers));
+    ptr += sizeof(numMarkers);
+
+    // Pack the set of markers for this rigid body.
+    for (size_t i = 0; i < numMarkers; ++i)
+    {
+      Marker_A marker = body.second.markers.at(i);
+      memcpy(ptr, &marker, sizeof(marker));
+      ptr += sizeof(marker);
+    }
   }
 
   return len;
@@ -216,7 +233,7 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
   memcpy(&numBodies, _buffer, sizeof(numBodies));
   _buffer += sizeof(numBodies);
 
-  for (int i = 0; i < numBodies; ++i)
+  for (size_t i = 0; i < numBodies; ++i)
   {
     // Unpack the rigid body name length.
     uint64_t nameLength;
@@ -233,7 +250,23 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
     _buffer += pose.size() * sizeof(float);
 
     // Add the new rigid body entry to the output.
-    _trackingInfo.bodies[name] = pose;
+    _trackingInfo.bodies[name].body = pose;
+
+    // Unpack the number of markers for this rigid body.
+    uint64_t numMarkers;
+    memcpy(&numMarkers, _buffer, sizeof(numMarkers));
+    _buffer += sizeof(numMarkers);
+
+    // Unpack the set of markers for this rigid body.
+    for (size_t j = 0; j < numMarkers; ++j)
+    {
+      Marker_A marker;
+      memcpy(&marker, _buffer, sizeof(marker));
+      _buffer += sizeof(marker);
+
+      // Add the marker to the output.
+      _trackingInfo.bodies[name].markers.push_back(marker);
+    }
   }
 
   return true;
@@ -307,9 +340,9 @@ bool OptitrackBridge::Update(TrackingInfo_t &_trackingInfo)
   // Store the timestamp.
   _trackingInfo.timestamp = TT_FrameTimeStamp();
 
-  for (int i = 0; i < TT_TrackableCount(); ++i)
+  for (auto i = 0; i < TT_TrackableCount(); ++i)
   {
-    if(TT_IsTrackableTracked(i))
+    if (TT_IsTrackableTracked(i))
     {
       float x, y, z;
       float qx, qy, qz, qw;
@@ -317,8 +350,20 @@ bool OptitrackBridge::Update(TrackingInfo_t &_trackingInfo)
       TT_TrackableLocation(i, &x, &y, &z, &qx, &qy, &qz, &qw,
         &yaw, &pitch, &roll);
 
+      auto name = TT_TrackableName(i);
+
       // Store the rigid body pose.
       _trackingInfo.bodies[TT_TrackableName(i)] = {-x, y, z, -qx, qy, qz, -qw};
+
+      // Markers for this rigid body.
+      auto numMarkers = TT_TrackableMarkerCount(i);
+      for (auto j = 0; j < numMarkers; ++j)
+      {
+        TT_TrackableMarker(i, j, &x, &y, &z);
+
+        // Store the marker for this rigid body.
+        _trackingInfo.bodies[name].markers.push_back({x, y, z});
+      }
     }
   }
 #endif
