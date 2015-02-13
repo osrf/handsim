@@ -19,6 +19,8 @@
 
 #include "handsim/HaptixControlPlugin.hh"
 
+#define FORCE_BASED 0
+
 namespace gazebo
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,15 +97,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Subscribe("~/hydra",
       &HaptixControlPlugin::OnHydra, this);
 
-  this->baseJoint =
-    this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
-  if (!this->baseJoint)
-  {
-    gzerr << "<base_joint>" << this->sdf->Get<std::string>("base_joint")
-          << "<base_joint> does not exist\n";
-    return;
-  }
-
   this->baseLink =
     this->model->GetLink(this->sdf->Get<std::string>("base_link"));
   if (!this->baseLink)
@@ -112,44 +105,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
           << "<base_link> does not exist\n";
     return;
   }
-  // this is where the user spawned the base link of the arm
-  this->initialBaseLinkPose = this->baseLink->GetWorldPose();
-  this->targetBaseLinkPose = this->initialBaseLinkPose;
-  // param for spacenav control, this is the point in arm base link
-  // frame for which we want to control with the spacenav
-  this->baseLinktoSpacenavPose = math::Pose(0, -0.4, 0, 0, 0, 0);
-  // get polhemus_source model location
-  // for tracking polhemus setup, where is the source in the world frame
-  this->polhemusSourceModel = this->world->GetModel("polhemus_source");
-  if (!this->polhemusSourceModel)
-  {
-    /// \TODO: make this a sdf param for the plugin?
-    gzwarn << "no polhemus_source model detected using predefine location.\n";
-    this->sourceWorldPose = math::Pose(-0.5, 0, 1.3, 3.14159, 0, -1.57159);
-  }
-  else
-  {
-    this->sourceWorldPose = this->polhemusSourceModel->GetWorldPose();
-  }
-  gzdbg << "Polhemus Source Pose [" << this->sourceWorldPose << "]\n";
-  this->sourceWorldPoseArmOffset = math::Pose();
-  this->sourceWorldPoseHeadOffset = math::Pose();
-  // transform from polhemus sensor orientation to base link frame
-  // -0.3 meters towards wrist from elbow
-  // 90 degrees yaw to the left
-  this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
-  // transform from polhemus sensor orientation to camera frame
-  // 10cm to the right of the sensor is roughly where the eyes are
-  // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
-  this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
-  // hydra sensor offset
-  this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
-
-  // for controller time control
-  this->lastTime = this->world->GetSimTime();
-
-  // initialize PID's
+  // initialize base joint control PID's
   double baseJointImplicitDamping = 100.0;
   if (this->sdf->HasElement("base_pid_pos"))
   {
@@ -187,6 +144,31 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->rotPid.Init(10000, 0, 0, 0, 0, 10000, -10000);
   }
 
+#if FORCE_BASED
+  if (this->world->GetPhysicsEngine()->GetType() == "ode" ||
+      this->world->GetPhysicsEngine()->GetType() == "bullet")
+  {
+    this->baseJoint = this->world->GetPhysicsEngine()->CreateJoint(
+      "revolute", this->model);
+    this->baseJoint->Attach(NULL, this->baseLink);
+    // load adds the joint to a vector of shared pointers kept
+    // in parent and child links, preventing joint from being destroyed.
+    this->baseJoint->Load(NULL, this->baseLink, math::Pose());
+    this->baseJoint->SetAxis(0, math::Vector3(0, 0, 1.0));
+    this->baseJoint->SetHighStop(0, 1e16);
+    this->baseJoint->SetLowStop(0, -1e16);
+    this->baseJoint->SetName(this->sdf->Get<std::string>("base_joint"));
+    this->baseJoint->Init();
+    // this->baseJoint =
+    //   this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
+    // if (!this->baseJoint)
+    // {
+    //   gzerr << "<base_joint>" << this->sdf->Get<std::string>("base_joint")
+    //         << "<base_joint> does not exist\n";
+    //   return;
+    // }
+  }
+
   // d-gain is enforced implicitly
   this->baseJoint->SetParam("erp", 0, 0.0);
   const double dampTol = 1.0e-6;
@@ -199,6 +181,45 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // same implicit damping for revolute joint stops
   this->baseJoint->SetParam("stop_erp", 0, 0.0);
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
+
+#endif
+
+  // this is where the user spawned the base link of the arm
+  this->initialBaseLinkPose = this->baseLink->GetWorldPose();
+  this->targetBaseLinkPose = this->initialBaseLinkPose;
+  // param for spacenav control, this is the point in arm base link
+  // frame for which we want to control with the spacenav
+  this->baseLinktoSpacenavPose = math::Pose(0, -0.4, 0, 0, 0, 0);
+  // get polhemus_source model location
+  // for tracking polhemus setup, where is the source in the world frame
+  this->polhemusSourceModel = this->world->GetModel("polhemus_source");
+  if (!this->polhemusSourceModel)
+  {
+    /// \TODO: make this a sdf param for the plugin?
+    gzwarn << "no polhemus_source model detected using predefine location.\n";
+    this->sourceWorldPose = math::Pose(-0.5, 0, 1.3, 3.14159, 0, -1.57159);
+  }
+  else
+  {
+    this->sourceWorldPose = this->polhemusSourceModel->GetWorldPose();
+  }
+  gzdbg << "Polhemus Source Pose [" << this->sourceWorldPose << "]\n";
+  this->sourceWorldPoseArmOffset = math::Pose();
+  this->sourceWorldPoseHeadOffset = math::Pose();
+  // transform from polhemus sensor orientation to base link frame
+  // -0.3 meters towards wrist from elbow
+  // 90 degrees yaw to the left
+  this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
+  // transform from polhemus sensor orientation to camera frame
+  // 10cm to the right of the sensor is roughly where the eyes are
+  // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
+  this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
+
+  // hydra sensor offset
+  this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
+
+  // for controller time control
+  this->lastTime = this->world->GetSimTime();
 
   this->optitrackHead = gazebo::math::Pose::Zero;
   this->optitrackArm = gazebo::math::Pose::Zero;
@@ -789,6 +810,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
     pose = this->targetBaseLinkPose;
   }
 
+#if FORCE_BASED
   math::Pose baseLinkPose = this->baseLink->GetWorldPose();
 
   math::Vector3 errorPos = baseLinkPose.pos - pose.pos;
@@ -804,6 +826,9 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   this->wrench.torque.z = this->rotPid.Update(errorRot.z, _dt);
   this->baseLink->SetForce(this->wrench.force);
   this->baseLink->SetTorque(this->wrench.torque);
+#else
+  this->model->SetLinkWorldPose(pose, this->baseLink);
+#endif
   // std::cout << "current pose: " << baseLinkPose << std::endl;
   // std::cout << "target pose: " << pose << std::endl;
   // std::cout << "wrench pos: " << this->wrench.force
