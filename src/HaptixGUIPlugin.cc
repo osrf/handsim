@@ -21,6 +21,7 @@
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
 
+#include "handsim/config.hh"
 #include "handsim/TaskButton.hh"
 #include "handsim/HaptixGUIPlugin.hh"
 
@@ -249,12 +250,17 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   frameLayout->addLayout(movementLayout);
 
+  QHBoxLayout *bottomLayout = new QHBoxLayout();
+  std::string versionStr = std::string("  v ") + HANDSIM_VERSION_FULL;
+  bottomLayout->addWidget(new QLabel(tr(versionStr.c_str())));
+
   // Add all widgets to the main frame layout
   frameLayout->addWidget(handView, 1.0);
   frameLayout->addWidget(tabFrame);
   frameLayout->addWidget(instructionsView);
   frameLayout->addWidget(cycleButtonFrame);
   frameLayout->addWidget(startStopButton);
+  frameLayout->addLayout(bottomLayout);
 
   QVBoxLayout *mainLayout = new QVBoxLayout();
   mainLayout->addWidget(mainFrame);
