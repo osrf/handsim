@@ -158,7 +158,7 @@ void Optitrack::RunReceptionTask()
       }
       else
       {
-        gzerr << "Model name " << it->first << " not found!" << std::endl;
+        gzlog << "Model name " << it->first << " not found!" << std::endl;
       }
     }
 
