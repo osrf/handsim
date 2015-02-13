@@ -342,7 +342,7 @@ bool OptitrackBridge::Update(TrackingInfo_t &_trackingInfo)
 
   for (auto i = 0; i < TT_TrackableCount(); ++i)
   {
-    if(TT_IsTrackableTracked(i))
+    if (TT_IsTrackableTracked(i))
     {
       float x, y, z;
       float qx, qy, qz, qw;
