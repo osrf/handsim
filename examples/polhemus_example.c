@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#include "polhemus_driver/polhemus_driver.h"
+#include <handsim/handsim/polhemus_driver.h>
 
 int
 main(void)

@@ -26,6 +26,8 @@
 #include <gazebo/math/Pose.hh>
 #include <gazebo/math/Vector3.hh>
 
+#include "handsim/OptitrackBridge.hh"
+
 namespace haptix
 {
   namespace tracking
@@ -133,6 +135,9 @@ namespace haptix
 
       /// \brief Store names and poses of tracker models to be published
       private: ModelPoses lastModelMap;
+
+      /// \brief Allow communication with the OptiTrack bridge.
+      private: OptitrackBridgeComms comms;
     };
   }
 }

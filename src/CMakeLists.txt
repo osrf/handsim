@@ -1,3 +1,7 @@
+set (gtest_sources
+  OptitrackBridge_TEST.cc
+)
+
 # make below target specific?
 include_directories(
   ${GAZEBO_INCLUDE_DIRS}
@@ -14,7 +18,8 @@ link_directories(
 
 #################################################
 # Build tracking library (Polhemus + Optitrack).
-add_library(HaptixTracking SHARED polhemus_driver.c Optitrack.cc)
+add_library(HaptixTracking SHARED polhemus_driver.c Optitrack.cc
+  OptitrackBridge.cc)
 target_link_libraries(HaptixTracking usb-1.0
   ${GAZEBO_LIBRARIES}
   ${IGNITION-TRANSPORT_LIBRARIES})
@@ -39,7 +44,7 @@ add_library(HaptixGUIPlugin SHARED ${HaptixGUIPlugin_MOC}
 add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxGrasp.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSensor.pb.cc
-  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxDevice.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxRobot.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)
 
 # additional library dependencies
@@ -63,3 +68,5 @@ set_target_properties(HaptixControlPlugin HaptixGUIPlugin PROPERTIES
 
 install (TARGETS HaptixControlPlugin HaptixGUIPlugin DESTINATION
   ${GAZEBO_PLUGIN_PATH}/)
+
+handsim_build_tests(${gtest_sources})

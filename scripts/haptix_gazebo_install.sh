@@ -44,9 +44,6 @@ echo "Retrieving packages"
 sudo apt-get update -qq
 echo "OK"
 
-# Install Gazebo (Haptix).
-sudo apt-get install gazebo-prerelease
-
 # Install Handsim
 sudo apt-get install handsim
 
