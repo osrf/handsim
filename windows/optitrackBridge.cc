@@ -69,7 +69,7 @@ int main(int argc, char **argv)
   // Get the tracking information from Optitrack and send it over the network.
   while (!hxTerminate)
   {
-    TT_Update()
+    TT_Update();
 
     // We're running at 500Hz. According to Natural Point we should call
     // TT_Update() periodically every 1ms to 10ms.
