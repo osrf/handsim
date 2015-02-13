@@ -271,7 +271,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   this->setLayout(mainLayout);
   this->move(10, 10);
-  this->resize(480, 830);
+  this->resize(480, 860);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
