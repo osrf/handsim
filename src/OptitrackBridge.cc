@@ -351,6 +351,7 @@ bool OptitrackBridge::Update(TrackingInfo_t &_trackingInfo)
         &yaw, &pitch, &roll);
 
       auto name = TT_TrackableName(i);
+
       // Store the rigid body pose.
       _trackingInfo.bodies[name].body = {-x, y, z, -qx, qy, qz, -qw};
 

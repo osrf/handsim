@@ -125,6 +125,11 @@ namespace haptix
       ///   11. qy (float).
       ///   12. qz (float).
       ///   13. qw (float).
+      ///   14. Number of markers (uint64_t)
+      ///   For each marker:
+      ///     15. x (float)
+      ///     16. y (float)
+      ///     17. z (float)
       public: bool Send(const TrackingInfo_t &_trackingInfo);
 
       /// \brief Optitrack multicast address.
