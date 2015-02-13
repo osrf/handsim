@@ -22,37 +22,40 @@
 
         <contacts>
           <contact name="mpl::rPalm0">
-            <pos>85 200</pos>
+            <pos>150 200</pos>
             <index>0</index>
             <size>50 100</size>
           </contact>
           <contact name="mpl::rPalm1">
-            <pos>150 200</pos>
             <index>1</index>
             <size>50 100</size>
+            <pos>85 200</pos>
           </contact>
 
-          <contact name="mpl::rPlanetaryAsm">
-            <pos>220 270</pos>
+          <contact name="mpl::rHandEdge">
+            <pos>10 235</pos>
             <index>2</index>
+            <size>40 70</size>
           </contact>
+          <contact name="mpl::rHandTop">
+            <pos>299 55</pos>
+            <index>3</index>
+            <size>25 31</size>
+          </contact>
+
           <contact name="mpl::rThProximal1">
             <pos>245 240</pos>
-            <index>3</index>
+            <index>4</index>
           </contact>
           <contact name="mpl::rThProximal2">
             <pos>275 195</pos>
-            <index>4</index>
+            <index>5</index>
           </contact>
           <contact name="mpl::rThDistal">
             <pos>302 130</pos>
-            <index>5</index>
-          </contact>
-
-          <contact name="mpl::rIndMetaCarpal">
-            <pos>210 156</pos>
             <index>6</index>
           </contact>
+
           <contact name="mpl::rIndProximal">
             <pos>218 116</pos>
             <index>7</index>
@@ -66,13 +69,9 @@
             <index>9</index>
           </contact>
 
-          <contact name="mpl::rMidMetaCarpal">
-            <pos>150 140</pos>
-            <index>10</index>
-          </contact>
           <contact name="mpl::rMidProximal">
             <pos>152 98</pos>
-            <index>12</index>
+            <index>10</index>
           </contact>
           <contact name="mpl::rMidMedial">
             <pos>155 19</pos>
@@ -80,53 +79,35 @@
           </contact>
           <contact name="mpl::rMidDistal">
             <pos>153 -60</pos>
-            <index>13</index>
+            <index>12</index>
           </contact>
 
-          <contact name="mpl::rRingMetaCarpal">
-            <pos>92 145</pos>
-            <index>14</index>
-          </contact>
           <contact name="mpl::rRingProximal">
             <pos>84 101</pos>
-            <index>15</index>
+            <index>13</index>
           </contact>
           <contact name="mpl::rRingMedial">
             <pos>74 41</pos>
-            <index>16</index>
+            <index>14</index>
           </contact>
           <contact name="mpl::rRingDistal">
             <pos>64 -19</pos>
-            <index>17</index>
+            <index>15</index>
           </contact>
 
-          <contact name="mpl::rLittleMetaCarpal">
-            <pos>43 196</pos>
-            <index>18</index>
-          </contact>
           <contact name="mpl::rLittleProximal">
             <pos>35 156</pos>
-            <index>19</index>
+            <index>16</index>
           </contact>
           <contact name="mpl::rLittleMedial">
             <pos>14 105</pos>
-            <index>20</index>
+            <index>17</index>
           </contact>
           <contact name="mpl::rLittleDistal">
             <pos>-7 54</pos>
-            <index>21</index>
+            <index>18</index>
           </contact>
 
-          <contact name="mpl::rHandEdge">
-            <pos>10 235</pos>
-            <index>22</index>
-            <size>40 70</size>
-          </contact>
-          <contact name="mpl::rHandTop">
-            <pos>299 55</pos>
-            <index>23</index>
-            <size>25 31</size>
-          </contact>
         </contacts>
 
         <task_group name="Grasp">
@@ -348,8 +329,10 @@
 
     <!-- The apl_description model is not (yet) publicly available. -->
     <include>
-      <uri>model://apl_description</uri>
-      <pose>0.4 -0.7 0 0 0 -1.57</pose>
+      <!--<uri>model://apl_description</uri>
+      <pose>0.4 -0.7 0 0 0 -1.57</pose>-->
+      <uri>model://mpl_right_forearm</uri>
+      <pose>0.4 -0.7 1.2 0 0 3.1415</pose>
     </include>
 
     <model name="polhemus_source">
