@@ -186,8 +186,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->startStyle =
       "QPushButton {"
         "margin: 10px;"
+        "margin-top: 0px;"
         "margin-bottom: 0px;"
-        "padding: 5px;"
+        "padding: 2px;"
         "background-color: #7A95D6;"
         "font: bold 30px;"
         "border: 0px;"
@@ -207,7 +208,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->stopStyle =
       "QPushButton {"
         "margin: 10px;"
-        "padding: 10px;"
+        "margin-top: 0px;"
+        "margin-bottom: 0px;"
+        "padding: 2px;"
         "background-color: #D85C48;"
         "font: bold 30px;"
         "border: 0px;"
@@ -287,7 +290,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   this->setLayout(mainLayout);
   this->move(10, 10);
-  this->resize(480, 860);
+  this->resize(480, 840);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -299,9 +302,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Create the publisher that communicates with the arrange plugin
   this->taskPub = this->node->Advertise<gazebo::msgs::GzString>("~/arrange");
-
-  // Create the publisher that communicates with the arrange plugin
-  this->scenePub = this->node->Advertise<gazebo::msgs::Scene>("~/scene");
 
   // Connect to the PreRender Gazebo signal
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
@@ -1226,11 +1226,7 @@ void HaptixGUIPlugin::OnLocalCoordMove(int _state)
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::OnStereoCheck(int _state)
 {
-  gazebo::msgs::Scene msg;
-  msg.set_name(gazebo::gui::get_world());
-  msg.set_shadows(!_state);
-
-  this->scenePub->Publish(msg);
+  gazebo::gui::get_active_camera()->EnableStereo(_state);
 }
 
 /////////////////////////////////////////////////
