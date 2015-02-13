@@ -34,22 +34,22 @@ TEST(OptitrackBridgeTest, IO)
   // Try to send an empty map.
   EXPECT_FALSE(comms.Send(tracking1));
 
-  std::string head               = "head";
-  std::string monitor            = "monitor";
-  std::string hand               = "hand";
-  RigidBody_A headPose           = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
-  Marker_A    headM1             = { 1.1,  2.1,  3.1};
-  Marker_A    headM2             = { 4.1,  5.1,  6.1};
-  Marker_A    headM3             = { 7.1,  8.1,  9.1};
-  RigidBody_A monitorPose        = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
-  Marker_A    monitorM1          = {11.1, 12.1, 13.1};
-  Marker_A    monitorM2          = {14.1, 15.1, 16.1};
-  Marker_A    monitorM3          = {17.1, 18.1, 19.1};
-  RigidBody_A handPose           = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
-  Marker_A    handM1             = {21.1, 22.1, 23.1};
-  Marker_A    handM2             = {24.1, 25.1, 26.1};
-  Marker_A    handM3             = {27.1, 28.1, 29.1};
-  double timestamp               = 0.5;
+  std::string head         = "head";
+  std::string monitor      = "monitor";
+  std::string hand         = "hand";
+  RigidBody_A headPose     = { 1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f};
+  Marker_A    headM1       = { 1.1f,  2.1f,  3.1f};
+  Marker_A    headM2       = { 4.1f,  5.1f,  6.1f};
+  Marker_A    headM3       = { 7.1f,  8.1f,  9.1f};
+  RigidBody_A monitorPose  = {11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
+  Marker_A    monitorM1    = {11.1f, 12.1f, 13.1f};
+  Marker_A    monitorM2    = {14.1f, 15.1f, 16.1f};
+  Marker_A    monitorM3    = {17.1f, 18.1f, 19.1f};
+  RigidBody_A handPose     = {21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f};
+  Marker_A    handM1       = {21.1f, 22.1f, 23.1f};
+  Marker_A    handM2       = {24.1f, 25.1f, 26.1f};
+  Marker_A    handM3       = {27.1f, 28.1f, 29.1f};
+  double timestamp         = 0.5;
   tracking1.timestamp               = timestamp;
   tracking1.bodies[head].body       = headPose;
   tracking1.bodies[head].markers    = {headM1, headM2, headM3};
