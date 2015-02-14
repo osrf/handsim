@@ -331,8 +331,6 @@
     <include>
       <uri>model://apl_description</uri>
       <pose>0.4 -0.7 0 0 0 -1.57</pose>
-      <!--<uri>model://mpl_right_forearm</uri>
-      <pose>0.4 -0.7 1.2 0 0 3.1415</pose>-->
     </include>
 
     <model name="polhemus_source">
