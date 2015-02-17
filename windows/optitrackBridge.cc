@@ -101,7 +101,7 @@ int main(int argc, char **argv)
 
   bool streamingEnabled = true;
 
-  // Sanity check: Verify that the optional argument is "-d".
+  // Sanity check: Verify that the optional third argument is "-d".
   if (argc == 3)
   {
     std::string arg = std::string(argv[2]);
