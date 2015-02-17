@@ -353,6 +353,12 @@ void HaptixControlPlugin::LoadHandControl()
     this->motorInfos[id].gearRatio = gearRatioSDF->Get<double>();
     // gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
 
+    // get joint offset associated with this motor
+    sdf::ElementPtr jointOffsetSDF =
+      motorSDF->GetElement("joint_offset");
+    this->motorInfos[id].jointOffset = jointOffsetSDF->Get<double>();
+    // gzdbg << "  joint offset [" << this->motorInfos[id].jointOffset << "]\n";
+
     // get max [continuous] motor torque associated with this motor
     sdf::ElementPtr motorTorqueSDF =
       motorSDF->GetElement("motor_torque");
@@ -1006,10 +1012,18 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     unsigned int m = motorInfos[i].index;
-    // TODO: return motor values, not joint values
-    this->robotState.set_motor_pos(i, this->joints[m]->GetAngle(0).Radian());
-    this->robotState.set_motor_vel(i, this->joints[m]->GetVelocity(0));
-    this->robotState.set_motor_torque(i, this->joints[m]->GetForce(0));
+    double jointPosition = this->joints[m]->GetAngle(0).Radian();
+    double jointVelocity = this->joints[m]->GetVelocity(0);
+    double jointTorque = this->joints[m]->GetForce(0);
+    // convert joint angle and velocities into motor using gear_ratio
+    double motorPosition = (this->motorInfos[i].jointOffset + jointPosition) /
+      this->motorInfos[i].gearRatio;
+    double motorVelocity = jointVelocity / this->motorInfos[i].gearRatio;
+    double motorTorque = jointTorque / this->motorInfos[i].gearRatio;
+    // write to struct
+    this->robotState.set_motor_pos(i, motorPosition);
+    this->robotState.set_motor_vel(i, motorVelocity);
+    this->robotState.set_motor_torque(i, motorTorque);
   }
 
   for (unsigned int i = 0; i < this->joints.size(); ++i)
