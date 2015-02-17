@@ -93,6 +93,10 @@ namespace haptix_gazebo_plugins
     /// \param[in] _state State of the check box.
     private slots: void OnLocalCoordMove(int _state);
 
+    /// \brief Callback triggered when stereo check box is clicked.
+    /// \param[in] _state State of the check box.
+    private slots: void OnStereoCheck(int _state);
+
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
     /// parameters.

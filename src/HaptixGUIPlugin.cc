@@ -21,6 +21,7 @@
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
 
+#include "handsim/config.hh"
 #include "handsim/TaskButton.hh"
 #include "handsim/HaptixGUIPlugin.hh"
 
@@ -185,7 +186,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->startStyle =
       "QPushButton {"
         "margin: 10px;"
-        "padding: 10px;"
+        "margin-top: 0px;"
+        "margin-bottom: 0px;"
+        "padding: 2px;"
         "background-color: #7A95D6;"
         "font: bold 30px;"
         "border: 0px;"
@@ -205,7 +208,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->stopStyle =
       "QPushButton {"
         "margin: 10px;"
-        "padding: 10px;"
+        "margin-top: 0px;"
+        "margin-bottom: 0px;"
+        "padding: 2px;"
         "background-color: #D85C48;"
         "font: bold 30px;"
         "border: 0px;"
@@ -243,11 +248,30 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(localCoordMoveCheck, SIGNAL(stateChanged(int)),
           this, SLOT(OnLocalCoordMove(int)));
 
+  QCheckBox *stereoCheck = new QCheckBox("Stereo");
+  stereoCheck->setToolTip(tr("Enable stereo rendering"));
+  stereoCheck->setFocusPolicy(Qt::NoFocus);
+  stereoCheck->setChecked(true);
+  connect(stereoCheck, SIGNAL(stateChanged(int)),
+          this, SLOT(OnStereoCheck(int)));
+
+  QHBoxLayout *stereoCheckLayout = new QHBoxLayout();
+  stereoCheckLayout->addWidget(stereoCheck);
+  stereoCheckLayout->addStretch(1);
+
+
   movementLayout->addWidget(localCoordMoveCheck);
   movementLayout->addWidget(new QLabel(tr("Arm move speed:")));
   movementLayout->addWidget(posScalingSlider);
 
   frameLayout->addLayout(movementLayout);
+  frameLayout->addLayout(stereoCheckLayout);
+
+  QHBoxLayout *bottomLayout = new QHBoxLayout();
+  std::string versionStr = std::string("  v ") + HANDSIM_VERSION_FULL;
+  QLabel *versionLabel = new QLabel(tr(versionStr.c_str()));
+  versionLabel->setStyleSheet("QLabel {font: 10px}");
+  bottomLayout->addWidget(versionLabel);
 
   // Add all widgets to the main frame layout
   frameLayout->addWidget(handView, 1.0);
@@ -255,6 +279,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   frameLayout->addWidget(instructionsView);
   frameLayout->addWidget(cycleButtonFrame);
   frameLayout->addWidget(startStopButton);
+  frameLayout->addLayout(bottomLayout);
 
   QVBoxLayout *mainLayout = new QVBoxLayout();
   mainLayout->addWidget(mainFrame);
@@ -265,7 +290,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   this->setLayout(mainLayout);
   this->move(10, 10);
-  this->resize(480, 830);
+  this->resize(480, 840);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -1204,6 +1229,12 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 void HaptixGUIPlugin::OnLocalCoordMove(int _state)
 {
   this->localCoordMove = _state == Qt::Unchecked ? false : true;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnStereoCheck(int _state)
+{
+  gazebo::gui::get_active_camera()->EnableStereo(_state);
 }
 
 /////////////////////////////////////////////////
