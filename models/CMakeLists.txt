@@ -1,5 +1,5 @@
 set (folders 
-  mpl_haptix_arm
+  mpl_haptix_right_forearm
 )
 
 foreach (folder ${folders})
