@@ -41,7 +41,7 @@ void usage()
 {
   std::cerr << "Usage: optitrackBridge <configFile> [-d]" << std::endl
             << std::endl
-            << "\t<configFile>   Motive configuration file."
+            << "\t<configFile>   Motive configuration file." << std::endl;
             << "\t -d            Disable custom streaming."
             << std::endl;
 }
