@@ -301,7 +301,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/forearm.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/forearm.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -354,7 +354,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/wristy.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/wristy.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -488,7 +488,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/wristx.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/wristx.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -696,7 +696,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/wristz.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/wristz.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -709,7 +709,7 @@
       <pose>0.025625 0 0 1.7427e-13 8.3267e-17 -3.1876e-16</pose>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/palm.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/palm.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -817,7 +817,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/index0.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/index0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -901,7 +901,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/index1.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/index1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1015,7 +1015,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/index2.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/index2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1130,7 +1130,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/index3.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/index3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1242,7 +1242,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/middle0.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/middle0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1326,7 +1326,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/middle1.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/middle1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1440,7 +1440,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/middle2.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/middle2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1555,7 +1555,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/middle3.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/middle3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1667,7 +1667,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/pinky0.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/pinky0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1751,7 +1751,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/pinky1.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/pinky1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1841,7 +1841,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/pinky2.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/pinky2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1955,7 +1955,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/pinky3.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/pinky3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2067,7 +2067,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/ring0.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/ring0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2151,7 +2151,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/ring1.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/ring1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2265,7 +2265,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/ring2.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/ring2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2379,7 +2379,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/ring3.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/ring3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2515,7 +2515,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/thumb0.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/thumb0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2648,7 +2648,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/thumb1.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/thumb1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2764,7 +2764,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/thumb2.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/thumb2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2879,7 +2879,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_right_arm/meshes/thumb3.stl</uri>
+          <uri>model://mpl_haptix_right_forearm/meshes/thumb3.stl</uri>
         </mesh>
       </geometry>
       <material>
