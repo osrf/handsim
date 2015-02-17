@@ -1225,10 +1225,10 @@ void HaptixControlPlugin::HaptixGraspCallback(
     _rep.add_ref_pos(0.0);
   }
 
-  _rep.set_ref_pos_enabled(true);
-  _rep.set_ref_vel_max_enabled(true);
-  _rep.set_gain_pos_enabled(true);
-  _rep.set_gain_vel_enabled(true);
+  _rep.set_ref_pos_enabled(this->robotCommand->ref_pos_enabled());
+  _rep.set_ref_vel_max_enabled(this->robotCommand->ref_max_vel_enabled());
+  _rep.set_gain_pos_enabled(this->robotCommand->gain_pos_enabled());
+  _rep.set_gain_vel_enabled(this->robotCommand->gain_vel_enabled());
 
   for (int i=0; i < _req.grasps_size(); ++i)
   {
