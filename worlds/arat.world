@@ -310,7 +310,7 @@
 
     <!-- The apl_description model is not (yet) publicly available. -->
     <include>
-     <uri>model://mpl_haptix_arm</uri>
+     <uri>model://mpl_haptix_right_forearm</uri>
      <pose>0.4 -0.7 1.2 0 0 3.1415</pose>
     </include>
 
