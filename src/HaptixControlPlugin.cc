@@ -248,7 +248,12 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
       fprintf(stderr, "Failed to initialize comms with Polhemus\n");
     }
     else
+    {
       this->havePolhemus = true;
+      msgs::GzString msg;
+      msg.set_data("have_polhemus");
+      this->gazeboNode->Publish<msgs::GzString>("~/arrange_polhemus", msg);
+    }
   }
 
   // spin up a separate thread to get polhemus sensor data

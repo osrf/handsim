@@ -1,7 +1,7 @@
 # HAPTIX Simulator #
 
 ## Installation instructions: ##
-To compile, first install gazebo from haptix branch, ign-transport and haptix-comm from default branch.  Next:
+To compile, first install gazebo, ign-transport, and haptix-comm from default branch.  Next:
 
 ~~~
 hg clone https://bitbucket.org/osrf/handsim

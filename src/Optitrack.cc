@@ -125,7 +125,7 @@ void Optitrack::RunReceptionTask()
   char buffer[20000];
   socklen_t addr_len = sizeof(struct sockaddr);
   sockaddr_in theirAddress;
-
+  int iterations = 0;
   while (1)
   {
     // Block until we receive a datagram from the network (from anyone
@@ -152,6 +152,15 @@ void Optitrack::RunReceptionTask()
       {
         this->armPub->Publish(gazebo::msgs::Convert(it->second));
       }
+      else if (it->first.compare(originTrackerName) == 0)
+      {
+        this->originPub->Publish(gazebo::msgs::Convert(it->second));
+      }
+      else
+      {
+        if (iterations % 1000 == 0)
+          gzwarn << "Model name " << it->first << " not found!" << std::endl;
+      }
     }
 
     gazebo::msgs::PointCloud pc;
@@ -165,6 +174,7 @@ void Optitrack::RunReceptionTask()
 
     this->originMarkers.clear();
     this->lastModelMap.clear();
+    iterations++;
   }
   this->active = false;
 }
