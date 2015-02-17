@@ -17,18 +17,17 @@
     <joint id="8">index1</joint>
     <joint id="9">index2</joint>
     <joint id="10">index3</joint>
-    <joint id="11">middle0</joint>
-    <joint id="12">middle1</joint>
-    <joint id="13">middle2</joint>
-    <joint id="14">middle3</joint>
-    <joint id="15">ring0</joint>
-    <joint id="16">ring1</joint>
-    <joint id="17">ring2</joint>
-    <joint id="18">ring3</joint>
-    <joint id="19">pinky0</joint>
-    <joint id="20">pinky1</joint>
-    <joint id="21">pinky2</joint>
-    <joint id="22">pinky3</joint>
+    <joint id="11">middle1</joint>
+    <joint id="12">middle2</joint>
+    <joint id="13">middle3</joint>
+    <joint id="14">ring0</joint>
+    <joint id="15">ring1</joint>
+    <joint id="16">ring2</joint>
+    <joint id="17">ring3</joint>
+    <joint id="18">pinky0</joint>
+    <joint id="19">pinky1</joint>
+    <joint id="20">pinky2</joint>
+    <joint id="21">pinky3</joint>
     <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="0" p=" 100.0"/>
     <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="1" p="  50.0"/>
     <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="2" p=" 100.0"/>
@@ -127,17 +126,7 @@
         <multiplier>0.8375</multiplier>
       </gearbox>
     </motor>
-    <motor id="10" name="motor_ring0">
-      <powered_motor_joint>ring0</powered_motor_joint>
-      <motor_torque>3.82e-3</motor_torque>
-      <gear_ratio>3520.0</gear_ratio>
-      <gearbox>
-        <joint>pinky0</joint>
-        <offset>0</offset>
-        <multiplier>1.0</multiplier>
-      </gearbox>
-    </motor>
-    <motor id="11" name="motor_ring">
+    <motor id="10" name="motor_ring">
       <powered_motor_joint>ring1</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
@@ -150,6 +139,16 @@
         <joint>ring3</joint>
         <offset>0.174532925199</offset>
         <multiplier>0.8375</multiplier>
+      </gearbox>
+    </motor>
+    <motor id="11" name="motor_ring0">
+      <powered_motor_joint>ring0</powered_motor_joint>
+      <motor_torque>3.82e-3</motor_torque>
+      <gear_ratio>3520.0</gear_ratio>
+      <gearbox>
+        <joint>pinky0</joint>
+        <offset>0</offset>
+        <multiplier>1.0</multiplier>
       </gearbox>
     </motor>
     <motor id="12" name="motor_pinky">
