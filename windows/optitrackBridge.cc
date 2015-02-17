@@ -104,7 +104,7 @@ int main(int argc, char **argv)
   // Sanity check: Verify that the optional argument is "-d".
   if (argc == 3)
   {
-    std::string arg = std::string(argv[3]);
+    std::string arg = std::string(argv[2]);
     if (arg != "-d")
     {
       usage();
