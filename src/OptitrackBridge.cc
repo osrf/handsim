@@ -359,10 +359,14 @@ bool OptitrackBridge::Update(TrackingInfo_t &_trackingInfo)
       auto numMarkers = TT_TrackableMarkerCount(i);
       for (auto j = 0; j < numMarkers; ++j)
       {
-        TT_TrackableMarker(i, j, &x, &y, &z);
+	bool tracked;
+	float mx, my, mz;
+        TT_TrackablePointCloudMarker(i, j, tracked, mx, my, mz);
+
+
 
         // Store the marker for this rigid body.
-        _trackingInfo.bodies[name].markers.push_back({x, y, z});
+        _trackingInfo.bodies[name].markers.push_back({-mx, my, mz});
       }
     }
   }
