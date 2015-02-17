@@ -254,6 +254,7 @@ else (build_errors)
     add_subdirectory(test)
     add_subdirectory(images)
     add_subdirectory(worlds)
+    add_subdirectory(models)
   endif (BUILD_HANDSIM)
 
   ########################################
