@@ -1143,7 +1143,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       return false;
     }
 
-    gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
+    //gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
 
     this->lastGraspRequest = graspTmp;
     // Assign to lastMotorCommand, because now we're tracking the target based
@@ -1291,7 +1291,6 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
     gzerr << "Failed to call gazebo/Grasp service" << std::endl;
   }
 
-  // gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
   // gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
 
   this->lastGraspRequest = grasp;

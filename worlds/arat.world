@@ -227,20 +227,18 @@
           <motor inc_key="z" dec_key="Z" index=0 increment=0.05></motor>
           <motor inc_key="x" dec_key="X" index=1 increment=0.05></motor>
           <motor inc_key="c" dec_key="C" index=2 increment=0.05></motor>
-          <motor inc_key="1" dec_key="!" index=13 increment=0.05></motor>
-          <motor inc_key="2" dec_key="@" index=6 increment=0.05></motor>
-          <motor inc_key="3" dec_key="#" index=11 increment=0.05></motor>
-          <motor inc_key="4" dec_key="$" index=3 increment=0.05></motor>
-          <motor inc_key="5" dec_key="%" index=5 increment=0.05></motor>
-          <motor inc_key="6" dec_key="^" index=12 increment=0.05></motor>
+          <motor inc_key="1" dec_key="!" index=3 increment=0.05></motor>
+          <motor inc_key="2" dec_key="@" index=4 increment=0.05></motor>
+          <motor inc_key="3" dec_key="#" index=5 increment=0.05></motor>
+          <motor inc_key="4" dec_key="$" index=6 increment=0.05></motor>
+          <motor inc_key="5" dec_key="%" index=7 increment=0.05></motor>
+          <motor inc_key="6" dec_key="^" index=8 increment=0.05></motor>
 	  <!-- I'm having trouble parsing "&" and "&amp;", so I'll just use
 	       "amp" and handle it in the code. -->
-          <motor inc_key="7" dec_key="amp" index=4 increment=0.05></motor>
-          <motor inc_key="8" dec_key="*" index=14 increment=0.05></motor>
-          <motor inc_key="9" dec_key="(" index=10 increment=0.05></motor>
-          <motor inc_key="0" dec_key=")" index=9 increment=0.05></motor>
-          <motor inc_key="-" dec_key="_" index=8 increment=0.05></motor>
-          <motor inc_key="=" dec_key="+" index=7 increment=0.05></motor>
+          <motor inc_key="7" dec_key="amp" index=9 increment=0.05></motor>
+          <motor inc_key="8" dec_key="*" index=10 increment=0.05></motor>
+          <motor inc_key="9" dec_key="(" index=11 increment=0.05></motor>
+          <motor inc_key="0" dec_key=")" index=12 increment=0.05></motor>
         </motor_keys>
 
         <grasp_keys>
@@ -329,8 +327,8 @@
 
     <!-- The apl_description model is not (yet) publicly available. -->
     <include>
-      <uri>model://apl_description</uri>
-      <pose>0.4 -0.7 0 0 0 -1.57</pose>
+     <uri>model://mpl_haptix_right_forearm</uri>
+     <pose>0.4 -0.7 1.2 0 0 3.1415</pose>
     </include>
 
     <model name="polhemus_source">
