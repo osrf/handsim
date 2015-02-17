@@ -196,7 +196,6 @@ void Optitrack::Unpack(char *pData)
 
     for (const auto &body : trackingInfo.bodies)
     {
-      std::cout << "Label: " << body.first << std::endl;
       float x  = body.second.body.at(0);
       float y  = body.second.body.at(1);
       float z  = body.second.body.at(2);
@@ -208,16 +207,15 @@ void Optitrack::Unpack(char *pData)
         gazebo::math::Vector3(x, y, z),
         gazebo::math::Quaternion(qw, qx, qy, qz));
 
-
-      std::cout << "Markers: " << std::endl;
-      for (const auto &marker : body.second.markers)
+      // Debug output.
+      /*for (const auto &marker : body.second.markers)
       {
         x = marker.at(0);
         y = marker.at(1);
         z = marker.at(2);
         std::cout << "\tMarker " << " : [x="
                << x << ",y=" << y << ",z=" << z << "]" << std::endl;
-      }
+      }*/
     }
   }
   else if (MessageID == 7)      // FRAME OF MOCAP DATA packet
@@ -239,7 +237,6 @@ void Optitrack::Unpack(char *pData)
       int nDataBytes = (int) strlen(ptr) + 1;
       ptr += nDataBytes;
       output << "Model Name: " << szName << std::endl;
-      std::cout << "Model Name: " << szName << std::endl;
       markerSets[szName] = std::vector<gazebo::math::Vector3>();
 
       // marker data
@@ -254,8 +251,6 @@ void Optitrack::Unpack(char *pData)
         float y = 0; memcpy(&y, ptr, 4); ptr += 4;
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
         output << "\tMarker " << j << " : [x="
-               << x << ",y=" << y << ",z=" << z << "]" << std::endl;
-        std::cout << "\tMarker " << j << " : [x="
                << x << ",y=" << y << ",z=" << z << "]" << std::endl;
         markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
       }
