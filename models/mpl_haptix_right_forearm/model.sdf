@@ -1,5 +1,5 @@
 <sdf version='1.5'>
-<model name="mpl_haptix_arm">
+<model name="mpl_haptix_right_forearm">
   <plugin filename="libHaptixControlPlugin.so" name="HaptixControlPlugin">
     <base_joint>elbow</base_joint>
     <base_link>forearm</base_link>
