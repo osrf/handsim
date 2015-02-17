@@ -38,7 +38,7 @@ namespace haptix
     /// (x, y, z, qx, qy, qz, qw).
     typedef std::array<float, 7> RigidBody_A;
 
-    /// \brief Arrat that stores the position of a marker.
+    /// \brief Array that stores the position of a marker.
     typedef std::array<float, 3> Marker_A;
 
     /// \brief Stores all the information about a rigid body.
