@@ -538,6 +538,10 @@ void HaptixControlPlugin::LoadHandControl()
     this->robotCommand.add_gain_pos(1.0);
     this->robotCommand.add_gain_vel(0.0);
   }
+  this->robotCommand.set_ref_pos_enabled(true);
+  this->robotCommand.set_ref_vel_max_enabled(true);
+  this->robotCommand.set_gain_pos_enabled(true);
+  this->robotCommand.set_gain_vel_enabled(true);
 
   for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
@@ -575,7 +579,16 @@ void HaptixControlPlugin::LoadHandControl()
     angvel->set_x(0);
     angvel->set_y(0);
     angvel->set_z(0);
+    haptix::comm::msgs::quaternion *orientation =
+      this->robotState.add_imu_orientation();
+    orientation->set_x(0);
+    orientation->set_y(0);
+    orientation->set_z(0);
+    orientation->set_w(1);
   }
+
+  this->robotState.mutable_time_stamp()->set_sec(0);
+  this->robotState.mutable_time_stamp()->set_nsec(0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -827,12 +840,20 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     }
     else
     {
-      this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
-      this->simRobotCommands[m].ref_vel_max = this->robotCommand.ref_vel_max(i);
+      if (this->robotCommand.ref_pos_enabled())
+      {
+        this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
+      }
+      if (this->robotCommand.ref_vel_max_enabled())
+      {
+        this->simRobotCommands[m].ref_vel_max =
+          this->robotCommand.ref_vel_max(i);
+      }
     }
-    /// \TODO: fix by implementing better models
-    // this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
-    // this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
+    if (this->robotCommand.gain_pos_enabled())
+      this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
+    if (this->robotCommand.gain_vel_enabled())
+      this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
 
     // set joint command using coupling specified in <gearbox> params.
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
@@ -840,18 +861,24 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       unsigned int n = this->motorInfos[i].gearboxes[j].index;
       // gzdbg << " " << n
       //       << " : " << this->simRobotCommands[n].ref_pos << "\n";
-      this->simRobotCommands[n].ref_pos =
-        (this->simRobotCommands[m].ref_pos +
-         this->motorInfos[i].gearboxes[j].offset)
-        * this->motorInfos[i].gearboxes[j].multiplier;
-      this->simRobotCommands[n].ref_vel_max =
-        (this->simRobotCommands[m].ref_vel_max +
-         this->motorInfos[i].gearboxes[j].offset)
-        * this->motorInfos[i].gearboxes[j].multiplier;
-
-      /// \TODO: fix by implementing better models
-      // this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
-      // this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
+      if (this->robotCommand.ref_pos_enabled())
+      {
+        this->simRobotCommands[n].ref_pos =
+          (this->simRobotCommands[m].ref_pos +
+           this->motorInfos[i].gearboxes[j].offset)
+          * this->motorInfos[i].gearboxes[j].multiplier;
+      }
+      if (this->robotCommand.ref_vel_max_enabled())
+      {
+        this->simRobotCommands[n].ref_vel_max =
+          (this->simRobotCommands[m].ref_vel_max +
+           this->motorInfos[i].gearboxes[j].offset)
+          * this->motorInfos[i].gearboxes[j].multiplier;
+      }
+      if (this->robotCommand.gain_pos_enabled())
+        this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
+      if (this->robotCommand.gain_vel_enabled())
+        this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
 
@@ -979,6 +1006,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     unsigned int m = motorInfos[i].index;
+    // TODO: return motor values, not joint values
     this->robotState.set_motor_pos(i, this->joints[m]->GetAngle(0).Radian());
     this->robotState.set_motor_vel(i, this->joints[m]->GetVelocity(0));
     this->robotState.set_motor_torque(i, this->joints[m]->GetForce(0));
@@ -1014,7 +1042,18 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     angvel->set_x(vel.x);
     angvel->set_y(vel.y);
     angvel->set_z(vel.z);
+    // Orientation not yet supported
+    haptix::comm::msgs::quaternion *orientation =
+        this->robotState.mutable_imu_orientation(i);
+    orientation->set_x(0);
+    orientation->set_y(0);
+    orientation->set_z(0);
+    orientation->set_w(1);
   }
+
+  common::Time curTime = this->world->GetSimTime();
+  this->robotState.mutable_time_stamp()->set_sec(curTime.sec);
+  this->robotState.mutable_time_stamp()->set_nsec(curTime.nsec);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1104,13 +1143,28 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
   _rep.set_contact_sensor_count(this->contactSensorInfos.size());
   _rep.set_imu_count(this->imuSensors.size());
 
+  for (std::vector<physics::JointPtr>::const_iterator it =
+         this->joints.begin();
+       it != this->joints.end();
+       ++it)
+  {
+    haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_joint_limit();
+    joint->set_minimum((*it)->GetLowerLimit(0).Radian());
+    joint->set_maximum((*it)->GetUpperLimit(0).Radian());
+  }
+
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_motor_limit();
+    haptix::comm::msgs::hxRobot::hxLimit *motor = _rep.add_motor_limit();
     unsigned int m = this->motorInfos[i].index;
-    joint->set_minimum(this->joints[m]->GetLowerLimit(0).Radian());
-    joint->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
+    // TODO: return the motor limits, not the joint limits
+    motor->set_minimum(this->joints[m]->GetLowerLimit(0).Radian());
+    motor->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
   }
+
+  // TODO: get this value from somewhere (and make sure that it's
+  // actually being obeyed in the model update).
+  _rep.set_update_rate(50.0);
 
   _result = true;
 }
@@ -1170,6 +1224,11 @@ void HaptixControlPlugin::HaptixGraspCallback(
     this->graspPositions[j] = 0.0;
     _rep.add_ref_pos(0.0);
   }
+
+  _rep.set_ref_pos_enabled(this->robotCommand.ref_pos_enabled());
+  _rep.set_ref_vel_max_enabled(this->robotCommand.ref_vel_max_enabled());
+  _rep.set_gain_pos_enabled(this->robotCommand.gain_pos_enabled());
+  _rep.set_gain_vel_enabled(this->robotCommand.gain_vel_enabled());
 
   for (int i=0; i < _req.grasps_size(); ++i)
   {
