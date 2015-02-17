@@ -39,9 +39,10 @@ void signal_handler(int _signal)
 //////////////////////////////////////////////////
 void usage()
 {
-  std::cerr << "Usage: optitrackBridge <configFile>" << std::endl
+  std::cerr << "Usage: optitrackBridge <configFile> [-d]" << std::endl
             << std::endl
             << "\t<configFile>   Motive configuration file."
+            << "\t -d            Disable custom streaming."
             << std::endl;
 }
 
@@ -92,10 +93,24 @@ int main(int argc, char **argv)
   return 0;
 #endif
   // Sanity check: Verify that we have the expected command line args.
-  if (argc != 2)
+  if (argc < 2 || argc > 3)
   {
     usage();
     return -1;
+  }
+
+  bool streamingEnabled = true;
+
+  // Sanity check: Verify that the optional argument is "-d".
+  if (argc == 3)
+  {
+    std::string arg = std::string(argv[3]);
+    if (arg != "-d")
+    {
+      usage();
+      return -1;
+    }
+    streamingEnabled = false;
   }
 
   try
@@ -110,7 +125,7 @@ int main(int argc, char **argv)
     {
       if (optitrack.Update(trackingInfo))
       {
-        if (!trackingInfo.bodies.empty())
+        if (streamingEnabled && !trackingInfo.bodies.empty())
         {
           if (!comms.Send(trackingInfo))
             std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;
