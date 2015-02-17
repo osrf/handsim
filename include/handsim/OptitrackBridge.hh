@@ -36,19 +36,19 @@ namespace haptix
     /// \brief Array that stores the position and orientation of a rigid body
     /// tracked by OptiTrack with the following format:
     /// (x, y, z, qx, qy, qz, qw).
-    typedef std::array<float, 7> RigidBody_A;
+    typedef std::array<float, 7> Pose_t;
 
     /// \brief Array that stores the position of a marker.
-    typedef std::array<float, 3> Marker_A;
+    typedef std::array<float, 3> Marker_t;
 
     /// \brief Stores all the information about a rigid body.
     struct RigidBody_t
     {
       /// \brief Rigid body names, pose and orientation.
-      RigidBody_A body;
+      Pose_t body;
 
       /// \brief Position of the markers contained in this rigid body.
-      std::vector<Marker_A> markers;
+      std::vector<Marker_t> markers;
     };
 
     /// \brief Map that contains rigid body information received from OptiTrack.
@@ -57,7 +57,7 @@ namespace haptix
     /// of the rigid body and the value is an array with floats storing the
     /// position and orientation of the object with the following format:
     /// (x, y, z, qx, qy, qz, qw).
-    /// \sa RigidBody_A.
+    /// \sa Pose_t.
     typedef std::map<std::string, RigidBody_t> RigidBody_M;
 
     /// \brief Snapshot of all the information captured from Optitrack.

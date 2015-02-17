@@ -34,22 +34,22 @@ TEST(OptitrackBridgeTest, IO)
   // Try to send an empty map.
   EXPECT_FALSE(comms.Send(tracking1));
 
-  std::string head         = "head";
-  std::string monitor      = "monitor";
-  std::string hand         = "hand";
-  RigidBody_A headPose     = { 1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f};
-  Marker_A    headM1       = { 1.1f,  2.1f,  3.1f};
-  Marker_A    headM2       = { 4.1f,  5.1f,  6.1f};
-  Marker_A    headM3       = { 7.1f,  8.1f,  9.1f};
-  RigidBody_A monitorPose  = {11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
-  Marker_A    monitorM1    = {11.1f, 12.1f, 13.1f};
-  Marker_A    monitorM2    = {14.1f, 15.1f, 16.1f};
-  Marker_A    monitorM3    = {17.1f, 18.1f, 19.1f};
-  RigidBody_A handPose     = {21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f};
-  Marker_A    handM1       = {21.1f, 22.1f, 23.1f};
-  Marker_A    handM2       = {24.1f, 25.1f, 26.1f};
-  Marker_A    handM3       = {27.1f, 28.1f, 29.1f};
-  double timestamp         = 0.5;
+  std::string head    = "head";
+  std::string monitor = "monitor";
+  std::string hand    = "hand";
+  Pose_t headPose     = { 1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f};
+  Marker_t headM1     = { 1.1f,  2.1f,  3.1f};
+  Marker_t headM2     = { 4.1f,  5.1f,  6.1f};
+  Marker_t headM3     = { 7.1f,  8.1f,  9.1f};
+  Pose_t monitorPose  = {11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
+  Marker_t monitorM1  = {11.1f, 12.1f, 13.1f};
+  Marker_t monitorM2  = {14.1f, 15.1f, 16.1f};
+  Marker_t monitorM3  = {17.1f, 18.1f, 19.1f};
+  Pose_t handPose     = {21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f};
+  Marker_t handM1     = {21.1f, 22.1f, 23.1f};
+  Marker_t handM2     = {24.1f, 25.1f, 26.1f};
+  Marker_t handM3     = {27.1f, 28.1f, 29.1f};
+  double timestamp    = 0.5;
   tracking1.timestamp               = timestamp;
   tracking1.bodies[head].body       = headPose;
   tracking1.bodies[head].markers    = {headM1, headM2, headM3};
@@ -64,11 +64,11 @@ TEST(OptitrackBridgeTest, IO)
   size_t expectedSize = sizeof(uint16_t) + sizeof(uint16_t) +
     sizeof(double)   + sizeof(uint16_t) +
     sizeof(uint64_t) + head.size()      + (headPose.size()    * sizeof(float)) +
-    sizeof(uint64_t) + sizeof(Marker_A) * 3 +
+    sizeof(uint64_t) + sizeof(Marker_t) * 3 +
     sizeof(uint64_t) + monitor.size()   + (monitorPose.size() * sizeof(float)) +
-    sizeof(uint64_t) + sizeof(Marker_A) * 3 +
+    sizeof(uint64_t) + sizeof(Marker_t) * 3 +
     sizeof(uint64_t) + hand.size()      + (handPose.size()    * sizeof(float)) +
-    sizeof(uint64_t) + sizeof(Marker_A) * 3;
+    sizeof(uint64_t) + sizeof(Marker_t) * 3;
 
   EXPECT_EQ(comms.MsgLength(tracking1), expectedSize);
 

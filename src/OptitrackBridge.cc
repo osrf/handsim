@@ -122,7 +122,7 @@ size_t OptitrackBridgeComms::MsgLength(const TrackingInfo_t &_trackingInfo)
     // Number of markers for this rigid body.
     len += sizeof(uint64_t);
     // All the marker positions for each rigid body.
-    len += body.second.markers.size() * sizeof(Marker_A);
+    len += body.second.markers.size() * sizeof(Marker_t);
   }
   return len;
 }
@@ -175,7 +175,7 @@ size_t OptitrackBridgeComms::Pack(const TrackingInfo_t &_trackingInfo,
     ptr += nameLength;
 
     // Pack the rigid body pose.
-    RigidBody_A pose = body.second.body;
+    Pose_t pose = body.second.body;
     memcpy(ptr, &pose[0], sizeof(float) * pose.size());
     ptr += sizeof(float) * pose.size();
 
@@ -187,7 +187,7 @@ size_t OptitrackBridgeComms::Pack(const TrackingInfo_t &_trackingInfo,
     // Pack the set of markers for this rigid body.
     for (size_t i = 0; i < numMarkers; ++i)
     {
-      Marker_A marker = body.second.markers.at(i);
+      Marker_t marker = body.second.markers.at(i);
       memcpy(ptr, &marker, sizeof(marker));
       ptr += sizeof(marker);
     }
@@ -245,7 +245,7 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
     _buffer += nameLength;
 
     // Unpack the rigid body pose.
-    RigidBody_A pose;
+    Pose_t pose;
     memcpy(&pose[0], _buffer, pose.size() * sizeof(float));
     _buffer += pose.size() * sizeof(float);
 
@@ -260,7 +260,7 @@ bool OptitrackBridgeComms::Unpack(const char *_buffer,
     // Unpack the set of markers for this rigid body.
     for (size_t j = 0; j < numMarkers; ++j)
     {
-      Marker_A marker;
+      Marker_t marker;
       memcpy(&marker, _buffer, sizeof(marker));
       _buffer += sizeof(marker);
 
