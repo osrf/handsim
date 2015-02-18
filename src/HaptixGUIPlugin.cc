@@ -1152,6 +1152,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     {
       this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
     }
+    this->lastMotorCommand.ref_pos_enabled = 1;
     return true;
   }
 
@@ -1177,6 +1178,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
       // Now add in the new diff
       cmd.ref_pos[index] += inc;
+      cmd.ref_pos_enabled = 1;
 
       // Now command it.
       // std::cout << "Sending: " << std::endl;
@@ -1218,6 +1220,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
         }
       }
+      this->lastMotorCommand.ref_pos_enabled = 1;
       return true;
     }
   }
@@ -1300,4 +1303,5 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   {
     this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
   }
+  this->lastMotorCommand.ref_pos_enabled = 1;
 }
