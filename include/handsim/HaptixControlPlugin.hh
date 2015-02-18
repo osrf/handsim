@@ -320,7 +320,7 @@ namespace gazebo
 
       /// \brief: joint_offset
       /// assuming the _hxCommand::ref_pos is motor position,
-      /// use joitn_offset and gear_ratio to
+      /// use joint_offset and gear_ratio to
       /// compute motor position based on simulation joint position.
       /// motor_pos = (joint_offset + joint_pos) * gear_ratio
       public: double jointOffset;
