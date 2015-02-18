@@ -575,18 +575,8 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   // Setup default arm starting pose
   this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 
-  this->requestPub = this->node->Advertise<gazebo::msgs::Request>(
-      "~/request");
-
   this->worldControlPub = this->node->Advertise<gazebo::msgs::WorldControl>
                                         ("~/world_control");
-
-  this->responseSub = this->node->Subscribe("~/response",
-      &HaptixGUIPlugin::OnResponse, this, true);
-
-  // Request info about the mpl arm
-  this->requestMsg = gazebo::msgs::CreateRequest("entity_info", "mpl");
-  this->requestPub->Publish(*this->requestMsg);
 
   this->pollSensorsThread = boost::thread(
     boost::bind(&HaptixGUIPlugin::PollSensors, this));
@@ -625,17 +615,6 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
 
     this->hxInitialized = true;
   }
-}
-
-/////////////////////////////////////////////////
-void HaptixGUIPlugin::OnResponse(ConstResponsePtr &_msg)
-{
-  if (!this->requestMsg || _msg->id() != this->requestMsg->id())
-    return;
-
-  gazebo::msgs::Model modelMsg;
-  modelMsg.ParseFromString(_msg->serialized_data());
-  //this->armStartPose = gazebo::msgs::Convert(modelMsg.pose());
 }
 
 /////////////////////////////////////////////////
