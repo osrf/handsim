@@ -1320,8 +1320,20 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixGUIPlugin::OnResetMocap()
 {
-  system("net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U \"Haptix \
-          Team\"%haptix 2> /dev/null &");
-  system("net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U \"Haptix \
-          Team\"%haptix 2> /dev/null &");
+  // We're trying to stop and start the remote service.  These commands can take
+  // time to execute, especially if the NetBIOS name lookup fails.  Also, they
+  // always return an error, even when they work.  So we'll stop then start, but
+  // all in the background.
+  // We're sleeping in between to ensure that the stop has taken effect before
+  // trying to start it again.
+  int ret =
+    system("(net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U \"Haptix "
+           "Team\"%haptix 2> /dev/null;"
+           "sleep 1;"
+           "net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U \"Haptix "
+           "Team\"%haptix 2> /dev/null)&");
+  if (ret != 0)
+  {
+    // Do nothing, because it always returns non-zero.
+  }
 }
