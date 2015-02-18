@@ -39,9 +39,10 @@ void signal_handler(int _signal)
 //////////////////////////////////////////////////
 void usage()
 {
-  std::cerr << "Usage: optitrackBridge <configFile>" << std::endl
+  std::cerr << "Usage: optitrackBridge <configFile> [-d]" << std::endl
             << std::endl
-            << "\t<configFile>   Motive configuration file."
+            << "\t<configFile>   Motive configuration file." << std::endl
+            << "\t -d            Disable custom streaming."
             << std::endl;
 }
 
@@ -51,16 +52,29 @@ void test()
   TrackingInfo_t trackingInfo;
   OptitrackBridgeComms comms;
 
-  std::string head        = "head";
-  std::string monitor     = "monitor";
-  std::string hand        = "hand";
-  RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
-  RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
-  RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
-  trackingInfo.timestamp        = 0.5;
-  trackingInfo.bodies [head]    = headPose;
-  trackingInfo.bodies [monitor] = monitorPose;
-  trackingInfo.bodies [hand]    = handPose;
+  std::string head    = "head";
+  std::string monitor = "monitor";
+  std::string hand    = "hand";
+  Pose_t headPose     = { 1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f};
+  Marker_t headM1     = { 1.1f,  2.1f,  3.1f};
+  Marker_t headM2     = { 4.1f,  5.1f,  6.1f};
+  Marker_t headM3     = { 7.1f,  8.1f,  9.1f};
+  Pose_t monitorPose  = {11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
+  Marker_t monitorM1  = {11.1f, 12.1f, 13.1f};
+  Marker_t monitorM2  = {14.1f, 15.1f, 16.1f};
+  Marker_t monitorM3  = {17.1f, 18.1f, 19.1f};
+  Pose_t handPose     = {21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f};
+  Marker_t handM1     = {21.1f, 22.1f, 23.1f};
+  Marker_t handM2     = {24.1f, 25.1f, 26.1f};
+  Marker_t handM3     = {27.1f, 28.1f, 29.1f};
+  double timestamp    = 0.5;
+  trackingInfo.timestamp               = timestamp;
+  trackingInfo.bodies[head].body       = headPose;
+  trackingInfo.bodies[head].markers    = {headM1, headM2, headM3};
+  trackingInfo.bodies[monitor].body    = monitorPose;
+  trackingInfo.bodies[monitor].markers = {monitorM1, monitorM2, monitorM3};
+  trackingInfo.bodies[hand].body       = handPose;
+  trackingInfo.bodies[hand].markers    = {handM1, handM2, handM3};
 
   // Send some data.
   if (!comms.Send(trackingInfo))
@@ -79,10 +93,24 @@ int main(int argc, char **argv)
   return 0;
 #endif
   // Sanity check: Verify that we have the expected command line args.
-  if (argc != 2)
+  if (argc < 2 || argc > 3)
   {
     usage();
     return -1;
+  }
+
+  bool streamingEnabled = true;
+
+  // Sanity check: Verify that the optional third argument is "-d".
+  if (argc == 3)
+  {
+    std::string arg = std::string(argv[2]);
+    if (arg != "-d")
+    {
+      usage();
+      return -1;
+    }
+    streamingEnabled = false;
   }
 
   try
@@ -97,7 +125,7 @@ int main(int argc, char **argv)
     {
       if (optitrack.Update(trackingInfo))
       {
-        if (!trackingInfo.bodies.empty())
+        if (streamingEnabled && !trackingInfo.bodies.empty())
         {
           if (!comms.Send(trackingInfo))
             std::cerr << "OptitrackBridge: Error sending a frame." << std::endl;

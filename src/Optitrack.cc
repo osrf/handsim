@@ -198,16 +198,26 @@ void Optitrack::Unpack(char *pData)
 
     for (const auto &body : trackingInfo.bodies)
     {
-      float x  = body.second.at(0);
-      float y  = body.second.at(1);
-      float z  = body.second.at(2);
-      float qx = body.second.at(3);
-      float qy = body.second.at(4);
-      float qz = body.second.at(5);
-      float qw = body.second.at(6);
+      float x  = body.second.body.at(0);
+      float y  = body.second.body.at(1);
+      float z  = body.second.body.at(2);
+      float qx = body.second.body.at(3);
+      float qy = body.second.body.at(4);
+      float qz = body.second.body.at(5);
+      float qw = body.second.body.at(6);
       this->lastModelMap[body.first] = gazebo::math::Pose(
         gazebo::math::Vector3(x, y, z),
         gazebo::math::Quaternion(qw, qx, qy, qz));
+
+      // Debug output.
+      /*for (const auto &marker : body.second.markers)
+      {
+        x = marker.at(0);
+        y = marker.at(1);
+        z = marker.at(2);
+        std::cout << "\tMarker " << " : [x="
+               << x << ",y=" << y << ",z=" << z << "]" << std::endl;
+      }*/
     }
   }
   else if (MessageID == 7)      // FRAME OF MOCAP DATA packet
