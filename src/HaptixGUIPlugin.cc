@@ -352,7 +352,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
     this->node->Subscribe("~/motion_tracking/pause_response",
       &HaptixGUIPlugin::OnPauseRequest, this);
 
-  this->circleSize = _elem->Get<int>("circle_size");
+  this->defaultContactSize = _elem->Get<gazebo::math::Vector2d>("default_size");
 
   this->forceMin = _elem->Get<double>("force_min");
   this->forceMax = _elem->Get<double>("force_max");
@@ -378,9 +378,15 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         gazebo::math::Vector2d contactPos =
           contact->Get<gazebo::math::Vector2d>("pos");
 
+        gazebo::math::Vector2d contactSize = this->defaultContactSize;
+        if (contact->HasElement("size"))
+        {
+          contactSize = contact->Get<gazebo::math::Vector2d>("size");
+        }
+
         this->contactGraphicsItems[contactName] =
-          new QGraphicsEllipseItem(contactPos.x,
-              contactPos.y, this->circleSize, this->circleSize);
+          new QGraphicsRectItem(contactPos.x,
+              contactPos.y, contactSize.x, contactSize.y);
         this->handScene->addItem(this->contactGraphicsItems[contactName]);
 
         this->contactGraphicsItems[contactName]->setBrush(
@@ -640,9 +646,10 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   // constant for decay
   // const float epsilon = 0.01;
 
-  float colorArray[3] = {this->colorNoContact[0],
+  float colorArray[4] = {this->colorNoContact[0],
                          this->colorNoContact[1],
-                         this->colorNoContact[2]};
+                         this->colorNoContact[2],
+                         this->colorNoContact[3]};
 
   float forceRange = this->forceMax - this->forceMin;
 
@@ -667,6 +674,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
           this->colorMax[i], this->colorMin[i]);
       }
     }
+    colorArray[3] = 255;
   }
 
   // debug
@@ -674,7 +682,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
   //         << ", " << colorArray[2] << ")\n";
 
-  QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2]));
+  QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2], colorArray[3]));
 
   this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
 }
@@ -683,7 +691,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
 void HaptixGUIPlugin::PreRender()
 {
   // Fade out old force values
-  for (std::map<std::string, QGraphicsEllipseItem*>::iterator iter =
+  for (std::map<std::string, QGraphicsRectItem*>::iterator iter =
       this->contactGraphicsItems.begin();
       iter != this->contactGraphicsItems.end(); ++iter)
   {
