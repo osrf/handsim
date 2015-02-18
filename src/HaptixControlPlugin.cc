@@ -407,37 +407,37 @@ void HaptixControlPlugin::LoadHandControl()
       }
     }
 
-    // Adjust max/min torque commands based on <motor_torque>,
-    // <gear_ratio> and <gearbox> params.
-    for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
-    {
-      unsigned int m = this->motorInfos[i].index;
-      // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
-      double jointTorque = this->motorInfos[i].gearRatio *
-                           this->motorInfos[i].motorTorque;
-      this->pids[m].SetCmdMax(jointTorque);
-      this->pids[m].SetCmdMin(-jointTorque);
-      // gzdbg << " motor torque [" << m
-      //       << "] : " << jointTorque << "\n";
-
-      /// \TODO: contemplate about using Joint::SetEffortLimit()
-      /// instead of PID::SetCmdMax() and PID::SetCmdMin()
-
-      // set torque command limits through <gearbox> coupling params.
-      for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
-      {
-        unsigned int n = this->motorInfos[i].gearboxes[j].index;
-        double coupledJointTorque = jointTorque /
-          this->motorInfos[i].gearboxes[j].multiplier;
-        this->pids[n].SetCmdMax(coupledJointTorque);
-        this->pids[n].SetCmdMin(-coupledJointTorque);
-        // gzdbg << " motor torque [" << n
-        //       << "] : " << coupledJointTorque << "\n";
-      }
-    }
-
     // get next sdf
     motorSDF = motorSDF->GetNextElement("motor");
+  }
+
+  // Adjust max/min torque commands based on <motor_torque>,
+  // <gear_ratio> and <gearbox> params.
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+  {
+    unsigned int m = this->motorInfos[i].index;
+    // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
+    double jointTorque = this->motorInfos[i].gearRatio *
+                         this->motorInfos[i].motorTorque;
+    this->pids[m].SetCmdMax(jointTorque);
+    this->pids[m].SetCmdMin(-jointTorque);
+    // gzdbg << " motor torque [" << m
+    //       << "] : " << jointTorque << "\n";
+
+    /// \TODO: contemplate about using Joint::SetEffortLimit()
+    /// instead of PID::SetCmdMax() and PID::SetCmdMin()
+
+    // set torque command limits through <gearbox> coupling params.
+    for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+    {
+      unsigned int n = this->motorInfos[i].gearboxes[j].index;
+      double coupledJointTorque = jointTorque /
+        this->motorInfos[i].gearboxes[j].multiplier;
+      this->pids[n].SetCmdMax(coupledJointTorque);
+      this->pids[n].SetCmdMin(-coupledJointTorque);
+      // gzdbg << "   coupled motor torque [" << n
+      //       << "] : " << coupledJointTorque << "\n";
+    }
   }
 
   // get sensor manager from gazebo
@@ -544,10 +544,11 @@ void HaptixControlPlugin::LoadHandControl()
     this->robotCommand.add_gain_pos(1.0);
     this->robotCommand.add_gain_vel(0.0);
   }
+  // initialize to control mode, not gain mode
   this->robotCommand.set_ref_pos_enabled(true);
-  this->robotCommand.set_ref_vel_max_enabled(true);
-  this->robotCommand.set_gain_pos_enabled(true);
-  this->robotCommand.set_gain_vel_enabled(true);
+  this->robotCommand.set_ref_vel_max_enabled(false);
+  this->robotCommand.set_gain_pos_enabled(false);
+  this->robotCommand.set_gain_vel_enabled(false);
 
   for (unsigned int i = 0; i < this->joints.size(); ++i)
   {
@@ -841,8 +842,14 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     unsigned int numWristMotors = 3;
     if (this->graspMode && i >= numWristMotors)
     {
-      this->simRobotCommands[m].ref_pos = this->graspPositions[i];
-      this->simRobotCommands[m].ref_vel_max = 0.0;
+      if (this->robotCommand.ref_pos_enabled())
+      {
+        this->simRobotCommands[m].ref_pos = this->graspPositions[i];
+      }
+      if (this->robotCommand.ref_vel_max_enabled())
+      {
+        this->simRobotCommands[m].ref_vel_max = 0.0;
+      }
     }
     else
     {
@@ -866,7 +873,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     {
       unsigned int n = this->motorInfos[i].gearboxes[j].index;
       // gzdbg << " " << n
-      //       << " : " << this->simRobotCommands[n].ref_pos << "\n";
+      //       << " : " << this->simRobotCommands[n].ref_pos
+      //       << " : " << this->robotCommand.ref_pos_enabled() << "\n";
       if (this->robotCommand.ref_pos_enabled())
       {
         this->simRobotCommands[n].ref_pos =
@@ -1208,7 +1216,16 @@ void HaptixControlPlugin::HaptixUpdateCallback(
     std::cout << "\t\t" << _req.ref_vel_max(i) << std::endl;
     std::cout << "\t\t" << _req.gain_pos(i) << std::endl;
     std::cout << "\t\t" << _req.gain_vel(i) << std::endl;
-  }*/
+  }
+  std::cout << "\tref_pos_enabled\t"
+            << _req.ref_pos_enabled()     << std::endl;
+  std::cout << "\tref_vel_max_enabled\t"
+            << _req.ref_vel_max_enabled() << std::endl;
+  std::cout << "\tgain_pos_enabled\t"
+            << _req.gain_pos_enabled()    << std::endl;
+  std::cout << "\tgain_vel_enabled\t"
+            << _req.gain_vel_enabled()    << std::endl;
+  */
 
   this->robotCommand = _req;
 
@@ -1244,6 +1261,9 @@ void HaptixControlPlugin::HaptixGraspCallback(
     this->graspPositions[j] = 0.0;
     _rep.add_ref_pos(0.0);
   }
+
+  // gzerr << "ref_pos_enabled: "
+  //       << this->robotCommand.ref_pos_enabled() << "\n";
 
   _rep.set_ref_pos_enabled(this->robotCommand.ref_pos_enabled());
   _rep.set_ref_vel_max_enabled(this->robotCommand.ref_vel_max_enabled());
@@ -1337,7 +1357,7 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
     gzdbg << "no polhemus, but responding to pause request\n";
   }
 
-  gzerr << "got " << _msg->data() << "\n";
+  // gzerr << "got " << _msg->data() << "\n";
   if (_msg->data() == 0)
   {
     this->pauseTracking = false;
