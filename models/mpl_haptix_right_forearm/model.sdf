@@ -104,7 +104,7 @@
       -->
       <motor_torque>1.50126</motor_torque>
       <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>0.1745</joint_offset>
+      <joint_offset>-0.174532925199</joint_offset>
     </motor>
     <motor id="8" name="motor_index1">
       <powered_motor_joint>index1</powered_motor_joint>
@@ -114,12 +114,12 @@
       <joint_offset>0.0</joint_offset>
       <gearbox>
         <joint>index2</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8625</multiplier>
       </gearbox>
       <gearbox>
         <joint>index3</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8375</multiplier>
       </gearbox>
     </motor>
@@ -131,15 +131,15 @@
       -->
       <motor_torque>1.50126</motor_torque>
       <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>0.1745</joint_offset>
+      <joint_offset>-0.174532925199</joint_offset>
       <gearbox>
         <joint>middle2</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8625</multiplier>
       </gearbox>
       <gearbox>
         <joint>middle3</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8375</multiplier>
       </gearbox>
     </motor>
@@ -151,15 +151,15 @@
       -->
       <motor_torque>1.50126</motor_torque>
       <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>0.1745</joint_offset>
+      <joint_offset>-0.174532925199</joint_offset>
       <gearbox>
         <joint>ring2</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8625</multiplier>
       </gearbox>
       <gearbox>
         <joint>ring3</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8375</multiplier>
       </gearbox>
     </motor>
@@ -182,15 +182,15 @@
       -->
       <motor_torque>1.50126</motor_torque>
       <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>0.1745</joint_offset>
+      <joint_offset>-0.174532925199</joint_offset>
       <gearbox>
         <joint>pinky2</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8625</multiplier>
       </gearbox>
       <gearbox>
         <joint>pinky3</joint>
-        <offset>0.174532925199</offset>
+        <offset>-0.174532925199</offset>
         <multiplier>0.8375</multiplier>
       </gearbox>
     </motor>
