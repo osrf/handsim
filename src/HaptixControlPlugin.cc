@@ -1018,8 +1018,8 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     // convert joint angle and velocities into motor using gear_ratio
     double motorPosition = (this->motorInfos[i].jointOffset + jointPosition) /
       this->motorInfos[i].gearRatio;
-    double motorVelocity = jointVelocity / this->motorInfos[i].gearRatio;
-    double motorTorque = jointTorque / this->motorInfos[i].gearRatio;
+    double motorVelocity = jointVelocity * this->motorInfos[i].gearRatio;
+    double motorTorque = jointTorque * this->motorInfos[i].gearRatio;
     // write to struct
     this->robotState.set_motor_pos(i, motorPosition);
     this->robotState.set_motor_vel(i, motorVelocity);
