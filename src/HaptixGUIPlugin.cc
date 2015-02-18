@@ -616,6 +616,7 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
       return;
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+    this->lastMotorCommand.ref_pos_enabled = 1;
     //::hxSensor sensor;
     if(::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
