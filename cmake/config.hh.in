@@ -8,7 +8,7 @@
 #define ${PROJECT_NAME_UPPER}_VERSION "${PROJECT_VERSION}"
 #define ${PROJECT_NAME_UPPER}_VERSION_FULL "${PROJECT_VERSION_FULL}"
 
-#define ${PROJECT_NAME_UPPER}_VERSION_HEADER "Ignition ${PROJECT_NAME}, version ${PROJECT_VERSION_FULL}\nCopyright (C) 2014 Open Source Robotics Foundation.\nReleased under the Apache 2.0 License.\n\n"
+#define ${PROJECT_NAME_UPPER}_VERSION_HEADER "${PROJECT_NAME}, version ${PROJECT_VERSION_FULL}\nCopyright (C) 2014 Open Source Robotics Foundation.\nReleased under the Apache 2.0 License.\n\n"
 
 #cmakedefine BUILD_TYPE_PROFILE 1
 #cmakedefine BUILD_TYPE_DEBUG 1
