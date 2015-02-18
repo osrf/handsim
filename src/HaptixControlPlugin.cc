@@ -427,7 +427,7 @@ void HaptixControlPlugin::LoadHandControl()
       for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
       {
         unsigned int n = this->motorInfos[i].gearboxes[j].index;
-        double coupledJointTorque = jointTorque *
+        double coupledJointTorque = jointTorque /
           this->motorInfos[i].gearboxes[j].multiplier;
         this->pids[n].SetCmdMax(coupledJointTorque);
         this->pids[n].SetCmdMin(-coupledJointTorque);
@@ -877,9 +877,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       if (this->robotCommand.ref_vel_max_enabled())
       {
         this->simRobotCommands[n].ref_vel_max =
-          (this->simRobotCommands[m].ref_vel_max +
-           this->motorInfos[i].gearboxes[j].offset)
-          * this->motorInfos[i].gearboxes[j].multiplier;
+          this->simRobotCommands[m].ref_vel_max
+          / this->motorInfos[i].gearboxes[j].multiplier;
       }
       if (this->robotCommand.gain_pos_enabled())
         this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
