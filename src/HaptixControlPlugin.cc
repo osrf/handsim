@@ -825,10 +825,6 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 ////////////////////////////////////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
-  /// \TODO: hack below to get things working
-  this->robotCommand.set_ref_pos_enabled(true);
-  this->robotCommand.set_ref_vel_max_enabled(true);
-
   // copy command from hxCommand for motors to list of all joints
   // commanded by this plugin.
   // also account for joint coupling here based on <gearbox> params
@@ -1211,11 +1207,13 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   std::cout << "\tgain_vel_enabled\t"
             << _req.gain_vel_enabled()    << std::endl;
 
+  this->robotCommand = _req;
+
   /// \TODO: hack below to get things working
   this->robotCommand.set_ref_pos_enabled(true);
   this->robotCommand.set_ref_vel_max_enabled(true);
-
-  this->robotCommand = _req;
+  this->robotCommand.set_gain_pos_enabled(false);
+  this->robotCommand.set_gain_vel_enabled(false);
 
   _rep.Clear();
 
@@ -1252,10 +1250,6 @@ void HaptixControlPlugin::HaptixGraspCallback(
 
   // gzerr << "ref_pos_enabled: "
   //       << this->robotCommand.ref_pos_enabled() << "\n";
-
-  /// \TODO: hack below to get things working
-  this->robotCommand.set_ref_pos_enabled(true);
-  this->robotCommand.set_ref_vel_max_enabled(true);
 
   _rep.set_ref_pos_enabled(this->robotCommand.ref_pos_enabled());
   _rep.set_ref_vel_max_enabled(this->robotCommand.ref_vel_max_enabled());
