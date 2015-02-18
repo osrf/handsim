@@ -629,6 +629,7 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
       return;
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+    this->lastMotorCommand.ref_pos_enabled = 1;
     //::hxSensor sensor;
     if(::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
@@ -1165,6 +1166,10 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     {
       this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
     }
+    this->lastMotorCommand.ref_pos_enabled = 1;
+    this->lastMotorCommand.ref_vel_max_enabled = 0;
+    this->lastMotorCommand.gain_pos_enabled = 0;
+    this->lastMotorCommand.gain_vel_enabled = 0;
     return true;
   }
 
@@ -1190,6 +1195,10 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
       // Now add in the new diff
       cmd.ref_pos[index] += inc;
+      cmd.ref_pos_enabled = 1;
+      cmd.ref_vel_max_enabled = 0;
+      cmd.gain_pos_enabled = 0;
+      cmd.gain_vel_enabled = 0;
 
       // Now command it.
       // std::cout << "Sending: " << std::endl;
@@ -1231,6 +1240,10 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           this->lastMotorCommand.ref_pos[i] = cmd.ref_pos[i];
         }
       }
+      this->lastMotorCommand.ref_pos_enabled = 1;
+      this->lastMotorCommand.ref_vel_max_enabled = 0;
+      this->lastMotorCommand.gain_pos_enabled = 0;
+      this->lastMotorCommand.gain_vel_enabled = 0;
       return true;
     }
   }
@@ -1313,6 +1326,10 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   {
     this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
   }
+  this->lastMotorCommand.ref_pos_enabled = 1;
+  this->lastMotorCommand.ref_vel_max_enabled = 0;
+  this->lastMotorCommand.gain_pos_enabled = 0;
+  this->lastMotorCommand.gain_vel_enabled = 0;
 }
 
 //////////////////////////////////////////////////

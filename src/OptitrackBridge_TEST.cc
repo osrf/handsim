@@ -34,17 +34,29 @@ TEST(OptitrackBridgeTest, IO)
   // Try to send an empty map.
   EXPECT_FALSE(comms.Send(tracking1));
 
-  std::string head        = "head";
-  std::string monitor     = "monitor";
-  std::string hand        = "hand";
-  RigidBody_A headPose    = { 1.0,  2.0,  3.0,  4.0,  5.0,  6.0,  7.0};
-  RigidBody_A monitorPose = {11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0};
-  RigidBody_A handPose    = {21.0, 22.0, 23.0, 24.0, 25.0, 26.0, 27.0};
-  double timestamp        = 0.5;
-  tracking1.timestamp       = timestamp;
-  tracking1.bodies[head]    = headPose;
-  tracking1.bodies[monitor] = monitorPose;
-  tracking1.bodies[hand]    = handPose;
+  std::string head    = "head";
+  std::string monitor = "monitor";
+  std::string hand    = "hand";
+  Pose_t headPose     = { 1.0f,  2.0f,  3.0f,  4.0f,  5.0f,  6.0f,  7.0f};
+  Marker_t headM1     = { 1.1f,  2.1f,  3.1f};
+  Marker_t headM2     = { 4.1f,  5.1f,  6.1f};
+  Marker_t headM3     = { 7.1f,  8.1f,  9.1f};
+  Pose_t monitorPose  = {11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f};
+  Marker_t monitorM1  = {11.1f, 12.1f, 13.1f};
+  Marker_t monitorM2  = {14.1f, 15.1f, 16.1f};
+  Marker_t monitorM3  = {17.1f, 18.1f, 19.1f};
+  Pose_t handPose     = {21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f};
+  Marker_t handM1     = {21.1f, 22.1f, 23.1f};
+  Marker_t handM2     = {24.1f, 25.1f, 26.1f};
+  Marker_t handM3     = {27.1f, 28.1f, 29.1f};
+  double timestamp    = 0.5;
+  tracking1.timestamp               = timestamp;
+  tracking1.bodies[head].body       = headPose;
+  tracking1.bodies[head].markers    = {headM1, headM2, headM3};
+  tracking1.bodies[monitor].body    = monitorPose;
+  tracking1.bodies[monitor].markers = {monitorM1, monitorM2, monitorM3};
+  tracking1.bodies[hand].body       = handPose;
+  tracking1.bodies[hand].markers    = {handM1, handM2, handM3};
 
   // Create a buffer.
   std::vector<char> buffer;
@@ -52,8 +64,11 @@ TEST(OptitrackBridgeTest, IO)
   size_t expectedSize = sizeof(uint16_t) + sizeof(uint16_t) +
     sizeof(double)   + sizeof(uint16_t) +
     sizeof(uint64_t) + head.size()      + (headPose.size()    * sizeof(float)) +
+    sizeof(uint64_t) + sizeof(Marker_t) * 3 +
     sizeof(uint64_t) + monitor.size()   + (monitorPose.size() * sizeof(float)) +
-    sizeof(uint64_t) + hand.size()      + (handPose.size()    * sizeof(float));
+    sizeof(uint64_t) + sizeof(Marker_t) * 3 +
+    sizeof(uint64_t) + hand.size()      + (handPose.size()    * sizeof(float)) +
+    sizeof(uint64_t) + sizeof(Marker_t) * 3;
 
   EXPECT_EQ(comms.MsgLength(tracking1), expectedSize);
 
@@ -71,8 +86,12 @@ TEST(OptitrackBridgeTest, IO)
   EXPECT_TRUE(tracking2.bodies.find(head)    != tracking1.bodies.end());
   EXPECT_TRUE(tracking2.bodies.find(monitor) != tracking1.bodies.end());
   EXPECT_TRUE(tracking2.bodies.find(hand)    != tracking1.bodies.end());
-  auto pose = tracking2.bodies[head];
+
+  // Head rigid body.
+  auto pose = tracking2.bodies[head].body;
   ASSERT_EQ(pose.size(), 7);
+  auto markers = tracking2.bodies[head].markers;
+  ASSERT_EQ(markers.size(), 3);
 
   float value = 1.0;
   for (size_t i = 0; i < pose.size(); ++i)
@@ -80,8 +99,21 @@ TEST(OptitrackBridgeTest, IO)
     ASSERT_FLOAT_EQ(pose.at(i), value);
     value += 1.0;
   }
-  pose = tracking2.bodies[monitor];
+  value = 1.1;
+  for (const auto &marker : markers)
+  {
+    for (const auto &elem : marker)
+    {
+      ASSERT_FLOAT_EQ(elem, value);
+      value += 1.0;
+    }
+  }
+
+  // Monitor rigid body.
+  pose = tracking2.bodies[monitor].body;
   ASSERT_EQ(pose.size(), 7);
+  markers = tracking2.bodies[monitor].markers;
+  ASSERT_EQ(markers.size(), 3);
 
   value = 11.0;
   for (size_t i = 0; i < pose.size(); ++i)
@@ -89,14 +121,36 @@ TEST(OptitrackBridgeTest, IO)
     ASSERT_FLOAT_EQ(pose.at(i), value);
     value += 1.0;
   }
-  pose = tracking2.bodies[hand];
+  value = 11.1;
+  for (const auto &marker : markers)
+  {
+    for (const auto &elem : marker)
+    {
+      ASSERT_FLOAT_EQ(elem, value);
+      value += 1.0;
+    }
+  }
+
+  // Hand rigid body.
+  pose = tracking2.bodies[hand].body;
   ASSERT_EQ(pose.size(), 7);
+  markers = tracking2.bodies[hand].markers;
+  ASSERT_EQ(markers.size(), 3);
 
   value = 21.0;
   for (size_t i = 0; i < pose.size(); ++i)
   {
     ASSERT_FLOAT_EQ(pose.at(i), value);
     value += 1.0;
+  }
+  value = 21.1;
+  for (const auto &marker : markers)
+  {
+    for (const auto &elem : marker)
+    {
+      ASSERT_FLOAT_EQ(elem, value);
+      value += 1.0;
+    }
   }
 
   // Send some data.
