@@ -17,8 +17,6 @@
 
 #include <sstream>
 #include <limits>
-#include <regex>
-#include <algorithm>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
