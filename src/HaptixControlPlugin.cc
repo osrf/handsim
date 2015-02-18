@@ -1172,8 +1172,15 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     haptix::comm::msgs::hxRobot::hxLimit *motor = _rep.add_motor_limit();
     unsigned int m = this->motorInfos[i].index;
     // TODO: return the motor limits, not the joint limits
-    motor->set_minimum(this->joints[m]->GetLowerLimit(0).Radian());
-    motor->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
+    double jointMin = this->joints[m]->GetLowerLimit(0).Radian();
+    double jointMax = this->joints[m]->GetUpperLimit(0).Radian();
+    /// \TODO: flip if gearRatio is negative
+    double motorMin = (this->motorInfos[i].jointOffset + jointMin) /
+      this->motorInfos[i].gearRatio;
+    double motorMax = (this->motorInfos[i].jointOffset + jointMax) /
+      this->motorInfos[i].gearRatio;
+    motor->set_minimum(motorMin);
+    motor->set_maximum(motorMax);
   }
 
   // TODO: get this value from somewhere (and make sure that it's
