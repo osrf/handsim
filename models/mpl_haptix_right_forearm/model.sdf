@@ -1147,6 +1147,7 @@
       </contact>
     </sensor>
     <sensor name='index3_imu_sensor' type='imu'>
+      <pose>0 0 0  1.570796 -1.570796 0</pose>
       <always_on>1</always_on>
       <update_rate>1000</update_rate>
       <imu>
@@ -1572,6 +1573,7 @@
       </contact>
     </sensor>
     <sensor name='middle3_imu_sensor' type='imu'>
+      <pose>0 0 0  1.570796 -1.570796 0</pose>
       <always_on>1</always_on>
       <update_rate>1000</update_rate>
       <imu>
@@ -1972,6 +1974,7 @@
       </contact>
     </sensor>
     <sensor name='pinky3_imu_sensor' type='imu'>
+      <pose>0 0 0  1.570796 -1.570796 0</pose>
       <always_on>1</always_on>
       <update_rate>1000</update_rate>
       <imu>
@@ -2396,6 +2399,7 @@
       </contact>
     </sensor>
     <sensor name='ring3_imu_sensor' type='imu'>
+      <pose>0 0 0  1.570796 -1.570796 0</pose>
       <always_on>1</always_on>
       <update_rate>1000</update_rate>
       <imu>
@@ -2896,6 +2900,7 @@
       </contact>
     </sensor>
     <sensor name='thumb3_imu_sensor' type='imu'>
+      <pose>0 0 0  1.570796 0 1.570796</pose>
       <always_on>1</always_on>
       <update_rate>1000</update_rate>
       <imu>
