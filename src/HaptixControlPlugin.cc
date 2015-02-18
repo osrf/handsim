@@ -540,7 +540,7 @@ void HaptixControlPlugin::LoadHandControl()
   }
   // initialize to control mode, not gain mode
   this->robotCommand.set_ref_pos_enabled(true);
-  this->robotCommand.set_ref_vel_max_enabled(true);
+  this->robotCommand.set_ref_vel_max_enabled(false);
   this->robotCommand.set_gain_pos_enabled(false);
   this->robotCommand.set_gain_vel_enabled(false);
 
@@ -1197,7 +1197,6 @@ void HaptixControlPlugin::HaptixUpdateCallback(
     std::cout << "\t\t" << _req.gain_pos(i) << std::endl;
     std::cout << "\t\t" << _req.gain_vel(i) << std::endl;
   }
-  */
   std::cout << "\tref_pos_enabled\t"
             << _req.ref_pos_enabled()     << std::endl;
   std::cout << "\tref_vel_max_enabled\t"
@@ -1206,14 +1205,15 @@ void HaptixControlPlugin::HaptixUpdateCallback(
             << _req.gain_pos_enabled()    << std::endl;
   std::cout << "\tgain_vel_enabled\t"
             << _req.gain_vel_enabled()    << std::endl;
+  */
 
   this->robotCommand = _req;
 
   /// \TODO: hack below to get things working
-  this->robotCommand.set_ref_pos_enabled(true);
-  this->robotCommand.set_ref_vel_max_enabled(true);
-  this->robotCommand.set_gain_pos_enabled(false);
-  this->robotCommand.set_gain_vel_enabled(false);
+  // this->robotCommand.set_ref_pos_enabled(true);
+  // this->robotCommand.set_ref_vel_max_enabled(false);
+  // this->robotCommand.set_gain_pos_enabled(false);
+  // this->robotCommand.set_gain_vel_enabled(false);
 
   _rep.Clear();
 
