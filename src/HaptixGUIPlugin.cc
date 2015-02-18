@@ -255,10 +255,23 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(stereoCheck, SIGNAL(stateChanged(int)),
           this, SLOT(OnStereoCheck(int)));
 
+  // Reset mocap button
+  QPushButton *resetMocapButton = new QPushButton();
+
+  resetMocapButton->setText(QString("Reset Mocap"));
+  resetMocapButton->setStyleSheet(
+      "background-color: rgba(120, 120, 120, 255);"
+      "border: 0px;"
+      "border-radius: 0px;"
+      "color: #ffffff;"
+      "font: 11px");
+  connect(resetMocapButton, SIGNAL(clicked()), this, SLOT(OnResetMocap()));
+
   QHBoxLayout *stereoCheckLayout = new QHBoxLayout();
   stereoCheckLayout->addWidget(stereoCheck);
   stereoCheckLayout->addStretch(1);
 
+  stereoCheckLayout->addWidget(resetMocapButton);
 
   movementLayout->addWidget(localCoordMoveCheck);
   movementLayout->addWidget(new QLabel(tr("Arm move speed:")));
@@ -1317,4 +1330,25 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   this->lastMotorCommand.ref_vel_max_enabled = 0;
   this->lastMotorCommand.gain_pos_enabled = 0;
   this->lastMotorCommand.gain_vel_enabled = 0;
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetMocap()
+{
+  // We're trying to stop and start the remote service.  These commands can take
+  // time to execute, especially if the NetBIOS name lookup fails.  Also, they
+  // always return an error, even when they work.  So we'll stop then start, but
+  // all in the background.
+  // We're sleeping in between to ensure that the stop has taken effect before
+  // trying to start it again.
+  int ret =
+    system("(net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U \"Haptix "
+           "Team\"%haptix 2> /dev/null;"
+           "sleep 1;"
+           "net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U \"Haptix "
+           "Team\"%haptix 2> /dev/null)&");
+  if (ret != 0)
+  {
+    // Do nothing, because it always returns non-zero.
+  }
 }
