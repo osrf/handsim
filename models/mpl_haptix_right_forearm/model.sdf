@@ -56,62 +56,66 @@
       <!-- wrist motor torque unknown, guessing for now -->
       <motor_torque>6.8</motor_torque>
       <gear_ratio>1.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="1" name="motor_wristx">
       <powered_motor_joint>wristx</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
       <motor_torque>1.7</motor_torque>
       <gear_ratio>1.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="2" name="motor_wristz">
       <powered_motor_joint>wristz</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
       <motor_torque>34.4</motor_torque>
       <gear_ratio>1.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="3" name="motor_thumb0">
       <powered_motor_joint>thumb0</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="4" name="motor_thumb1">
       <powered_motor_joint>thumb1</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="5" name="motor_thumb2">
       <powered_motor_joint>thumb2</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="6" name="motor_thumb3">
       <powered_motor_joint>thumb3</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="7" name="motor_index0">
       <powered_motor_joint>index0</powered_motor_joint>
       <!--
         1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
+        if a transmission is defined by multiplier and joint offset, then
+          gear_ratio = multiplier
+          encoder_offset = joint_offset * gear_ratio
+                         = joint_offset / multiplier
       -->
       <motor_torque>1.50126</motor_torque>
-      <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>-0.174532925199</joint_offset>
+      <gear_ratio>1.2</gear_ratio>
+      <encoder_offset>-0.20943951</encoder_offset>
     </motor>
     <motor id="8" name="motor_index1">
       <powered_motor_joint>index1</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
       <!-- uncertain about transmission -->
       <gear_ratio>393.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>index2</joint>
         <offset>-0.174532925199</offset>
@@ -128,10 +132,14 @@
       <!--
         1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
+        if a transmission is defined by multiplier and joint offset, then
+          gear_ratio = multiplier
+          encoder_offset = joint_offset * gear_ratio
+                         = joint_offset / multiplier
       -->
       <motor_torque>1.50126</motor_torque>
-      <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>-0.174532925199</joint_offset>
+      <gear_ratio>1.2</gear_ratio>
+      <encoder_offset>-0.20943951</encoder_offset>
       <gearbox>
         <joint>middle2</joint>
         <offset>-0.174532925199</offset>
@@ -148,10 +156,14 @@
       <!--
         1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
+        if a transmission is defined by multiplier and joint offset, then
+          gear_ratio = multiplier
+          encoder_offset = joint_offset * gear_ratio
+                         = joint_offset / multiplier
       -->
       <motor_torque>1.50126</motor_torque>
-      <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>-0.174532925199</joint_offset>
+      <gear_ratio>1.2</gear_ratio>
+      <encoder_offset>-0.20943951</encoder_offset>
       <gearbox>
         <joint>ring2</joint>
         <offset>-0.174532925199</offset>
@@ -167,7 +179,7 @@
       <powered_motor_joint>ring0</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>3520.0</gear_ratio>
-      <joint_offset>0.0</joint_offset>
+      <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>pinky0</joint>
         <offset>0</offset>
@@ -179,10 +191,14 @@
       <!--
         1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
+        if a transmission is defined by multiplier and joint offset, then
+          gear_ratio = multiplier
+          encoder_offset = joint_offset * gear_ratio
+                         = joint_offset / multiplier
       -->
       <motor_torque>1.50126</motor_torque>
-      <gear_ratio>0.8333</gear_ratio>
-      <joint_offset>-0.174532925199</joint_offset>
+      <gear_ratio>1.2</gear_ratio>
+      <encoder_offset>-0.20943951</encoder_offset>
       <gearbox>
         <joint>pinky2</joint>
         <offset>-0.174532925199</offset>

@@ -354,10 +354,10 @@ void HaptixControlPlugin::LoadHandControl()
     // gzdbg << "  gear [" << this->motorInfos[id].gearRatio << "]\n";
 
     // get joint offset associated with this motor
-    sdf::ElementPtr jointOffsetSDF =
-      motorSDF->GetElement("joint_offset");
-    this->motorInfos[id].jointOffset = jointOffsetSDF->Get<double>();
-    // gzdbg << "  joint offset [" << this->motorInfos[id].jointOffset << "]\n";
+    sdf::ElementPtr encoderOffsetSDF =
+      motorSDF->GetElement("encoder_offset");
+    this->motorInfos[id].encoderOffset = encoderOffsetSDF->Get<double>();
+    // gzdbg << "  enc offset [" << this->motorInfos[id].encoderOffset << "]\n";
 
     // get max [continuous] motor torque associated with this motor
     sdf::ElementPtr motorTorqueSDF =
@@ -1023,10 +1023,10 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     double jointVelocity = this->joints[m]->GetVelocity(0);
     double jointTorque = this->joints[m]->GetForce(0);
     // convert joint angle and velocities into motor using gear_ratio
-    double motorPosition = (this->motorInfos[i].jointOffset + jointPosition) /
-      this->motorInfos[i].gearRatio;
-    double motorVelocity = jointVelocity * this->motorInfos[i].gearRatio;
-    double motorTorque = jointTorque * this->motorInfos[i].gearRatio;
+    double motorPosition = jointPosition * this->motorInfos[i].gearRatio
+      - this->motorInfos[i].encoderOffset;
+    double motorVelocity = jointVelocity / this->motorInfos[i].gearRatio;
+    double motorTorque = jointTorque / this->motorInfos[i].gearRatio;
     // write to struct
     this->robotState.set_motor_pos(i, motorPosition);
     this->robotState.set_motor_vel(i, motorVelocity);
@@ -1182,10 +1182,10 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     double jointMin = this->joints[m]->GetLowerLimit(0).Radian();
     double jointMax = this->joints[m]->GetUpperLimit(0).Radian();
     /// \TODO: flip if gearRatio is negative
-    double motorMin = (this->motorInfos[i].jointOffset + jointMin) /
-      this->motorInfos[i].gearRatio;
-    double motorMax = (this->motorInfos[i].jointOffset + jointMax) /
-      this->motorInfos[i].gearRatio;
+    double motorMin = jointMin * this->motorInfos[i].gearRatio
+      - this->motorInfos[i].encoderOffset;
+    double motorMax = jointMax * this->motorInfos[i].gearRatio
+      - this->motorInfos[i].encoderOffset;
     motor->set_minimum(motorMin);
     motor->set_maximum(motorMax);
   }
