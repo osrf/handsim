@@ -1209,12 +1209,6 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 
   this->robotCommand = _req;
 
-  /// \TODO: hack below to get things working
-  // this->robotCommand.set_ref_pos_enabled(true);
-  // this->robotCommand.set_ref_vel_max_enabled(false);
-  // this->robotCommand.set_gain_pos_enabled(false);
-  // this->robotCommand.set_gain_vel_enabled(false);
-
   _rep.Clear();
 
   _rep = this->robotState;
