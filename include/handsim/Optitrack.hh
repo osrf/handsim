@@ -106,8 +106,8 @@ namespace haptix
       /// \brief UDP socket used to received tracking updates.
       private: int dataSocket;
 
-      /// \brief IP address associated to the multicast socket.
-      private: std::string myIPAddress;
+      /// \brief List of network interfaces associated to the multicast socket.
+      private: std::vector<std::string> myNetworkInterfaces;
 
       /// \brief Name of the world associated with the Gazebo publishers.
       private: std::string world;
