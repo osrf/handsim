@@ -316,30 +316,34 @@ namespace gazebo
           this->fakeTorque = 0.0;
           this->fakeUpperLimit = 1e16;
           this->fakeLowerLimit = -1e16;
-          // this->realJoint.reset();
+          this->realJoint = NULL ;  // .reset();
           this->hasJoint = false;
+        }
+      public: ~HaptixJoint()
+        {
         }
       public: HaptixJoint &operator=(physics::JointPtr _joint)
         {
-          gzerr << _joint->GetName() << "\n";
           this->realJoint = _joint;
           this->hasJoint = true;
-          // gzerr << this->realJoint->GetAngle(0) << "\n";
           return *this;
         }
-      public: void SetJoint(physics::JointPtr _joint);
+      public: void SetJoint(physics::JointPtr _joint)
+        {
+          this->realJoint = _joint;
+          this->hasJoint = true;
+        }
+      public: std::string jointName;
       public: physics::JointPtr realJoint;
-      private: bool hasJoint;
+      public: bool hasJoint;
       public: math::Angle GetAngle(int _index)
         {
           if (this->hasJoint)
           {
-            gzerr << "GetAngle " << this->realJoint << "\n";
             return this->realJoint->GetAngle(_index);
           }
           else
           {
-            gzerr << "no\n";
             return this->fakePosition;
           }
         }
@@ -401,7 +405,7 @@ namespace gazebo
       private: math::Angle fakeUpperLimit;
       private: math::Angle fakeLowerLimit;
     };
-    private: std::vector<HaptixJoint> haptixJoints;
+    private: std::vector<HaptixJoint*> haptixJoints;
 
     /// \brief: class containing info on motors
     private: class MotorInfo

@@ -305,25 +305,20 @@ void HaptixControlPlugin::LoadHandControl()
   // Set initial haptixJoints size to match jointNames
   // this is incremented with fake joints from motor specifications
   this->haptixJoints.resize(this->jointNames.size());
-
-  // Get pid gains and insert into pid
-  this->pids.resize(this->haptixJoints.size());
-  sdf::ElementPtr pid = this->sdf->GetElement("pid");
-  // gzdbg << "getting pid\n";
-  while (pid)
+  // Get gazebo joint pointers to joints
+  for (unsigned int i = 0; i < this->jointNames.size(); ++i)
   {
-    pid->GetAttribute("id")->Get(id);
-    // gzdbg << "getting pid [" << id << "]\n";
-    double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
-    pid->GetAttribute("p")->Get(pVal);
-    pid->GetAttribute("i")->Get(iVal);
-    pid->GetAttribute("d")->Get(dVal);
-    pid->GetAttribute("cmd_max")->Get(cmdMaxVal);
-    pid->GetAttribute("cmd_min")->Get(cmdMinVal);
-    this->pids[id] = common::PID(pVal, iVal, dVal, cmdMaxVal, cmdMinVal);
-
-    // get next sdf
-    pid = pid->GetNextElement("pid");
+    /// \TODO: this assumes id's for joints are consecutive, starting with 0
+    physics::JointPtr joint = this->model->GetJoint(this->jointNames[i]);
+    if (joint)
+    {
+      // gzdbg << "setting gazebo joint [" << joint->GetName() << "]\n";
+      this->haptixJoints[i] = new HaptixJoint();
+      this->haptixJoints[i]->SetJoint(joint);
+      this->haptixJoints[i]->jointName = this->jointNames[i];
+    }
+    else
+      gzerr << "jointName [" << this->jointNames[i] << "] not found.\n";
   }
 
   // Get motor names and insert id/name pair into MotorInfo map
@@ -372,17 +367,20 @@ void HaptixControlPlugin::LoadHandControl()
         break;
       }
     }
+
     // if fail to find a joint name matching one specified in motor block
     if (this->motorInfos[id].index == -1)
     {
       // create a fake joint, append it to the end
       int j1 = this->haptixJoints.size();
-      gzerr << "len0: " << j1 << "\n";
-      HaptixJoint hj;
+      HaptixJoint *hj = new HaptixJoint();
+      hj->jointName = this->motorInfos[id].jointName;
       this->haptixJoints.push_back(hj);
       this->motorInfos[id].index = j1;
-      gzerr << "new len: " << this->haptixJoints.size() << "\n";
+      gzdbg << "add fake joint[" << j1 << "]: " << hj->jointName << "\n";
     }
+
+    // gzerr << id << " : " << this->motorInfos[id].index << "\n";
 
     // get coupled joints from <gearbox> blocks
     if (motorSDF->HasElement("gearbox"))
@@ -407,6 +405,9 @@ void HaptixControlPlugin::LoadHandControl()
             break;
           }
         }
+        if (g.index == -1)
+          gzerr <<  "failed to find joint for gearbox\n";
+
         g.offset = offsetSDF->Get<double>();
         g.multiplier = multiplierSDF->Get<double>();
         this->motorInfos[id].gearboxes.push_back(g);
@@ -417,6 +418,26 @@ void HaptixControlPlugin::LoadHandControl()
 
     // get next sdf
     motorSDF = motorSDF->GetNextElement("motor");
+  }
+
+  // Get pid gains and insert into pid
+  this->pids.resize(this->haptixJoints.size());
+  sdf::ElementPtr pid = this->sdf->GetElement("pid");
+  // gzdbg << "getting pid\n";
+  while (pid)
+  {
+    pid->GetAttribute("id")->Get(id);
+    // gzdbg << "getting pid [" << id << "]\n";
+    double pVal, iVal, dVal, cmdMaxVal, cmdMinVal;
+    pid->GetAttribute("p")->Get(pVal);
+    pid->GetAttribute("i")->Get(iVal);
+    pid->GetAttribute("d")->Get(dVal);
+    pid->GetAttribute("cmd_max")->Get(cmdMaxVal);
+    pid->GetAttribute("cmd_min")->Get(cmdMinVal);
+    this->pids[id] = common::PID(pVal, iVal, dVal, cmdMaxVal, cmdMinVal);
+
+    // get next sdf
+    pid = pid->GetNextElement("pid");
   }
 
   // Adjust max/min torque commands based on <motor_torque>,
@@ -560,22 +581,19 @@ void HaptixControlPlugin::LoadHandControl()
 
   for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
-    this->robotState.add_joint_pos(0);
-    this->robotState.add_joint_vel(0);
+    if (this->haptixJoints[i]->hasJoint)
+    {
+      this->robotState.add_joint_pos(0);
+      this->robotState.add_joint_vel(0);
 
-    // internal command of all joints controller here (not just motors)
-    SimRobotCommand c;
-    c.ref_pos = 0.0;
-    c.ref_vel_max = 0.0;
-    c.gain_pos = 1.0;
-    c.gain_vel = 0.0;
-    this->simRobotCommands.push_back(c);
-
-    // get gazebo joint handles
-    // this->haptixJoints[i] = this->model->GetJoint(this->jointNames[i]);
-    // if (!this->haptixJoints[i])
-    //   fprintf(stderr, "joint[%d]=[%s] bad\n",
-    //           i, this->jointNames[i].c_str());
+      // internal command of all joints controller here (not just motors)
+      SimRobotCommand c;
+      c.ref_pos = 0.0;
+      c.ref_vel_max = 0.0;
+      c.gain_pos = 1.0;
+      c.gain_vel = 0.0;
+      this->simRobotCommands.push_back(c);
+    }
   }
 
   // add a robot state contact per contactSensorInfo
@@ -605,17 +623,6 @@ void HaptixControlPlugin::LoadHandControl()
   this->robotState.mutable_time_stamp()->set_sec(0);
   this->robotState.mutable_time_stamp()->set_nsec(0);
 
-  // Get pointers to joints
-  for (unsigned int i = 0; i < this->jointNames.size(); ++i)
-  {
-    /// \TODO: this assumes id's for joints are consecutive, starting with 0
-    physics::JointPtr joint = this->model->GetJoint(this->jointNames[i]);
-    if (joint)
-    {
-      gzdbg << "setting gazebo joint [" << joint->GetName() << "]\n";
-      this->haptixJoints[i].SetJoint(joint);
-    }
-  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -919,8 +926,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   for(unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
     // get joint positions and velocities
-    double position = this->haptixJoints[i].GetAngle(0).Radian();
-    double velocity = this->haptixJoints[i].GetVelocity(0);
+    double position = this->haptixJoints[i]->GetAngle(0).Radian();
+    double velocity = this->haptixJoints[i]->GetVelocity(0);
 
     // compute position and velocity error
     /// \TODO: get motor position for motor controlled joint based on
@@ -942,12 +949,13 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     double force = this->pids[i].Update(error, _dt);
 
     // this->robotState.set_motor_torque(i, force);
-    if (!this->haptixJoints[i].SetForce(0, force))
+    if (!this->haptixJoints[i]->SetForce(0, force))
     {
       // not a real gazebo joint, set target directly
-      this->haptixJoints[i].SetPosition(position);
+      this->haptixJoints[i]->SetPosition(position);
+      /// \TODO: something about velocity commands
+      // this->haptixJoints[i]->SetVelocity(velocity);
     }
-    
   }
 }
 
@@ -1046,15 +1054,13 @@ void HaptixControlPlugin::PublishHaptixControlStatus()
 // Play the trajectory, update states
 void HaptixControlPlugin::GetRobotStateFromSim()
 {
+  // fill robot state motor_pos, motor_vel, motor_torque
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     int m = motorInfos[i].index;
-    gzerr << m << " : " << this->haptixJoints.size() << "\n";
-    double jointPosition = this->haptixJoints[m].GetAngle(0).Radian();
-    gzerr << m << " : " << this->haptixJoints.size() << "\n";
-    double jointVelocity = this->haptixJoints[m].GetVelocity(0);
-    gzerr << m << " : " << this->haptixJoints.size() << "\n";
-    double jointTorque = this->haptixJoints[m].GetForce(0);
+    double jointPosition = this->haptixJoints[m]->GetAngle(0).Radian();
+    double jointVelocity = this->haptixJoints[m]->GetVelocity(0);
+    double jointTorque = this->haptixJoints[m]->GetForce(0);
     // convert joint angle and velocities into motor using gear_ratio
     double motorPosition = jointPosition * this->motorInfos[i].gearRatio
       - this->motorInfos[i].encoderOffset;
@@ -1066,13 +1072,18 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     this->robotState.set_motor_torque(i, motorTorque);
   }
 
+  // fill robot state joint_pos and joint_vel
+  unsigned int count = 0;
   for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
-    gzerr << i << " : " << this->haptixJoints.size() << "\n";
-    this->robotState.set_joint_pos(i,
-      this->haptixJoints[i].GetAngle(0).Radian());
-    this->robotState.set_joint_vel(i,
-      this->haptixJoints[i].GetVelocity(0));
+    if (this->haptixJoints[i]->hasJoint)
+    {
+      this->robotState.set_joint_pos(count,
+        this->haptixJoints[i]->GetAngle(0).Radian());
+      this->robotState.set_joint_vel(count,
+        this->haptixJoints[i]->GetVelocity(0));
+      ++count;
+    }
   }
 
   // copy contact forces
@@ -1196,25 +1207,27 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
   //   _result = false;
 
   _rep.set_motor_count(this->motorInfos.size());
-  _rep.set_joint_count(this->haptixJoints.size());
+  _rep.set_joint_count(this->jointNames.size());
   _rep.set_contact_sensor_count(this->contactSensorInfos.size());
   _rep.set_imu_count(this->imuSensors.size());
 
-  for (std::vector<HaptixJoint>::const_iterator
-       it = this->haptixJoints.begin(); it != this->haptixJoints.end(); ++it)
+  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
-    haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_joint_limit();
-    joint->set_minimum((*it).GetLowerLimit(0).Radian());
-    joint->set_maximum((*it).GetUpperLimit(0).Radian());
+    if (this->haptixJoints[i]->hasJoint)
+    {
+      haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_joint_limit();
+      joint->set_minimum(this->haptixJoints[i]->GetLowerLimit(0).Radian());
+      joint->set_maximum(this->haptixJoints[i]->GetUpperLimit(0).Radian());
+    }
   }
 
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    haptix::comm::msgs::hxRobot::hxLimit *motor = _rep.add_motor_limit();
     int m = this->motorInfos[i].index;
+    haptix::comm::msgs::hxRobot::hxLimit *motor = _rep.add_motor_limit();
     // compute the motor limits from joint limits
-    double jointMin = this->haptixJoints[m].GetLowerLimit(0).Radian();
-    double jointMax = this->haptixJoints[m].GetUpperLimit(0).Radian();
+    double jointMin = this->haptixJoints[m]->GetLowerLimit(0).Radian();
+    double jointMax = this->haptixJoints[m]->GetUpperLimit(0).Radian();
     /// \TODO: flip if gearRatio is negative
     double motorMin = jointMin * this->motorInfos[i].gearRatio
       - this->motorInfos[i].encoderOffset;
