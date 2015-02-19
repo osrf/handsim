@@ -52,7 +52,7 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
   this->active = false;
-  this->myIPAddress = ignition::transport::determineHost();
+  this->myNetworkInterfaces = ignition::transport::determineInterfaces();
 }
 
 /////////////////////////////////////////////////
@@ -83,16 +83,21 @@ void Optitrack::StartReception()
     gzerr << "Binding to a local port failed." << std::endl;
     return;
   }
-  // Join the multicast group.
-  struct ip_mreq mreq;
-  mreq.imr_multiaddr.s_addr = inet_addr(this->multicastAddress.c_str());
-  mreq.imr_interface.s_addr = inet_addr(this->myIPAddress.c_str());
-  if (setsockopt(this->dataSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-    reinterpret_cast<const char*>(&mreq), sizeof(mreq)) != 0)
+
+  // Join the multicast group. We apply IP_ADD_MEMBERSHIP to all our network
+  // interfaces to receive multicast datagrams from everywhere.
+  for (const auto &interface : this->myNetworkInterfaces)
   {
-    gzerr << "Error setting socket option (IP_ADD_MEMBERSHIP)."
-              << std::endl;
-    return;
+    struct ip_mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(this->multicastAddress.c_str());
+    mreq.imr_interface.s_addr = inet_addr(interface.c_str());
+    if (setsockopt(this->dataSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+      reinterpret_cast<const char*>(&mreq), sizeof(mreq)) != 0)
+    {
+      gzerr << "Error setting socket option (IP_ADD_MEMBERSHIP) for interface ["
+            << interface << "]" << std::endl;
+      return;
+    }
   }
 
   this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
