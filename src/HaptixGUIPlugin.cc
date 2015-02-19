@@ -974,6 +974,7 @@ void HaptixGUIPlugin::ResetModels()
 
   // Also reset wrist and finger posture
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+  this->lastMotorCommand.ref_pos_enabled = 1;
   //::hxSensor sensor;
   if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
@@ -1323,12 +1324,14 @@ void HaptixGUIPlugin::OnResetMocap()
   // all in the background.
   // We're sleeping in between to ensure that the stop has taken effect before
   // trying to start it again.
+  // We also need to redirect both stdout and stderr to /dev/null to repress
+  // error messages.
   int ret =
     system("(net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U \"Haptix "
-           "Team\"%haptix 2> /dev/null;"
+           "Team\"%haptix > /dev/null 2>&1;"
            "sleep 1;"
            "net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U \"Haptix "
-           "Team\"%haptix 2> /dev/null)&");
+           "Team\"%haptix > /dev/null 2>&1)&");
   if (ret != 0)
   {
     // Do nothing, because it always returns non-zero.
