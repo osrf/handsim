@@ -316,61 +316,84 @@ namespace gazebo
           this->fakeTorque = 0.0;
           this->fakeUpperLimit = 1e16;
           this->fakeLowerLimit = -1e16;
+          // this->realJoint.reset();
+          this->hasJoint = false;
         }
-      public: physics::JointPtr &operator =(physics::JointPtr _joint)
+      public: HaptixJoint &operator=(physics::JointPtr _joint)
         {
+          gzerr << _joint->GetName() << "\n";
           this->realJoint = _joint;
-          return this->realJoint;
+          this->hasJoint = true;
+          // gzerr << this->realJoint->GetAngle(0) << "\n";
+          return *this;
         }
+      public: void SetJoint(physics::JointPtr _joint);
       public: physics::JointPtr realJoint;
+      private: bool hasJoint;
       public: math::Angle GetAngle(int _index)
         {
-          if (this->realJoint)
+          if (this->hasJoint)
+          {
+            gzerr << "GetAngle " << this->realJoint << "\n";
             return this->realJoint->GetAngle(_index);
+          }
           else
+          {
+            gzerr << "no\n";
             return this->fakePosition;
+          }
         }
       public: double GetVelocity(int _index)
         {
-          if (this->realJoint)
+          if (this->hasJoint)
             return this->realJoint->GetVelocity(_index);
           else
             return this->fakeVelocity;
         }
-      public: void SetForce(int _index, double _force)
+      public: bool SetForce(int _index, double _force)
         {
-          if (this->realJoint)
+          if (this->hasJoint)
+          {
             this->realJoint->SetForce(_index, _force);
+            return true;
+          }
           else
           {
             if (_index == 0)
+            {
               this->fakeTorque = _force;
+            }
             else
             {
               // we only support _index == 0
             }
+            return false;
           }
         }
       public: double GetForce(int _index)
         {
-          if (this->realJoint)
+          if (this->hasJoint)
             return this->realJoint->GetForce(_index);
           else
             return this->fakeTorque;
         }
       public: math::Angle GetUpperLimit(int _index) const
         {
-          if (this->realJoint)
+          if (this->hasJoint)
             return this->realJoint->GetUpperLimit(_index);
           else
             return this->fakeUpperLimit;
         }
       public: math::Angle GetLowerLimit(int _index) const
         {
-          if (this->realJoint)
+          if (this->hasJoint)
             return this->realJoint->GetLowerLimit(_index);
           else
             return this->fakeLowerLimit;
+        }
+      public: void SetPosition(double _position)
+        {
+          this->fakePosition = _position;
         }
       private: math::Angle fakePosition;
       private: double fakeVelocity;
