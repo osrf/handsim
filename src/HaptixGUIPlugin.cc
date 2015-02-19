@@ -1320,7 +1320,7 @@ void HaptixGUIPlugin::OnResetMocap()
   // all in the background.
   // We're sleeping in between to ensure that the stop has taken effect before
   // trying to start it again.
-  // We also need to redirect both stdin and stderr to /dev/null to repress
+  // We also need to redirect both stdout and stderr to /dev/null to repress
   // error messages
   int ret =
     system("(net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U \"Haptix "
