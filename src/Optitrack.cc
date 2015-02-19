@@ -84,7 +84,7 @@ void Optitrack::StartReception()
     return;
   }
 
-  // Join the multicast group. We apply IP_ADD_MEMBERSHIP to all out network
+  // Join the multicast group. We apply IP_ADD_MEMBERSHIP to all our network
   // interfaces to receive multicast datagrams from everywhere.
   for (const auto &interface : this->myNetworkInterfaces)
   {
