@@ -916,6 +916,14 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     double velocity = this->joints[i]->GetVelocity(0);
 
     // compute position and velocity error
+    /// \TODO: get motor position for motor controlled joint based on
+    /// ref_pos --> motor angle
+    /// for non-motor gearboxed joints, apply joint angles directly
+    ///
+    /// double motorPosition = jointPosition * this->motorInfos[i].gearRatio
+    ///   - this->motorInfos[i].encoderOffset;
+    /// double motorVelocity = jointVelocity / this->motorInfos[i].gearRatio;
+    /// double motorTorque = jointTorque / this->motorInfos[i].gearRatio;
     double errorPos = position - this->simRobotCommands[i].ref_pos;
     double errorVel = velocity - this->simRobotCommands[i].ref_vel_max;
 
