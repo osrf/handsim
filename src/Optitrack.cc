@@ -94,8 +94,8 @@ void Optitrack::StartReception()
     if (setsockopt(this->dataSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
       reinterpret_cast<const char*>(&mreq), sizeof(mreq)) != 0)
     {
-      gzerr << "Error setting socket option (IP_ADD_MEMBERSHIP)."
-                << std::endl;
+      gzerr << "Error setting socket option (IP_ADD_MEMBERSHIP) for interface ["
+            << interface << "]" << std::endl;
       return;
     }
   }
