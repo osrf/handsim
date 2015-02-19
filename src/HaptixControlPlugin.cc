@@ -929,15 +929,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     double position = this->haptixJoints[i]->GetAngle(0).Radian();
     double velocity = this->haptixJoints[i]->GetVelocity(0);
 
-    // compute position and velocity error
-    /// \TODO: get motor position for motor controlled joint based on
-    /// ref_pos --> motor angle
-    /// for non-motor gearboxed joints, apply joint angles directly
-    ///
-    /// double motorPosition = jointPosition * this->motorInfos[i].gearRatio
-    ///   - this->motorInfos[i].encoderOffset;
-    /// double motorVelocity = jointVelocity / this->motorInfos[i].gearRatio;
-    /// double motorTorque = jointTorque / this->motorInfos[i].gearRatio;
+    // compute target joint position and velocity error in gazebo
     double errorPos = position - this->simRobotCommands[i].ref_pos;
     double errorVel = velocity - this->simRobotCommands[i].ref_vel_max;
 
@@ -1235,6 +1227,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       - this->motorInfos[i].encoderOffset;
     motor->set_minimum(motorMin);
     motor->set_maximum(motorMax);
+    gzerr << motorMin << " : " << motorMax << "\n";
   }
 
   // TODO: get this value from somewhere (and make sure that it's

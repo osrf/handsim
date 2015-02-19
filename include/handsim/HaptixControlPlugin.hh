@@ -314,8 +314,8 @@ namespace gazebo
           this->fakePosition = math::Angle(0.0);
           this->fakeVelocity = 0.0;
           this->fakeTorque = 0.0;
-          this->fakeUpperLimit = 1e16;
           this->fakeLowerLimit = -1e16;
+          this->fakeUpperLimit = 1e16;
           this->realJoint = NULL ;  // .reset();
           this->hasJoint = false;
         }
