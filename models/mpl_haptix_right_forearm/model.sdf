@@ -54,22 +54,22 @@
       <powered_motor_joint>wristy</powered_motor_joint>
       <!-- gear_ratio = motor angle / joint angle -->
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>6.8</motor_torque>
-      <gear_ratio>1.0</gear_ratio>
+      <motor_torque>0.0382</motor_torque>
+      <gear_ratio>180.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="1" name="motor_wristx">
       <powered_motor_joint>wristx</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>1.7</motor_torque>
-      <gear_ratio>1.0</gear_ratio>
+      <motor_torque>0.00955</motor_torque>
+      <gear_ratio>180.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="2" name="motor_wristz">
       <powered_motor_joint>wristz</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>34.4</motor_torque>
-      <gear_ratio>1.0</gear_ratio>
+      <motor_torque>0.0191</motor_torque>
+      <gear_ratio>180.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="3" name="motor_thumb0">
