@@ -280,7 +280,11 @@ namespace gazebo
 
     /// \brief: state and command messages
     private: haptix::comm::msgs::hxSensor robotState;
+
+    /// \brief: keep a local copy of hxCommand
     private: haptix::comm::msgs::hxCommand robotCommand;
+
+    /// \brief: simulation commands for all the pid'd simulation joints
     private: class SimRobotCommand
     {
       public: double ref_pos;
@@ -288,6 +292,7 @@ namespace gazebo
       public: double gain_pos;
       public: double gain_vel;
     };
+
     /// \brief: commanding all the joints in robot, and map
     /// robotCommand motor joints to a subset of the joints here.
     private: std::vector<SimRobotCommand> simRobotCommands;
@@ -299,7 +304,81 @@ namespace gazebo
     ///   <joint id="0">joint_33</joint>
     ///   <joint id="1">joint_55</joint>
     private: std::map<unsigned int, std::string> jointNames;
-    private: std::vector<physics::JointPtr> joints;
+
+    /// \brief: keep an array of joints, some are valid gazebo joints
+    /// others just keep a "fake" state here.
+    private: class HaptixJoint
+    {
+      public: HaptixJoint()
+        {
+          this->fakePosition = math::Angle(0.0);
+          this->fakeVelocity = 0.0;
+          this->fakeTorque = 0.0;
+          this->fakeUpperLimit = 1e16;
+          this->fakeLowerLimit = -1e16;
+        }
+      public: physics::JointPtr &operator =(physics::JointPtr _joint)
+        {
+          this->realJoint = _joint;
+          return this->realJoint;
+        }
+      public: physics::JointPtr realJoint;
+      public: math::Angle GetAngle(int _index)
+        {
+          if (this->realJoint)
+            return this->realJoint->GetAngle(_index);
+          else
+            return this->fakePosition;
+        }
+      public: double GetVelocity(int _index)
+        {
+          if (this->realJoint)
+            return this->realJoint->GetVelocity(_index);
+          else
+            return this->fakeVelocity;
+        }
+      public: void SetForce(int _index, double _force)
+        {
+          if (this->realJoint)
+            this->realJoint->SetForce(_index, _force);
+          else
+          {
+            if (_index == 0)
+              this->fakeTorque = _force;
+            else
+            {
+              // we only support _index == 0
+            }
+          }
+        }
+      public: double GetForce(int _index)
+        {
+          if (this->realJoint)
+            return this->realJoint->GetForce(_index);
+          else
+            return this->fakeTorque;
+        }
+      public: math::Angle GetUpperLimit(int _index) const
+        {
+          if (this->realJoint)
+            return this->realJoint->GetUpperLimit(_index);
+          else
+            return this->fakeUpperLimit;
+        }
+      public: math::Angle GetLowerLimit(int _index) const
+        {
+          if (this->realJoint)
+            return this->realJoint->GetLowerLimit(_index);
+          else
+            return this->fakeLowerLimit;
+        }
+      private: math::Angle fakePosition;
+      private: double fakeVelocity;
+      private: double fakeTorque;
+      private: math::Angle fakeUpperLimit;
+      private: math::Angle fakeLowerLimit;
+    };
+    private: std::vector<HaptixJoint> haptixJoints;
 
     /// \brief: class containing info on motors
     private: class MotorInfo
