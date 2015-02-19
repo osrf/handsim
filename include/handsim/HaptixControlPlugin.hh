@@ -326,13 +326,13 @@ namespace gazebo
       public: double encoderOffset;
 
       /// \brief: index of joint controlled by this motor
-      public: unsigned int index;
+      public: int index;
 
       /// \brief: index of coupled joints
       public: class GearBox
       {
         /// \brief: index of joint controlled by this gearbox
-        public: unsigned int index;
+        public: int index;
         /// \brief: see example for motorInfos
         public: double offset;
         /// \brief: see example for motorInfos

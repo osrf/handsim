@@ -99,23 +99,28 @@
     <motor id="7" name="motor_index0">
       <powered_motor_joint>index0</powered_motor_joint>
       <!--
-        1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
+        1MF gear ratio: 352, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
-        if a transmission is defined by multiplier and joint offset, then
-          gear_ratio = multiplier
-          encoder_offset = joint_offset * gear_ratio
-                         = joint_offset / multiplier
       -->
-      <motor_torque>1.50126</motor_torque>
-      <gear_ratio>1.2</gear_ratio>
-      <encoder_offset>-0.20943951</encoder_offset>
+      <motor_torque>3.82e-3</motor_torque>
+      <gear_ratio>352.0</gear_ratio>
+      <encoder_offset>0</encoder_offset>
     </motor>
     <motor id="8" name="motor_index1">
-      <powered_motor_joint>index1</powered_motor_joint>
+      <!--
+        1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
+        max differential joint torque = 1.50126 Nm
+        indexm: motor joint for index finger
+      -->
+      <powered_motor_joint>indexm</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
-      <!-- uncertain about transmission -->
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
+      <gearbox>
+        <joint>index1</joint>
+        <offset>-0.174532925199</offset>
+        <multiplier>0.833333</multiplier>
+      </gearbox>
       <gearbox>
         <joint>index2</joint>
         <offset>-0.174532925199</offset>
@@ -128,18 +133,20 @@
       </gearbox>
     </motor>
     <motor id="9" name="motor_middle1">
-      <powered_motor_joint>middle1</powered_motor_joint>
       <!--
         1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
-        if a transmission is defined by multiplier and joint offset, then
-          gear_ratio = multiplier
-          encoder_offset = joint_offset * gear_ratio
-                         = joint_offset / multiplier
+        middlem: motor joint for middle finger
       -->
-      <motor_torque>1.50126</motor_torque>
-      <gear_ratio>1.2</gear_ratio>
-      <encoder_offset>-0.20943951</encoder_offset>
+      <powered_motor_joint>middlem</powered_motor_joint>
+      <motor_torque>3.82e-3</motor_torque>
+      <gear_ratio>393.0</gear_ratio>
+      <encoder_offset>0.0</encoder_offset>
+      <gearbox>
+        <joint>middle1</joint>
+        <offset>-0.174532925199</offset>
+        <multiplier>0.833333</multiplier>
+      </gearbox>
       <gearbox>
         <joint>middle2</joint>
         <offset>-0.174532925199</offset>
@@ -152,18 +159,25 @@
       </gearbox>
     </motor>
     <motor id="10" name="motor_ring1">
-      <powered_motor_joint>ring1</powered_motor_joint>
       <!--
         1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
-        if a transmission is defined by multiplier and joint offset, then
-          gear_ratio = multiplier
-          encoder_offset = joint_offset * gear_ratio
-                         = joint_offset / multiplier
+        ringm: motor joint for ring finger
       -->
-      <motor_torque>1.50126</motor_torque>
-      <gear_ratio>1.2</gear_ratio>
-      <encoder_offset>-0.20943951</encoder_offset>
+      <powered_motor_joint>ringm</powered_motor_joint>
+      <motor_torque>3.82e-3</motor_torque>
+      <gear_ratio>393.0</gear_ratio>
+      <encoder_offset>0.0</encoder_offset>
+      <gearbox>
+        <joint>ring1</joint>
+        <offset>-0.174532925199</offset>
+        <multiplier>0.833333</multiplier>
+      </gearbox>
+      <gearbox>
+        <joint>ring2</joint>
+        <offset>-0.174532925199</offset>
+        <multiplier>0.8625</multiplier>
+      </gearbox>
       <gearbox>
         <joint>ring2</joint>
         <offset>-0.174532925199</offset>
@@ -178,7 +192,7 @@
     <motor id="11" name="motor_pinky0">
       <powered_motor_joint>ring0</powered_motor_joint>
       <motor_torque>3.82e-3</motor_torque>
-      <gear_ratio>3520.0</gear_ratio>
+      <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>pinky0</joint>
@@ -187,18 +201,20 @@
       </gearbox>
     </motor>
     <motor id="12" name="motor_pinky1">
-      <powered_motor_joint>pinky1</powered_motor_joint>
       <!--
         1MF gear ratio: 383, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
-        if a transmission is defined by multiplier and joint offset, then
-          gear_ratio = multiplier
-          encoder_offset = joint_offset * gear_ratio
-                         = joint_offset / multiplier
+        pinkym: motor joint for pinky finger
       -->
-      <motor_torque>1.50126</motor_torque>
-      <gear_ratio>1.2</gear_ratio>
-      <encoder_offset>-0.20943951</encoder_offset>
+      <powered_motor_joint>pinkym</powered_motor_joint>
+      <motor_torque>3.82e-3</motor_torque>
+      <gear_ratio>393.0</gear_ratio>
+      <encoder_offset>0.0</encoder_offset>
+      <gearbox>
+        <joint>pinky1</joint>
+        <offset>-0.174532925199</offset>
+        <multiplier>0.833333</multiplier>
+      </gearbox>
       <gearbox>
         <joint>pinky2</joint>
         <offset>-0.174532925199</offset>
