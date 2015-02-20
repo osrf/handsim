@@ -66,7 +66,7 @@
     <motor id="2" name="motor_wristz">
       <powered_motor_joint>wristz</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>0.0191</motor_torque>
+      <motor_torque>0.00955</motor_torque>
       <gear_ratio>180.0</gear_ratio>
     </motor>
     <motor id="3" name="motor_thumb0">

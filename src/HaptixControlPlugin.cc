@@ -1113,7 +1113,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
                 << "] f [" << force << "]\n";
     }
     usleep(10000);
-    if (percent > 5.0)
+    if (percent > 10.0)
       usleep(100000);
   }
 
