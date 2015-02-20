@@ -1070,6 +1070,30 @@ void HaptixControlPlugin::GazeboUpdateStates()
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
 
+  /* errro check
+  double *error = boost::any_cast<double*>(
+    this->world->GetPhysicsEngine()->GetParam("rms_error"));
+  double *resid = boost::any_cast<double*>(
+    this->world->GetPhysicsEngine()->GetParam("constraint_residual"));
+
+  // [0] is bilateral constraints
+  gzerr << "error: [" << error[0] << "] resid: [" << resid[0] << "]\n";
+  // print all joints and efforts
+  for (unsigned int m = 0; m < this->joints.size(); ++m)
+  {
+    // double angle = this->joints[m]->GetAngle(0).Radian();
+    // double velocity = this->joints[m]->GetVelocity(0);
+    double force  = this->joints[m]->GetForce(0);
+    gzerr << "  joint [" << this->joints[m]->GetName()
+          << "] f [" << force << "]\n";
+  }
+  // pause if unconverged
+  if (std::abs(error[0]) > 0.1)
+  {
+    getchar();
+  }
+  */
+
   common::Time curTime = this->world->GetSimTime();
   double dt = (curTime - this->lastTime).Double();
   if (dt > 0)
