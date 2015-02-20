@@ -1088,16 +1088,17 @@ void HaptixControlPlugin::GazeboUpdateStates()
   if (percent < 0.0)
     percent = 0.0;
   // [0] is bilateral constraints
-  gzerr << "error: [" << error[0] << "] resid: [" << resid[0]
-        << "] avg: [" << this->avgRmsError << "] %: [" << percent
-        << "]\n";
   // pause if unconverged
   if (numSamples < 2000)
   {
     ++this->numSamples;
   }
-  else if (percent > 0.3)
+  else if (percent > 0.5)
   {
+    std::cout << "error: [" << error[0] << "] resid: [" << resid[0]
+              << "] avg: [" << this->avgRmsError << "] %: [" << percent
+              << "]\n";
+
     this->maxRmsError = std::abs(this->lastRmsError) > this->maxRmsError ?
       std::abs(this->lastRmsError) : this->maxRmsError;
 
@@ -1107,13 +1108,13 @@ void HaptixControlPlugin::GazeboUpdateStates()
       // double angle = this->joints[m]->GetAngle(0).Radian();
       double velocity = this->joints[m]->GetVelocity(0);
       double force  = this->joints[m]->GetForce(0);
-      gzerr << "  joint [" << this->joints[m]->GetName()
-            << "  vel [" << velocity
-            << "] f [" << force << "]\n";
+      std::cout << "  joint [" << this->joints[m]->GetName()
+                << "  vel [" << velocity
+                << "] f [" << force << "]\n";
     }
-    usleep(50000);
+    usleep(10000);
     if (percent > 5.0)
-      getchar();
+      usleep(100000);
   }
 
   common::Time curTime = this->world->GetSimTime();
