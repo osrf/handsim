@@ -106,7 +106,7 @@
       <!--
       <motor_torque>3.82e-3</motor_torque>
       -->
-      <motor_torque>5.68-3</motor_torque>
+      <motor_torque>5.68e-3</motor_torque>
       <gear_ratio>176.0</gear_ratio>
     </motor>
     <motor id="8" name="motor_index1">
@@ -186,7 +186,7 @@
       <motor_torque>3.82e-3</motor_torque>
       <motor_torque>2.54e-3</motor_torque>
       -->
-      <motor_torque>2.0e-3</motor_torque>
+      <motor_torque>1.0e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <gearbox>
         <joint>pinky2</joint>
