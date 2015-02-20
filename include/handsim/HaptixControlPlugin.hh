@@ -556,6 +556,12 @@ namespace gazebo
 
     /// \brief True if optitrackHeadOffset has been initialized
     private: bool headOffsetInitialized;
+
+    /// \brief convergence check
+    private: double lastRmsError;
+    private: double avgRmsError;
+    private: double maxRmsError;
+    private: int numSamples;
   };
 
 /// \}
