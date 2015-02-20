@@ -33,11 +33,6 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
 
-  this->lastRmsError = 0.0;
-  this->avgRmsError = 0.05;
-  this->maxRmsError = 0.0;
-  this->numSamples = 0.0;
-
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
     &HaptixControlPlugin::HaptixGetRobotInfoCallback, this);
@@ -1074,47 +1069,6 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 void HaptixControlPlugin::GazeboUpdateStates()
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
-
-  /* errro check */
-  double *error = boost::any_cast<double*>(
-    this->world->GetPhysicsEngine()->GetParam("rms_error"));
-  double *resid = boost::any_cast<double*>(
-    this->world->GetPhysicsEngine()->GetParam("constraint_residual"));
-
-  this->lastRmsError = error[0];
-  const double epsilon = 0.0001;
-  this->avgRmsError = epsilon*error[0] + (1.0 - epsilon)*this->avgRmsError;
-  double percent = (this->lastRmsError - this->avgRmsError)/this->avgRmsError;
-  if (percent < 0.0)
-    percent = 0.0;
-  // [0] is bilateral constraints
-  gzerr << "error: [" << error[0] << "] resid: [" << resid[0]
-        << "] avg: [" << this->avgRmsError << "] %: [" << percent
-        << "]\n";
-  // pause if unconverged
-  if (numSamples < 2000)
-  {
-    ++this->numSamples;
-  }
-  else if (percent > 0.3)
-  {
-    this->maxRmsError = std::abs(this->lastRmsError) > this->maxRmsError ?
-      std::abs(this->lastRmsError) : this->maxRmsError;
-
-    // print all joints and efforts
-    for (unsigned int m = 0; m < this->joints.size(); ++m)
-    {
-      // double angle = this->joints[m]->GetAngle(0).Radian();
-      double velocity = this->joints[m]->GetVelocity(0);
-      double force  = this->joints[m]->GetForce(0);
-      gzerr << "  joint [" << this->joints[m]->GetName()
-            << "  vel [" << velocity
-            << "] f [" << force << "]\n";
-    }
-    usleep(50000);
-    if (percent > 5.0)
-      getchar();
-  }
 
   common::Time curTime = this->world->GetSimTime();
   double dt = (curTime - this->lastTime).Double();
