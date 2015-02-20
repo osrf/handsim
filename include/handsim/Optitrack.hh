@@ -124,6 +124,9 @@ namespace haptix
       /// \brief Gazebo publisher for monitor tracker pose
       private: gazebo::transport::PublisherPtr originPub;
 
+      /// \brief Gazebo publisher for tracker data liveliness
+      private: gazebo::transport::PublisherPtr optitrackAlivePub;
+
       /// \brief Name of head tracker rigid body
       public: static const std::string headTrackerName;
 
@@ -132,6 +135,9 @@ namespace haptix
 
       /// \brief Name of monitor tracker rigid body
       public: static const std::string originTrackerName;
+
+      /// \brief Name of topic for liveliness
+      public: static const std::string optitrackAliveTopic;
 
       /// \brief Store names and poses of tracker models to be published
       private: ModelPoses lastModelMap;

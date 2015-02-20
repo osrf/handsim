@@ -1071,7 +1071,6 @@ void HaptixControlPlugin::GazeboUpdateStates()
   boost::mutex::scoped_lock lock(this->updateMutex);
 
   common::Time curTime = this->world->GetSimTime();
-
   double dt = (curTime - this->lastTime).Double();
   if (dt > 0)
   {
@@ -1362,7 +1361,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 
   this->optitrackHead = pose + this->optitrackHeadOffset;
 
-  if (this->pauseTracking)
+  // If we're paused, or if we haven't calculated an offset yet...
+  if (this->pauseTracking || !this->headOffsetInitialized)
   {
     if (this->userCameraPoseValid)
     {
@@ -1370,7 +1370,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
       this->headOffsetInitialized = true;
     }
   }
-  else if (this->headOffsetInitialized)
+  else
   {
     gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
     this->viewpointJoyPub->Publish(this->joyMsg);
@@ -1387,12 +1387,13 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
-  if (this->pauseTracking)
+  // If we're paused, or if we haven't calculated an offset yet...
+  if (this->pauseTracking || !this->armOffsetInitialized)
   {
     this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
   }
-  else if (this->armOffsetInitialized)
+  else
   {
     this->targetBaseLinkPose = this->optitrackArm;
   }
