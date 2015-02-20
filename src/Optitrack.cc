@@ -45,6 +45,7 @@ using namespace tracking;
 const std::string Optitrack::headTrackerName = "HeadTracker";
 const std::string Optitrack::armTrackerName = "ArmTracker";
 const std::string Optitrack::originTrackerName = "MonitorTracker";
+const std::string Optitrack::optitrackAliveTopic = "Alive";
 
 /////////////////////////////////////////////////
 Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
@@ -114,6 +115,10 @@ void Optitrack::StartReception()
   this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+originTrackerName);
 
+  // Publisher for sending a pulse to HaptixGUIPlugin
+  this->optitrackAlivePub = this->gzNode->Advertise<gazebo::msgs::Time>
+                    ("~/optitrack/"+optitrackAliveTopic);
+
   this->active = true;
   this->RunReceptionTask();
 }
@@ -141,6 +146,11 @@ void Optitrack::RunReceptionTask()
       gzerr << "Optitrack::RunReceptionTask() Recvfrom failed" << std::endl;
       continue;
     }
+
+    // Tell other things (e.g., HaptixGUIPlugin) that the optitrack is alive and
+    // sending us data.
+    this->optitrackAlivePub->Publish(
+      gazebo::msgs::Convert(gazebo::common::Time::GetWallTime()));
 
     // Dispatch the data received.
     this->Unpack(buffer);

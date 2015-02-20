@@ -266,6 +266,15 @@ namespace haptix_gazebo_plugins
     /// \brief Poll network for OptitrackBridge status
     private: void PollTracking();
 
+    /// \brief Subscribe to Optitrack liveliness
+    private: gazebo::transport::SubscriberPtr optitrackAliveSub;
+
+    /// \brief Optitrack alive callback
+    private: void OnOptitrackAlive(ConstTimePtr &_time);
+
+    /// \brief Last optitrack update time
+    private: gazebo::common::Time optitrackUpdateTime;
+
     /// \brief Get contact sensor information
     private: void UpdateSensorContact();
 

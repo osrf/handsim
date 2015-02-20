@@ -23,6 +23,7 @@
 
 #include "handsim/config.hh"
 #include "handsim/TaskButton.hh"
+#include "handsim/Optitrack.hh"
 #include "handsim/HaptixGUIPlugin.hh"
 
 using namespace haptix_gazebo_plugins;
@@ -255,7 +256,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(stereoCheck, SIGNAL(stateChanged(int)),
           this, SLOT(OnStereoCheck(int)));
 
-  this->mocapStatusIndicator = new QLabel(QString("Mocap: OFF"));
+  this->mocapStatusIndicator = new QLabel(QString("Mocap: NO DATA"));
 
   QHBoxLayout *stereoCheckLayout = new QHBoxLayout();
   stereoCheckLayout->addWidget(stereoCheck);
@@ -583,6 +584,12 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 
   this->pollSensorsThread = boost::thread(
       std::bind(&HaptixGUIPlugin::PollSensors, this));
+
+  this->optitrackUpdateTime = gazebo::common::Time::GetWallTime();
+
+  this->optitrackAliveSub = this->node->Subscribe("~/optitrack/" +
+      haptix::tracking::Optitrack::optitrackAliveTopic,
+      &HaptixGUIPlugin::OnOptitrackAlive, this);
 
   this->pollTrackingThread = boost::thread(
       std::bind(&HaptixGUIPlugin::PollTracking, this));
@@ -922,11 +929,11 @@ void HaptixGUIPlugin::PollTracking()
   {
     // Query the state of the remote OptitrackBridge service.
     int ret = system("(if test -n \"`net rpc service -S HAPTIX-WIN-VM status "
-        "optitrackbridge -U \"Haptix Team\"%haptix | head -n1 | grep running`\";"
-        "then exit 0; else exit 1; fi) > /dev/null 2>&1");
+      "optitrackbridge -U \"Haptix Team\"%haptix | head -n1 | grep running`\";"
+      "then exit 0; else exit 1; fi) > /dev/null 2>&1");
     if (ret == 0)
     {
-      if (!trackingPaused)
+      if (!this->trackingPaused)
       {
         // GUI indicator ON
         this->mocapStatusIndicator->setText("Mocap: ON");
@@ -934,21 +941,43 @@ void HaptixGUIPlugin::PollTracking()
       else
       {
         // GUI indicator off
-        this->mocapStatusIndicator->setText("Mocap: OFF");
+        this->mocapStatusIndicator->setText("Mocap: PAUSED");
       }
     }
     else
     {
       // If the service is stopped, try to restart it.
-      this->mocapStatusIndicator->setText("Mocap: OFF");
+      this->mocapStatusIndicator->setText("Mocap: NO DATA");
       ret = system("net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U"
             "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
-      if (ret == 0)
+      gzdbg << "Starting optitrackbridge service" << std::endl;
+      // It can take a long time for data to start streaming. Wait up to 10
+      // seconds, checking in every 100 ms if data was received.
+      unsigned int sleepTime = 100000;
+      unsigned int sleepNumber = 100;
+      while ((sleepNumber > 0) &&
+             (gazebo::common::Time::GetWallTime() -
+              this->optitrackUpdateTime).Double() > 3)
       {
-        // do nothing, always the same
+        usleep(sleepTime);
+        sleepNumber--;
       }
+      continue;
     }
-    usleep(10000);
+
+    // If we haven't received a pulse from Optitrack in 3 seconds
+    if ((gazebo::common::Time::GetWallTime() -
+         this->optitrackUpdateTime).Double() > 3)
+    {
+      // Try to stop the service to get it in a consistent state
+      this->mocapStatusIndicator->setText("Mocap: NO DATA");
+      ret = system("net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U"
+            "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
+      gzdbg << "Stopping optitrackbridge service" << std::endl;
+      usleep(2000000); // wait 2 seconds for service call to take effect
+    }
+
+    usleep(500000); // 2 hz
   }
 }
 
@@ -1292,7 +1321,7 @@ void HaptixGUIPlugin::OnPauseRequest(ConstIntPtr &_msg)
   }
   else
   {
-    gzwarn << "Got unexpected message data in";
+    gzwarn << "Got unexpected message data in OnPauseRequest";
   }
 }
 
@@ -1340,4 +1369,9 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   this->lastMotorCommand.ref_vel_max_enabled = 0;
   this->lastMotorCommand.gain_pos_enabled = 0;
   this->lastMotorCommand.gain_vel_enabled = 0;
+}
+
+void HaptixGUIPlugin::OnOptitrackAlive(ConstTimePtr& /*_time*/)
+{
+  this->optitrackUpdateTime = gazebo::common::Time::GetWallTime();
 }
