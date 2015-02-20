@@ -74,25 +74,25 @@
     </motor>
     <motor id="3" name="motor_thumb0">
       <powered_motor_joint>thumb0</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="4" name="motor_thumb1">
       <powered_motor_joint>thumb1</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="5" name="motor_thumb2">
       <powered_motor_joint>thumb2</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="6" name="motor_thumb3">
       <powered_motor_joint>thumb3</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
@@ -102,7 +102,7 @@
         1MF gear ratio: 352, Allied Motion SL0500-S02-Z motor torque: 3.82e-3 Nm
         max differential joint torque = 1.50126 Nm
       -->
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0</encoder_offset>
     </motor>
@@ -113,7 +113,7 @@
         indexm: motor joint for index finger
       -->
       <powered_motor_joint>indexm</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -143,7 +143,7 @@
         middlem: motor joint for middle finger
       -->
       <powered_motor_joint>middlem</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -173,7 +173,7 @@
         ringm: motor joint for ring finger
       -->
       <powered_motor_joint>ringm</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -203,7 +203,7 @@
     </motor>
     <motor id="11" name="motor_pinky0">
       <powered_motor_joint>ring0</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -219,7 +219,7 @@
         pinkym: motor joint for pinky finger
       -->
       <powered_motor_joint>pinkym</powered_motor_joint>
-      <motor_torque>1.91e-3</motor_torque>
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
