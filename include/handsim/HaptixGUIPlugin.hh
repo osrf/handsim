@@ -257,6 +257,24 @@ namespace haptix_gazebo_plugins
     /// \brief start a thread to poll contact sensor data
     private: void PollSensors();
 
+    /// \brief graphical mocap status indicator
+    private: QLabel* mocapStatusIndicator;
+
+    /// \brief start a thread to poll optitrackbridge
+    private: boost::thread pollTrackingThread;
+
+    /// \brief Poll network for OptitrackBridge status
+    private: void PollTracking();
+
+    /// \brief Subscribe to Optitrack liveliness
+    private: gazebo::transport::SubscriberPtr optitrackAliveSub;
+
+    /// \brief Optitrack alive callback
+    private: void OnOptitrackAlive(ConstTimePtr &_time);
+
+    /// \brief Last optitrack update time
+    private: gazebo::common::Time optitrackUpdateTime;
+
     /// \brief Get contact sensor information
     private: void UpdateSensorContact();
 
@@ -270,7 +288,7 @@ namespace haptix_gazebo_plugins
     private: void OnHydra(ConstHydraPtr &_msg);
 
     /// \brief Start a thread to stop and start the remote Optitrack service
-    private slots: void OnResetMocap();
+    private slots: void OnStartStopMocap(bool _checked);
   };
 }
 #endif
