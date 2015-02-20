@@ -255,20 +255,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(stereoCheck, SIGNAL(stateChanged(int)),
           this, SLOT(OnStereoCheck(int)));
 
-  // Reset mocap button
-  /*this->resetMocapButton = new QPushButton();
-
-  resetMocapButton->setText(QString("Start Mocap"));
-  resetMocapButton->setStyleSheet(
-      "background-color: rgba(120, 120, 120, 255);"
-      "border: 0px;"
-      "border-radius: 0px;"
-      "color: #ffffff;"
-      "font: 11px");
-  resetMocapButton->setCheckable(true);
-  resetMocapButton->setDisabled(false);
-  connect(resetMocapButton, SIGNAL(toggled(bool)), this, SLOT(OnStartStopMocap(bool)));*/
-
   this->mocapStatusIndicator = new QLabel(QString("Mocap: OFF"));
 
   QHBoxLayout *stereoCheckLayout = new QHBoxLayout();
@@ -932,9 +918,9 @@ void HaptixGUIPlugin::PollSensors()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::PollTracking()
 {
-  // 
   while (!quit)
   {
+    // Query the state of the remote OptitrackBridge service.
     int ret = system("(if test -n \"`net rpc service -S HAPTIX-WIN-VM status "
         "optitrackbridge -U \"Haptix Team\"%haptix | head -n1 | grep running`\";"
         "then exit 0; else exit 1; fi) > /dev/null 2>&1");
@@ -953,7 +939,7 @@ void HaptixGUIPlugin::PollTracking()
     }
     else
     {
-      // TODO GUI indicator off
+      // If the service is stopped, try to restart it.
       this->mocapStatusIndicator->setText("Mocap: OFF");
       ret = system("net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U"
             "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
@@ -1354,46 +1340,4 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   this->lastMotorCommand.ref_vel_max_enabled = 0;
   this->lastMotorCommand.gain_pos_enabled = 0;
   this->lastMotorCommand.gain_vel_enabled = 0;
-}
-
-//////////////////////////////////////////////////
-void HaptixGUIPlugin::OnStartStopMocap(bool _checked)
-{
-  // We're trying to stop and start the remote service.  These commands can take
-  // time to execute, especially if the NetBIOS name lookup fails.  Also, they
-  // always return an error, even when they work.  So we'll stop then start, but
-  // all in the background.
-  // We're sleeping in between to ensure that the stop has taken effect before
-  // trying to start it again.
-  // We also need to redirect both stdout and stderr to /dev/null to repress
-  // error messages.
-  /*int ret =
-    system("(net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U \"Haptix "
-           "Team\"%haptix > /dev/null 2>&1;"
-           "sleep 1;"
-           "net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U \"Haptix "
-           "Team\"%haptix > /dev/null 2>&1)&");
-  if (ret != 0)
-  {
-    // Do nothing, because it always returns non-zero.
-  }*/
-  int ret;
-
-  // Checked is a signal to start running, so send the message to start the
-  // service and set the text to "Stop Mocap"
-  if (_checked)
-  {
-    //this->resetMocapButton->setText("Stop Mocap");
-  }
-  else
-  {
-    //this->resetMocapButton->setText("Start Mocap");
-    ret = system("net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U"
-              "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
-  }
-
-  if (ret != 0)
-  {
-    // Do nothing, because it always returns non-zero.
-  }
 }
