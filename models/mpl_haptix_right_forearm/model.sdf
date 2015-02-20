@@ -71,33 +71,51 @@
     </motor>
     <motor id="3" name="motor_thumb0">
       <powered_motor_joint>thumb0</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      -->
+      <motor_torque>9.47e-4</motor_torque>
       <gear_ratio>1056.0</gear_ratio>
     </motor>
     <motor id="4" name="motor_thumb1">
       <powered_motor_joint>thumb1</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      -->
+      <motor_torque>2.84e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
     </motor>
     <motor id="5" name="motor_thumb2">
       <powered_motor_joint>thumb2</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      -->
+      <motor_torque>3.55e-3</motor_torque>
       <gear_ratio>281.6</gear_ratio>
     </motor>
     <motor id="6" name="motor_thumb3">
       <powered_motor_joint>thumb3</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      -->
+      <motor_torque>7.10e-3</motor_torque>
       <gear_ratio>140.8</gear_ratio>
     </motor>
     <motor id="7" name="motor_index0">
       <powered_motor_joint>index0</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      -->
+      <motor_torque>5.68-3</motor_torque>
       <gear_ratio>176.0</gear_ratio>
     </motor>
     <motor id="8" name="motor_index1">
       <powered_motor_joint>index1</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
-      <!-- uncertain about transmission -->
+      <motor_torque>2.54e-3</motor_torque>
+      -->
+      <motor_torque>2.0e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <gearbox>
         <joint>index2</joint>
@@ -112,7 +130,11 @@
     </motor>
     <motor id="9" name="motor_middle1">
       <powered_motor_joint>middle1</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      <motor_torque>2.54e-3</motor_torque>
+      -->
+      <motor_torque>2.0e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <gearbox>
         <joint>middle2</joint>
@@ -127,7 +149,11 @@
     </motor>
     <motor id="10" name="motor_ring1">
       <powered_motor_joint>ring1</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      <motor_torque>2.54e-3</motor_torque>
+      -->
+      <motor_torque>2.0e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <gearbox>
         <joint>ring2</joint>
@@ -142,7 +168,11 @@
     </motor>
     <motor id="11" name="motor_pinky0">
       <powered_motor_joint>ring0</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      <motor_torque>2.54e-3</motor_torque>
+      -->
+      <motor_torque>2.0e-3</motor_torque>
       <gear_ratio>3520.0</gear_ratio>
       <gearbox>
         <joint>pinky0</joint>
@@ -152,7 +182,11 @@
     </motor>
     <motor id="12" name="motor_pinky1">
       <powered_motor_joint>pinky1</powered_motor_joint>
+      <!--
       <motor_torque>3.82e-3</motor_torque>
+      <motor_torque>2.54e-3</motor_torque>
+      -->
+      <motor_torque>2.0e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <gearbox>
         <joint>pinky2</joint>
