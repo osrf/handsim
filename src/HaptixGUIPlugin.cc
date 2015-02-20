@@ -256,22 +256,26 @@ HaptixGUIPlugin::HaptixGUIPlugin()
           this, SLOT(OnStereoCheck(int)));
 
   // Reset mocap button
-  QPushButton *resetMocapButton = new QPushButton();
+  /*this->resetMocapButton = new QPushButton();
 
-  resetMocapButton->setText(QString("Reset Mocap"));
+  resetMocapButton->setText(QString("Start Mocap"));
   resetMocapButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
       "border-radius: 0px;"
       "color: #ffffff;"
       "font: 11px");
-  connect(resetMocapButton, SIGNAL(clicked()), this, SLOT(OnResetMocap()));
+  resetMocapButton->setCheckable(true);
+  resetMocapButton->setDisabled(false);
+  connect(resetMocapButton, SIGNAL(toggled(bool)), this, SLOT(OnStartStopMocap(bool)));*/
+
+  this->mocapStatusIndicator = new QLabel(QString("Mocap: OFF"));
 
   QHBoxLayout *stereoCheckLayout = new QHBoxLayout();
   stereoCheckLayout->addWidget(stereoCheck);
   stereoCheckLayout->addStretch(1);
 
-  stereoCheckLayout->addWidget(resetMocapButton);
+  stereoCheckLayout->addWidget(mocapStatusIndicator);
 
   movementLayout->addWidget(localCoordMoveCheck);
   movementLayout->addWidget(new QLabel(tr("Arm move speed:")));
@@ -592,7 +596,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
                                         ("~/world_control");
 
   this->pollSensorsThread = boost::thread(
-    boost::bind(&HaptixGUIPlugin::PollSensors, this));
+      std::bind(&HaptixGUIPlugin::PollSensors, this));
+
+  this->pollTrackingThread = boost::thread(
+      std::bind(&HaptixGUIPlugin::PollTracking, this));
 
   // latched subscription, HaptixControlPlugin only publishes this once.
   this->initializeSub = this->node->Subscribe("~/haptix_load",
@@ -919,6 +926,43 @@ void HaptixGUIPlugin::PollSensors()
       this->UpdateSensorContact();
     }
     usleep(1000);  // 1kHz max
+  }
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::PollTracking()
+{
+  // 
+  while (!quit)
+  {
+    int ret = system("(if test -n \"`net rpc service -S HAPTIX-WIN-VM status "
+        "optitrackbridge -U \"Haptix Team\"%haptix | head -n1 | grep running`\";"
+        "then exit 0; else exit 1; fi) > /dev/null 2>&1");
+    if (ret == 0)
+    {
+      if (!trackingPaused)
+      {
+        // GUI indicator ON
+        this->mocapStatusIndicator->setText("Mocap: ON");
+      }
+      else
+      {
+        // GUI indicator off
+        this->mocapStatusIndicator->setText("Mocap: OFF");
+      }
+    }
+    else
+    {
+      // TODO GUI indicator off
+      this->mocapStatusIndicator->setText("Mocap: OFF");
+      ret = system("net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U"
+            "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
+      if (ret == 0)
+      {
+        // do nothing, always the same
+      }
+    }
+    usleep(10000);
   }
 }
 
@@ -1313,7 +1357,7 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
 }
 
 //////////////////////////////////////////////////
-void HaptixGUIPlugin::OnResetMocap()
+void HaptixGUIPlugin::OnStartStopMocap(bool _checked)
 {
   // We're trying to stop and start the remote service.  These commands can take
   // time to execute, especially if the NetBIOS name lookup fails.  Also, they
@@ -1323,12 +1367,31 @@ void HaptixGUIPlugin::OnResetMocap()
   // trying to start it again.
   // We also need to redirect both stdout and stderr to /dev/null to repress
   // error messages.
-  int ret =
+  /*int ret =
     system("(net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U \"Haptix "
            "Team\"%haptix > /dev/null 2>&1;"
            "sleep 1;"
            "net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U \"Haptix "
            "Team\"%haptix > /dev/null 2>&1)&");
+  if (ret != 0)
+  {
+    // Do nothing, because it always returns non-zero.
+  }*/
+  int ret;
+
+  // Checked is a signal to start running, so send the message to start the
+  // service and set the text to "Stop Mocap"
+  if (_checked)
+  {
+    //this->resetMocapButton->setText("Stop Mocap");
+  }
+  else
+  {
+    //this->resetMocapButton->setText("Start Mocap");
+    ret = system("net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U"
+              "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
+  }
+
   if (ret != 0)
   {
     // Do nothing, because it always returns non-zero.
