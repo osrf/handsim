@@ -42,9 +42,10 @@
 using namespace haptix;
 using namespace tracking;
 
-const std::string Optitrack::headTrackerName = "head";
-const std::string Optitrack::armTrackerName = "hand";
-const std::string Optitrack::originTrackerName = "monitor";
+const std::string Optitrack::headTrackerName = "HeadTracker";
+const std::string Optitrack::armTrackerName = "ArmTracker";
+const std::string Optitrack::originTrackerName = "MonitorTracker";
+const std::string Optitrack::optitrackAliveTopic = "Alive";
 
 /////////////////////////////////////////////////
 Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
@@ -52,7 +53,7 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
   this->active = false;
-  this->myIPAddress = ignition::transport::determineHost();
+  this->myNetworkInterfaces = ignition::transport::determineInterfaces();
 }
 
 /////////////////////////////////////////////////
@@ -83,16 +84,21 @@ void Optitrack::StartReception()
     gzerr << "Binding to a local port failed." << std::endl;
     return;
   }
-  // Join the multicast group.
-  struct ip_mreq mreq;
-  mreq.imr_multiaddr.s_addr = inet_addr(this->multicastAddress.c_str());
-  mreq.imr_interface.s_addr = inet_addr(this->myIPAddress.c_str());
-  if (setsockopt(this->dataSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
-    reinterpret_cast<const char*>(&mreq), sizeof(mreq)) != 0)
+
+  // Join the multicast group. We apply IP_ADD_MEMBERSHIP to all our network
+  // interfaces to receive multicast datagrams from everywhere.
+  for (const auto &interface : this->myNetworkInterfaces)
   {
-    gzerr << "Error setting socket option (IP_ADD_MEMBERSHIP)."
-              << std::endl;
-    return;
+    struct ip_mreq mreq;
+    mreq.imr_multiaddr.s_addr = inet_addr(this->multicastAddress.c_str());
+    mreq.imr_interface.s_addr = inet_addr(interface.c_str());
+    if (setsockopt(this->dataSocket, IPPROTO_IP, IP_ADD_MEMBERSHIP,
+      reinterpret_cast<const char*>(&mreq), sizeof(mreq)) != 0)
+    {
+      gzerr << "Error setting socket option (IP_ADD_MEMBERSHIP) for interface ["
+            << interface << "]" << std::endl;
+      return;
+    }
   }
 
   this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
@@ -106,8 +112,12 @@ void Optitrack::StartReception()
                     ("~/optitrack/"+headTrackerName);
   this->armPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+armTrackerName);
-  this->originPub = this->gzNode->Advertise<gazebo::msgs::PointCloud>
+  this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+originTrackerName);
+
+  // Publisher for sending a pulse to HaptixGUIPlugin
+  this->optitrackAlivePub = this->gzNode->Advertise<gazebo::msgs::Time>
+                    ("~/optitrack/"+optitrackAliveTopic);
 
   this->active = true;
   this->RunReceptionTask();
@@ -136,6 +146,11 @@ void Optitrack::RunReceptionTask()
       gzerr << "Optitrack::RunReceptionTask() Recvfrom failed" << std::endl;
       continue;
     }
+
+    // Tell other things (e.g., HaptixGUIPlugin) that the optitrack is alive and
+    // sending us data.
+    this->optitrackAlivePub->Publish(
+      gazebo::msgs::Convert(gazebo::common::Time::GetWallTime()));
 
     // Dispatch the data received.
     this->Unpack(buffer);
@@ -208,13 +223,13 @@ void Optitrack::Unpack(char *pData)
 
     for (const auto &body : trackingInfo.bodies)
     {
-      float x  = body.second.at(0);
-      float y  = body.second.at(1);
-      float z  = body.second.at(2);
-      float qx = body.second.at(3);
-      float qy = body.second.at(4);
-      float qz = body.second.at(5);
-      float qw = body.second.at(6);
+      float x  = body.second.body.at(0);
+      float y  = body.second.body.at(1);
+      float z  = body.second.body.at(2);
+      float qx = body.second.body.at(3);
+      float qy = body.second.body.at(4);
+      float qz = body.second.body.at(5);
+      float qw = body.second.body.at(6);
       this->lastModelMap[body.first] = gazebo::math::Pose(
         gazebo::math::Vector3(x, y, z),
         gazebo::math::Quaternion(qw, qx, qy, qz));

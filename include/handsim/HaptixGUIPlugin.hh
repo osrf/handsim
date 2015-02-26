@@ -109,10 +109,6 @@ namespace haptix_gazebo_plugins
     /// \brief callback on Initialize hx connection
     private: void OnInitialize(ConstIntPtr &_msg);
 
-    /// \brief Handle request responses
-    /// \param[in] _msg Response message.
-    private: void OnResponse(ConstResponsePtr &_msg);
-
     /// \brief Handle position scaling slider movement
     /// \param[in] _state State of the slider
     private slots: void OnScalingSlider(int _state);
@@ -157,12 +153,6 @@ namespace haptix_gazebo_plugins
 
     /// \brief Node used to establish communication with gzserver.
     private: gazebo::transport::NodePtr node;
-
-    /// \brief Publisher of requests.
-    private: gazebo::transport::PublisherPtr requestPub;
-
-    /// \brief Subscriber of respones.
-    private: gazebo::transport::SubscriberPtr responseSub;
 
     /// \brief Publisher for signaling WorldControl node.
     private: gazebo::transport::PublisherPtr worldControlPub;
@@ -236,9 +226,6 @@ namespace haptix_gazebo_plugins
     /// \brief Starting pose of the arm.
     private: gazebo::math::Pose armStartPose;
 
-    /// \brief Request message used to get the initial arm pose.
-    private: gazebo::msgs::Request *requestMsg;
-
     /// \brief When true, move in the arm's local coordinate frame.
     private: bool localCoordMove;
 
@@ -270,6 +257,24 @@ namespace haptix_gazebo_plugins
     /// \brief start a thread to poll contact sensor data
     private: void PollSensors();
 
+    /// \brief graphical mocap status indicator
+    private: QLabel* mocapStatusIndicator;
+
+    /// \brief start a thread to poll optitrackbridge
+    private: boost::thread pollTrackingThread;
+
+    /// \brief Poll network for OptitrackBridge status
+    private: void PollTracking();
+
+    /// \brief Subscribe to Optitrack liveliness
+    private: gazebo::transport::SubscriberPtr optitrackAliveSub;
+
+    /// \brief Optitrack alive callback
+    private: void OnOptitrackAlive(ConstTimePtr &_time);
+
+    /// \brief Last optitrack update time
+    private: gazebo::common::Time optitrackUpdateTime;
+
     /// \brief Get contact sensor information
     private: void UpdateSensorContact();
 
@@ -281,6 +286,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief callback for subscriber to the hydra publisher
     private: void OnHydra(ConstHydraPtr &_msg);
+
+    /// \brief Start a thread to stop and start the remote Optitrack service
+    private slots: void OnStartStopMocap(bool _checked);
   };
 }
 #endif
