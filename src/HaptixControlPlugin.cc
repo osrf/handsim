@@ -1355,7 +1355,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   gazebo::math::Pose pose = this->optitrackWorldHeadRot +
       gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
   pose.pos = this->headPosFilter.Process(pose.pos);
-  pose.rot = this->headOriFilter.Process(pose.rot);  
+  // pose.rot = this->headOriFilter.Process(pose.rot);  
+  pose.rot.SetToIdentity();
   
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
