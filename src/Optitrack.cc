@@ -112,7 +112,7 @@ void Optitrack::StartReception()
                     ("~/optitrack/"+headTrackerName);
   this->armPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+armTrackerName);
-  this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+  this->originPub = this->gzNode->Advertise<gazebo::msgs::PointCloud>
                     ("~/optitrack/"+originTrackerName);
 
   // Publisher for sending a pulse to HaptixGUIPlugin
@@ -167,13 +167,9 @@ void Optitrack::RunReceptionTask()
       {
         this->armPub->Publish(gazebo::msgs::Convert(it->second));
       }
-      else if (it->first.compare(originTrackerName) == 0)
-      {
-        this->originPub->Publish(gazebo::msgs::Convert(it->second));
-      }
       else
       {
-        if (iterations % 1000 == 0)
+        if (iterations % 1000 == 0 && it->first != originTrackerName)
           gzwarn << "Model name " << it->first << " not found!" << std::endl;
       }
     }
@@ -181,11 +177,14 @@ void Optitrack::RunReceptionTask()
     gazebo::msgs::PointCloud pc;
     for (unsigned int i = 0; i < this->originMarkers.size(); ++i)
     {
-      pc.add_points();
-      gazebo::msgs::Vector3d* pt = pc.mutable_points(i);
-      pt->CopyFrom(gazebo::msgs::Convert(this->originMarkers[i]));
+      gazebo::msgs::Vector3d* pt = pc.add_points();
+      //pt->CopyFrom(gazebo::msgs::Convert(this->originMarkers[i]));
+      pt->set_x(this->originMarkers[i].x);
+      pt->set_y(this->originMarkers[i].y);
+      pt->set_z(this->originMarkers[i].z);
     }
-    this->originPub->Publish(pc);
+    if (originMarkers.size() > 0)
+      this->originPub->Publish(pc);
 
     this->originMarkers.clear();
     this->lastModelMap.clear();
@@ -233,6 +232,16 @@ void Optitrack::Unpack(char *pData)
       this->lastModelMap[body.first] = gazebo::math::Pose(
         gazebo::math::Vector3(x, y, z),
         gazebo::math::Quaternion(qw, qx, qy, qz));
+      if (body.first == originTrackerName)
+      {
+        for (const auto &marker : body.second.markers)
+        {
+          x = marker.at(0);
+          y = marker.at(1);
+          z = marker.at(2);
+          this->originMarkers.push_back(gazebo::math::Vector3(x, y, z));
+        }
+      }
     }
   }
   else if (MessageID == 7)      // FRAME OF MOCAP DATA packet

@@ -545,6 +545,9 @@ namespace gazebo
     /// \brief Pose of the optitrack origin in the monitor (gazebo) frame
     private: gazebo::math::Pose optitrackMonitorFrame;
 
+    /// \brief 
+    private: boost::mutex optitrackMonitorMutex;
+
     /// \brief Low-pass filter for head position (reduces jitter)
     private: gazebo::math::OnePoleVector3 headPosFilter;
 
