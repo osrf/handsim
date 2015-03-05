@@ -143,6 +143,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
+  // The average radius of a person's head is 55cm
+  this->cameraToOptitrackHead = math::Pose(-0.55, 0, 0, 0, 0, 0);
+
   // hydra sensor offset
   this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
 
@@ -1355,13 +1358,14 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   gazebo::math::Pose pose = this->optitrackWorldHeadRot +
       gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
   pose.pos = this->headPosFilter.Process(pose.pos);
+  pose.rot = this->headOriFilter.Process(pose.rot);  
   pose.pos = pose.RotatePositionAboutOrigin(pose.rot).pos;
   pose.rot.SetToIdentity();
-  // pose.rot = this->headOriFilter.Process(pose.rot);  
   
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
   this->optitrackHead = pose + this->optitrackHeadOffset;
+  this->optitrackHead = pose + this->cameraToOptitrackHead;
 
   // If we're paused, or if we haven't calculated an offset yet...
   if (this->pauseTracking || !this->headOffsetInitialized)
