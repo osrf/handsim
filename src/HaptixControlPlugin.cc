@@ -1358,7 +1358,7 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
   gazebo::math::Pose pose = this->optitrackWorldHeadRot +
-      gazebo::msgs::Convert(*_msg)/* - this->monitorOptitrackFrame*/;
+      gazebo::msgs::Convert(*_msg);
   pose.pos = this->headPosFilter.Process(pose.pos);
   gazebo::math::Quaternion headRotation = pose.rot;
   headRotation = this->headOriFilter.Process(headRotation);
@@ -1372,13 +1372,15 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
-      this->optitrackHeadOffset = -pose + (this->cameraToOptitrackHead.RotatePositionAboutOrigin(headRotation) + this->userCameraPose);
+      this->optitrackHeadOffset = -pose + (this->cameraToOptitrackHead.
+          RotatePositionAboutOrigin(headRotation) + this->userCameraPose);
       this->headOffsetInitialized = true;
     }
   }
   else
   {
-    this->optitrackHead = pose + -this->cameraToOptitrackHead.RotatePositionAboutOrigin(headRotation) + this->optitrackHeadOffset;
+    this->optitrackHead = pose + -this->cameraToOptitrackHead.
+        RotatePositionAboutOrigin(headRotation) + this->optitrackHeadOffset;
     gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
     this->viewpointJoyPub->Publish(this->joyMsg);
   }
@@ -1390,7 +1392,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   
   gazebo::math::Pose pose = this->optitrackWorldArmRot +
-      gazebo::msgs::Convert(*_msg)/* - this->monitorOptitrackFrame*/;
+      gazebo::msgs::Convert(*_msg);
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
