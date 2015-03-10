@@ -137,6 +137,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QPushButton *resetButton = new QPushButton();
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
+  resetButton->setToolTip(QString("Reset camera view, arm, and objects to original positions."));
   resetButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
@@ -149,6 +150,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QPushButton *nextButton = new QPushButton();
   nextButton->setFocusPolicy(Qt::NoFocus);
   nextButton->setText(QString("Next Test"));
+  nextButton->setToolTip(QString("Skip to the next test."));
   nextButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
@@ -160,7 +162,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // add reset scene only
   QPushButton *resetSceneButton = new QPushButton();
   resetSceneButton->setFocusPolicy(Qt::NoFocus);
-  resetSceneButton->setText(QString("Reset Scene"));
+  resetSceneButton->setText(QString("Reset Objects"));
+  resetSceneButton->setToolTip(QString("Reset test objects to original positions."));
   resetSceneButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
@@ -182,6 +185,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->startStopButton->setFocusPolicy(Qt::NoFocus);
   this->startStopButton->setCheckable(true);
   this->startStopButton->setText(QString("Start"));
+  this->startStopButton->setToolTip(QString("Start/stop timer."));
   this->startStopButton->setDisabled(true);
 
   this->startStyle =
