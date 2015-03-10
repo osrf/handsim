@@ -143,8 +143,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
-  // The average radius of a person's head is 55cm
-  this->cameraToOptitrackHead = math::Pose(-0.55, 0, 0, 0, 0, 0);
+  // translation from camera to marker in marker frame
+  //this->cameraToOptitrackHead = math::Pose(0.09, -0.03, 0, 0, 0, 0);
+  // rotation about X looks good (y-axis)
+  this->cameraToOptitrackHead = math::Pose(-0.09, -0.53, 0.25, 0, 0, 0);
 
   // hydra sensor offset
   this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
@@ -1356,28 +1358,27 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
   gazebo::math::Pose pose = this->optitrackWorldHeadRot +
-      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+      gazebo::msgs::Convert(*_msg)/* - this->monitorOptitrackFrame*/;
   pose.pos = this->headPosFilter.Process(pose.pos);
-  pose.rot = this->headOriFilter.Process(pose.rot);  
-  pose.pos = pose.RotatePositionAboutOrigin(pose.rot).pos;
+  gazebo::math::Quaternion headRotation = pose.rot;
+  headRotation = this->headOriFilter.Process(headRotation);
+  pose.pos = pose.RotatePositionAboutOrigin(headRotation).pos;
   pose.rot.SetToIdentity();
   
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
-
-  this->optitrackHead = pose + this->optitrackHeadOffset;
-  this->optitrackHead = pose + this->cameraToOptitrackHead;
 
   // If we're paused, or if we haven't calculated an offset yet...
   if (this->pauseTracking || !this->headOffsetInitialized)
   {
     if (this->userCameraPoseValid)
     {
-      this->optitrackHeadOffset = -pose + this->userCameraPose;
+      this->optitrackHeadOffset = -pose + (this->cameraToOptitrackHead.RotatePositionAboutOrigin(headRotation) + this->userCameraPose);
       this->headOffsetInitialized = true;
     }
   }
   else
   {
+    this->optitrackHead = pose + -this->cameraToOptitrackHead.RotatePositionAboutOrigin(headRotation) + this->optitrackHeadOffset;
     gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
     this->viewpointJoyPub->Publish(this->joyMsg);
   }
@@ -1389,7 +1390,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   
   gazebo::math::Pose pose = this->optitrackWorldArmRot +
-      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+      gazebo::msgs::Convert(*_msg)/* - this->monitorOptitrackFrame*/;
     
   this->optitrackArm = pose + this->optitrackArmOffset;
 
