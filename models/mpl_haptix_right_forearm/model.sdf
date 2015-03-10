@@ -1097,6 +1097,7 @@
   </joint>
 
   <link name='index3'>
+    <self_collide>true</self_collide>
     <pose>0.0380858 -0.709843 0.136482 -1.15476e-13 0.174533 -0.0115373</pose>
     <inertial>
       <pose>4.32004e-05 -0.0125318 0.000903476 0 0 0</pose>
@@ -1523,6 +1524,7 @@
   </joint>
 
   <link name='middle3'>
+    <self_collide>true</self_collide>
     <pose>0.0151931 -0.721397 0.133515 0.0872665 1.51577e-14 -0.0115373</pose>
     <inertial>
       <pose>4.31236e-05 -0.0125318 0.000903446 0 0 0</pose>
@@ -1924,6 +1926,7 @@
   </joint>
 
   <link name='pinky3'>
+    <self_collide>true</self_collide>
     <pose>-0.0277931 -0.681081 0.130023 -1.14622e-13 -0.174533 -0.0115373</pose>
     <inertial>
       <pose>3.85026e-05 -0.0125047 0.000912295 0 0 0</pose>
@@ -2349,6 +2352,7 @@
   </joint>
 
   <link name='ring3'>
+    <self_collide>true</self_collide>
     <pose>-0.00745287 -0.710217 0.13716 -1.14821e-13 -0.174533 -0.0115373</pose>
     <inertial>
       <pose>4.31973e-05 -0.0125318 0.000903457 0 0 0</pose>
@@ -2850,6 +2854,7 @@
   </joint>
 
   <link name='thumb3'>
+    <self_collide>true</self_collide>
     <pose>0.121705 -0.603689 0.129371 0.0873761 -0.0305803 -0.276903</pose>
     <inertial>
       <pose>0.0123437 -0.0014554 0 0 0 0</pose>
