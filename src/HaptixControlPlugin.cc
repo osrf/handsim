@@ -144,8 +144,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // translation from camera to marker in marker frame
-  //this->cameraToOptitrackHead = math::Pose(0.09, -0.03, 0, 0, 0, 0);
-  // rotation about X looks good (y-axis)
   this->cameraToOptitrackHead = math::Pose(-0.09, -0.53, 0.25, 0, 0, 0);
 
   // hydra sensor offset

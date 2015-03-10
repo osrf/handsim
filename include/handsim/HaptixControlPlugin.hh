@@ -268,7 +268,7 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    /// \brief Transform from Optitrack head sensor to camera frame
+    /// \brief Transform from camera frame to Optitrack head sensor.
     private: math::Pose cameraToOptitrackHead;
 
     /// \brief Transform from hydra sensor orientation to base link frame.
