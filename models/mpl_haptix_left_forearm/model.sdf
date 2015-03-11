@@ -238,7 +238,7 @@
     <child>forearm</child>
     <parent>world</parent>
     <axis>
-      <xyz>0 0 1.0</xyz>
+      <xyz>0 0 -1.0</xyz>
       <limit>
         <lower>0</lower>
         <upper>0</upper>
@@ -400,7 +400,7 @@
     <child>wristy</child>
     <parent>forearm</parent>
     <axis>
-      <xyz>0.011537 0.999933 -1.2164e-13</xyz>
+      <xyz>-0.011537 0.999933 1.2164e-13</xyz>
       <limit>
         <lower>-1.57</lower>
         <upper>1.57</upper>
@@ -534,7 +534,7 @@
     <child>wristx</child>
     <parent>wristy</parent>
     <axis>
-      <xyz>-1.35564e-14 -1.18814e-13 -1</xyz>
+      <xyz>1.35564e-14 -1.18814e-13 1</xyz>
       <limit>
         <lower>-0.261</lower>
         <upper>0.785</upper>
@@ -779,7 +779,7 @@
     <child>wristz</child>
     <parent>wristx</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.42109e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.42109e-14</xyz>
       <limit>
         <lower>-1.04</lower>
         <upper>1.04</upper>
@@ -863,7 +863,7 @@
     <child>index0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>-0.173637 0.00200338 -0.984808</xyz>
+      <xyz>0.173637 0.00200338 0.984808</xyz>
       <limit>
         <lower>-0.345</lower>
         <upper>0</upper>
@@ -953,7 +953,7 @@
     <child>index1</child>
     <parent>index0</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 0.173648</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -1068,7 +1068,7 @@
     <child>index2</child>
     <parent>index1</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.72</upper>
@@ -1205,7 +1205,7 @@
     <child>index3</child>
     <parent>index2</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -1289,7 +1289,7 @@
     <child>middle0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.00100552 0.0871499 -0.996195</xyz>
+      <xyz>-0.00100552 0.0871499 0.996195</xyz>
       <limit>
         <lower>0</lower>
         <upper>0</upper>
@@ -1379,7 +1379,7 @@
     <child>middle1</child>
     <parent>middle0</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.43013e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.43013e-14</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -1494,7 +1494,7 @@
     <child>middle2</child>
     <parent>middle1</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.32727e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.32727e-14</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.73</upper>
@@ -1631,7 +1631,7 @@
     <child>middle3</child>
     <parent>middle2</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.51577e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.51577e-14</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -1715,7 +1715,7 @@
     <child>pinky0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.173637 -0.00200338 -0.984808</xyz>
+      <xyz>-0.173637 -0.00200338 0.984808</xyz>
       <limit>
         <lower>0</lower>
         <upper>0.345</upper>
@@ -1805,7 +1805,7 @@
     <child>pinky1</child>
     <parent>pinky0</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -1895,7 +1895,7 @@
     <child>pinky2</child>
     <parent>pinky1</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.72</upper>
@@ -2032,7 +2032,7 @@
     <child>pinky3</child>
     <parent>pinky2</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -2116,7 +2116,7 @@
     <child>ring0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.173637 -0.00200338 -0.984808</xyz>
+      <xyz>-0.173637 -0.00200338 0.984808</xyz>
       <limit>
         <lower>0</lower>
         <upper>0.345</upper>
@@ -2206,7 +2206,7 @@
     <child>ring1</child>
     <parent>ring0</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -2320,7 +2320,7 @@
     <child>ring2</child>
     <parent>ring1</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.72</upper>
@@ -2457,7 +2457,7 @@
     <child>ring3</child>
     <parent>ring2</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -2565,7 +2565,7 @@
     <child>thumb0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.269769 0.958967 0.0872241</xyz>
+      <xyz>-0.269769 0.958967 -0.0872241</xyz>
       <limit>
         <lower>0</lower>
         <upper>2.07</upper>
@@ -2706,7 +2706,7 @@
     <child>thumb1</child>
     <parent>thumb0</parent>
     <axis>
-      <xyz>0.0531549 0.0756139 -0.995719</xyz>
+      <xyz>-0.0531549 0.0756139 0.995719</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.03</upper>
@@ -2821,7 +2821,7 @@
     <child>thumb2</child>
     <parent>thumb1</parent>
     <axis>
-      <xyz>0.0531549 0.0756139 -0.995719</xyz>
+      <xyz>-0.0531549 0.0756139 0.995719</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.03</upper>
@@ -2958,7 +2958,7 @@
     <child>thumb3</child>
     <parent>thumb2</parent>
     <axis>
-      <xyz>0.0531549 0.0756139 -0.995719</xyz>
+      <xyz>-0.0531549 0.0756139 0.995719</xyz>
       <limit>
         <lower>-0.819</lower>
         <upper>1.28</upper>
