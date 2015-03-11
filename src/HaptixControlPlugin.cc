@@ -1384,12 +1384,12 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     {
       if (this->viewpointRotationsEnabled)
       {
-        this->optitrackHeadOffset = -pose + (this->cameraToOptitrackHead.
-            RotatePositionAboutOrigin(headRotation) + this->userCameraPose);
+        this->optitrackHeadOffset = -pose + this->userCameraPose;
       }
       else
       {
-        this->optitrackHeadOffset = -pose + this->userCameraPose;
+        this->optitrackHeadOffset = -pose + (this->cameraToOptitrackHead.
+            RotatePositionAboutOrigin(headRotation) + this->userCameraPose);
       }
       this->headOffsetInitialized = true;
     }
@@ -1398,12 +1398,15 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
-      this->optitrackHead = pose + -this->cameraToOptitrackHead.
+      if (this->viewpointRotationsEnabled)
+      {
+        this->optitrackHead = pose + this->optitrackHeadOffset;
+      }
+      else
+      {
+        this->optitrackHead = pose + -this->cameraToOptitrackHead.
           RotatePositionAboutOrigin(headRotation) + this->optitrackHeadOffset;
-    }
-    else
-    {
-      this->optitrackHead = pose + this->optitrackHeadOffset;
+      }
     }
     gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
     this->viewpointJoyPub->Publish(this->joyMsg);
