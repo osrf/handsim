@@ -28,7 +28,13 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->pauseTracking = true;
   this->gotPauseRequest = false;
 
+  this->havePolhemus = false;
+  this->polhemusConn = NULL;
   this->haveHydra = false;
+  this->graspMode = false;
+  this->staleKeyboardPose = false;
+  this->newJoystickMessage = false;
+  this->userCameraPoseValid = false;
   this->haveKeyboard = false;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
@@ -220,7 +226,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->headPosFilter.SetFc(0.002, 0.3);
   this->headOriFilter.SetFc(0.002, 0.3);
-  
+
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
               ("~/optitrack/" + haptix::tracking::Optitrack::headTrackerName,
@@ -671,9 +677,10 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   posRate = camPose.rot.RotateVector(posRate);
   rotRate = camPose.rot.RotateVector(rotRate);
 
-  const double posScale = 2.0;
-  const double rotScale = 5.0;
   {
+    const double posScale = 2.0;
+    const double rotScale = 5.0;
+
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     math::Pose targetSpacenavPose = this->baseLinktoSpacenavPose
                                   + this->targetBaseLinkPose;
@@ -922,7 +929,7 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   if (_i >= static_cast<int>(this->contactSensorInfos.size()))
-  {   
+  {
     gzerr << "sensor [" << _i
           << "] is out of range of contactSensorInfos["
           << this->contactSensorInfos.size() << "].\n";
@@ -1355,8 +1362,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   gazebo::math::Pose pose = this->optitrackWorldHeadRot +
       gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
   pose.pos = this->headPosFilter.Process(pose.pos);
-  pose.rot = this->headOriFilter.Process(pose.rot);  
-  
+  pose.rot = this->headOriFilter.Process(pose.rot);
+
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
   this->optitrackHead = pose + this->optitrackHeadOffset;
@@ -1381,10 +1388,10 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  
+
   gazebo::math::Pose pose = this->optitrackWorldArmRot +
       gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
-    
+
   this->optitrackArm = pose + this->optitrackArmOffset;
 
   // If we're paused, or if we haven't calculated an offset yet...

@@ -226,7 +226,7 @@ namespace gazebo
     /*                                            */
     /**********************************************/
 
-    /// \brief true if motion tracking is paused 
+    /// \brief true if motion tracking is paused
     private: bool pauseTracking;
 
     /// \brief got command to pause polhemus updates
