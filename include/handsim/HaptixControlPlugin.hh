@@ -554,6 +554,14 @@ namespace gazebo
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
 
+    /// \brief Receives messages to toggle viewpoint rotations.
+    private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
+
+    private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
+
+    /// \brief True if motion capture rotations the head, false otherwise.
+    private: bool viewpointRotationsEnabled;
+
     /// \brief True if optitrackArmOffset has been initialized
     private: bool armOffsetInitialized;
 
