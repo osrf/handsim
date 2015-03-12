@@ -72,7 +72,7 @@ void TaskButton::SetInstructions(const std::string &_instr)
 }
 
 /////////////////////////////////////////////////
-void TaskButton::SetId(const std::string _id)
+void TaskButton::SetId(const std::string &_id)
 {
   this->id = _id;
 }
