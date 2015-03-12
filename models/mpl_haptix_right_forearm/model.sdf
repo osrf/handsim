@@ -1,6 +1,7 @@
 <sdf version='1.5'>
 <model name="mpl_haptix_right_forearm">
   <plugin filename="libHaptixControlPlugin.so" name="HaptixControlPlugin">
+    <update_rate>50</update_rate>
     <base_joint>elbow</base_joint>
     <base_link>forearm</base_link>
     <base_pid_pos cmd_max="10000.0" cmd_min="-10000.0" d="70.0" i="0" p="700.0"/>
