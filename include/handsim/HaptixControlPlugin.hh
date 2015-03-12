@@ -525,6 +525,10 @@ namespace gazebo
     /// \brief Callback on Optitrack monitor tracker update
     private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
 
+    /// \brief Callback on message to toggle viewpoint rotations due to mocap
+    /// \param[in] _msg Message sent by publisher
+    private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
+
     /// \brief Pose of the optitrack head tracker in the world frame
     private: gazebo::math::Pose optitrackHead;
 
@@ -557,7 +561,8 @@ namespace gazebo
     /// \brief Receives messages to toggle viewpoint rotations.
     private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
 
-    private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
+    /// \brief Mutex to lock viewpointRotationsEnabled
+    private: std::mutex viewpointRotationsMutex;
 
     /// \brief True if motion capture rotations the head, false otherwise.
     private: bool viewpointRotationsEnabled;

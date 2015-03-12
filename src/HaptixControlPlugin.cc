@@ -32,6 +32,7 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->haveKeyboard = false;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
+  this->viewpointRotationsEnabled = false;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
@@ -146,7 +147,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // translation from camera to marker in camera frame
   this->cameraToOptitrackHead = math::Pose(-0.09, -0.53, 0.25, 0, 0, 0);
 
-  this->viewpointRotationsEnabled = false;
   this->viewpointRotationsSub = this->gazeboNode->Subscribe(
       "~/motion_tracking/viewpoint_rotations",
           &HaptixControlPlugin::OnToggleViewpointRotations, this);
@@ -1382,6 +1382,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
+      std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
+          std::try_to_lock);
       if (this->viewpointRotationsEnabled)
       {
         this->optitrackHeadOffset = -pose + this->userCameraPose;
@@ -1404,8 +1406,9 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
       }
       else
       {
-        this->optitrackHead = pose + -this->cameraToOptitrackHead.
-          RotatePositionAboutOrigin(headRotation) + this->optitrackHeadOffset;
+        this->optitrackHead = pose +
+          -this->cameraToOptitrackHead.RotatePositionAboutOrigin(headRotation)
+              + this->optitrackHeadOffset;
       }
     }
     gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
@@ -1444,6 +1447,8 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnToggleViewpointRotations(ConstIntPtr &_msg)
 {
+  std::unique_lock<std::mutex> lock(this->viewpointRotationsMutex,
+      std::try_to_lock);
   this->viewpointRotationsEnabled = _msg->data() == 0 ? false : true;
 }
 
