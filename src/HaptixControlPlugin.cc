@@ -27,7 +27,13 @@ HaptixControlPlugin::HaptixControlPlugin()
 {
   this->pauseTracking = true;
   this->gotPauseRequest = false;
+  this->havePolhemus = false;
+  this->polhemusConn = NULL;
   this->haveHydra = false;
+  this->graspMode = false;
+  this->staleKeyboardPose = false;
+  this->newJoystickMessage = false;
+  this->userCameraPoseValid = false;
   this->haveKeyboard = false;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
@@ -678,9 +684,10 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   posRate = camPose.rot.RotateVector(posRate);
   rotRate = camPose.rot.RotateVector(rotRate);
 
-  const double posScale = 2.0;
-  const double rotScale = 5.0;
   {
+    const double posScale = 2.0;
+    const double rotScale = 5.0;
+
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     math::Pose targetSpacenavPose = this->baseLinktoSpacenavPose
                                   + this->targetBaseLinkPose;
