@@ -1395,6 +1395,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   pose.pos = this->headPosFilter.Process(pose.pos);
   gazebo::math::Quaternion headRotation = pose.rot;
   headRotation = this->headOriFilter.Process(headRotation);
+ std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
+      std::try_to_lock);
   if (this->viewpointRotationsEnabled)
   {
     pose.rot = headRotation;
@@ -1412,8 +1414,6 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
-      std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
-          std::try_to_lock);
       if (this->viewpointRotationsEnabled)
       {
         this->optitrackHeadOffset = -pose + this->userCameraPose;
