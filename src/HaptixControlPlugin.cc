@@ -27,7 +27,6 @@ HaptixControlPlugin::HaptixControlPlugin()
 {
   this->pauseTracking = true;
   this->gotPauseRequest = false;
-
   this->havePolhemus = false;
   this->polhemusConn = NULL;
   this->haveHydra = false;
@@ -38,6 +37,7 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->haveKeyboard = false;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
+  this->updateRate = 50.0;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
@@ -101,6 +101,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Subscribe("~/hydra",
       &HaptixControlPlugin::OnHydra, this);
 
+  // Set the update rate
+  if (this->sdf->HasElement("update_rate"))
+    this->updateRate = this->sdf->Get<double>("update_rate");
+
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
   if (!this->baseJoint)
@@ -154,6 +158,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
+
+  // For update rate throttling
+  this->lastWallTime = common::Time::GetWallTime();
 
   // initialize PID's
   double baseJointImplicitDamping = 100.0;
@@ -830,7 +837,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void HaptixControlPlugin::UpdateHandControl(double _dt)
+void HaptixControlPlugin::GetHandControlFromClient()
 {
   // copy command from hxCommand for motors to list of all joints
   // commanded by this plugin.
@@ -896,7 +903,11 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
         this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
+}
 
+/////////////////////////////////////////////////
+void HaptixControlPlugin::UpdateHandControl(double _dt)
+{
   // command all joints
   for(unsigned int i = 0; i < this->joints.size(); ++i)
   {
@@ -1090,8 +1101,22 @@ void HaptixControlPlugin::GazeboUpdateStates()
     // compute wrench needed
     this->UpdateBaseLink(dt);
 
-    // Get robot state from simulation
-    this->GetRobotStateFromSim();
+    // Update based on updateRate.
+    if (common::Time::GetWallTime() - this->lastWallTime >=
+        1.0/this->updateRate)
+    {
+      // Uncomment this to see the update rate.
+      // gzdbg << 1.0/(common::Time::GetWallTime() -
+      //               this->lastWallTime).Double() << std::endl;
+
+      // Get robot state from simulation
+      this->GetRobotStateFromSim();
+
+      // Get simulation control from client
+      this->GetHandControlFromClient();
+
+      this->lastWallTime = common::Time::GetWallTime();
+    }
 
     // control finger joints
     this->UpdateHandControl(dt);
@@ -1176,9 +1201,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     motor->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
   }
 
-  // TODO: get this value from somewhere (and make sure that it's
-  // actually being obeyed in the model update).
-  _rep.set_update_rate(50.0);
+  _rep.set_update_rate(this->updateRate);
 
   _result = true;
 }

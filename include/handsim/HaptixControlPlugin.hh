@@ -126,6 +126,9 @@ namespace gazebo
     /// \brief For computing dt
     private: common::Time lastTime;
 
+    /// \brief For throttling the update rate
+    private: common::Time lastWallTime;
+
     /**********************************************/
     /*                                            */
     /*       basic polhemus interface stuff       */
@@ -273,6 +276,9 @@ namespace gazebo
 
     /// \brief Update the state of the robot hand based the commanded states.
     private: void GetRobotStateFromSim();
+
+    /// \brief Get hand control information from client.
+    private: void GetHandControlFromClient();
 
     /// \brief: Update joint PIDs in simulation on every tick
     /// \param[in] _dt time step to be passed into PID class for control update.
@@ -556,6 +562,9 @@ namespace gazebo
 
     /// \brief True if optitrackHeadOffset has been initialized
     private: bool headOffsetInitialized;
+
+    /// \brief Rate at which this plugin should update
+    private: double updateRate;
   };
 
 /// \}
