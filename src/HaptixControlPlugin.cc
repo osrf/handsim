@@ -27,11 +27,17 @@ HaptixControlPlugin::HaptixControlPlugin()
 {
   this->pauseTracking = true;
   this->gotPauseRequest = false;
-
+  this->havePolhemus = false;
+  this->polhemusConn = NULL;
   this->haveHydra = false;
+  this->graspMode = false;
+  this->staleKeyboardPose = false;
+  this->newJoystickMessage = false;
+  this->userCameraPoseValid = false;
   this->haveKeyboard = false;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
+  this->updateRate = 50.0;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
@@ -95,6 +101,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Subscribe("~/hydra",
       &HaptixControlPlugin::OnHydra, this);
 
+  // Set the update rate
+  if (this->sdf->HasElement("update_rate"))
+    this->updateRate = this->sdf->Get<double>("update_rate");
+
   this->baseJoint =
     this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
   if (!this->baseJoint)
@@ -148,6 +158,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
+
+  // For update rate throttling
+  this->lastWallTime = common::Time::GetWallTime();
 
   // initialize PID's
   double baseJointImplicitDamping = 100.0;
@@ -220,7 +233,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->headPosFilter.SetFc(0.002, 0.3);
   this->headOriFilter.SetFc(0.002, 0.3);
-  
+
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
               ("~/optitrack/" + haptix::tracking::Optitrack::headTrackerName,
@@ -671,9 +684,10 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   posRate = camPose.rot.RotateVector(posRate);
   rotRate = camPose.rot.RotateVector(rotRate);
 
-  const double posScale = 2.0;
-  const double rotScale = 5.0;
   {
+    const double posScale = 2.0;
+    const double rotScale = 5.0;
+
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     math::Pose targetSpacenavPose = this->baseLinktoSpacenavPose
                                   + this->targetBaseLinkPose;
@@ -823,7 +837,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void HaptixControlPlugin::UpdateHandControl(double _dt)
+void HaptixControlPlugin::GetHandControlFromClient()
 {
   // copy command from hxCommand for motors to list of all joints
   // commanded by this plugin.
@@ -889,7 +903,11 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
         this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
+}
 
+/////////////////////////////////////////////////
+void HaptixControlPlugin::UpdateHandControl(double _dt)
+{
   // command all joints
   for(unsigned int i = 0; i < this->joints.size(); ++i)
   {
@@ -922,7 +940,7 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   if (_i >= static_cast<int>(this->contactSensorInfos.size()))
-  {   
+  {
     gzerr << "sensor [" << _i
           << "] is out of range of contactSensorInfos["
           << this->contactSensorInfos.size() << "].\n";
@@ -1083,8 +1101,22 @@ void HaptixControlPlugin::GazeboUpdateStates()
     // compute wrench needed
     this->UpdateBaseLink(dt);
 
-    // Get robot state from simulation
-    this->GetRobotStateFromSim();
+    // Update based on updateRate.
+    if (common::Time::GetWallTime() - this->lastWallTime >=
+        1.0/this->updateRate)
+    {
+      // Uncomment this to see the update rate.
+      // gzdbg << 1.0/(common::Time::GetWallTime() -
+      //               this->lastWallTime).Double() << std::endl;
+
+      // Get robot state from simulation
+      this->GetRobotStateFromSim();
+
+      // Get simulation control from client
+      this->GetHandControlFromClient();
+
+      this->lastWallTime = common::Time::GetWallTime();
+    }
 
     // control finger joints
     this->UpdateHandControl(dt);
@@ -1169,9 +1201,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     motor->set_maximum(this->joints[m]->GetUpperLimit(0).Radian());
   }
 
-  // TODO: get this value from somewhere (and make sure that it's
-  // actually being obeyed in the model update).
-  _rep.set_update_rate(50.0);
+  _rep.set_update_rate(this->updateRate);
 
   _result = true;
 }
@@ -1355,8 +1385,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   gazebo::math::Pose pose = this->optitrackWorldHeadRot +
       gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
   pose.pos = this->headPosFilter.Process(pose.pos);
-  pose.rot = this->headOriFilter.Process(pose.rot);  
-  
+  pose.rot = this->headOriFilter.Process(pose.rot);
+
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
   this->optitrackHead = pose + this->optitrackHeadOffset;
@@ -1381,10 +1411,10 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  
+
   gazebo::math::Pose pose = this->optitrackWorldArmRot +
       gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
-    
+
   this->optitrackArm = pose + this->optitrackArmOffset;
 
   // If we're paused, or if we haven't calculated an offset yet...
