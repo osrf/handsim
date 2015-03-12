@@ -27,11 +27,11 @@ HaptixControlPlugin::HaptixControlPlugin()
 {
   this->pauseTracking = true;
   this->gotPauseRequest = false;
-
   this->haveHydra = false;
   this->haveKeyboard = false;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
+  this->updateRate = 50.0;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
@@ -96,7 +96,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
       &HaptixControlPlugin::OnHydra, this);
 
   // Set the update rate
-  this->updateRate = 50.0;
   if (this->sdf->HasElement("update_rate"))
     this->updateRate = this->sdf->Get<double>("update_rate");
 
