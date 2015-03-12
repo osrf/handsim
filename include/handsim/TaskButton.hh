@@ -38,7 +38,7 @@ namespace haptix_gazebo_plugins
 
     /// \brief Set the task id (used in conjunction with the arrange plugin).
     /// \param[in] _id  Task ID
-    public: void SetId(const std::string _id);
+    public: void SetId(const std::string &_id);
 
     /// \brief Get the task id (used in conjunction with the arrange plugin).
     /// \return Task ID

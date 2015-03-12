@@ -40,11 +40,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
 
-  // Read parameters
-  std::string handImgFilename =
-    gazebo::common::SystemPaths::Instance()->FindFileURI(
-      "file://media/gui/arat/arat_icons/hand.svg");
-
   // Parameters for sensor contact visualization
   // Set the frame background and foreground colors
   this->setStyleSheet(
@@ -69,9 +64,14 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   handView->setSizePolicy(QSizePolicy::Expanding,
                           QSizePolicy::MinimumExpanding);
 
+  // Read parameters
+  std::string handImgFilename =
+    gazebo::common::SystemPaths::Instance()->FindFileURI(
+      "file://media/gui/arat/arat_icons/hand_right.svg");
+
   // Load the hand image
   QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
-  QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
+  this->handItem = new QGraphicsPixmapItem(handImg);
   handItem->setPos(-20, -73);
 
   // Draw the hand on the canvas
@@ -263,6 +263,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   stereoCheckLayout->addStretch(1);
 
   stereoCheckLayout->addWidget(mocapStatusIndicator);
+  stereoCheckLayout->addSpacing(10);
 
   movementLayout->addWidget(localCoordMoveCheck);
   movementLayout->addWidget(new QLabel(tr("Arm move speed:")));
@@ -366,6 +367,21 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->colorMax = _elem->Get<gazebo::common::Color>("color_max");
 
   this->handSide = _elem->Get<std::string>("hand_side");
+
+  // Move the GUI if on the left side
+  if (this->handSide == "left")
+  {
+    std::string handImgFilename =
+      gazebo::common::SystemPaths::Instance()->FindFileURI(
+          "file://media/gui/arat/arat_icons/hand_left.svg");
+
+    // Load the left hand image
+    QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
+    this->handItem->setPixmap(handImg);
+
+    this->move(static_cast<QWidget*>(this->parent())->width() -
+        this->width() - 10, 10);
+  }
 
   // Get contact names
   if (_elem->HasElement("contacts"))
