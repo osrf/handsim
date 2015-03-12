@@ -332,8 +332,12 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   gazebo::rendering::UserCameraPtr userCamera =
                                             gazebo::gui::get_active_camera();
   if (userCamera)
+  {
     userCamera->SetHFOV(GZ_DTOR(120));
-  this->initialCameraPose = userCamera->GetWorldPose();
+    userCamera->SetClipDist(0.001, 500);
+    this->initialCameraPose = userCamera->GetWorldPose();
+  }
+
 
   // Hide the scene tree.
   gazebo::gui::Events::leftPaneVisibility(false);
