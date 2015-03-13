@@ -35,8 +35,8 @@ $C_{gd}$: The desired pose of the camera in the Gazebo frame.
 \subsection{Paused}
 Calculations at time $t$ when motion tracking is paused:
 
-\[M_{oi} = M_{ot}\\
-C_{oi} = M_{ot} - (M_c + R^o_g)\]
+\[M_{oi} = M_{ot}\]
+\[C_{oi} = M_{ot} - (M_c + R^o_g)\]
 
 We can rotate $C_{oi}$ into the Gazebo frame, but we still don't know what the translation is to enforce that $C_{gi}$ is the input user camera pose.
 
@@ -51,9 +51,9 @@ Calculations at time $t$ when motion tracking is running:
 
 $R_{\delta}$: pure rotational difference between $M_{gd}$ and $M_{gi}$.
 
-\[M_{od} = M_{ot}\\
-C_{od} = M_{ot} - (M_c + R_{\delta} + R^o_g)\\
-C_{gd} = C_{od} + O_g\]
+\[M_{od} = M_{ot}\]
+\[C_{od} = M_{ot} - (M_c + R_{\delta} + R^o_g)\]
+\[C_{gd} = C_{od} + O_g\]
 
 To implement the desired viewpoint effect in Gazebo, set the rotational component of the user camera to the rotational component of $C_{gi}$, and set the translational component of the user camera to the translational component of $C_{gd}$.
 
