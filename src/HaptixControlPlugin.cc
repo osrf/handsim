@@ -1258,7 +1258,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       - this->motorInfos[i].encoderOffset;
     motor->set_minimum(motorMin);
     motor->set_maximum(motorMax);
-    gzerr << motorMin << " : " << motorMax << "\n";
+    // gzerr << motorMin << " : " << motorMax << "\n";
   }
 
   _rep.set_update_rate(this->updateRate);
