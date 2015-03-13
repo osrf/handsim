@@ -274,6 +274,8 @@ namespace gazebo
     /// \brief Transform from camera frame to Optitrack head sensor.
     private: math::Pose cameraToOptitrackHead;
 
+    private: math::Quaternion initialRotation;
+
     /// \brief Transform from hydra sensor orientation to base link frame.
     private: math::Pose baseLinkToHydraSensor;
 
@@ -581,6 +583,12 @@ namespace gazebo
 
     /// \brief Rate at which this plugin should update
     private: double updateRate;
+
+    /// \brief The initial rotation of the optitrack head marker
+    private: math::Quaternion initialOptitrackRot;
+
+    // private: physics::ModelPtr cameraVisual;
+    // private: physics::ModelPtr markerVisual;
   };
 
 /// \}
