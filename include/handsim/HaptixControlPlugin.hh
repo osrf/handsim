@@ -587,8 +587,8 @@ namespace gazebo
     /// \brief The initial rotation of the optitrack head marker
     private: math::Quaternion initialOptitrackRot;
 
-    // private: physics::ModelPtr cameraVisual;
-    // private: physics::ModelPtr markerVisual;
+    private: physics::ModelPtr cameraVisual;
+    private: physics::ModelPtr markerVisual;
   };
 
 /// \}

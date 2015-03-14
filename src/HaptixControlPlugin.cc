@@ -159,9 +159,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // translation from camera to marker in camera frame
-  //this->cameraToOptitrackHead = math::Pose(-0.09, -0.53, 0.25, 0, 0, 0);
-  //this->cameraToOptitrackHead = math::Pose(0.125, -0.025, 0.02, 0, 0, 0);
-  this->cameraToOptitrackHead = math::Pose(0.02, -0.025, -0.125, 0, 0, 0);
+  this->cameraToOptitrackHead = math::Pose(-0.025, -0.125, 0.02, 0, 0, 0);
 
   this->viewpointRotationsSub = this->gazeboNode->Subscribe(
       "~/motion_tracking/viewpoint_rotations",
@@ -1445,9 +1443,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
         cameraToOptitrackHeadRotated.pos =
             (headRotation*this->initialOptitrackRot.GetInverse()).RotateVector(
                 this->cameraToOptitrackHead.pos);
-
-        this->optitrackHead = pose +
-            (this->optitrackHeadOffset-cameraToOptitrackHeadRotated);
+        this->optitrackHead = -cameraToOptitrackHeadRotated + pose +
+          this->optitrackHeadOffset;
       }
     }
     gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
