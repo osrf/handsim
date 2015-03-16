@@ -109,9 +109,34 @@ namespace haptix_gazebo_plugins
     /// \brief callback on Initialize hx connection
     private: void OnInitialize(ConstIntPtr &_msg);
 
+    /// \brief Reset models, signal motion tracking to pause, reset hand state
+    private: void ResetModels();
+
+    /// \brief Callback for subscriber to pause response
+    /// \param[in] _msg pause state
+    private: void OnPauseRequest(ConstIntPtr &_msg);
+
+    /// \brief start a thread to poll contact sensor data
+    private: void PollSensors();
+
+    /// \brief Poll network for OptitrackBridge status
+    private: void PollTracking();
+
+    /// \brief callback for subscriber to the hydra publisher
+    private: void OnHydra(ConstHydraPtr &_msg);
+
     /// \brief Handle position scaling slider movement
     /// \param[in] _state State of the slider
     private slots: void OnScalingSlider(int _state);
+
+    /// \brief Start a thread to stop and start the remote Optitrack service
+    private slots: void OnStartStopMocap(bool _checked);
+
+    /// \brief Optitrack alive callback
+    private: void OnOptitrackAlive(ConstTimePtr &_time);
+
+    /// \brief Get contact sensor information
+    private: void UpdateSensorContact();
 
     /// \brief Size of the contact sensor display rectangle, in pixels.
     private: gazebo::math::Vector2d defaultContactSize;
@@ -238,13 +263,6 @@ namespace haptix_gazebo_plugins
     /// \brief Subscriber to pause status
     private: gazebo::transport::SubscriberPtr pauseSub;
 
-    /// \brief Reset models, signal motion tracking to pause, reset hand state
-    private: void ResetModels();
-
-    /// \brief Callback for subscriber to pause response
-    /// \param[in] _msg pause state
-    private: void OnPauseRequest(ConstIntPtr &_msg);
-
     /// \brief was pausing motion tracking successful?
     private: bool trackingPaused;
 
@@ -254,29 +272,17 @@ namespace haptix_gazebo_plugins
     /// \brief start a thread to poll contact sensor data
     private: boost::thread pollSensorsThread;
 
-    /// \brief start a thread to poll contact sensor data
-    private: void PollSensors();
-
     /// \brief graphical mocap status indicator
     private: QLabel* mocapStatusIndicator;
 
     /// \brief start a thread to poll optitrackbridge
     private: boost::thread pollTrackingThread;
 
-    /// \brief Poll network for OptitrackBridge status
-    private: void PollTracking();
-
     /// \brief Subscribe to Optitrack liveliness
     private: gazebo::transport::SubscriberPtr optitrackAliveSub;
 
-    /// \brief Optitrack alive callback
-    private: void OnOptitrackAlive(ConstTimePtr &_time);
-
     /// \brief Last optitrack update time
     private: gazebo::common::Time optitrackUpdateTime;
-
-    /// \brief Get contact sensor information
-    private: void UpdateSensorContact();
 
     /// \brief True if received a signal to quit
     private: bool quit;
@@ -284,11 +290,8 @@ namespace haptix_gazebo_plugins
     /// \brief subscribe to hydra
     private: gazebo::transport::SubscriberPtr hydraSub;
 
-    /// \brief callback for subscriber to the hydra publisher
-    private: void OnHydra(ConstHydraPtr &_msg);
-
-    /// \brief Start a thread to stop and start the remote Optitrack service
-    private slots: void OnStartStopMocap(bool _checked);
+    /// \brief Pixmap for the SVG hand
+    private: QGraphicsPixmapItem *handItem;
   };
 }
 #endif
