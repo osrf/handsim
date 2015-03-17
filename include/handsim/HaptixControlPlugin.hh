@@ -322,7 +322,7 @@ namespace gazebo
           this->fakeTorque = 0.0;
           this->fakeLowerLimit = -1e16;
           this->fakeUpperLimit = 1e16;
-          this->realJoint = NULL ;  // .reset();
+          this->realJoint = NULL;
           this->hasJoint = false;
         }
       public: ~HaptixJoint()
