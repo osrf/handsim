@@ -49,12 +49,12 @@
 
 namespace gazebo
 {
-  class Wrench
+  class WrenchHelper
   {
     /// \brief Operator =
     /// \param[in] _wrench wrench to set from.
     /// \return *this
-    public: Wrench &operator =(const Wrench &_wrench)
+    private: WrenchHelper &operator =(const WrenchHelper &_wrench)
             {
               this->force = _wrench.force;
               this->torque = _wrench.torque;
@@ -64,7 +64,7 @@ namespace gazebo
     /// \brief Operator +
     /// \param[in] _wrench wrench to add
     /// \return *this
-    public: inline Wrench &operator +(const Wrench &_wrench)
+    private: inline WrenchHelper &operator +(const WrenchHelper &_wrench)
             {
               this->force += _wrench.force;
               this->torque += _wrench.torque;
@@ -74,7 +74,7 @@ namespace gazebo
     /// \brief Operator -
     /// \param[in] _wrench wrench to subtract
     /// \return *this
-    public: inline Wrench &operator -(const Wrench &_wrench)
+    private: inline WrenchHelper &operator -(const WrenchHelper &_wrench)
             {
               this->force -= _wrench.force;
               this->torque -= _wrench.torque;
@@ -82,13 +82,15 @@ namespace gazebo
             }
 
     /// \brief linear forces
-    public: math::Vector3 force;
+    private: math::Vector3 force;
 
     /// \brief angular torques
-    public: math::Vector3 torque;
+    private: math::Vector3 torque;
 
     /// \brief reference link frame
-    public: physics::LinkPtr referenceFrame;
+    private: physics::LinkPtr referenceFrame;
+
+    friend class HaptixControlPlugin;
   };
 
   /// \defgroup haptix_control_plugins HAPTIX Control Plugins
@@ -171,7 +173,7 @@ namespace gazebo
     /// \brief PID for controlling arm base link orientation in world frame.
     private: common::PID rotPid;
     /// \brief force for moving the arm base link to target location.
-    private: Wrench wrench;
+    private: WrenchHelper wrench;
     /// \brief this actually does the PID force calculation and applies
     /// force to the arm base link.
     /// \param[in] _dt time step size.
@@ -315,7 +317,7 @@ namespace gazebo
     /// others just keep a "fake" state here.
     private: class HaptixGazeboJointHelper
     {
-      public: HaptixGazeboJointHelper()
+      private: HaptixGazeboJointHelper()
         {
           this->fakePosition = math::Angle(0.0);
           this->fakeVelocity = 0.0;
@@ -325,24 +327,24 @@ namespace gazebo
           this->realJoint = NULL;
           this->hasJoint = false;
         }
-      public: ~HaptixGazeboJointHelper()
+      private: ~HaptixGazeboJointHelper()
         {
         }
-      public: HaptixGazeboJointHelper &operator=(physics::JointPtr _joint)
+      private: HaptixGazeboJointHelper &operator=(physics::JointPtr _joint)
         {
           this->realJoint = _joint;
           this->hasJoint = true;
           return *this;
         }
-      public: void SetJoint(physics::JointPtr _joint)
+      private: void SetJoint(physics::JointPtr _joint)
         {
           this->realJoint = _joint;
           this->hasJoint = true;
         }
-      public: std::string jointName;
-      public: physics::JointPtr realJoint;
-      public: bool hasJoint;
-      public: math::Angle GetAngle(int _index)
+      private: std::string jointName;
+      private: physics::JointPtr realJoint;
+      private: bool hasJoint;
+      private: math::Angle GetAngle(int _index)
         {
           if (this->hasJoint)
           {
@@ -353,14 +355,14 @@ namespace gazebo
             return this->fakePosition;
           }
         }
-      public: double GetVelocity(int _index)
+      private: double GetVelocity(int _index)
         {
           if (this->hasJoint)
             return this->realJoint->GetVelocity(_index);
           else
             return this->fakeVelocity;
         }
-      public: bool SetForce(int _index, double _force)
+      private: bool SetForce(int _index, double _force)
         {
           if (this->hasJoint)
           {
@@ -380,28 +382,28 @@ namespace gazebo
             return false;
           }
         }
-      public: double GetForce(int _index)
+      private: double GetForce(int _index)
         {
           if (this->hasJoint)
             return this->realJoint->GetForce(_index);
           else
             return this->fakeTorque;
         }
-      public: math::Angle GetUpperLimit(int _index) const
+      private: math::Angle GetUpperLimit(int _index) const
         {
           if (this->hasJoint)
             return this->realJoint->GetUpperLimit(_index);
           else
             return this->fakeUpperLimit;
         }
-      public: math::Angle GetLowerLimit(int _index) const
+      private: math::Angle GetLowerLimit(int _index) const
         {
           if (this->hasJoint)
             return this->realJoint->GetLowerLimit(_index);
           else
             return this->fakeLowerLimit;
         }
-      public: void SetPosition(double _position)
+      private: void SetPosition(double _position)
         {
           this->fakePosition = _position;
         }
@@ -410,6 +412,8 @@ namespace gazebo
       private: double fakeTorque;
       private: math::Angle fakeUpperLimit;
       private: math::Angle fakeLowerLimit;
+
+      friend class HaptixControlPlugin;
     };
     private: std::vector<HaptixGazeboJointHelper*> haptixJoints;
 
@@ -417,42 +421,47 @@ namespace gazebo
     private: class MotorInfo
     {
       /// \brief: motor name
-      public: std::string name;
+      private: std::string name;
       /// \brief: joint name associated with each motor
-      public: std::string jointName;
+      private: std::string jointName;
 
       /// \brief: max continuous motor torque
-      public: double motorTorque;
+      private: double motorTorque;
 
       /// \brief: gear_ratio = motor_angle / joint_angle
       /// assuming the _hxCommand::ref_pos and _hxCommand::ref_vel are
       /// motor position and motor velocities, use gear_ratio to
       /// compute simulation joint torques.
-      public: double gearRatio;
+      private: double gearRatio;
 
       /// \brief: joint_offset
       /// assuming the _hxCommand::ref_pos is motor position,
       /// use joint_offset and gear_ratio to
       /// compute motor position based on simulation joint position.
       /// motor_pos = (motor_offset + joint_pos) * gear_ratio
-      public: double encoderOffset;
+      private: double encoderOffset;
 
       /// \brief: index of joint controlled by this motor
-      public: int index;
+      private: int index;
 
       /// \brief: index of coupled joints
-      public: class GearBox
+      private: class GearBox
       {
         /// \brief: index of joint controlled by this gearbox
-        public: int index;
+        private: int index;
         /// \brief: see example for motorInfos
-        public: double offset;
+        private: double offset;
         /// \brief: see example for motorInfos
-        public: double multiplier1;
-        public: double multiplier2;
+        private: double multiplier1;
+        private: double multiplier2;
+
+        friend class MotorInfo;
+        friend class HaptixControlPlugin;
       };
       /// \brief: joint coupling enforced at position/velocity command level.
-      public: std::vector<GearBox> gearboxes;
+      private: std::vector<GearBox> gearboxes;
+
+      friend class HaptixControlPlugin;
     };
     /// \brief: user controllable joints via motor commands in hxCommand.
     /// <gearbox> joint coupling is only applied at position/velocity command
@@ -506,11 +515,13 @@ namespace gazebo
     /// \brief: data structure for storing contact sensor infos
     class ContactSensorInfo
     {
-      public: sensors::SensorPtr sensor;
-      public: event::ConnectionPtr connection;
+      private: sensors::SensorPtr sensor;
+      private: event::ConnectionPtr connection;
       // aggregated forces and torques from contact
-      public: math::Vector3 contactForce;
-      public: math::Vector3 contactTorque;
+      private: math::Vector3 contactForce;
+      private: math::Vector3 contactTorque;
+
+      friend class HaptixControlPlugin;
     };
     /// \brief: create a list of contact sensors based on contactSensorNames
     private: std::vector<ContactSensorInfo> contactSensorInfos;
