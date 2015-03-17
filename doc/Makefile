@@ -6,19 +6,21 @@ PS2PDF = ps2pdf
 VIEWPDF = okular
 
 BASE_NAME = referenceguide
+OPTITRACK_NAME = optitrack
 
 OTHER_FILES = 
 
 all: $(BASE_NAME).pdf 
+transforms: $(OPTITRACK_NAME).pdf 
 
-$(BASE_NAME).pdf: $(BASE_NAME).tex $(OTHER_FILES) $(PNG_FILES) 
+%.pdf: %.tex $(OTHER_FILES) $(PNG_FILES) 
 	$(LATEX) $< && $(LATEX) $< && $(LATEX) $<
 
-$(BASE_NAME).dvi: $(BASE_NAME).tex
+%.dvi: %.tex
 	$(LATEX) $< && $(LATEX) $< && $(LATEX) $<
 
-$(BASE_NAME).ps: $(BASE_NAME).dvi
-	$(DVIPS) -P pdf -f -t a4 $(BASE_NAME).dvi > $@
+%.ps: %.dvi
+	$(DVIPS) -P pdf -f -t a4 $<.dvi > $@
 
 display: $(BASE_NAME).pdf
 	$(VIEWPDF) $(BASE_NAME).pdf &
