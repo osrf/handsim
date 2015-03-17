@@ -326,7 +326,7 @@ void HaptixControlPlugin::LoadHandControl()
     if (joint)
     {
       // gzdbg << "setting gazebo joint [" << joint->GetName() << "]\n";
-      this->haptixJoints[i] = new HaptixJoint();
+      this->haptixJoints[i] = new HaptixGazeboJointHelper();
       this->haptixJoints[i]->SetJoint(joint);
       this->haptixJoints[i]->jointName = this->jointNames[i];
     }
@@ -386,7 +386,7 @@ void HaptixControlPlugin::LoadHandControl()
     {
       // create a fake joint, append it to the end
       int j1 = this->haptixJoints.size();
-      HaptixJoint *hj = new HaptixJoint();
+      HaptixGazeboJointHelper *hj = new HaptixGazeboJointHelper();
       hj->jointName = this->motorInfos[id].jointName;
       this->haptixJoints.push_back(hj);
       this->motorInfos[id].index = j1;
@@ -401,10 +401,11 @@ void HaptixControlPlugin::LoadHandControl()
       sdf::ElementPtr gearboxSDF = motorSDF->GetElement("gearbox");
       while (gearboxSDF)
       {
-        // get joint, offset and multiplier
+        // get joint, offset and multiplier1 and multiplier2
         sdf::ElementPtr jointSDF = gearboxSDF->GetElement("joint");
         sdf::ElementPtr offsetSDF = gearboxSDF->GetElement("offset");
-        sdf::ElementPtr multiplierSDF = gearboxSDF->GetElement("multiplier");
+        sdf::ElementPtr multiplier1SDF = gearboxSDF->GetElement("multiplier1");
+        sdf::ElementPtr multiplier2SDF = gearboxSDF->GetElement("multiplier2");
         MotorInfo::GearBox g;
 
         // find index in this->haptixJoints that matches
@@ -422,7 +423,8 @@ void HaptixControlPlugin::LoadHandControl()
           gzerr <<  "failed to find joint for gearbox\n";
 
         g.offset = offsetSDF->Get<double>();
-        g.multiplier = multiplierSDF->Get<double>();
+        g.multiplier1 = multiplier1SDF->Get<double>();
+        g.multiplier2 = multiplier2SDF->Get<double>();
         this->motorInfos[id].gearboxes.push_back(g);
 
         gearboxSDF = gearboxSDF->GetNextElement("gearbox");
@@ -473,8 +475,11 @@ void HaptixControlPlugin::LoadHandControl()
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       int n = this->motorInfos[i].gearboxes[j].index;
+      /// \TODO Use multiplier1 for reporting, but this value changes now
+      /// as a function of joint angle. Implement later.
+      /// See issue #60.
       double coupledJointTorque = jointTorque /
-        this->motorInfos[i].gearboxes[j].multiplier;
+        this->motorInfos[i].gearboxes[j].multiplier1;
       this->pids[n].SetCmdMax(coupledJointTorque);
       this->pids[n].SetCmdMin(-coupledJointTorque);
       // gzdbg << "   coupled motor torque [" << n
@@ -909,26 +914,59 @@ void HaptixControlPlugin::GetHandControlFromClient()
     if (this->robotCommand.gain_vel_enabled())
       this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
 
-    // set joint command using coupling specified in <gearbox> params.
+    // Use motor commands to set set joint command
+    // based on coupling specified in <gearbox> params.
+
+    // First, find minimum offset from all gearboxes:
+    double minOffset = 1e16;
+    for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+      minOffset = std::min(minOffset, this->motorInfos[i].gearboxes[j].offset);
+
+    // Next, apply transmission as defined:
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       int n = this->motorInfos[i].gearboxes[j].index;
       // gzdbg << " " << n
       //       << " : " << this->simRobotCommands[n].ref_pos
       //       << " : " << this->robotCommand.ref_pos_enabled() << "\n";
-      if (this->robotCommand.ref_pos_enabled())
+
+      // See transmission specification in issue #60,
+      // If motor angle commanded is less than offset
+      // use multiplier1, otherwise use multiplier2
+      if (this->simRobotCommands[m].ref_pos < minOffset)
       {
-        this->simRobotCommands[n].ref_pos =
-          (this->simRobotCommands[m].ref_pos +
-           this->motorInfos[i].gearboxes[j].offset)
-          * this->motorInfos[i].gearboxes[j].multiplier;
+        if (this->robotCommand.ref_pos_enabled())
+        {
+          this->simRobotCommands[n].ref_pos =
+            this->simRobotCommands[m].ref_pos
+            * this->motorInfos[i].gearboxes[j].multiplier1;
+        }
+        if (this->robotCommand.ref_vel_max_enabled())
+        {
+          this->simRobotCommands[n].ref_vel_max =
+            this->simRobotCommands[m].ref_vel_max
+            / this->motorInfos[i].gearboxes[j].multiplier1;
+        }
       }
-      if (this->robotCommand.ref_vel_max_enabled())
+      else
       {
-        this->simRobotCommands[n].ref_vel_max =
-          this->simRobotCommands[m].ref_vel_max
-          / this->motorInfos[i].gearboxes[j].multiplier;
+        if (this->robotCommand.ref_pos_enabled())
+        {
+          this->simRobotCommands[n].ref_pos =
+            (this->simRobotCommands[m].ref_pos -
+             this->motorInfos[i].gearboxes[j].offset)
+            * this->motorInfos[i].gearboxes[j].multiplier2
+            + this->motorInfos[i].gearboxes[j].offset
+            * this->motorInfos[i].gearboxes[j].multiplier2;
+        }
+        if (this->robotCommand.ref_vel_max_enabled())
+        {
+          this->simRobotCommands[n].ref_vel_max =
+            this->simRobotCommands[m].ref_vel_max
+            / this->motorInfos[i].gearboxes[j].multiplier2;
+        }
       }
+      // set gains
       if (this->robotCommand.gain_pos_enabled())
         this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
       if (this->robotCommand.gain_vel_enabled())

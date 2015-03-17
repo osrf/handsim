@@ -138,22 +138,25 @@
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>index1</joint>
-        <offset>-0.174532925199</offset>
-        <multiplier>0.833333</multiplier>
+        <offset>0.174532925199</offset>
+        <multiplier1>1.0</multiplier1>
+        <multiplier2>0.833333</multiplier2>
       </gearbox>
       <gearbox>
         <joint>index2</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0</multiplier1>
         <!-- 69/(90-10) * (118-10)/90 -->
-        <multiplier>0.71875</multiplier>
+        <multiplier2>0.71875</multiplier2>
       </gearbox>
       <gearbox>
         <joint>index3</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0</multiplier1>
         <!-- 67/(90-10) * (118-10)/90 -->
-        <multiplier>0.69791667</multiplier>
+        <multiplier2>0.69791667</multiplier2>
       </gearbox>
     </motor>
     <motor id="9" name="motor_middle1">
@@ -172,22 +175,25 @@
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>middle1</joint>
-        <offset>-0.174532925199</offset>
-        <multiplier>0.833333</multiplier>
+        <offset>0.174532925199</offset>
+        <multiplier1>1.0</multiplier1>
+        <multiplier2>0.833333</multiplier2>
       </gearbox>
       <gearbox>
         <joint>middle2</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0.0</multiplier1>
         <!-- 69/(90-10) * (118-10)/90 -->
-        <multiplier>0.71875</multiplier>
+        <multiplier2>0.71875</multiplier2>
       </gearbox>
       <gearbox>
         <joint>middle3</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0.0</multiplier1>
         <!-- 67/(90-10) * (118-10)/90 -->
-        <multiplier>0.69791667</multiplier>
+        <multiplier2>0.69791667</multiplier2>
       </gearbox>
     </motor>
     <motor id="10" name="motor_ring1">
@@ -206,27 +212,25 @@
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>ring1</joint>
-        <offset>-0.174532925199</offset>
-        <multiplier>0.833333</multiplier>
-      </gearbox>
-      <gearbox>
-        <joint>ring2</joint>
-        <offset>-0.174532925199</offset>
-        <multiplier>0.8625</multiplier>
+        <offset>0.174532925199</offset>
+        <multiplier1>1.0</multiplier1>
+        <multiplier2>0.833333</multiplier2>
       </gearbox>
       <gearbox>
         <joint>ring2</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0.0</multiplier1>
         <!-- 69/(90-10) * (118-10)/90 -->
-        <multiplier>0.71875</multiplier>
+        <multiplier2>0.71875</multiplier2>
       </gearbox>
       <gearbox>
         <joint>ring3</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0.0</multiplier1>
         <!-- 67/(90-10) * (118-10)/90 -->
-        <multiplier>0.69791667</multiplier>
+        <multiplier2>0.69791667</multiplier2>
       </gearbox>
     </motor>
     <motor id="11" name="motor_pinky0">
@@ -241,7 +245,8 @@
       <gearbox>
         <joint>pinky0</joint>
         <offset>0</offset>
-        <multiplier>1.0</multiplier>
+        <multiplier1>1.0</multiplier1>
+        <multiplier2>1.0</multiplier2>
       </gearbox>
     </motor>
     <motor id="12" name="motor_pinky1">
@@ -260,22 +265,25 @@
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>pinky1</joint>
-        <offset>-0.174532925199</offset>
-        <multiplier>0.833333</multiplier>
+        <offset>0.174532925199</offset>
+        <multiplier1>1.0</multiplier1>
+        <multiplier2>0.833333</multiplier2>
       </gearbox>
       <gearbox>
         <joint>pinky2</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0.0</multiplier1>
         <!-- 69/(90-10) * (118-10)/90 -->
-        <multiplier>0.71875</multiplier>
+        <multiplier2>0.71875</multiplier2>
       </gearbox>
       <gearbox>
         <joint>pinky3</joint>
         <!-- -(0.174532925199 + 0.174532925199 * (118-10)/90) -->
-        <offset>-0.38397243543</offset>
+        <offset>0.38397243543</offset>
+        <multiplier1>0.0</multiplier1>
         <!-- 67/(90-10) * (118-10)/90 -->
-        <multiplier>0.69791667</multiplier>
+        <multiplier2>0.69791667</multiplier2>
       </gearbox>
     </motor>
     <contactSensor id="0">palm0_contact_sensor</contactSensor>

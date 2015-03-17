@@ -313,9 +313,9 @@ namespace gazebo
 
     /// \brief: keep an array of joints, some are valid gazebo joints
     /// others just keep a "fake" state here.
-    private: class HaptixJoint
+    private: class HaptixGazeboJointHelper
     {
-      public: HaptixJoint()
+      public: HaptixGazeboJointHelper()
         {
           this->fakePosition = math::Angle(0.0);
           this->fakeVelocity = 0.0;
@@ -325,10 +325,10 @@ namespace gazebo
           this->realJoint = NULL;
           this->hasJoint = false;
         }
-      public: ~HaptixJoint()
+      public: ~HaptixGazeboJointHelper()
         {
         }
-      public: HaptixJoint &operator=(physics::JointPtr _joint)
+      public: HaptixGazeboJointHelper &operator=(physics::JointPtr _joint)
         {
           this->realJoint = _joint;
           this->hasJoint = true;
@@ -411,7 +411,7 @@ namespace gazebo
       private: math::Angle fakeUpperLimit;
       private: math::Angle fakeLowerLimit;
     };
-    private: std::vector<HaptixJoint*> haptixJoints;
+    private: std::vector<HaptixGazeboJointHelper*> haptixJoints;
 
     /// \brief: class containing info on motors
     private: class MotorInfo
@@ -448,7 +448,8 @@ namespace gazebo
         /// \brief: see example for motorInfos
         public: double offset;
         /// \brief: see example for motorInfos
-        public: double multiplier;
+        public: double multiplier1;
+        public: double multiplier2;
       };
       /// \brief: joint coupling enforced at position/velocity command level.
       public: std::vector<GearBox> gearboxes;
@@ -457,17 +458,38 @@ namespace gazebo
     /// <gearbox> joint coupling is only applied at position/velocity command
     /// level. <gear_ratio> is not used yet.
     ///
-    /// For example, code below means:
-    ///   joint_33 position = (joint_55 position - 0.1) * 1.5
-    ///
-    /// Example:
+    /// Example transmission:
     ///   <motor id="3" name="motor_a">
     ///     <powered_motor_joint>joint_33</powered_motor_joint>
     ///     <gear_ratio>399.0</gear_ratio>
+    ///     <!-- per JHU requirements, transmission is applied in 2 stages,
+    ///          for powered motor joint angle less than offset,
+    ///          multiplier1 is used. For powered motor joint angle
+    ///          greater than minimum offset, multiplier2 is used.
+    ///
+    ///          For example:
+    ///
+    ///            minOffset = min(all gearboxes offsets) = 0.15
+    ///            if (joint_33 < minOffset)
+    ///              joint_55 = 100.0 * joint_33
+    ///              joint_66 = 0.0 * joint_33
+    ///            else
+    ///              joint_55 = 1.5 * (joint_33 - minOffset)
+    ///                       + 100.0 * minOffset
+    ///              joint_66 = 10.5 * (joint_33 - minOffset)
+    ///                       + 0.0 * minOffset
+    ///     -->
     ///     <gearbox>
     ///       <joint>joint_55</joint>
-    ///       <offset>0.1</offset>
-    ///       <multiplier>1.5</multiplier>
+    ///       <offset>0.15</offset>
+    ///       <multiplier1>100.0</multiplier1>
+    ///       <multiplier2>1.5</multiplier2>
+    ///     </gearbox>
+    ///     <gearbox>
+    ///       <joint>joint_66</joint>
+    ///       <offset>0.25</offset>
+    ///       <multiplier1>0.0</multiplier1>
+    ///       <multiplier2>10.5</multiplier2>
     ///     </gearbox>
     ///   </motor>
     private: std::map<unsigned int, MotorInfo> motorInfos;
