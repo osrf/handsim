@@ -529,18 +529,18 @@ namespace gazebo
     private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
 
     /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
     /// \brief Callback on message to toggle viewpoint rotations due to mocap
     /// \param[in] _msg Message sent by publisher
     private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
 
     /// \brief Pose of the optitrack arm tracker in the world frame
-    private: gazebo::math::Pose optitrackArm;
+    //private: gazebo::math::Pose optitrackArm;
 
     /// \brief Pose offset between initial Optitrack arm and desired initial
     /// pose of arm
-    private: gazebo::math::Pose optitrackArmOffset;
+    private: gazebo::math::Pose gazeboToScreen;
 
     /// \brief Pose of the Optitrack in Gazebo frame
     private: gazebo::math::Pose gazeboToOptitrack;
@@ -562,6 +562,9 @@ namespace gazebo
 
     /// \brief Mutex to lock viewpointRotationsEnabled
     private: std::mutex viewpointRotationsMutex;
+
+    /// \brief Mutex to lock optitrack monitor data
+    private: std::mutex optitrackMonitorMutex;
 
     /// \brief True if motion capture rotations the head, false otherwise.
     private: bool viewpointRotationsEnabled;

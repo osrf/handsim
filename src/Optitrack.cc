@@ -112,7 +112,7 @@ void Optitrack::StartReception()
                     ("~/optitrack/"+headTrackerName);
   this->armPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+armTrackerName);
-  this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+  this->originPub = this->gzNode->Advertise<gazebo::msgs::PointCloud>
                     ("~/optitrack/"+originTrackerName);
 
   // Publisher for sending a pulse to HaptixGUIPlugin
@@ -167,16 +167,25 @@ void Optitrack::RunReceptionTask()
       {
         this->armPub->Publish(gazebo::msgs::Convert(it->second));
       }
-      else if (it->first.compare(originTrackerName) == 0)
-      {
-        this->originPub->Publish(gazebo::msgs::Convert(it->second));
-      }
       else
       {
-        if (iterations % 1000 == 0)
+        if (iterations % 1000 == 0 && it->first != originTrackerName)
           gzwarn << "Model name " << it->first << " not found!" << std::endl;
       }
     }
+
+    gazebo::msgs::PointCloud pc;
+    for (unsigned int i = 0; i < this->originMarkers.size(); i++)
+    {
+      gazebo::msgs::Vector3d *pt = pc.add_points();
+      pt->set_x(this->originMarkers[i].x);
+      pt->set_y(this->originMarkers[i].y);
+      pt->set_z(this->originMarkers[i].z);
+    }
+    if (originMarkers.size() > 0)
+      this->originPub->Publish(pc);
+
+    this->originMarkers.clear();
 
     this->lastModelMap.clear();
     iterations++;
@@ -224,15 +233,15 @@ void Optitrack::Unpack(char *pData)
         gazebo::math::Vector3(x, y, z),
         gazebo::math::Quaternion(qw, qx, qy, qz));
 
-      // Debug output.
-      /*for (const auto &marker : body.second.markers)
+      for (const auto &marker : body.second.markers)
       {
         x = marker.at(0);
         y = marker.at(1);
         z = marker.at(2);
-        std::cout << "\tMarker " << " : [x="
-               << x << ",y=" << y << ",z=" << z << "]" << std::endl;
-      }*/
+        /*std::cout << "\tMarker " << " : [x="
+               << x << ",y=" << y << ",z=" << z << "]" << std::endl;*/
+        this->originMarkers.push_back(gazebo::math::Vector3(x, y, z));
+      }
     }
   }
   else if (MessageID == 7)      // FRAME OF MOCAP DATA packet
@@ -269,7 +278,14 @@ void Optitrack::Unpack(char *pData)
         float z = 0; memcpy(&z, ptr, 4); ptr += 4;
         output << "\tMarker " << j << " : [x="
                << x << ",y=" << y << ",z=" << z << "]" << std::endl;
-        markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
+        if (szName == originTrackerName)
+        {
+          originMarkers.push_back(gazebo::math::Vector3(x, y, z));
+        }
+        else
+        {
+          markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
+        }
       }
     }
 

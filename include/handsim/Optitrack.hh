@@ -142,6 +142,8 @@ namespace haptix
       /// \brief Store names and poses of tracker models to be published
       private: ModelPoses lastModelMap;
 
+      private: std::vector<gazebo::math::Vector3> originMarkers;
+
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
     };
