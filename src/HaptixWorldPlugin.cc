@@ -121,14 +121,13 @@ void HaptixWorldPlugin::Reset()
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixSimInfoCallback(
-      const std::string &/*_service*/,
+void HaptixWorldPlugin::HaptixSimInfoCallback( const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result)
 {
   _rep.clear();
 
-  // TODO
+  // TODO: add info
   _result = true;
 }
 
@@ -139,7 +138,7 @@ void HaptixWorldPlugin::HaptixCameraCallback(
       haptix::comm::msgs::hxCamera &_rep, bool &_result)
 {
   _rep.clear();
-  UserCameraPtr camera = gui::get_active_camera;
+  UserCameraPtr camera = gui::get_active_camera();
   if (!camera)
   {
     _result = false;
@@ -148,7 +147,6 @@ void HaptixWorldPlugin::HaptixCameraCallback(
   {
     gazebo::math::Pose pose = camera->GetWorldPose();
     hxTransform transform;
-    transform.
     _rep.set_allocated_transform();
     _result = true;
   }

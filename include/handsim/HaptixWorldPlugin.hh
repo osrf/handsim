@@ -67,6 +67,8 @@ namespace gazebo
     /// \brief Reset the plugin.
     public: virtual void Reset();
 
+    ///////////// Callback functions /////////////
+
     private: void HaptixSimInfoCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
@@ -176,6 +178,43 @@ namespace gazebo
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
+
+    ///////////// Utility functions /////////////
+
+    /// \brief Convert from hxTransform to Gazebo Pose
+    /// \param[in] _in hxTransform to transform
+    /// \param[out] _out Gazebo pose output
+    /// \return True if the conversion succeeded.
+    private: bool ConvertTransform(const haptix::comm::hxTransform &_in,
+        gazebo::math::Pose &_out) const;
+
+    /// \brief Convert from Gazebo Pose to hxTransform
+    /// \param[in] _in hxTransform to transform
+    /// \param[out] _out Gazebo pose output
+    /// \return True if the conversion succeeded.
+    private: bool ConvertTransform(const gazebo::math::Pose &_in,
+        haptix::comm::hxTransform &_out) const;
+
+    /// \brief Convert from hxVector3 to Gazebo Vector3
+    /// \param[in] _in hxVector3 to transform
+    /// \param[out] _out Gazebo Vector3 output
+    /// \return True if the conversion succeeded.
+    private: bool ConvertVector(const haptix::comm::hxVector3 &_in,
+        gazebo::math::Vector3 &_out) const;
+
+    /// \brief Convert from Gazebo Vector3 to hxVector3
+    /// \param[in] _in Gazebo Vector3 to transform
+    /// \param[out] _out hxVector3 output
+    /// \return True if the conversion succeeded.
+    private: bool ConvertVector(const gazebo::math::Vector3 &_in,
+        haptix::comm::hxVector3 &_out) const;
+
+    /// \brief Convert from hxQuaternion to Gazebo Quaternion
+
+    /// \brief Convert from Gazebo Quaternion to hxQuaternion
+
+
+    ///////////// Member variables /////////////
 
     /// \brief World pointer.
     protected: physics::WorldPtr world;
