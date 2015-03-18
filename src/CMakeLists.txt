@@ -47,6 +47,9 @@ add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxRobot.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)
 
+add_library(HaptixWorldPlugin SHARED HaptixWorldPlugin.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS})
+
 # additional library dependencies
 add_dependencies(HaptixControlPlugin
   gazebo_msgs
@@ -62,11 +65,16 @@ target_link_libraries(HaptixGUIPlugin ${GAZEBO_LIBRARIES}
   ${QT_LIBRARIES} ${PROTOBUF_LIBRARIES} ${IGNITION-TRANSPORT_LIBRARIES}
   haptix-comm HaptixTracking)
 
+target_link_libraries(HaptixWorldPlugin
+  ${GAZEBO_LIBRARIES}
+  ${HAPTIX_COMM_LIBRARIES}
+  ${IGNITION-TRANSPORT_LIBRARIES})
+
 # below adds -std=c++11, needed to compile against ign-transport
-set_target_properties(HaptixControlPlugin HaptixGUIPlugin PROPERTIES
+set_target_properties(HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin PROPERTIES
   COMPILE_FLAGS ${IGNITION-TRANSPORT_CXX_FLAGS})
 
-install (TARGETS HaptixControlPlugin HaptixGUIPlugin DESTINATION
+install (TARGETS HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin DESTINATION
   ${GAZEBO_PLUGIN_PATH}/)
 
 handsim_build_tests(${gtest_sources})
