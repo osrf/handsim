@@ -5,48 +5,6 @@
       <shadows>0</shadows>
     </scene>
 
-    <model name="user_camera_visual"> 
-      <static>true</static>
-      <link name="square">
-      <visual name="visual">
-        <geometry>
-          <box>
-            <size>0.05 0.05 0.05</size>
-          </box>
-        </geometry>
-        <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
-        </material>
-      </visual>
- 
-      </link>
-     
-    </model> 
-
-    <model name="marker_visual"> 
-      <static>true</static>
-      <link name="square">
-      <visual name="visual">
-        <geometry>
-          <box>
-            <size>0.05 0.05 0.05</size>
-          </box>
-        </geometry>
-        <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Red</name>
-          </script>
-        </material>
-      </visual>
- 
-      </link>
-     
-    </model> 
-
     <gui>
       <camera name="user_camera">
         <pose>0 -0.6 1.3  0 0.4 1.57</pose>
