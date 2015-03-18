@@ -158,8 +158,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
-  // translation from camera to marker in camera frame
-  this->cameraToOptitrackHead = math::Pose(-0.02, -0.025, 0.125, -M_PI/2, -M_PI/2, 0);
+  // transformation from camera to marker in camera frame
+  this->cameraToOptitrackHead = math::Pose(-0.02, -0.025, 0.125,
+                                           -M_PI/2, -M_PI/2, 0);
 
   this->viewpointRotationsSub = this->gazeboNode->Subscribe(
       "~/motion_tracking/viewpoint_rotations",

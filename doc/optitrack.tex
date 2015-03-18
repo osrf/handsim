@@ -3,58 +3,45 @@
 \begin{document}
 
 \section{Notation}
-\subsection{Inputs}
+$M_O$: Marker pose in Optitrack frame.
 
-$M_{ot}$: The raw pose of the head marker in the Optitrack frame at time $t$.
+$C_G$: Camera pose in Gazebo frame. Represented in code by variable userCameraPose.
 
-$M_c$: The marker pose in the camera frame. Also the offset from the camera to the marker expressed in the camera frame. Note that camera frame = Gazebo frame with a translational offset.
+$M_C$: Marker pose in camera frame. Represented in code by cameraToOptitrackHead.
 
-$C_g$: The initial user camera pose in Gazebo coordinates.
+$M_G$: Marker pose in Gazebo frame.
 
-$R^o_g$: Rotation component from Gazebo frame to Optitrack frame.
+$O_G$: Gazebo to Optitrack transform. Represented in code by variable optitrackHeadOffset.
 
-\subsection{Calculated variables}
+All pose arithmetic done in the convention of Gazebo pose math, where $A$ is
+the transform from $O$ to $P$ specified in frame $O$ (denoted $P_O$) and $B$
+is the transform from $P$ to $Q$ specified in frame $P$ ($Q_P$) then
 
-$M_{oi}$: The initial pose of the marker in the Optitrack frame. "Initial" means the state of the marker pose right before the timestep when the user unpauses motion capture.
-
-$M_{od}$: The desired pose of the marker in the Optitrack frame. This is the raw marker pose while motion capture is enabled.
-
-$M_{gi}$: The initial pose of the marker in the Gazebo frame.
-
-$M_{gd}$: The desired pose of the marker in the Gazebo frame.
-
-$C_{oi}$: The initial pose of the camera in the Optitrack frame.
-
-$C_{od}$: The desired pose of the camera in the Optitrack frame.
-
-$C_{gi}$: The initial pose of the camera in the Gazebo frame. Note that we want $C_g = C_{gi}$.
-
-$C_{gd}$: The desired pose of the camera in the Gazebo frame.
+\begin{equation}
+B + A = Q_O
+\end{equation}
 
 \section{Calculations}
 \subsection{Paused}
 Calculations at time $t$ when motion tracking is paused:
 
-\[M_{oi} = M_{ot}\]
-\[C_{oi} = M_{ot} - (M_c + R^o_g)\]
-
-We can rotate $C_{oi}$ into the Gazebo frame, but we still don't know what the translation is to enforce that $C_{gi}$ is the input user camera pose.
-
-Calculate $T^o_g$, the translation from Gazebo to Optitrack frame, and store it.
-
-\[C_{gi} - C_{oi} = T^o_g\]
-
-Denote the combined pose of rotation $R^o_g$ and translation $T^o_g$ as $G_o$, which can be thought of the pose of the Gazebo origin in the Optitrack frame. More intuitive notation might be $O_g$, the pose of the Optitrack marker in the Gazebo frame.
+\begin{equation}
+M_G = M_C + C_G
+\end{equation}
+\begin{equation}
+O_G = O_M + M_G = -M_O + M_G
+\end{equation}
 
 \subsection{Running}
 Calculations at time $t$ when motion tracking is running:
 
-$R_{\delta}$: pure rotational difference between $M_{gd}$ and $M_{gi}$.
+\begin{equation}
+M_G = M_O + O_G
+\end{equation}
+\begin{equation}
+C_G = C_M + M_G = -M_C + M_G
+\end{equation}
 
-\[M_{od} = M_{ot}\]
-\[C_{od} = M_{ot} - (M_c + R_{\delta} + R^o_g)\]
-\[C_{gd} = C_{od} + O_g\]
-
-To implement the desired viewpoint effect in Gazebo, set the rotational component of the user camera to the rotational component of $C_{gi}$, and set the translational component of the user camera to the translational component of $C_{gd}$.
+Publish $C_G$ as the new pose of the Gazebo user camera.
 
 \end{document}
