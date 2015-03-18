@@ -1386,6 +1386,21 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
+  // The pose transformation math traverses the following transform tree.
+
+  // G ---------> O --------> M ---> C
+  // | \          \__________^ ^     ^
+  // |  \______________________|     |
+  // \_______________________________/
+
+  // G: Gazebo origin
+  // O: Optitrack origin
+  // M: Head marker
+  // C: Gazebo camera
+  // We will denote the transform from B to A in B's frame as A_B
+
+  // rawMarkerPose is the pose of the marker in the Optitrack frame: M_O
+
   gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
   rawMarkerPose.pos = this->headPosFilter.Process(rawMarkerPose.pos);
   rawMarkerPose.rot = this->headOriFilter.Process(rawMarkerPose.rot);
@@ -1399,6 +1414,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
+      // gazeboToOptitrack is transform from gazebo to Optitrack: O_G
+      // O_G = O_M + M_C + C_G
       this->gazeboToOptitrack = -rawMarkerPose
           + this->cameraToOptitrackHeadMarker + this->userCameraPose;
       this->headOffsetInitialized = true;
@@ -1408,6 +1425,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
+      // C_G = C_M + M_O + O_G
       gazebo::math::Pose targetCameraPose = -this->cameraToOptitrackHeadMarker
           + rawMarkerPose + this->gazeboToOptitrack;
       if (!this->viewpointRotationsEnabled)
