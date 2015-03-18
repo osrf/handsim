@@ -271,10 +271,8 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    /// \brief Transform from camera frame to Optitrack head sensor.
-    private: math::Pose cameraToOptitrackHead;
-
-    private: math::Quaternion initialRotation;
+    /// \brief Transform from camera frame to Optitrack head marker.
+    private: math::Pose cameraToOptitrackHeadMarker;
 
     /// \brief Transform from hydra sensor orientation to base link frame.
     private: math::Pose baseLinkToHydraSensor;
@@ -537,9 +535,6 @@ namespace gazebo
     /// \param[in] _msg Message sent by publisher
     private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
 
-    /// \brief Pose of the optitrack head tracker in the world frame
-    private: gazebo::math::Pose optitrackHead;
-
     /// \brief Pose of the optitrack arm tracker in the world frame
     private: gazebo::math::Pose optitrackArm;
 
@@ -547,9 +542,8 @@ namespace gazebo
     /// pose of arm
     private: gazebo::math::Pose optitrackArmOffset;
 
-    /// \brief Pose offset between initial Optitrack head and desired initial
-    /// viewpoint pose
-    private: gazebo::math::Pose optitrackHeadOffset;
+    /// \brief Pose of the Optitrack in Gazebo frame
+    private: gazebo::math::Pose gazeboToOptitrack;
 
     /// \brief Orthonormal transformation between Optitrack arm and world axes
     private: gazebo::math::Pose optitrackWorldArmRot;
