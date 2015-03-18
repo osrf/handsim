@@ -133,9 +133,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // for tracking polhemus setup, where is the source in the world frame
   this->polhemusSourceModel = this->world->GetModel("polhemus_source");
 
-  this->cameraVisual = this->world->GetModel("user_camera_visual");
-  this->markerVisual = this->world->GetModel("marker_visual");
-
   if (!this->polhemusSourceModel)
   {
     /// \TODO: make this a sdf param for the plugin?

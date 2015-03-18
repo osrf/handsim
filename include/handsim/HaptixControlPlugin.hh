@@ -574,12 +574,6 @@ namespace gazebo
 
     /// \brief Rate at which this plugin should update
     private: double updateRate;
-
-    /// \brief The initial rotation of the optitrack head marker
-    private: math::Quaternion initialOptitrackRot;
-
-    private: physics::ModelPtr cameraVisual;
-    private: physics::ModelPtr markerVisual;
   };
 
 /// \}
