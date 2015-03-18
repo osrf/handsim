@@ -229,11 +229,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackArm = gazebo::math::Pose::Zero;
   this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
 
-  this->optitrackWorldHeadRot = gazebo::math::Pose(
-                                gazebo::math::Vector3(0, 0, 0),
-                                gazebo::math::Quaternion(M_PI/2, 0, M_PI/2));
-
-
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
                                gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
@@ -1401,10 +1396,6 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
       std::try_to_lock);
   pose.rot = headRotation;
-  /*else
-  {
-    pose.rot = this->optitrackWorldHeadRot.rot;
-  }*/
 
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
@@ -1413,20 +1404,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
-      if (this->viewpointRotationsEnabled)
-      {
-        this->optitrackHeadOffset = -pose + this->userCameraPose;
-      }
-      else
-      {
-        /*this->initialOptitrackRot = headRotation;
-        this->optitrackHeadOffset = -pose + (this->cameraToOptitrackHead +
-            this->userCameraPose);
-        this->optitrackHeadOffset = this->userCameraPose -
-            (-this->cameraToOptitrackHead + pose);*/
-        // Transform from Optitrack to Gazebo
-        this->optitrackHeadOffset = -pose + this->cameraToOptitrackHead + this->userCameraPose;
-      }
+      this->optitrackHeadOffset = -pose + this->cameraToOptitrackHead
+          + this->userCameraPose;
       this->headOffsetInitialized = true;
     }
   }
@@ -1434,27 +1413,15 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
-      if (this->viewpointRotationsEnabled)
+      this->optitrackHead = -this->cameraToOptitrackHead + pose
+          + this->optitrackHeadOffset;
+      if (!this->viewpointRotationsEnabled)
       {
-        this->optitrackHead = pose + this->optitrackHeadOffset;
-      }
-      else
-      {
-        /*gazebo::math::Pose cameraToOptitrackHeadRotated;
-        cameraToOptitrackHeadRotated.pos =
-            (headRotation*this->initialOptitrackRot.GetInverse()).RotateVector(
-                this->cameraToOptitrackHead.pos);
-
-        this->optitrackHead = pose +
-            (this->optitrackHeadOffset-cameraToOptitrackHeadRotated);*/
-        this->optitrackHead = -this->cameraToOptitrackHead + pose + this->optitrackHeadOffset;
         this->optitrackHead.rot = this->userCameraPose.rot;
       }
     }
     gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
     this->viewpointJoyPub->Publish(this->joyMsg);
-    //this->cameraVisual->SetLinkWorldPose(this->optitrackHead, "square");
-    //this->markerVisual->SetLinkWorldPose(pose+this->optitrackHeadOffset, "square");
   }
 }
 
