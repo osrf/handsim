@@ -62,7 +62,7 @@
     <motor id="1" name="motor_wristx">
       <powered_motor_joint>wristx</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>0.00955</motor_torque>
+      <motor_torque>0.003</motor_torque>
       <gear_ratio>180.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
@@ -133,7 +133,7 @@
       <motor_torque>3.82e-3</motor_torque>
       <motor_torque>2.54e-3</motor_torque>
       -->
-      <motor_torque>2.0e-3</motor_torque>
+      <motor_torque>1.5e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -629,7 +629,7 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>2</damping>
+        <damping>1.0</damping>
         <friction>0</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
