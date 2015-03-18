@@ -159,9 +159,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // translation from camera to marker in camera frame
-  //this->cameraToOptitrackHead = math::Pose(-0.09, -0.53, 0.25, 0, 0, 0);
-  //this->cameraToOptitrackHead = math::Pose(0.125, -0.025, 0.02, 0, 0, 0);
-  this->cameraToOptitrackHead = math::Pose(0.02, -0.025, -0.125, 0, 0, 0);
+  this->cameraToOptitrackHead = math::Pose(-0.02, -0.025, 0.125, -M_PI/2, -M_PI/2, 0);
 
   this->viewpointRotationsSub = this->gazeboNode->Subscribe(
       "~/motion_tracking/viewpoint_rotations",
@@ -1402,10 +1400,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   headRotation = this->headOriFilter.Process(headRotation);
   std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
       std::try_to_lock);
-  if (this->viewpointRotationsEnabled)
-  {
-    pose.rot = headRotation;
-  }
+  pose.rot = headRotation;
   /*else
   {
     pose.rot = this->optitrackWorldHeadRot.rot;
@@ -1426,9 +1421,11 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
       {
         /*this->initialOptitrackRot = headRotation;
         this->optitrackHeadOffset = -pose + (this->cameraToOptitrackHead +
-            this->userCameraPose);*/
+            this->userCameraPose);
         this->optitrackHeadOffset = this->userCameraPose -
-            (-this->cameraToOptitrackHead + pose);
+            (-this->cameraToOptitrackHead + pose);*/
+        // Transform from Optitrack to Gazebo
+        this->optitrackHeadOffset = -pose + this->cameraToOptitrackHead + this->userCameraPose;
       }
       this->headOffsetInitialized = true;
     }
@@ -1450,9 +1447,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 
         this->optitrackHead = pose +
             (this->optitrackHeadOffset-cameraToOptitrackHeadRotated);*/
-        this->optitrackHead = pose - this->cameraToOptitrackHead
-            + this->optitrackHeadOffset;
-
+        this->optitrackHead = -this->cameraToOptitrackHead + pose + this->optitrackHeadOffset;
         this->optitrackHead.rot = this->userCameraPose.rot;
       }
     }
