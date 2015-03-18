@@ -3,15 +3,17 @@
 \begin{document}
 
 \section{Notation}
-$M_O$: Marker pose in Optitrack frame.
+\begin{itemize}
+\item $M_O$: Marker pose in Optitrack frame. Raw sensor data from the Optitrack.
 
-$C_G$: Camera pose in Gazebo frame. Represented in code by variable userCameraPose.
+\item $C_G$: Camera pose in Gazebo frame. Represented by variable userCameraPose.
 
-$M_C$: Marker pose in camera frame. Represented in code by cameraToOptitrackHead.
+\item $M_C$: Marker pose in camera frame. Represented by cameraToOptitrackHead.
 
-$M_G$: Marker pose in Gazebo frame.
+\item $M_G$: Marker pose in Gazebo frame.
 
-$O_G$: Gazebo to Optitrack transform. Represented in code by variable optitrackHeadOffset.
+\item $O_G$: Gazebo to Optitrack transform. Represented by variable optitrackHeadOffset.
+\end{itemize}
 
 All pose arithmetic done in the convention of Gazebo pose math, where $A$ is
 the transform from $O$ to $P$ specified in frame $O$ (denoted $P_O$) and $B$
