@@ -38,6 +38,7 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
   this->updateRate = 50.0;
+  this->viewpointRotationsEnabled = false;
 
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
@@ -131,6 +132,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // get polhemus_source model location
   // for tracking polhemus setup, where is the source in the world frame
   this->polhemusSourceModel = this->world->GetModel("polhemus_source");
+
   if (!this->polhemusSourceModel)
   {
     /// \TODO: make this a sdf param for the plugin?
@@ -152,6 +154,14 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // 10cm to the right of the sensor is roughly where the eyes are
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
+
+  // transformation from camera to marker in camera frame
+  this->cameraToOptitrackHeadMarker = math::Pose(-0.02, -0.025, 0.125,
+                                           -M_PI/2, -M_PI/2, 0);
+
+  this->viewpointRotationsSub = this->gazeboNode->Subscribe(
+      "~/motion_tracking/viewpoint_rotations",
+          &HaptixControlPlugin::OnToggleViewpointRotations, this);
 
   // hydra sensor offset
   this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
@@ -213,21 +223,15 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_erp", 0, 0.0);
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
-  this->optitrackHead = gazebo::math::Pose::Zero;
   this->optitrackArm = gazebo::math::Pose::Zero;
   this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
-
-  this->optitrackWorldHeadRot = gazebo::math::Pose(
-                                gazebo::math::Vector3(0, 0, 0),
-                                gazebo::math::Quaternion(M_PI/2, 0, M_PI/2));
-
 
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
                                gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
 
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
-  this->optitrackHeadOffset = gazebo::math::Pose::Zero;
+  this->gazeboToOptitrack = gazebo::math::Pose::Zero;
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
 
@@ -1382,28 +1386,54 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
-  gazebo::math::Pose pose = this->optitrackWorldHeadRot +
-      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
-  pose.pos = this->headPosFilter.Process(pose.pos);
-  pose.rot = this->headOriFilter.Process(pose.rot);
+  /// The pose transformation math traverses the following transform tree.
+
+  /// G ---------> O --------> M ---> C
+  /// | \          \__________^ ^     ^
+  /// |  \______________________|     |
+  /// \_______________________________/
+
+  /// G: Gazebo origin
+  /// O: Optitrack origin
+  /// M: Head marker
+  /// C: Gazebo camera
+  /// We will denote the transform from B to A in B's frame as A_B
+
+  /// rawMarkerPose is the pose of the marker in the Optitrack frame: M_O
+  gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
+  rawMarkerPose.pos = this->headPosFilter.Process(rawMarkerPose.pos);
+  rawMarkerPose.rot = this->headOriFilter.Process(rawMarkerPose.rot);
+  std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
+      std::try_to_lock);
 
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
 
-  this->optitrackHead = pose + this->optitrackHeadOffset;
-
-  // If we're paused, or if we haven't calculated an offset yet...
+  /// If we're paused, or if we haven't calculated an offset yet...
   if (this->pauseTracking || !this->headOffsetInitialized)
   {
     if (this->userCameraPoseValid)
     {
-      this->optitrackHeadOffset = -pose + this->userCameraPose;
+      /// gazeboToOptitrack is transform from gazebo to Optitrack: O_G
+      /// O_G = O_M + M_C + C_G
+      this->gazeboToOptitrack = -rawMarkerPose
+          + this->cameraToOptitrackHeadMarker + this->userCameraPose;
       this->headOffsetInitialized = true;
     }
   }
   else
   {
-    gazebo::msgs::Set(&this->joyMsg, this->optitrackHead);
-    this->viewpointJoyPub->Publish(this->joyMsg);
+    if (this->userCameraPoseValid)
+    {
+      /// C_G = C_M + M_O + O_G
+      gazebo::math::Pose targetCameraPose = -this->cameraToOptitrackHeadMarker
+          + rawMarkerPose + this->gazeboToOptitrack;
+      if (!this->viewpointRotationsEnabled)
+      {
+        targetCameraPose.rot = this->userCameraPose.rot;
+      }
+      gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
+      this->viewpointJoyPub->Publish(this->joyMsg);
+    }
   }
 }
 
@@ -1413,7 +1443,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
 
   gazebo::math::Pose pose = this->optitrackWorldArmRot +
-      gazebo::msgs::Convert(*_msg) - this->monitorOptitrackFrame;
+      gazebo::msgs::Convert(*_msg);
 
   this->optitrackArm = pose + this->optitrackArmOffset;
 
@@ -1433,6 +1463,14 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPosePtr &_msg)
 {
   this->monitorOptitrackFrame = gazebo::msgs::Convert(*_msg);
+}
+
+//////////////////////////////////////////////////
+void HaptixControlPlugin::OnToggleViewpointRotations(ConstIntPtr &_msg)
+{
+  std::unique_lock<std::mutex> lock(this->viewpointRotationsMutex,
+      std::try_to_lock);
+  this->viewpointRotationsEnabled = _msg->data() == 0 ? false : true;
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)

@@ -271,6 +271,9 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
+    /// \brief Transform from camera frame to Optitrack head marker.
+    private: math::Pose cameraToOptitrackHeadMarker;
+
     /// \brief Transform from hydra sensor orientation to base link frame.
     private: math::Pose baseLinkToHydraSensor;
 
@@ -528,8 +531,9 @@ namespace gazebo
     /// \brief Callback on Optitrack monitor tracker update
     private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
 
-    /// \brief Pose of the optitrack head tracker in the world frame
-    private: gazebo::math::Pose optitrackHead;
+    /// \brief Callback on message to toggle viewpoint rotations due to mocap
+    /// \param[in] _msg Message sent by publisher
+    private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
 
     /// \brief Pose of the optitrack arm tracker in the world frame
     private: gazebo::math::Pose optitrackArm;
@@ -538,12 +542,8 @@ namespace gazebo
     /// pose of arm
     private: gazebo::math::Pose optitrackArmOffset;
 
-    /// \brief Pose offset between initial Optitrack head and desired initial
-    /// viewpoint pose
-    private: gazebo::math::Pose optitrackHeadOffset;
-
-    /// \brief Orthonormal transformation between Optitrack head and world axes
-    private: gazebo::math::Pose optitrackWorldHeadRot;
+    /// \brief Pose of the Optitrack in Gazebo frame
+    private: gazebo::math::Pose gazeboToOptitrack;
 
     /// \brief Orthonormal transformation between Optitrack arm and world axes
     private: gazebo::math::Pose optitrackWorldArmRot;
@@ -556,6 +556,15 @@ namespace gazebo
 
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
+
+    /// \brief Receives messages to toggle viewpoint rotations.
+    private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
+
+    /// \brief Mutex to lock viewpointRotationsEnabled
+    private: std::mutex viewpointRotationsMutex;
+
+    /// \brief True if motion capture rotations the head, false otherwise.
+    private: bool viewpointRotationsEnabled;
 
     /// \brief True if optitrackArmOffset has been initialized
     private: bool armOffsetInitialized;
