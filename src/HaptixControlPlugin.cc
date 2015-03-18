@@ -228,7 +228,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
+                               gazebo::math::Quaternion(0, 0, 0));
 
   this->gazeboToScreen = gazebo::math::Pose::Zero;
   this->gazeboToOptitrack = gazebo::math::Pose::Zero;
@@ -1452,12 +1452,12 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
     //this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
-    this->gazeboToScreen = -(rawMarkerPose + this->monitorOptitrackFrame) + this->targetBaseLinkPose;
+    this->gazeboToScreen = -rawMarkerPose + this->optitrackWorldArmRot + this->monitorOptitrackFrame + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
   }
   else
   {
-    this->targetBaseLinkPose = rawMarkerPose + this->monitorOptitrackFrame
+    this->targetBaseLinkPose = -(this->optitrackWorldArmRot + this->monitorOptitrackFrame) + rawMarkerPose
         + this->gazeboToScreen;
   }
 }
@@ -1492,18 +1492,17 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
     return;
   }
 
-  // The rotational matrix from Gazebo/monitor frame to Optitrack can be
+  // The rotational matrix from monitor frame to Optitrack can be
   // represented with gx, gy, gz as its column vectors
 
   // Calculate RPY angles from rotation matrix:
   // http://planning.cs.uiuc.edu/node103.html
 
-  float alpha = atan2(gx[1], gx[0]);
-  float beta = atan2(-gx[2], sqrt(pow(gy[2], 2) + pow(gz[2], 2)));
-  float gamma = atan2(gy[2], gz[2]);
+  double alpha = atan2(gx[1], gx[0]);
+  double beta = atan2(-gx[2], sqrt(pow(gy[2], 2) + pow(gz[2], 2)));
+  double gamma = atan2(gy[2], gz[2]);
 
   gazebo::math::Quaternion monitorRot(gamma, beta, alpha);
-
   this->monitorOptitrackFrame.pos = points[1];
   this->monitorOptitrackFrame.rot = monitorRot;
 }
