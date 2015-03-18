@@ -1389,9 +1389,9 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
-  gazebo::math::Pose pose = gazebo::msgs::Convert(*_msg);
-  pose.pos = this->headPosFilter.Process(pose.pos);
-  pose.rot = this->headOriFilter.Process(pose.rot);
+  gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
+  rawMarkerPose.pos = this->headPosFilter.Process(rawMarkerPose.pos);
+  rawMarkerPose.rot = this->headOriFilter.Process(rawMarkerPose.rot);
   std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
       std::try_to_lock);
 
@@ -1402,8 +1402,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     if (this->userCameraPoseValid)
     {
-      this->gazeboToOptitrack = -pose + this->cameraToOptitrackHeadMarker
-          + this->userCameraPose;
+      this->gazeboToOptitrack = -rawMarkerPose
+          + this->cameraToOptitrackHeadMarker + this->userCameraPose;
       this->headOffsetInitialized = true;
     }
   }
@@ -1412,7 +1412,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     if (this->userCameraPoseValid)
     {
       gazebo::math::Pose targetCameraPose = -this->cameraToOptitrackHeadMarker
-          + pose + this->gazeboToOptitrack;
+          + rawMarkerPose + this->gazeboToOptitrack;
       if (!this->viewpointRotationsEnabled)
       {
         targetCameraPose.rot = this->userCameraPose.rot;
