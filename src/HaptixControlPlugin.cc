@@ -1295,13 +1295,21 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     // compute the motor limits from joint limits
     double jointMin = this->haptixJoints[m]->GetLowerLimit(0).Radian();
     double jointMax = this->haptixJoints[m]->GetUpperLimit(0).Radian();
-    /// \TODO: flip if gearRatio is negative
     double motorMin = jointMin * this->motorInfos[i].gearRatio
       - this->motorInfos[i].encoderOffset;
     double motorMax = jointMax * this->motorInfos[i].gearRatio
       - this->motorInfos[i].encoderOffset;
-    motor->set_minimum(motorMin);
-    motor->set_maximum(motorMax);
+    if (this->motorInfos[i].gearRatio < 0)
+    {
+      // flip if gearRatio is negative
+      motor->set_maximum(motorMin);
+      motor->set_minimum(motorMax);
+    }
+    else
+    {
+      motor->set_minimum(motorMin);
+      motor->set_maximum(motorMax);
+    }
     // gzerr << motorMin << " : " << motorMax << "\n";
   }
 
