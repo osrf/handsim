@@ -1,5 +1,5 @@
 <sdf version='1.5'>
-<model name="mpl_haptix_right_forearm">
+<model name="mpl_haptix_left_forearm">
   <plugin filename="libHaptixControlPlugin.so" name="HaptixControlPlugin">
     <update_rate>50</update_rate>
     <spacenav_control_point_offset>0 0.4 0 0 0 3.1416</spacenav_control_point_offset>
@@ -240,7 +240,7 @@
     <child>forearm</child>
     <parent>world</parent>
     <axis>
-      <xyz>0 0 1.0</xyz>
+      <xyz>0 0 -1.0</xyz>
       <limit>
         <lower>0</lower>
         <upper>0</upper>
@@ -269,9 +269,9 @@
     </physics>
   </joint>
   <link name='forearm'>
-    <pose>0.00660504 -0.294573 0.119123 -1.21334e-13 2.77556e-17 -0.0115373</pose>
+    <pose>0.00660504 0.294573 0.119123 1.21334e-13 2.77556e-17 0.0115373</pose>
     <inertial>
-      <pose>-0.000589428 -0.0733139 0.0215526 0 0 0</pose>
+      <pose>-0.000589428 0.0733139 0.0215526 0 0 0</pose>
       <mass>0.0997005</mass>
       <inertia>
         <ixx>0.0004998</ixx>
@@ -308,7 +308,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.10745 0.016 1.5707 0 0</pose>
+      <pose>0 0.10745 0.016 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <radius>0.035</radius>
@@ -335,7 +335,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/forearm.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/forearm.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -347,9 +347,9 @@
   </link>
 
   <link name='wristy'>
-    <pose>0.00449937 -0.479995 0.135123 -1.2164e-13 1.09079e-14 -0.0115373</pose>
+    <pose>0.00449937 0.479995 0.135123 1.2164e-13 1.09079e-14 0.0115373</pose>
     <inertial>
-      <pose>-7.08369e-05 -0.0217787 -0.000286168 0 0 0</pose>
+      <pose>-7.08369e-05 0.0217787 -0.000286168 0 0 0</pose>
       <mass>0.0272932</mass>
       <inertia>
         <ixx>1.77029e-05</ixx>
@@ -361,7 +361,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.025 0 1.5707 0 0</pose>
+      <pose>0 0.025 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <radius>0.03447</radius>
@@ -388,7 +388,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/wristy.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/wristy.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -402,7 +402,7 @@
     <child>wristy</child>
     <parent>forearm</parent>
     <axis>
-      <xyz>0.011537 0.999933 -1.2164e-13</xyz>
+      <xyz>-0.011537 0.999933 1.2164e-13</xyz>
       <limit>
         <lower>-1.57</lower>
         <upper>1.57</upper>
@@ -431,9 +431,9 @@
   </joint>
 
   <link name='wristx'>
-    <pose>0.003916 -0.527636 0.137161 -1.18962e-13 1.21847e-14 -0.0115373</pose>
+    <pose>0.003916 0.527636 0.137161 1.18962e-13 1.21847e-14 0.0115373</pose>
     <inertial>
-      <pose>0.00139174 -0.00975189 -0.00252668 0 0 0</pose>
+      <pose>0.00139174 0.00975189 -0.00252668 0 0 0</pose>
       <mass>0.010691</mass>
       <inertia>
         <ixx>3.27995e-06</ixx>
@@ -470,7 +470,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0.02360 -0.02969 -0.00240 0 1.5707 0</pose>
+      <pose>0.02360 0.02969 -0.00240 0 1.5707 0</pose>
       <geometry>
         <cylinder>
           <radius>0.013175</radius>
@@ -495,7 +495,7 @@
       </surface>
     </collision>
     <collision name='collision_2'>
-      <pose>-0.02360 -0.02969 -0.00240 0 1.5707 0</pose>
+      <pose>-0.02360 0.02969 -0.00240 0 1.5707 0</pose>
       <geometry>
         <cylinder>
           <radius>0.013175</radius>
@@ -522,7 +522,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/wristx.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/wristx.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -536,7 +536,7 @@
     <child>wristx</child>
     <parent>wristy</parent>
     <axis>
-      <xyz>-1.35564e-14 -1.18814e-13 -1</xyz>
+      <xyz>1.35564e-14 -1.18814e-13 1</xyz>
       <limit>
         <lower>-0.261</lower>
         <upper>0.785</upper>
@@ -565,9 +565,9 @@
   </joint>
 
   <link name='wristz'>
-    <pose>0.00375708 -0.557636 0.135067 -2.87105e-13 1.42109e-14 -0.0115373</pose>
+    <pose>0.00375708 0.557636 0.135067 2.87105e-13 1.42109e-14 0.0115373</pose>
     <inertial>
-      <pose>0.00368152 -0.0358755 0.00265927 0 0 0</pose>
+      <pose>0.00368152 0.0358755 0.00265927 0 0 0</pose>
       <mass>0.125889</mass>
       <inertia>
         <ixx>8.18077e-05</ixx>
@@ -579,7 +579,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0.00207 -0.00047 0.00046 1.5707 0 1.5707</pose>
+      <pose>0.00207 0.00047 0.00046 -1.5707 0 -1.5707</pose>
       <geometry>
         <cylinder>
           <radius>0.01411</radius>
@@ -604,7 +604,7 @@
       </surface>
     </collision>
     <collision name='collision_palm'>
-      <pose>0.002 -0.03739 0 0 0 0</pose>
+      <pose>0.002 0.03739 0 0 0 0</pose>
       <geometry>
         <box>
           <size>0.07928 0.08316 0.04402</size>
@@ -628,7 +628,7 @@
       </surface>
     </collision>
     <collision name="palmEdge">
-      <pose>-0.028 -0.03 0 1.57 0 -0.1</pose>
+      <pose>-0.028 0.03 0 -1.57 0 0.1</pose>
       <geometry>
         <cylinder>
           <radius>0.01</radius>
@@ -654,7 +654,7 @@
     </collision>
    <!-- Dorsal surface (top) -->
     <collision name="handTop">
-      <pose>0.002 -0.045 0.01 0 0 0</pose>
+      <pose>0.002 0.045 0.01 0 0 0</pose>
       <geometry>
         <box>
           <size>0.075 0.08 0.02</size>
@@ -679,7 +679,7 @@
     </collision>
     <!-- Palm 0 (closer to thumb) -->
     <collision name="palm0">
-      <pose>0.023 -0.04 -0.012 0 0 0.1</pose>
+      <pose>0.023 0.04 -0.012 0 0 -0.1</pose>
       <geometry>
         <box>
           <size>0.037 0.07 0.02</size>
@@ -704,7 +704,7 @@
     </collision>
     <!-- Palm 1 (closer to pinky) -->
     <collision name="palm1">
-      <pose>-0.018 -0.04 -0.012 0 0 0</pose>
+      <pose>-0.018 0.04 -0.012 0 0 0</pose>
       <geometry>
         <box>
           <size>0.037 0.07 0.02</size>
@@ -730,7 +730,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/wristz.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/wristz.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -740,10 +740,10 @@
       </material>
     </visual>
     <visual name='visual_palm'>
-      <pose>0.025625 0 0 1.7427e-13 8.3267e-17 -3.1876e-16</pose>
+      <pose>0.025625 0 0 -1.7427e-13 8.3267e-17 3.1876e-16</pose>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/palm.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/palm.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -781,7 +781,7 @@
     <child>wristz</child>
     <parent>wristx</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.42109e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.42109e-14</xyz>
       <limit>
         <lower>-1.04</lower>
         <upper>1.04</upper>
@@ -810,9 +810,9 @@
   </joint>
 
   <link name='index0'>
-    <pose>0.0384854 -0.623842 0.136079 -1.14726e-13 0.174533 -0.0115373</pose>
+    <pose>0.0384854 0.623842 0.136079 1.14726e-13 0.174533 0.0115373</pose>
     <inertial>
-      <pose>-0.000142572 -0.00548494 0.000206145 0 0 0</pose>
+      <pose>-0.000142572 0.00548494 0.000206145 0 0 0</pose>
       <mass>0.00295579</mass>
       <inertia>
         <ixx>4.22375e-07</ixx>
@@ -824,7 +824,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.01339 0 1.5707 0 0</pose>
+      <pose>0 0.01339 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.028</length>
@@ -851,7 +851,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/index0.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/index0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -865,7 +865,7 @@
     <child>index0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>-0.173637 0.00200338 -0.984808</xyz>
+      <xyz>0.173637 0.00200338 0.984808</xyz>
       <limit>
         <lower>-0.345</lower>
         <upper>0</upper>
@@ -894,9 +894,9 @@
   </joint>
 
   <link name='index1'>
-    <pose>0.0383394 -0.641841 0.136068 -1.1474e-13 0.174533 -0.0115373</pose>
+    <pose>0.0383394 0.641841 0.136068 1.1474e-13 0.174533 0.0115373</pose>
     <inertial>
-      <pose>0.000406487 -0.0213125 0.000655609 0 0 0</pose>
+      <pose>0.000406487 0.0213125 0.000655609 0 0 0</pose>
       <mass>0.00478235</mass>
       <inertia>
         <ixx>8.18593e-07</ixx>
@@ -908,7 +908,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.02782 0 1.5707 0 0</pose>
+      <pose>0 0.02782 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <radius>0.01</radius>
@@ -935,7 +935,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/index1.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/index1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -955,7 +955,7 @@
     <child>index1</child>
     <parent>index0</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 0.173648</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -984,9 +984,9 @@
   </joint>
 
   <link name='index2'>
-    <pose>0.0389938 -0.685352 0.136372 -1.1445e-13 0.174533 -0.0115373</pose>
+    <pose>0.0389938 0.685352 0.136372 1.1445e-13 0.174533 0.0115373</pose>
     <inertial>
-      <pose>-0.000841462 -0.012689 0.000572665 0 0 0</pose>
+      <pose>-0.000841462 0.012689 0.000572665 0 0 0</pose>
       <mass>0.00344764</mass>
       <inertia>
         <ixx>3.63785e-07</ixx>
@@ -998,7 +998,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.01152 0 1.5707 0 0</pose>
+      <pose>0 0.01152 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.029</length>
@@ -1023,7 +1023,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.02502 0 0 0 0</pose>
+      <pose>0 0.02502 0 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0075</radius>
@@ -1049,7 +1049,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/index2.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/index2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1070,7 +1070,7 @@
     <child>index2</child>
     <parent>index1</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.72</upper>
@@ -1100,9 +1100,9 @@
 
   <link name='index3'>
     <self_collide>true</self_collide>
-    <pose>0.0380858 -0.709843 0.136482 -1.15476e-13 0.174533 -0.0115373</pose>
+    <pose>0.0380858 0.709843 0.136482 1.15476e-13 0.174533 0.0115373</pose>
     <inertial>
-      <pose>4.32004e-05 -0.0125318 0.000903476 0 0 0</pose>
+      <pose>4.32004e-05 0.0125318 0.000903476 0 0 0</pose>
       <mass>0.00274415</mass>
       <inertia>
         <ixx>1.09202e-07</ixx>
@@ -1114,7 +1114,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
+      <pose>0 0.00688 0.0001 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.01376</length>
@@ -1139,7 +1139,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.015 0.0001 0 0 0</pose>
+      <pose>0 0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
@@ -1165,7 +1165,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/index3.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/index3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1208,7 +1208,7 @@
     <child>index3</child>
     <parent>index2</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -1237,9 +1237,9 @@
   </joint>
 
   <link name='middle0'>
-    <pose>0.0156685 -0.63568 0.140513 0.0872665 1.4183e-14 -0.0115373</pose>
+    <pose>0.0156685 0.63568 0.140513 -0.0872665 1.4183e-14 0.0115373</pose>
     <inertial>
-      <pose>-0.000142567 -0.00548493 0.000206162 0 0 0</pose>
+      <pose>-0.000142567 0.00548493 0.000206162 0 0 0</pose>
       <mass>0.00295579</mass>
       <inertia>
         <ixx>4.22374e-07</ixx>
@@ -1251,7 +1251,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.01339 0 1.5707 0 0</pose>
+      <pose>0 0.01339 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.028</length>
@@ -1278,7 +1278,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/middle0.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/middle0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1292,7 +1292,7 @@
     <child>middle0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.00100552 0.0871499 -0.996195</xyz>
+      <xyz>-0.00100552 0.0871499 0.996195</xyz>
       <limit>
         <lower>0</lower>
         <upper>0</upper>
@@ -1321,9 +1321,9 @@
   </joint>
 
   <link name='middle1'>
-    <pose>0.0155242 -0.653612 0.138944 0.0872665 1.43013e-14 -0.0115373</pose>
+    <pose>0.0155242 0.653612 0.138944 -0.0872665 1.43013e-14 0.0115373</pose>
     <inertial>
-      <pose>0.000406411 -0.0213125 0.00065565 0 0 0</pose>
+      <pose>0.000406411 0.0213125 0.00065565 0 0 0</pose>
       <mass>0.00478229</mass>
       <inertia>
         <ixx>8.1859e-07</ixx>
@@ -1335,7 +1335,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.025 0 1.5707 0 0</pose>
+      <pose>0 0.025 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <radius>0.01</radius>
@@ -1362,7 +1362,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/middle1.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/middle1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1382,7 +1382,7 @@
     <child>middle1</child>
     <parent>middle0</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.43013e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.43013e-14</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -1411,9 +1411,9 @@
   </joint>
 
   <link name='middle2'>
-    <pose>0.0161097 -0.696999 0.135651 0.0872665 1.32728e-14 -0.0115373</pose>
+    <pose>0.0161097 0.696999 0.135651 -0.0872665 1.32728e-14 0.0115373</pose>
     <inertial>
-      <pose>-0.000841444 -0.012689 0.00057266 0 0 0</pose>
+      <pose>-0.000841444 0.012689 0.00057266 0 0 0</pose>
       <mass>0.00344765</mass>
       <inertia>
         <ixx>3.63785e-07</ixx>
@@ -1425,7 +1425,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.01152 0 1.5707 0 0</pose>
+      <pose>0 0.01152 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.029</length>
@@ -1450,7 +1450,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.02302 0 0 0 0</pose>
+      <pose>0 0.02302 0 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0075</radius>
@@ -1476,7 +1476,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/middle2.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/middle2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1497,7 +1497,7 @@
     <child>middle2</child>
     <parent>middle1</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.32727e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.32727e-14</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.73</upper>
@@ -1527,9 +1527,9 @@
 
   <link name='middle3'>
     <self_collide>true</self_collide>
-    <pose>0.0151931 -0.721397 0.133515 0.0872665 1.51577e-14 -0.0115373</pose>
+    <pose>0.0151931 0.721397 0.133515 -0.0872665 1.51577e-14 0.0115373</pose>
     <inertial>
-      <pose>4.31236e-05 -0.0125318 0.000903446 0 0 0</pose>
+      <pose>4.31236e-05 0.0125318 0.000903446 0 0 0</pose>
       <mass>0.00274417</mass>
       <inertia>
         <ixx>1.09202e-07</ixx>
@@ -1541,7 +1541,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
+      <pose>0 0.00688 0.0001 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.01376</length>
@@ -1566,7 +1566,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.015 0.0001 0 0 0</pose>
+      <pose>0 0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
@@ -1592,7 +1592,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/middle3.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/middle3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1635,7 +1635,7 @@
     <child>middle3</child>
     <parent>middle2</parent>
     <axis>
-      <xyz>0.999933 -0.011537 -1.51577e-14</xyz>
+      <xyz>-0.999933 -0.011537 1.51577e-14</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -1664,9 +1664,9 @@
   </joint>
 
   <link name='pinky0'>
-    <pose>-0.0275009 -0.61268 0.129428 -1.14942e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.0275009 0.61268 0.129428 1.14942e-13 -0.174533 0.0115373</pose>
     <inertial>
-      <pose>-0.000142559 -0.00538484 0.000206147 0 0 0</pose>
+      <pose>-0.000142559 0.00538484 0.000206147 0 0 0</pose>
       <mass>0.00295579</mass>
       <inertia>
         <ixx>4.22375e-07</ixx>
@@ -1678,7 +1678,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.01339 0 1.5707 0 0</pose>
+      <pose>0 0.01339 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.028</length>
@@ -1705,7 +1705,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/pinky0.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/pinky0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1719,7 +1719,7 @@
     <child>pinky0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.173637 -0.00200338 -0.984808</xyz>
+      <xyz>-0.173637 -0.00200338 0.984808</xyz>
       <limit>
         <lower>0</lower>
         <upper>0.345</upper>
@@ -1748,9 +1748,9 @@
   </joint>
 
   <link name='pinky1'>
-    <pose>-0.0276458 -0.630579 0.129439 -1.14943e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.0276458 0.630579 0.129439 -1.14943e-13 0.174533 0.0115373</pose>
     <inertial>
-      <pose>0.000458624 -0.0160478 0.000924735 0 0 0</pose>
+      <pose>0.000458624 0.0160478 0.000924735 0 0 0</pose>
       <mass>0.0034099</mass>
       <inertia>
         <ixx>4.03282e-07</ixx>
@@ -1762,7 +1762,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.02082 0 1.5707 0 0</pose>
+      <pose>0 0.02082 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <radius>0.01</radius>
@@ -1789,7 +1789,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/pinky1.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/pinky1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1809,7 +1809,7 @@
     <child>pinky1</child>
     <parent>pinky0</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -1838,9 +1838,9 @@
   </joint>
 
   <link name='pinky2'>
-    <pose>-0.0275441 -0.663582 0.130032 -1.14415e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.0275441 0.663582 0.130032 1.14415e-13 -0.174533 0.0115373</pose>
     <inertial>
-      <pose>-0.000270832 -0.00914628 0.000738493 0 0 0</pose>
+      <pose>-0.000270832 0.00914628 0.000738493 0 0 0</pose>
       <mass>0.00250622</mass>
       <inertia>
         <ixx>1.78939e-07</ixx>
@@ -1852,7 +1852,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.0076 0 1.5707 0 0</pose>
+      <pose>0 0.0076 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.029</length>
@@ -1879,7 +1879,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/pinky2.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/pinky2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -1899,7 +1899,7 @@
     <child>pinky2</child>
     <parent>pinky1</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.72</upper>
@@ -1929,9 +1929,9 @@
 
   <link name='pinky3'>
     <self_collide>true</self_collide>
-    <pose>-0.0277931 -0.681081 0.130023 -1.14622e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.0277931 0.681081 0.130023 1.14622e-13 -0.174533 0.0115373</pose>
     <inertial>
-      <pose>3.85026e-05 -0.0125047 0.000912295 0 0 0</pose>
+      <pose>3.85026e-05 0.0125047 0.000912295 0 0 0</pose>
       <mass>0.00273265</mass>
       <inertia>
         <ixx>1.08629e-07</ixx>
@@ -1943,7 +1943,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
+      <pose>0 0.00688 0.0001 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.01376</length>
@@ -1968,7 +1968,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.015 0.0001 0 0 0</pose>
+      <pose>0 0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
@@ -1994,7 +1994,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/pinky3.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/pinky3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2037,7 +2037,7 @@
     <child>pinky3</child>
     <parent>pinky2</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -2066,9 +2066,9 @@
   </joint>
 
   <link name='ring0'>
-    <pose>-0.00687963 -0.624218 0.136579 -1.14553e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.00687963 0.624218 0.136579 1.14553e-13 -0.174533 0.0115373</pose>
     <inertial>
-      <pose>-0.000142559 -0.00548494 0.000206147 0 -0 0</pose>
+      <pose>-0.000142559 0.00548494 0.000206147 0 -0 0</pose>
       <mass>0.00295579</mass>
       <inertia>
         <ixx>4.22375e-07</ixx>
@@ -2080,7 +2080,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.01339 0 1.5707 0 0</pose>
+      <pose>0 0.01339 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.028</length>
@@ -2107,7 +2107,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/ring0.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/ring0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2121,7 +2121,7 @@
     <child>ring0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.173637 -0.00200338 -0.984808</xyz>
+      <xyz>-0.173637 -0.00200338 0.984808</xyz>
       <limit>
         <lower>0</lower>
         <upper>0.345</upper>
@@ -2150,9 +2150,9 @@
   </joint>
 
   <link name='ring1'>
-    <pose>-0.00702565 -0.642218 0.13659 -1.14538e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.00702565 0.642218 0.13659 1.14538e-13 -0.174533 0.0115373</pose>
     <inertial>
-      <pose>0.000406447 -0.0213125 0.00065563 0 0 0</pose>
+      <pose>0.000406447 0.0213125 0.00065563 0 0 0</pose>
       <mass>0.00478232</mass>
       <inertia>
         <ixx>8.18592e-07</ixx>
@@ -2164,7 +2164,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.02505 0 1.5707 0 0</pose>
+      <pose>0 0.02505 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <radius>0.01</radius>
@@ -2191,7 +2191,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/ring1.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/ring1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2211,7 +2211,7 @@
     <child>ring1</child>
     <parent>ring0</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>-0.785</lower>
         <upper>1.57</upper>
@@ -2240,9 +2240,9 @@
   </joint>
 
   <link name='ring2'>
-    <pose>-0.0065449 -0.685726 0.137271 -1.14828e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.0065449 0.685726 0.137271 1.14828e-13 -0.174533 0.0115373</pose>
     <inertial>
-      <pose>-0.000841518 -0.012689 0.000572674 0 0 0</pose>
+      <pose>-0.000841518 0.012689 0.000572674 0 0 0</pose>
       <mass>0.00344767</mass>
       <inertia>
         <ixx>3.63785e-07</ixx>
@@ -2254,7 +2254,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.01152 0 1.5707 0 0</pose>
+      <pose>0 0.01152 0 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.029</length>
@@ -2279,7 +2279,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.02302 0 0 0 0</pose>
+      <pose>0 0.02302 0 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0075</radius>
@@ -2305,7 +2305,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/ring2.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/ring2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2325,7 +2325,7 @@
     <child>ring2</child>
     <parent>ring1</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.72</upper>
@@ -2355,9 +2355,9 @@
 
   <link name='ring3'>
     <self_collide>true</self_collide>
-    <pose>-0.00745287 -0.710217 0.13716 -1.14821e-13 -0.174533 -0.0115373</pose>
+    <pose>-0.00745287 0.710217 0.13716 1.14821e-13 -0.174533 0.0115373</pose>
     <inertial>
-      <pose>4.31973e-05 -0.0125318 0.000903457 0 0 0</pose>
+      <pose>4.31973e-05 0.0125318 0.000903457 0 0 0</pose>
       <mass>0.00274416</mass>
       <inertia>
         <ixx>1.09202e-07</ixx>
@@ -2369,7 +2369,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
+      <pose>0 0.00688 0.0001 -1.5707 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.01376</length>
@@ -2394,7 +2394,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0 -0.015 0.0001 0 0 0</pose>
+      <pose>0 0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
@@ -2420,7 +2420,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/ring3.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/ring3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2463,7 +2463,7 @@
     <child>ring3</child>
     <parent>ring2</parent>
     <axis>
-      <xyz>0.984742 -0.0113618 0.173648</xyz>
+      <xyz>-0.984742 -0.0113618 -0.173648</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.38</upper>
@@ -2492,9 +2492,9 @@
   </joint>
 
   <link name='thumb0'>
-    <pose>0.0374985 -0.578725 0.124974 0.0873761 -0.0305803 -0.276903</pose>
+    <pose>0.0374985 0.578725 0.124974 -0.0873761 -0.0305803 0.276903</pose>
     <inertial>
-      <pose>0.00863339 -0.000156884 -0.000945846 0 0 0</pose>
+      <pose>0.00863339 0.000156884 -0.000945846 0 0 0</pose>
       <mass>0.00336696</mass>
       <inertia>
         <ixx>2.44266e-07</ixx>
@@ -2506,7 +2506,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0.0200 -0.001 0.0015 0 0 0</pose>
+      <pose>0.0200 0.001 0.0015 0 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.023</length>
@@ -2531,7 +2531,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
-      <pose>0.01 -.001 0.0015 0 0 0</pose>
+      <pose>0.01 .001 0.0015 0 0 0</pose>
       <geometry>
         <box>
           <size>0.0202 0.0155 0.023</size>
@@ -2557,7 +2557,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/thumb0.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/thumb0.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2571,7 +2571,7 @@
     <child>thumb0</child>
     <parent>wristz</parent>
     <axis>
-      <xyz>0.269769 0.958967 0.0872241</xyz>
+      <xyz>-0.269769 0.958967 -0.0872241</xyz>
       <limit>
         <lower>0</lower>
         <upper>2.07</upper>
@@ -2600,9 +2600,9 @@
   </joint>
 
   <link name='thumb1'>
-    <pose>0.057306 -0.585356 0.126981 0.0873761 -0.0305803 -0.276903</pose>
+    <pose>0.057306 0.585356 0.126981 -0.0873761 -0.0305803 0.276903</pose>
     <inertial>
-      <pose>0.019024 0.000361131 -0.000186763 0 0 0</pose>
+      <pose>0.019024 -0.000361131 -0.000186763 0 0 0</pose>
       <mass>0.00596213</mass>
       <inertia>
         <ixx>5.36423e-07</ixx>
@@ -2690,7 +2690,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/thumb1.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/thumb1.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2712,7 +2712,7 @@
     <child>thumb1</child>
     <parent>thumb0</parent>
     <axis>
-      <xyz>0.0531549 0.0756139 -0.995719</xyz>
+      <xyz>-0.0531549 0.0756139 0.995719</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.03</upper>
@@ -2741,9 +2741,9 @@
   </joint>
 
   <link name='thumb2'>
-    <pose>0.0895543 -0.594453 0.127266 0.0873761 -0.0305803 -0.276903</pose>
+    <pose>0.0895543 0.594453 0.127266 -0.0873761 -0.0305803 0.276903</pose>
     <inertial>
-      <pose>0.0188965 0.000375725 0.00065381 0 0 0</pose>
+      <pose>0.0188965 -0.000375725 0.00065381 0 0 0</pose>
       <mass>0.00599792</mass>
       <inertia>
         <ixx>5.17385e-07</ixx>
@@ -2806,7 +2806,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/thumb2.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/thumb2.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2827,7 +2827,7 @@
     <child>thumb2</child>
     <parent>thumb1</parent>
     <axis>
-      <xyz>0.0531549 0.0756139 -0.995719</xyz>
+      <xyz>-0.0531549 0.0756139 0.995719</xyz>
       <limit>
         <lower>0</lower>
         <upper>1.03</upper>
@@ -2857,9 +2857,9 @@
 
   <link name='thumb3'>
     <self_collide>true</self_collide>
-    <pose>0.121705 -0.603689 0.129371 0.0873761 -0.0305803 -0.276903</pose>
+    <pose>0.121705 0.603689 0.129371 -0.0873761 -0.0305803 0.276903</pose>
     <inertial>
-      <pose>0.0123437 -0.0014554 0 0 0 0</pose>
+      <pose>0.0123437 0.0014554 0 0 0 0</pose>
       <mass>0.00274415</mass>
       <inertia>
         <ixx>1.73183661e-7</ixx>
@@ -2871,7 +2871,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
-      <pose>0.01507 -0.00219 0.0001 0 0 0</pose>
+      <pose>0.01507 0.00219 0.0001 0 0 0</pose>
       <geometry>
         <cylinder>
           <length>0.01476</length>
@@ -2922,7 +2922,7 @@
     <visual name='visual'>
       <geometry>
         <mesh>
-          <uri>model://mpl_haptix_right_forearm/meshes/thumb3.stl</uri>
+          <uri>model://mpl_haptix_left_forearm/meshes/thumb3.stl</uri>
         </mesh>
       </geometry>
       <material>
@@ -2939,7 +2939,7 @@
       </contact>
     </sensor>
     <sensor name='thumb3_imu_sensor' type='imu'>
-      <pose>0 0 0  1.570796 0 1.570796</pose>
+      <pose>0 0 0  -1.570796 0 -1.570796</pose>
       <always_on>1</always_on>
       <update_rate>1000</update_rate>
       <imu>
@@ -2965,7 +2965,7 @@
     <child>thumb3</child>
     <parent>thumb2</parent>
     <axis>
-      <xyz>0.0531549 0.0756139 -0.995719</xyz>
+      <xyz>-0.0531549 0.0756139 0.995719</xyz>
       <limit>
         <lower>-0.819</lower>
         <upper>1.28</upper>
