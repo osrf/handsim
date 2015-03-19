@@ -400,10 +400,7 @@ void HaptixControlPlugin::LoadHandControl()
       hj->jointName = this->motorInfos[id].jointName;
       this->haptixJoints.push_back(hj);
       this->motorInfos[id].index = j1;
-      gzdbg << "add fake joint[" << j1 << "]: " << hj->jointName << "\n";
     }
-
-    // gzerr << id << " : " << this->motorInfos[id].index << "\n";
 
     // get coupled joints from <gearbox> blocks
     if (motorSDF->HasElement("gearbox"))
@@ -650,7 +647,6 @@ void HaptixControlPlugin::LoadHandControl()
 
   this->robotState.mutable_time_stamp()->set_sec(0);
   this->robotState.mutable_time_stamp()->set_nsec(0);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
