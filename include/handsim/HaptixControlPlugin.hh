@@ -220,6 +220,8 @@ namespace gazebo
     private: math::Pose hydraPose;
     /// \brief Mutex to protect access to hydraPose
     private: boost::mutex hydraMessageMutex;
+    /// \brief 0 for left and 1 for right controller
+    private: int hydraIndex;
     /// \brief have a hydra?
     private: bool haveHydra;
 

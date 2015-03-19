@@ -4,6 +4,7 @@
     <update_rate>50</update_rate>
     <spacenav_control_point_offset>0 0.4 0 0 0 3.1416</spacenav_control_point_offset>
     <hydra_control_point_offset>0 -0.3 0 0 3.1416 -1.5707</hydra_control_point_offset>
+    <hydra_control_index>1</hydra_control_index>
     <base_joint>elbow</base_joint>
     <base_link>forearm</base_link>
     <base_pid_pos cmd_max="10000.0" cmd_min="-10000.0" d="10.0" i="0" p="700.0"/>

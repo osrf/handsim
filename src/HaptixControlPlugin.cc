@@ -30,6 +30,7 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->havePolhemus = false;
   this->polhemusConn = NULL;
   this->haveHydra = false;
+  this->hydraIndex = 1;
   this->graspMode = false;
   this->staleKeyboardPose = false;
   this->newJoystickMessage = false;
@@ -175,6 +176,12 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   {
     this->baseLinkToHydraSensor =
       _sdf->Get<math::Pose>("hydra_control_point_offset");
+  }
+
+  // left (0) or right (1) joystick?
+  if (_sdf->HasElement("hydra_control_index"))
+  {
+    this->hydraIndex = _sdf->Get<int>("hydra_control_index");
   }
 
   // for controller time control
@@ -1345,7 +1352,10 @@ void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->hydraMessageMutex);
   this->haveHydra = true;
-  this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
+  if (this->hydraIndex == 0)
+    this->hydraPose = math::Pose(msgs::Convert(_msg->left().pose()));
+  else if (this->hydraIndex == 1)
+    this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
 
   math::Pose armSensorPose = this->hydraPose;
   if (this->pauseTracking)
