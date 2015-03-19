@@ -129,6 +129,12 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // param for spacenav control, this is the point in arm base link
   // frame for which we want to control with the spacenav
   this->baseLinktoSpacenavPose = math::Pose(0, -0.4, 0, 0, 0, 0);
+  if (_sdf->HasElement("spacenav_control_point_offset"))
+  {
+    this->baseLinktoSpacenavPose =
+      _sdf->Get<math::Pose>("spacenav_control_point_offset");
+  }
+
   // get polhemus_source model location
   // for tracking polhemus setup, where is the source in the world frame
   this->polhemusSourceModel = this->world->GetModel("polhemus_source");
