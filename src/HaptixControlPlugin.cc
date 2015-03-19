@@ -19,6 +19,8 @@
 
 #include "handsim/HaptixControlPlugin.hh"
 
+#include <cassert>
+
 namespace gazebo
 {
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +230,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(0, 0, 0));
+                               gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
 
   this->gazeboToScreen = gazebo::math::Pose::Zero;
   this->gazeboToOptitrack = gazebo::math::Pose::Zero;
@@ -1445,20 +1447,20 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   /*gazebo::math::Pose pose = this->optitrackWorldArmRot +
       gazebo::msgs::Convert(*_msg);*/
   gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
-
+  gazebo::math::Pose armAbsolute = (this->optitrackWorldArmRot + rawMarkerPose) + (this->optitrackWorldArmRot+this->monitorOptitrackFrame);
   //this->optitrackArm = pose + this->optitrackArmOffset;
 
   // If we're paused, or if we haven't calculated an offset yet...
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
     //this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
-    this->gazeboToScreen = -rawMarkerPose + this->optitrackWorldArmRot + this->monitorOptitrackFrame + this->targetBaseLinkPose;
+    // S_G = -(A_O + O_S) + A_G)
+    this->gazeboToScreen = -armAbsolute + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
   }
   else
   {
-    this->targetBaseLinkPose = -(this->optitrackWorldArmRot + this->monitorOptitrackFrame) + rawMarkerPose
-        + this->gazeboToScreen;
+    this->targetBaseLinkPose = armAbsolute + this->gazeboToScreen;
   }
 }
 
@@ -1505,6 +1507,19 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   gazebo::math::Quaternion monitorRot(gamma, beta, alpha);
   this->monitorOptitrackFrame.pos = points[1];
   this->monitorOptitrackFrame.rot = monitorRot;
+
+  // Test: Assert that the inverse of the rotation we calculated rotates
+  // gx, gy and gz to their respective unit vectors.
+  gazebo::math::Quaternion optitrackToMonitor = monitorRot.GetInverse();
+  double xdiff = (gazebo::math::Vector3(1, 0, 0) -
+      optitrackToMonitor.RotateVector(gx)).GetLength();
+  assert(xdiff < 1e-6);
+  double ydiff = (gazebo::math::Vector3(0, 1, 0) -
+      optitrackToMonitor.RotateVector(gy)).GetLength();
+  assert(ydiff < 1e-6);
+  double zdiff = (gazebo::math::Vector3(0, 0, 1) -
+      optitrackToMonitor.RotateVector(gz)).GetLength();
+  assert(zdiff < 1e-6);
 }
 
 //////////////////////////////////////////////////
