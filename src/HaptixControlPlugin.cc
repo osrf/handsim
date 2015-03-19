@@ -171,6 +171,11 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // hydra sensor offset
   this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
+  if (_sdf->HasElement("hydra_control_point_offset"))
+  {
+    this->baseLinkToHydraSensor =
+      _sdf->Get<math::Pose>("hydra_control_point_offset");
+  }
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
