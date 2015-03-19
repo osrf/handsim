@@ -137,7 +137,7 @@
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
-        <joint>index1</joint>
+        <joint>index1_motor</joint>
         <offset>0.174532925199</offset>
         <multiplier1>1.0</multiplier1>
         <multiplier2>0.833333</multiplier2>
@@ -978,6 +978,53 @@
     </physics>
   </joint>
 
+  <!-- motor core -->
+  <link name='index1_motor'>
+    <pose>0.0383394 -0.641841 0.136068 -1.1474e-13 0.174533 -0.0115373</pose>
+    <inertial>
+      <pose>0 0 0 0 0 0</pose>
+      <mass>0.001</mass>
+      <inertia>
+        <ixx>1.0e-07</ixx>
+        <ixy>0.0</ixy>
+        <ixz>0.0</ixz>
+        <iyy>1.0e-07</iyy>
+        <iyz>0.0</iyz>
+        <izz>1.0e-07</izz>
+      </inertia>
+    </inertial>
+  </link>
+  <joint name='index1_motor' type='revolute'>
+    <parent>index0</parent>
+    <child>index1_motor</child>
+    <axis>
+      <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      <limit>
+        <lower>-1e16</lower>
+        <upper>1e16</upper>
+        <effort>10000</effort>
+        <velocity>-1</velocity>
+      </limit>
+      <dynamics>
+        <damping>0.0001</damping>
+        <friction>0</friction>
+        <spring_reference>0</spring_reference>
+        <spring_stiffness>0</spring_stiffness>
+      </dynamics>
+      <use_parent_model_frame>1</use_parent_model_frame>
+    </axis>
+    <physics>
+      <provide_feedback>1</provide_feedback>
+      <ode>
+        <implicit_spring_damper>1</implicit_spring_damper>
+        <cfm_damping>1</cfm_damping>
+        <limit>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
+        </limit>
+      </ode>
+    </physics>
+  </joint>
   <link name='index1'>
     <pose>0.0383394 -0.641841 0.136068 -1.1474e-13 0.174533 -0.0115373</pose>
     <inertial>
@@ -1037,8 +1084,8 @@
     </sensor>
   </link>
   <joint name='index1' type='revolute'>
-    <child>index1</child>
     <parent>index0</parent>
+    <child>index1</child>
     <axis>
       <xyz>0.984742 -0.0113618 -0.173648</xyz>
       <limit>
@@ -1066,6 +1113,18 @@
         </limit>
       </ode>
     </physics>
+  </joint>
+  <joint name="index1_gearbox" type="gearbox">
+      <gearbox_reference_body>index0</gearbox_reference_body>
+      <parent>index1_motor</parent>
+      <child>index1</child>
+      <gearbox_ratio>393.0</gearbox_ratio>
+      <axis>
+        <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      </axis>
+      <axis2>
+        <xyz>0.984742 -0.0113618 -0.173648</xyz>
+      </axis2>
   </joint>
 
   <link name='index2'>
