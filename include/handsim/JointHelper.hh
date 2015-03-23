@@ -27,32 +27,80 @@ namespace gazebo
 {
   /// \brief keep an array of joints, some are valid gazebo joints
   /// others just keep a "fake" state here.
+  /// This class essentially contains a `gazebo::physics::JointPtr`,
+  /// which either points to a real Gazebo Joint object, or is left NULL.
+  /// When controller calls an equivalent Gazebo Joint API using this
+  /// JointHelper class, it either passes them through to the Gazebo
+  /// Joint class for valid Gazebo Joints, or get/set the local values
+  /// for the "fake" joint.
+  /// A pesudo-code example below:
+  ///
+  /// ~~~
+  /// HaptixGazeboJointHelper realJoint;
+  /// realJoint.SetJoint(realGazeboJointPtr);
+  /// HaptixGazeboJointHelper noJoint;
+  /// realJoint.GetPosition(0);  // effectively calls realJoint->GetPosition(0)
+  /// noJoint.SetPosition(10);  // sets noJoint.fakeJoint to 10
+  /// noJoint.GetPosition(0);  // returns noJoint.fakeJoint
+  /// ~~~
+  ///
+  /// The reason for creating this class is that we've created artificial
+  /// motor joints which do not exist in the Gazebo model for the arm
+  /// (e.g. `indexm`, `middlem`, `ringm` and `pinkym`), but we want to
+  /// manipulate these *fake joints*, in a transparent way similar to
+  /// the real joints.
   class JointHelper
   {
+    /// \brief Constructor
     public: JointHelper();
 
+    /// \brief Destructor
     public: ~JointHelper();
 
+    /// \brief Operator =
+    /// \param[in] _joint a valid Gazebo Joint pointer
     public: JointHelper &operator=(physics::JointPtr _joint);
 
+    /// \brief Assign a valid gazebo joint
+    /// \param[in] _joint a valid Gazebo Joint pointer
     public: void SetJoint(physics::JointPtr _joint);
 
+    /// \brief Set name of this joint
+    /// \param[in] _name name of this joint
     public: void SetJointName(const std::string &_name);
 
+    /// \brief Set angle of this joint
+    /// \param[in] _index joint index to set angle
     public: math::Angle GetAngle(int _index);
 
+    /// \brief Get angular velocity of this joint
+    /// \param[in] _index joint index to get angular velocity
     public: double GetVelocity(int _index);
 
+    /// \brief Set force of this joint
+    /// \param[in] _index joint index to set force
     public: bool SetForce(int _index, double _force);
 
+    /// \brief Get force of this joint
+    /// \param[in] _index joint index to get force
     public: double GetForce(int _index);
 
+    /// \brief Get upper joint limit
+    /// \param[in] _index joint index to get upper limit
+    /// \return upper joint limit
     public: math::Angle GetUpperLimit(int _index) const;
 
+    /// \brief Get lower joint limit
+    /// \param[in] _index joint index to get lower limit
+    /// \return lower joint limit
     public: math::Angle GetLowerLimit(int _index) const;
 
+    /// \brief Set joint position
+    /// \param[in] _index joint index to set position
     public: void SetPosition(double _position);
 
+    /// \brief Returns true if joint has been assigned
+    /// \return true if joint has been assigned
     public: bool HasJoint() const;
 
     private: math::Angle fakePosition;
