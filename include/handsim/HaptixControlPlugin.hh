@@ -409,15 +409,15 @@ namespace gazebo
     ///
     ///          For example:
     ///
-    ///            minOffset = min(all gearboxes offsets) = 0.15
-    ///            if (joint_33 < minOffset)
-    ///              joint_55 = 100.0 * joint_33
-    ///              joint_66 = 0.0 * joint_33
+    ///            minOffset angle = min(all gearboxes offset angles) = 0.15
+    ///            if (joint_33 angle < minOffset angle)
+    ///              joint_55 angle = 100.0 * joint_33 angle
+    ///              joint_66 angle = 0.0 * joint_33 angle
     ///            else
-    ///              joint_55 = 1.5 * (joint_33 - minOffset)
-    ///                       + 100.0 * minOffset
-    ///              joint_66 = 10.5 * (joint_33 - minOffset)
-    ///                       + 0.0 * minOffset
+    ///              joint_55 angle = 1.5 * (joint_33 angle - minOffset angle)
+    ///                       + 100.0 * minOffset angle
+    ///              joint_66 angle = 10.5 * (joint_33 angle - minOffset angle)
+    ///                       + 0.0 * minOffset angle
     ///     -->
     ///     <gearbox>
     ///       <joint>joint_55</joint>
