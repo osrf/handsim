@@ -38,14 +38,14 @@
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="4" p="  20.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="5" p="   8.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="6" p="   2.0"/>
-    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="7" p="  15.0"/>
+    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="7" p="  20.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="8" p="  10.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="9" p="   5.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="10" p="   1.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="11" p="  10.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="12" p="   5.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="13" p="   1.0"/>
-    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="14" p="  15.0"/>
+    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="14" p="  20.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="15" p="  10.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="16" p="   5.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="17" p="   1.0"/>
@@ -117,7 +117,7 @@
       <!--
       <motor_torque>3.82e-3</motor_torque>
       -->
-      <motor_torque>1.0e-3</motor_torque>
+      <motor_torque>2.00e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0</encoder_offset>
     </motor>
@@ -235,10 +235,10 @@
     <motor id="11" name="motor_pinky0">
       <powered_motor_joint>ring0</powered_motor_joint>
       <!--
-      <motor_torque>3.82e-3</motor_torque>
       <motor_torque>2.54e-3</motor_torque>
-      -->
       <motor_torque>1.0e-3</motor_torque>
+      -->
+      <motor_torque>3.82e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
