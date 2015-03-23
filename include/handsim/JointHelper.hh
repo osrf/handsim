@@ -71,18 +71,22 @@ namespace gazebo
 
     /// \brief Set angle of this joint
     /// \param[in] _index joint index to set angle
+    /// \return Angle of the joint
     public: math::Angle GetAngle(int _index);
 
     /// \brief Get angular velocity of this joint
     /// \param[in] _index joint index to get angular velocity
+    /// \return Joint velocity
     public: double GetVelocity(int _index);
 
     /// \brief Set force of this joint
     /// \param[in] _index joint index to set force
+    /// \return True if the force was set correctly
     public: bool SetForce(int _index, double _force);
 
     /// \brief Get force of this joint
     /// \param[in] _index joint index to get force
+    /// \return Force on a joint.
     public: double GetForce(int _index);
 
     /// \brief Get upper joint limit
