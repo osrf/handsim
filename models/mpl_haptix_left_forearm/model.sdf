@@ -77,10 +77,7 @@
     </motor>
     <motor id="3" name="motor_thumb0">
       <powered_motor_joint>thumb0</powered_motor_joint>
-      <!--
       <motor_torque>3.82e-3</motor_torque>
-      -->
-      <motor_torque>1.5e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
@@ -2666,7 +2663,7 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>1.0</damping>
+        <damping>0.2</damping>
         <friction>0</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
