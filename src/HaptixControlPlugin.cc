@@ -21,7 +21,7 @@
 
 namespace gazebo
 {
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Constructor
 HaptixControlPlugin::HaptixControlPlugin()
 {
@@ -54,7 +54,7 @@ HaptixControlPlugin::HaptixControlPlugin()
     &HaptixControlPlugin::HaptixReadCallback, this);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Destructor
 HaptixControlPlugin::~HaptixControlPlugin()
 {
@@ -63,7 +63,7 @@ HaptixControlPlugin::~HaptixControlPlugin()
   event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Load the controller
 void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                                  sdf::ElementPtr _sdf)
@@ -306,7 +306,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->PublishHaptixControlStatus();
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Open spacenav
 void HaptixControlPlugin::LoadHandControl()
 {
@@ -336,9 +336,9 @@ void HaptixControlPlugin::LoadHandControl()
     if (joint)
     {
       // gzdbg << "setting gazebo joint [" << joint->GetName() << "]\n";
-      this->haptixJoints[i] = new HaptixGazeboJointHelper();
+      this->haptixJoints[i] = new JointHelper();
       this->haptixJoints[i]->SetJoint(joint);
-      this->haptixJoints[i]->jointName = this->jointNames[i];
+      this->haptixJoints[i]->SetJointName(this->jointNames[i]);
     }
     else
       gzerr << "jointName [" << this->jointNames[i] << "] not found.\n";
@@ -396,8 +396,8 @@ void HaptixControlPlugin::LoadHandControl()
     {
       // create a fake joint, append it to the end
       int j1 = this->haptixJoints.size();
-      HaptixGazeboJointHelper *hj = new HaptixGazeboJointHelper();
-      hj->jointName = this->motorInfos[id].jointName;
+      JointHelper *hj = new JointHelper();
+      hj->SetJointName(this->motorInfos[id].jointName);
       this->haptixJoints.push_back(hj);
       this->motorInfos[id].index = j1;
     }
@@ -606,7 +606,7 @@ void HaptixControlPlugin::LoadHandControl()
 
   for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
-    if (this->haptixJoints[i]->hasJoint)
+    if (this->haptixJoints[i]->HasJoint())
     {
       this->robotState.add_joint_pos(0);
       this->robotState.add_joint_vel(0);
@@ -649,7 +649,7 @@ void HaptixControlPlugin::LoadHandControl()
   this->robotState.mutable_time_stamp()->set_nsec(0);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 void HaptixControlPlugin::Reset()
 {
   this->targetBaseLinkPose = this->initialBaseLinkPose;
@@ -663,7 +663,7 @@ void HaptixControlPlugin::Reset()
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Open keyboard commands
 void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
                      const msgs::Pose &_pose)
@@ -677,7 +677,7 @@ void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
   this->staleKeyboardPose = false;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 bool HaptixControlPlugin::LoadKeyboard()
 {
   this->keyboardPose = this->initialBaseLinkPose;
@@ -691,7 +691,7 @@ bool HaptixControlPlugin::LoadKeyboard()
   return false;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Play the trajectory, update states
 void HaptixControlPlugin::UpdateSpacenav(double _dt)
 {
@@ -746,7 +746,7 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Update targetBaseLinkPose using Polhemus
 void HaptixControlPlugin::UpdatePolhemus()
 {
@@ -835,7 +835,7 @@ void HaptixControlPlugin::UpdatePolhemus()
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
@@ -850,7 +850,7 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateBaseLink(double _dt)
 {
   math::Pose pose;
@@ -880,7 +880,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   //           << " rot: " << this->wrench.torque << std::endl;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 void HaptixControlPlugin::GetHandControlFromClient()
 {
   // copy command from hxCommand for motors to list of all joints
@@ -1013,7 +1013,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
   // how do we know which sensor triggered this update?
@@ -1093,7 +1093,7 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   //       << "]\n";
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 void HaptixControlPlugin::PublishHaptixControlStatus()
 {
   // finished loading arm? send status
@@ -1104,7 +1104,7 @@ void HaptixControlPlugin::PublishHaptixControlStatus()
   this->haptixStatusPub->Publish(loadStat);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Play the trajectory, update states
 void HaptixControlPlugin::GetRobotStateFromSim()
 {
@@ -1130,7 +1130,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   unsigned int count = 0;
   for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
-    if (this->haptixJoints[i]->hasJoint)
+    if (this->haptixJoints[i]->HasJoint())
     {
       this->robotState.set_joint_pos(count,
         this->haptixJoints[i]->GetAngle(0).Radian());
@@ -1178,7 +1178,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   this->robotState.mutable_time_stamp()->set_nsec(curTime.nsec);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Play the trajectory, update states
 void HaptixControlPlugin::GazeboUpdateStates()
 {
@@ -1237,7 +1237,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
   }
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Play the trajectory, update states
 math::Pose HaptixControlPlugin::convertPolhemusToPose(double x, double y,
   double z, double roll, double pitch, double yaw)
@@ -1249,7 +1249,7 @@ math::Pose HaptixControlPlugin::convertPolhemusToPose(double x, double y,
                     roll*RAD_PER_DEG, pitch*RAD_PER_DEG, yaw*RAD_PER_DEG);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////
 // Play the trajectory, update states
 math::Pose HaptixControlPlugin::convertPolhemusToPose(
   const polhemus_pose_t &_pose)
@@ -1280,7 +1280,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
 
   for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
-    if (this->haptixJoints[i]->hasJoint)
+    if (this->haptixJoints[i]->HasJoint())
     {
       haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_joint_limit();
       joint->set_minimum(this->haptixJoints[i]->GetLowerLimit(0).Radian());
