@@ -90,6 +90,7 @@ bool JointHelper::SetForce(int _index, double _force)
     else
     {
       // we only support _index == 0
+      gzerr << "only joint index == 0 is supported.\n";
     }
     return false;
   }
