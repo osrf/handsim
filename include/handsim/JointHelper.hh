@@ -103,6 +103,11 @@ namespace gazebo
     /// \param[in] _index joint index to set position
     public: void SetPosition(double _position);
 
+    /// \brief Set joint effort limit
+    /// \param[in] _effort Effort limit for the axis.
+    /// \param[in] _index Index of the axis to set.
+    public: void SetEffortLimit(unsigned int _index, double _effort);
+
     /// \brief Returns true if joint has been assigned
     /// \return true if joint has been assigned
     public: bool HasJoint() const;
@@ -116,6 +121,8 @@ namespace gazebo
     private: math::Angle fakeUpperLimit;
 
     private: math::Angle fakeLowerLimit;
+
+    private: math::Angle fakeEffortLimit;
 
     private: std::string jointName;
 
