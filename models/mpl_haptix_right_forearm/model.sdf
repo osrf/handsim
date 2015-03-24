@@ -83,27 +83,18 @@
     </motor>
     <motor id="4" name="motor_thumb1">
       <powered_motor_joint>thumb1</powered_motor_joint>
-      <!--
-      <motor_torque>3.82e-3</motor_torque>
-      -->
-      <motor_torque>2.0e-3</motor_torque>
+      <motor_torque>3.0e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="5" name="motor_thumb2">
       <powered_motor_joint>thumb2</powered_motor_joint>
-      <!--
-      <motor_torque>3.82e-3</motor_torque>
-      -->
       <motor_torque>2.0e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="6" name="motor_thumb3">
       <powered_motor_joint>thumb3</powered_motor_joint>
-      <!--
-      <motor_torque>3.82e-3</motor_torque>
-      -->
       <motor_torque>1.0e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
@@ -508,7 +499,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -642,7 +633,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -887,7 +878,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -971,7 +962,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1061,7 +1052,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1176,7 +1167,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1314,7 +1305,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1398,7 +1389,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1488,7 +1479,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1603,7 +1594,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1741,7 +1732,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1825,7 +1816,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -1915,7 +1906,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2005,7 +1996,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2143,7 +2134,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2227,7 +2218,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2317,7 +2308,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2431,7 +2422,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2569,7 +2560,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2663,8 +2654,8 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>0.2</damping>
-        <friction>0</friction>
+        <damping>1.0</damping>
+        <friction>1.0</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
       </dynamics>
@@ -2677,7 +2668,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2804,8 +2795,8 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>0.5</damping>
-        <friction>0</friction>
+        <damping>0.7</damping>
+        <friction>0.7</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
       </dynamics>
@@ -2818,7 +2809,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -2919,8 +2910,8 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>0.25</damping>
-        <friction>0</friction>
+        <damping>0.5</damping>
+        <friction>0.5</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
       </dynamics>
@@ -2933,7 +2924,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
@@ -3057,8 +3048,8 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>0.125</damping>
-        <friction>0</friction>
+        <damping>0.3</damping>
+        <friction>0.3</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
       </dynamics>
@@ -3071,7 +3062,7 @@
         <cfm_damping>1</cfm_damping>
         <limit>
           <cfm>0.01</cfm>
-          <erp>0.1</erp>
+          <erp>0.01</erp>
         </limit>
       </ode>
     </physics>
