@@ -69,6 +69,9 @@ namespace gazebo
     // Documentation inherited.
     public: virtual void Reset();
 
+    /// \brief Check physics properties
+    void PhysicsDiagnostics();
+
     /// \brief Gazebo loop: Update the controller on every simulation tick.
     private: void GazeboUpdateStates();
 

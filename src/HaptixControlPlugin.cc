@@ -1205,47 +1205,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
 
-  /* errro check */
-  double *error = boost::any_cast<double*>(
-    this->world->GetPhysicsEngine()->GetParam("rms_error"));
-  double *resid = boost::any_cast<double*>(
-    this->world->GetPhysicsEngine()->GetParam("constraint_residual"));
-
-  this->lastRmsError = error[0];
-  const double epsilon = 0.0001;
-  this->avgRmsError = epsilon*error[0] + (1.0 - epsilon)*this->avgRmsError;
-  double percent = (this->lastRmsError - this->avgRmsError)/this->avgRmsError;
-  if (percent < 0.0)
-    percent = 0.0;
-  // [0] is bilateral constraints
-  // pause if unconverged
-  if (numSamples < 2000)
-  {
-    ++this->numSamples;
-  }
-  else if (percent > 0.5)
-  {
-    std::cout << "error: [" << error[0] << "] resid: [" << resid[0]
-              << "] avg: [" << this->avgRmsError << "] %: [" << percent
-              << "]\n";
-
-    this->maxRmsError = std::abs(this->lastRmsError) > this->maxRmsError ?
-      std::abs(this->lastRmsError) : this->maxRmsError;
-
-    // print all joints and efforts
-    for (unsigned int m = 0; m < this->haptixJoints.size(); ++m)
-    {
-      // double angle = this->haptixJoints[m]->GetAngle(0).Radian();
-      double velocity = this->haptixJoints[m]->GetVelocity(0);
-      double force  = this->haptixJoints[m]->GetForce(0);
-      std::cout << "  joint [" << this->haptixJoints[m]->GetName()
-                << "  vel [" << velocity
-                << "] f [" << force << "]\n";
-    }
-    usleep(10000);
-    if (percent > 10.0)
-      usleep(100000);
-  }
+  // this->PhysicsDiagnostics();
 
   common::Time curTime = this->world->GetSimTime();
   double dt = (curTime - this->lastTime).Double();
@@ -1642,6 +1602,53 @@ void HaptixControlPlugin::OnToggleViewpointRotations(ConstIntPtr &_msg)
   std::unique_lock<std::mutex> lock(this->viewpointRotationsMutex,
       std::try_to_lock);
   this->viewpointRotationsEnabled = _msg->data() == 0 ? false : true;
+}
+
+/////////////////////////////////////////////////
+// Physics Diagnostics
+void HaptixControlPlugin::PhysicsDiagnostics()
+{
+  /* errro check */
+  double *error = boost::any_cast<double*>(
+    this->world->GetPhysicsEngine()->GetParam("rms_error"));
+  double *resid = boost::any_cast<double*>(
+    this->world->GetPhysicsEngine()->GetParam("constraint_residual"));
+
+  this->lastRmsError = error[0];
+  const double epsilon = 0.0001;
+  this->avgRmsError = epsilon*error[0] + (1.0 - epsilon)*this->avgRmsError;
+  double percent = (this->lastRmsError - this->avgRmsError)/this->avgRmsError;
+  if (percent < 0.0)
+    percent = 0.0;
+  // [0] is bilateral constraints
+  // pause if unconverged
+  if (numSamples < 2000)
+  {
+    ++this->numSamples;
+  }
+  else if (percent > 0.5)
+  {
+    std::cout << "error: [" << error[0] << "] resid: [" << resid[0]
+              << "] avg: [" << this->avgRmsError << "] %: [" << percent
+              << "]\n";
+
+    this->maxRmsError = std::abs(this->lastRmsError) > this->maxRmsError ?
+      std::abs(this->lastRmsError) : this->maxRmsError;
+
+    // print all joints and efforts
+    for (unsigned int m = 0; m < this->haptixJoints.size(); ++m)
+    {
+      // double angle = this->haptixJoints[m]->GetAngle(0).Radian();
+      double velocity = this->haptixJoints[m]->GetVelocity(0);
+      double force  = this->haptixJoints[m]->GetForce(0);
+      std::cout << "  joint [" << this->haptixJoints[m]->GetName()
+                << "  vel [" << velocity
+                << "] f [" << force << "]\n";
+    }
+    usleep(10000);
+    if (percent > 10.0)
+      usleep(100000);
+  }
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)
