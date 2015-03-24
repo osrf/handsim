@@ -126,7 +126,7 @@ namespace gazebo
 
     private: math::Angle fakeLowerLimit;
 
-    private: math::Angle fakeEffortLimit;
+    private: double fakeEffortLimit;
 
     private: std::string jointName;
 
