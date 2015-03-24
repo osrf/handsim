@@ -1442,12 +1442,47 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
+  /// The pose transformation math traverses the following transform tree.
+
+  ///   __?__> X ___
+  ///  /           |
+  /// /            v
+  /// G ----?----> O ---------------> A
+  /// |                               ^
+  /// \______________________________/
+
+  /// G: Gazebo origin
+  /// O: Optitrack origin
+  /// M: Monitor
+  /// A: Arm
+  /// We will denote the transform from B to A in B's frame as A_B
+
+  /// while paused:
+  /// X_O is giving by the monitor axes
+  /// O_G = O_A + A_G
+  /// X_G = X_O + O_A + A_G
+
+  /// while unpaused:
+  /// A_G = A_O + O_X + X_G
+
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
 
-  /*gazebo::math::Pose pose = this->optitrackWorldArmRot +
-      gazebo::msgs::Convert(*_msg);*/
+  // rawMarkerPose = A_O
   gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
-  gazebo::math::Pose armAbsolute = (this->optitrackWorldArmRot + rawMarkerPose) + (this->optitrackWorldArmRot+this->monitorOptitrackFrame);
+
+  if (this->pauseTracking || !this->armOffsetInitialized)
+  {
+    this->gazeboToScreen = -this->monitorOptitrackFrame -
+        rawMarkerPose + this->targetBaseLinkPose;
+    this->armOffsetInitialized = true;
+  }
+  else
+  {
+    //this->targetBaseLinkPose = armAbsolute + this->gazeboToOptitrack;
+    this->targetBaseLinkPose = rawMarkerPose + this->monitorOptitrackFrame + this->gazeboToScreen;
+  }
+  /*gazebo::math::Pose armAbsolute = (this->optitrackWorldArmRot + rawMarkerPose)
+      + (this->optitrackWorldArmRot+this->monitorOptitrackFrame);
   //this->optitrackArm = pose + this->optitrackArmOffset;
 
   // If we're paused, or if we haven't calculated an offset yet...
@@ -1461,7 +1496,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   else
   {
     this->targetBaseLinkPose = armAbsolute + this->gazeboToScreen;
-  }
+  }*/
 }
 
 //////////////////////////////////////////////////
