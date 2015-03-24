@@ -32,7 +32,7 @@
     <joint id="20">pinky2</joint>
     <joint id="21">pinky3</joint>
     <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="0" p=" 100.0"/>
-    <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="1" p="  50.0"/>
+    <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="1" p=" 100.0"/>
     <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="2" p=" 100.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="3" p="  30.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="4" p="  20.0"/>
@@ -628,7 +628,7 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>1.0</damping>
+        <damping>0.1</damping>
         <friction>0</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
