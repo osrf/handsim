@@ -2,7 +2,7 @@
 <model name="mpl_haptix_left_forearm">
   <plugin filename="libHaptixControlPlugin.so" name="HaptixControlPlugin">
     <update_rate>50</update_rate>
-    <spacenav_control_point_offset>0 -0.4 0 0 0 0</spacenav_control_point_offset>
+    <spacenav_control_point_offset>0 0.4 0 0 0 0</spacenav_control_point_offset>
     <hydra_control_point_offset>0 0.3 0 0 3.1416 1.5707</hydra_control_point_offset>
     <base_joint>elbow</base_joint>
     <base_link>forearm</base_link>
