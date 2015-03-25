@@ -1375,7 +1375,7 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>1</damping>
+        <damping>0</damping>
         <friction>0</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
@@ -1388,8 +1388,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0.01</cfm>
-          <erp>0.01</erp>
+          <cfm>0.0</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
