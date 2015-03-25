@@ -1468,35 +1468,18 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
 
   // rawMarkerPose = A_O
-  gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose rawMarkerPose = this->optitrackWorldArmRot + gazebo::msgs::Convert(*_msg);
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    this->gazeboToScreen = -this->monitorOptitrackFrame -
+    this->gazeboToScreen = this->monitorOptitrackFrame -
         rawMarkerPose + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
   }
   else
   {
-    //this->targetBaseLinkPose = armAbsolute + this->gazeboToOptitrack;
-    this->targetBaseLinkPose = rawMarkerPose + this->monitorOptitrackFrame + this->gazeboToScreen;
+    this->targetBaseLinkPose = rawMarkerPose - this->monitorOptitrackFrame + this->gazeboToScreen;
   }
-  /*gazebo::math::Pose armAbsolute = (this->optitrackWorldArmRot + rawMarkerPose)
-      + (this->optitrackWorldArmRot+this->monitorOptitrackFrame);
-  //this->optitrackArm = pose + this->optitrackArmOffset;
-
-  // If we're paused, or if we haven't calculated an offset yet...
-  if (this->pauseTracking || !this->armOffsetInitialized)
-  {
-    //this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
-    // S_G = -(A_O + O_S) + A_G)
-    this->gazeboToScreen = -armAbsolute + this->targetBaseLinkPose;
-    this->armOffsetInitialized = true;
-  }
-  else
-  {
-    this->targetBaseLinkPose = armAbsolute + this->gazeboToScreen;
-  }*/
 }
 
 //////////////////////////////////////////////////
