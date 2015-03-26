@@ -1203,7 +1203,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
     {
       // Uncomment this to see the update rate.
       // gzdbg << 1.0/(common::Time::GetSimTime() -
-      //               this->lastSimTime).Double() << std::endl;
+      //          this->lastSimTimeForControlThrottling).Double() << std::endl;
 
       // Get robot state from simulation
       this->GetRobotStateFromSim();
