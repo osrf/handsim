@@ -497,8 +497,8 @@ void HaptixControlPlugin::LoadHandControl()
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       int n = this->motorInfos[i].gearboxes[j].index;
-      /// \TODO Use the maximum of multiplier1 and multiplier2
-      /// for bounding joint torque command.
+      // Use the maximum of multiplier1 and multiplier2
+      // for bounding joint torque command.
       double maxMultiplier = std::max(
         this->motorInfos[i].gearboxes[j].multiplier1,
         this->motorInfos[i].gearboxes[j].multiplier2);
