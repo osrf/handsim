@@ -1234,6 +1234,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
   {
     // has time been reset?
     this->lastTime = curTime;
+    this->lastSimTimeForControlThrottling = curTime;
   }
 }
 
