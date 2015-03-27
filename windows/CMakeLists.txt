@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
-if (UNIX)
+if (NOT MSVC)
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE_UPPERCASE}} -std=c++11")
 endif()
 
@@ -24,6 +24,10 @@ else ()
 endif ()
 
 # ToDo: Make sure that the library and header are installed.
+if ($ENV{NPTRACKINGTOOLS_INC} == "")
+    message(FATAL_ERROR "Seems like you don't have Motive SDK installed: http://www.optitrack.com/downloads/motive.html")
+endif()
+
 include_directories($ENV{NPTRACKINGTOOLS_INC})
 link_directories($ENV{NPTRACKINGTOOLS_LIB})
 
