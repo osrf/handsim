@@ -171,6 +171,11 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // hydra sensor offset
   this->baseLinkToHydraSensor = math::Pose(0, -0.3, 0, 0, 1.0*M_PI, -0.5*M_PI);
+  if (_sdf->HasElement("hydra_control_point_offset"))
+  {
+    this->baseLinkToHydraSensor =
+      _sdf->Get<math::Pose>("hydra_control_point_offset");
+  }
 
   // for controller time control
   this->lastTime = this->world->GetSimTime();
@@ -472,6 +477,11 @@ void HaptixControlPlugin::LoadHandControl()
                          this->motorInfos[i].motorTorque;
     this->pids[m].SetCmdMax(jointTorque);
     this->pids[m].SetCmdMin(-jointTorque);
+
+    /// also set joint effort limit directly, gazebo pid limits
+    /// broken (see gazebo issue #1534)
+    this->haptixJoints[m]->SetEffortLimit(0, jointTorque);
+
     // gzdbg << " motor torque [" << m
     //       << "] : " << jointTorque << "\n";
 
@@ -482,13 +492,19 @@ void HaptixControlPlugin::LoadHandControl()
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       int n = this->motorInfos[i].gearboxes[j].index;
-      /// \TODO Use multiplier1 for reporting, but this value changes now
-      /// as a function of joint angle. Implement later.
-      /// See issue #60.
-      double coupledJointTorque = jointTorque /
-        this->motorInfos[i].gearboxes[j].multiplier1;
+      // Use the maximum of multiplier1 and multiplier2
+      // for bounding joint torque command.
+      double maxMultiplier = std::max(
+        this->motorInfos[i].gearboxes[j].multiplier1,
+        this->motorInfos[i].gearboxes[j].multiplier2);
+      double coupledJointTorque = jointTorque * maxMultiplier;
       this->pids[n].SetCmdMax(coupledJointTorque);
       this->pids[n].SetCmdMin(-coupledJointTorque);
+
+      /// also set joint effort limit directly, gazebo pid limits
+      /// broken (see gazebo issue #1534)
+      this->haptixJoints[n]->SetEffortLimit(0, coupledJointTorque);
+
       // gzdbg << "   coupled motor torque [" << n
       //       << "] : " << coupledJointTorque << "\n";
     }

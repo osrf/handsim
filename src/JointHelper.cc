@@ -27,6 +27,7 @@ JointHelper::JointHelper()
   this->fakeTorque = 0.0;
   this->fakeLowerLimit = -1e16;
   this->fakeUpperLimit = 1e16;
+  this->fakeEffortLimit = 0;
   this->realJoint = NULL;
   this->hasJoint = false;
 }
@@ -133,6 +134,15 @@ void JointHelper::SetPosition(double _position)
 void JointHelper::SetJointName(const std::string &_name)
 {
   this->jointName = _name;
+}
+
+/////////////////////////////////////////////////
+void JointHelper::SetEffortLimit(unsigned int _index, double _effort)
+{
+  if (this->hasJoint)
+    this->realJoint->SetEffortLimit(_index, _effort);
+  else
+    this->fakeEffortLimit = _effort;
 }
 
 /////////////////////////////////////////////////
