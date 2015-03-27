@@ -188,7 +188,7 @@ namespace gazebo
     private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
 
     /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
     /// \brief Callback on message to toggle viewpoint rotations due to mocap
     /// \param[in] _msg Message sent by publisher
@@ -525,20 +525,6 @@ namespace gazebo
     /// \brief Subscriber to Optitrack monitor tracker updates
     private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
 
-    /// \brief Callback on Optitrack head tracker update
-    private: void OnUpdateOptitrackHead(ConstPosePtr &_pose);
-
-    /// \brief Callback on Optitrack arm tracker update
-    private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
-
-    /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
-
-    /// \brief Callback on message to toggle viewpoint rotations due to mocap
-    /// \param[in] _msg Message sent by publisher
-    private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
-
-
     /// \brief hardcoded offset between arm sensor and position on link to
     /// control, T_ME
     private: gazebo::math::Pose armMarkerOffset;
@@ -546,7 +532,7 @@ namespace gazebo
     private: gazebo::math::Pose worldToScreen;
 
     /// \brief Pose of the Optitrack in Gazebo frame
-    private: gazebo::math::Pose gazeboToOptitrack;
+    private: gazebo::math::Pose optitrackHeadOffset;
 
     /// \brief Orthonormal transformation between Optitrack arm and world axes
     private: gazebo::math::Pose optitrackWorldArmRot;
