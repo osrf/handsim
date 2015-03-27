@@ -561,6 +561,12 @@ namespace gazebo
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
 
+    /// \brief Low-pass filter for monitor position (reduces jitter)
+    private: gazebo::math::OnePoleVector3 monitorPosFilter;
+
+    /// \brief Low-pass filter for monitor orientation (reduces jitter)
+    private: gazebo::math::OnePoleQuaternion monitorOriFilter;
+
     /// \brief Receives messages to toggle viewpoint rotations.
     private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
 

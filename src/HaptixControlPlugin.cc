@@ -230,7 +230,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
+                               gazebo::math::Quaternion(M_PI, 0, 0));
 
   this->worldToScreen = gazebo::math::Pose::Zero;
   this->gazeboToOptitrack = gazebo::math::Pose::Zero;
@@ -240,6 +240,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->headPosFilter.SetFc(0.002, 0.3);
   this->headOriFilter.SetFc(0.002, 0.3);
+
+  this->monitorPosFilter.SetFc(0.002, 0.3);
+  this->monitorOriFilter.SetFc(0.002, 0.3);
 
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
@@ -1464,16 +1467,17 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   }
   else
   {
-    //this->targetBaseLinkPose = rawMarkerPose - this->monitorOptitrackFrame + this->gazeboToScreen;
     // T_WE = T_WS + T_SM + T_MC + T_CA - armOffset + T_ME
-    this->targetBaseLinkPose = this->worldToScreen + this->monitorOptitrackFrame + rawMarkerPose - this->optitrackArmOffset + this->armMarkerOffset;
+    this->targetBaseLinkPose = this->worldToScreen +
+        this->monitorOptitrackFrame + rawMarkerPose - this->optitrackArmOffset
+        + this->armMarkerOffset;
   }
 }
 
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 {
-  if (_msg == NULL || _msg->points_size() != 3)
+  if (!this->pauseTracking ||  _msg == NULL || _msg->points_size() != 3)
     return;
 
   std::unique_lock<std::mutex> lock(this->optitrackMonitorMutex,
@@ -1514,6 +1518,13 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   this->monitorOptitrackFrame.pos = points[1];
   this->monitorOptitrackFrame.rot = monitorRot;
 
+
+  this->monitorOptitrackFrame.pos =
+      this->monitorPosFilter.Process(this->monitorOptitrackFrame.pos);
+  this->monitorOptitrackFrame.rot =
+      this->monitorOriFilter.Process(this->monitorOptitrackFrame.rot);
+
+  // TODO: Filter the final pose
   // Test: Assert that the inverse of the rotation we calculated rotates
   // gx, gy and gz to their respective unit vectors.
   gazebo::math::Quaternion optitrackToMonitor = monitorRot.GetInverse();
