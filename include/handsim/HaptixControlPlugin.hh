@@ -212,8 +212,8 @@ namespace gazebo
     /// \brief For computing dt
     private: common::Time lastTime;
 
-    /// \brief For throttling the update rate
-    private: common::Time lastWallTime;
+    /// \brief For user control code throttling
+    private: common::Time lastSimTimeForControlThrottling;
 
     ////////////////////////////////////////////////
     //

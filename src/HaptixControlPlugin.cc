@@ -185,8 +185,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // for controller time control
   this->lastTime = this->world->GetSimTime();
 
-  // For update rate throttling
-  this->lastWallTime = common::Time::GetWallTime();
+  // For user control code update rate throttling
+  this->lastSimTimeForControlThrottling = this->world->GetSimTime();
 
   // initialize PID's
   double baseJointImplicitDamping = 100.0;
@@ -1221,12 +1221,12 @@ void HaptixControlPlugin::GazeboUpdateStates()
     this->UpdateBaseLink(dt);
 
     // Update based on updateRate.
-    if (common::Time::GetWallTime() - this->lastWallTime >=
+    if (curTime - this->lastSimTimeForControlThrottling >=
         1.0/this->updateRate)
     {
       // Uncomment this to see the update rate.
-      // gzdbg << 1.0/(common::Time::GetWallTime() -
-      //               this->lastWallTime).Double() << std::endl;
+      // gzdbg << 1.0/(curTime -
+      //   this->lastSimTimeForControlThrottling).Double() << std::endl;
 
       // Get robot state from simulation
       this->GetRobotStateFromSim();
@@ -1234,7 +1234,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
       // Get simulation control from client
       this->GetHandControlFromClient();
 
-      this->lastWallTime = common::Time::GetWallTime();
+      this->lastSimTimeForControlThrottling = curTime;
     }
 
     // control finger joints
@@ -1257,6 +1257,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
   {
     // has time been reset?
     this->lastTime = curTime;
+    this->lastSimTimeForControlThrottling = curTime;
   }
 }
 
