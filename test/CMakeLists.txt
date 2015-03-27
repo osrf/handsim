@@ -17,6 +17,29 @@ execute_process(COMMAND cmake -E remove_directory ${CMAKE_BINARY_DIR}/test_resul
 execute_process(COMMAND cmake -E make_directory ${CMAKE_BINARY_DIR}/test_results)
 include_directories(${GTEST_INCLUDE_DIRS})
 
+# Build static ServerFixture library
+include_directories(
+  ${PROJECT_BINARY_DIR}
+  ${Boost_FILESYSTEM_INCLUDE_DIRS}
+  ${Boost_SYSTEM_INCLUDE_DIRS}
+  ${GAZEBO_INCLUDE_DIRS}
+  ${HAPTIX-COMM_INCLUDE_DIRS}
+  ${IGNITION-TRANSPORT_INCLUDE_DIRS}
+)
+
+link_directories(
+  ${PROJECT_BINARY_DIR}/test
+  ${Boost_FILESYSTEM_LIBRARY_DIRS}
+  ${Boost_SYSTEM_LIBRARY_DIRS}
+  ${GAZEBO_LIBRARY_DIRS}
+  ${HAPTIX-COMM_LIBRARY_DIRS}
+  ${IGNITION-TRANSPORT_LIBRARY_DIRS}
+)
+set(ServerFixtureSources
+  ServerFixture.cc
+)
+add_library(server_fixture STATIC ${ServerFixtureSources})
+
 add_subdirectory(integration)
 add_subdirectory(performance)
 add_subdirectory(regression)

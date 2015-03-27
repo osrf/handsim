@@ -12,13 +12,27 @@ macro (handsim_build_tests)
     add_dependencies(${BINARY_NAME}
       lib${PROJECT_NAME_LOWER}
       gtest gtest_main
+      server_fixture
       )
 
+    message(STATUS "\n\n\n\n\n${GAZEBO_LIBRARY_DIRS}\n\n\n")
+    link_directories(
+      ${GAZEBO_LIBRARY_DIRS}
+  /home/hsu/projects/haptix/gazebo_haptix/install_release/lib/x86_64-linux-gnu
+    )
     target_link_libraries(${BINARY_NAME}
+      /home/hsu/projects/haptix/gazebo_haptix/install_release/lib/x86_64-linux-gnu/libgazebo_sensors.so.6.0.0
       libgtest.a
       libgtest_main.a
       pthread
       HaptixTracking
+      ${Boost_FILESYSTEM_LIBRARIES}
+      ${Boost_SYSTEM_LIBRARIES}
+      ${GAZEBO_LIBRARIES}
+      ${HAPTIX-COMM_LIBRARIES}
+      ${IGNITION-TRANSPORT_LIBRARIES}
+      gazebo
+      server_fixture
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
