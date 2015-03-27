@@ -271,7 +271,7 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    /// \brief Transform from camera frame to Optitrack head marker.
+    /// \brief Transform from camera frame to Optitrack head marker, T_HU
     private: math::Pose cameraToOptitrackHeadMarker;
 
     /// \brief Transform from hydra sensor orientation to base link frame.
@@ -538,9 +538,11 @@ namespace gazebo
     /// \brief Pose of the optitrack arm tracker in the world frame
     //private: gazebo::math::Pose optitrackArm;
 
-    /// \brief Pose offset between initial Optitrack arm and desired initial
-    /// pose of arm
-    private: gazebo::math::Pose gazeboToScreen;
+    /// \brief hardcoded offset between arm sensor and position on link to
+    /// control, T_ME
+    private: gazebo::math::Pose armMarkerOffset;
+
+    private: gazebo::math::Pose worldToScreen;
 
     /// \brief Pose of the Optitrack in Gazebo frame
     private: gazebo::math::Pose gazeboToOptitrack;
@@ -550,6 +552,8 @@ namespace gazebo
 
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
     private: gazebo::math::Pose monitorOptitrackFrame;
+
+    private: gazebo::math::Pose optitrackArmOffset;
 
     /// \brief Low-pass filter for head position (reduces jitter)
     private: gazebo::math::OnePoleVector3 headPosFilter;

@@ -232,8 +232,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                                gazebo::math::Vector3(0, 0, 0),
                                gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
 
-  this->gazeboToScreen = gazebo::math::Pose::Zero;
+  this->worldToScreen = gazebo::math::Pose::Zero;
   this->gazeboToOptitrack = gazebo::math::Pose::Zero;
+
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
 
@@ -1442,43 +1443,30 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
-  /// The pose transformation math traverses the following transform tree.
-
-  ///   __?__> X ___
-  ///  /           |
-  /// /            v
-  /// G ----?----> O ---------------> A
-  /// |                               ^
-  /// \______________________________/
-
-  /// G: Gazebo origin
-  /// O: Optitrack origin
-  /// M: Monitor
-  /// A: Arm
-  /// We will denote the transform from B to A in B's frame as A_B
-
-  /// while paused:
-  /// X_O is giving by the monitor axes
-  /// O_G = O_A + A_G
-  /// X_G = X_O + O_A + A_G
-
-  /// while unpaused:
-  /// A_G = A_O + O_X + X_G
+  //this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
+  // T_WE = targetBaseLinkPose
+  // T_EM = hardcoded arm-marker transform (can be optional?)
+  // T_CA = Arm pose in optitrack frame
 
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
 
   // rawMarkerPose = A_O
-  gazebo::math::Pose rawMarkerPose = this->optitrackWorldArmRot + gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose rawMarkerPose = this->optitrackWorldArmRot +
+      gazebo::msgs::Convert(*_msg);
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    this->gazeboToScreen = this->monitorOptitrackFrame -
-        rawMarkerPose + this->targetBaseLinkPose;
+    // Paused:
+    //   ArmOffset = T_ME + T_EW + T_WS + T_SM + T_MC + T_CA
+    this->optitrackArmOffset = this->armMarkerOffset - this->targetBaseLinkPose
+      + this->worldToScreen + this->monitorOptitrackFrame + rawMarkerPose;
     this->armOffsetInitialized = true;
   }
   else
   {
-    this->targetBaseLinkPose = rawMarkerPose - this->monitorOptitrackFrame + this->gazeboToScreen;
+    //this->targetBaseLinkPose = rawMarkerPose - this->monitorOptitrackFrame + this->gazeboToScreen;
+    // T_WE = T_WS + T_SM + T_MC + T_CA - armOffset + T_ME
+    this->targetBaseLinkPose = this->worldToScreen + this->monitorOptitrackFrame + rawMarkerPose - this->optitrackArmOffset + this->armMarkerOffset;
   }
 }
 
