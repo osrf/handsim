@@ -1,6 +1,7 @@
 include (${project_cmake_dir}/Utils.cmake)
 
 set (headers
+  MotorInfo.hh
   OptitrackBridge.hh
   polhemus_driver.h
 )
