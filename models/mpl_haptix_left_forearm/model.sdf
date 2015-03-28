@@ -2,11 +2,12 @@
 <model name="mpl_haptix_left_forearm">
   <plugin filename="libHaptixControlPlugin.so" name="HaptixControlPlugin">
     <update_rate>50</update_rate>
-    <spacenav_control_point_offset>0 0.4 0 0 0 3.1416</spacenav_control_point_offset>
+    <spacenav_control_point_offset>0 0.4 0 0 0 0</spacenav_control_point_offset>
+    <hydra_control_point_offset>0 0.3 0 0 3.1416 1.5707</hydra_control_point_offset>
     <base_joint>elbow</base_joint>
     <base_link>forearm</base_link>
-    <base_pid_pos cmd_max="10000.0" cmd_min="-10000.0" d="70.0" i="0" p="700.0"/>
-    <base_pid_rot cmd_max="10000.0" cmd_min="-10000.0" d="50.0" i="0" p="800.0"/>
+    <base_pid_pos cmd_max="10000.0" cmd_min="-10000.0" d="10.0" i="0" p="700.0"/>
+    <base_pid_rot cmd_max="10000.0" cmd_min="-10000.0" d="10.0" i="0" p="800.0"/>
     <!-- order must match hxAPLJoints enumeration -->
     <joint id="0">wristy</joint>
     <joint id="1">wristx</joint>
@@ -31,20 +32,20 @@
     <joint id="20">pinky2</joint>
     <joint id="21">pinky3</joint>
     <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="0" p=" 100.0"/>
-    <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="1" p="  50.0"/>
+    <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="1" p=" 100.0"/>
     <pid cmd_max=" 500.0" cmd_min=" -500.0" d="0" i="0" id="2" p=" 100.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="3" p="  30.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="4" p="  20.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="5" p="   8.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="6" p="   2.0"/>
-    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="7" p="  15.0"/>
+    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="7" p="  20.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="8" p="  10.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="9" p="   5.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="10" p="   1.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="11" p="  10.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="12" p="   5.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="13" p="   1.0"/>
-    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="14" p="  15.0"/>
+    <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="14" p="  20.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="15" p="  10.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="16" p="   5.0"/>
     <pid cmd_max=" 100.0" cmd_min=" -100.0" d="0" i="0" id="17" p="   1.0"/>
@@ -63,7 +64,7 @@
     <motor id="1" name="motor_wristx">
       <powered_motor_joint>wristx</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>0.00955</motor_torque>
+      <motor_torque>0.003</motor_torque>
       <gear_ratio>180.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
@@ -76,10 +77,7 @@
     </motor>
     <motor id="3" name="motor_thumb0">
       <powered_motor_joint>thumb0</powered_motor_joint>
-      <!--
       <motor_torque>3.82e-3</motor_torque>
-      -->
-      <motor_torque>2.0e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
@@ -119,7 +117,7 @@
       <!--
       <motor_torque>3.82e-3</motor_torque>
       -->
-      <motor_torque>1.0e-3</motor_torque>
+      <motor_torque>1.50e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0</encoder_offset>
     </motor>
@@ -171,7 +169,7 @@
       <motor_torque>3.82e-3</motor_torque>
       <motor_torque>2.54e-3</motor_torque>
       -->
-      <motor_torque>2.0e-3</motor_torque>
+      <motor_torque>1.0e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -208,7 +206,7 @@
       <motor_torque>3.82e-3</motor_torque>
       <motor_torque>2.54e-3</motor_torque>
       -->
-      <motor_torque>2.0e-3</motor_torque>
+      <motor_torque>1.0e-3</motor_torque>
       <gear_ratio>393.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -238,9 +236,9 @@
       <powered_motor_joint>ring0</powered_motor_joint>
       <!--
       <motor_torque>3.82e-3</motor_torque>
-      <motor_torque>2.54e-3</motor_torque>
-      -->
       <motor_torque>1.0e-3</motor_torque>
+      -->
+      <motor_torque>2.54e-3</motor_torque>
       <gear_ratio>352.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
@@ -509,8 +507,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -630,7 +628,7 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>2</damping>
+        <damping>0.1</damping>
         <friction>0</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
@@ -643,8 +641,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -888,8 +886,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -972,8 +970,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1062,8 +1060,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1177,8 +1175,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1315,8 +1313,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1399,8 +1397,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1489,8 +1487,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1604,8 +1602,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1742,8 +1740,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1826,8 +1824,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -1916,8 +1914,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2006,8 +2004,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2144,8 +2142,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2228,8 +2226,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2318,8 +2316,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2432,8 +2430,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2570,8 +2568,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2665,7 +2663,7 @@
         <velocity>-1</velocity>
       </limit>
       <dynamics>
-        <damping>1.0</damping>
+        <damping>0.2</damping>
         <friction>0</friction>
         <spring_reference>0</spring_reference>
         <spring_stiffness>0</spring_stiffness>
@@ -2678,8 +2676,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2819,8 +2817,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -2934,8 +2932,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
@@ -3072,8 +3070,8 @@
         <implicit_spring_damper>1</implicit_spring_damper>
         <cfm_damping>1</cfm_damping>
         <limit>
-          <cfm>0</cfm>
-          <erp>0.2</erp>
+          <cfm>0.01</cfm>
+          <erp>0.1</erp>
         </limit>
       </ode>
     </physics>
