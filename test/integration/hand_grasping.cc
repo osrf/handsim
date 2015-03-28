@@ -38,16 +38,52 @@ void HaptixGraspingTest::HoldGrasps(const std::string &_world)
   physics::WorldPtr world = physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
-  // Unthrottle real time
+  // Unthrottle real time (?)
 
   // Find the hand model
+  physics::ModelPtr armModel;
 
-  // Move objects into hand
-  // Close fingers
+  if (_world == "worlds/arat.world")
+  {
+    armModel = world->GetModel("mpl_haptix_right_forearm");
+  }
+  else if (_world == "worlds/arat_left.world")
+  {
+    armModel = world->GetModel("mpl_haptix_left_forearm");
+  }
 
-  // Wait fixed amount (measured in sim time)
+  EXPECT_TRUE(armModel);
 
-  // 
+  EXPECT_TRUE(armModel->GetLink("wristz"));
+  math::Pose palmPose = armModel->GetLink("wristz")->GetWorldPose();
+
+  // Iterate through choice objects
+  // C++11 vector initialization
+  std::vector<std::string> graspObjects =
+      {"wood_cube_10cm", "wood_cube_7_5cm","wood_cube_5cm", "cricket_ball"};
+
+  for (auto const &object : graspObjects)
+  {
+    // Move objects into hand
+    ModelPtr objectModel = world->GetModel(object);
+    EXPECT_TRUE(objectModel);
+
+    // Align x and y with palmPose, move Z based on radius of the object
+    math::Pose objectPose = palmPose;
+    objectPose.pos.z -= objectModel->GetBoundingBox()->GetZLength()/2;
+    objectModel->SetWorldPose(objectPose);
+
+    // Temporarily disable object's gravity while closing fingers?
+    objectModel->SetGravityMode(false);
+
+    // Close fingers using haptix-comm (of course), test motors
+
+  
+    objectModel->SetGravityMode(true);
+    // Wait fixed amount (measured in sim time)
+
+    // Verify object is still in the hand: allow for ~5cm of error
+  }
 }
 
 /////////////////////////////////////////////////
