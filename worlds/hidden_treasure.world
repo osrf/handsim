@@ -7,7 +7,7 @@
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.7 1  0 0.4 1.57</pose>
+        <pose>0 -0.7 1  0 0.7 1.57</pose>
       </camera>
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <default_size>25 25</default_size>
