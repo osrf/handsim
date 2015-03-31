@@ -131,25 +131,25 @@
 
     <include>
       <name>robot1</name>
-      <uri>model://Tinybot</uri>
+      <uri>model://tinybot</uri>
       <pose>-0.477173 0.000407 0.069058 1.571721 0 -2.356195</pose>
     </include>
 
     <include>
       <name>robot2</name>
-      <uri>model://Tinybot</uri>
+      <uri>model://tinybot</uri>
       <pose>-0.052049 -0.424721 0.069058 1.571721 0 2.649844</pose>
     </include>
 
     <include>
       <name>robot3</name>
-      <uri>model://Tinybot</uri>
+      <uri>model://tinybot</uri>
       <pose>0.241868 0.124 0.069058 1.571721 0 -2.84795</pose>
     </include>
 
     <include>
       <name>robot4</name>
-      <uri>model://Tinybot</uri>
+      <uri>model://tinybot</uri>
       <pose>-0.64451 0.162583 0.069058 1.571721 0 0</pose>
     </include>
 
