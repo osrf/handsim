@@ -241,15 +241,15 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(M_PI, 0, 0));
+                               gazebo::math::Quaternion(0, 0, 0));
 
   this->worldToScreen = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   // From marker to elbow of simulated arm
   this->armMarkerOffset = gazebo::math::Pose(
-                               //gazebo::math::Vector3(0, 0.23, 0),
-                               gazebo::math::Vector3(0, 0, 0),
+                               gazebo::math::Vector3(0, 0.23, 0),
+                               //gazebo::math::Vector3(0, 0, 0),
                                gazebo::math::Quaternion(0, 0, 0));
 
   this->armOffsetInitialized = false;
@@ -1576,29 +1576,24 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
-  //this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
-  // T_WE = targetBaseLinkPose
-  // T_EM = hardcoded arm-marker transform (can be optional?)
-  // T_CA = Arm pose in optitrack frame (rawMarkerPose)
-
   // By Gazebo pose math,
   // If A = T_OP and B = T_PQ, B+A = T_OQ
 
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
 
-  gazebo::math::Pose rawMarkerPose = /*this->optitrackWorldArmRot +*/
-      gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    // offset = T_CA + T_WC + T_EW + T_AE
-    this->optitrackArmOffset = rawMarkerPose + this->monitorOptitrackFrame - targetBaseLinkPose + this->armMarkerOffset;
+    // T_AA' = T_CA' + T_SC + T_WS + T_EW + T_AE
+    this->optitrackArmOffset = rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame - this->targetBaseLinkPose + this->armMarkerOffset;
     this->armOffsetInitialized = true;
   }
   else
   {
-    // T_WE = T_AE + offset + T_CA + T_WC
-    this->targetBaseLinkPose = this->armMarkerOffset - this->optitrackArmOffset + rawMarkerPose + this->monitorOptitrackFrame;
+    // T_WE = T_AE + T_A'A + T_CA' + T_SC + T_WS
+    this->targetBaseLinkPose = this->armMarkerOffset -this->optitrackArmOffset + rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame;
+    //this->targetBaseLinkPose = rawMarkerPose - this->monitorOptitrackFrame;
   }
 }
 
@@ -1643,7 +1638,6 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   double gamma = atan2(gy[2], gz[2]);
 
   gazebo::math::Quaternion monitorRot(gamma, beta, alpha);
-  this->monitorOptitrackFrame.pos = monitorRot.GetInverse()*points[1];
   this->monitorOptitrackFrame.rot = monitorRot;
 
 
