@@ -241,16 +241,17 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(0, 0, 0));
+                               gazebo::math::Quaternion(0, 0, M_PI));
 
   this->worldToScreen = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   // From marker to elbow of simulated arm
   this->armMarkerOffset = gazebo::math::Pose(
-                               gazebo::math::Vector3(0, 0.23, 0),
-                               //gazebo::math::Vector3(0, 0, 0),
+                               //gazebo::math::Vector3(0, -0.29, 0),
+                               gazebo::math::Vector3(0, 0, 0),
                                gazebo::math::Quaternion(0, 0, 0));
+    //0.00660504 -0.294573  -1.21334e-13 2.77556e-17 -0.0115373
 
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
@@ -1581,18 +1582,27 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
 
-  gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose rawMarkerPose = this->optitrackWorldArmRot + gazebo::msgs::Convert(*_msg);
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    // T_AA' = T_CA' + T_SC + T_WS + T_EW + T_AE
-    this->optitrackArmOffset = rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame - this->targetBaseLinkPose + this->armMarkerOffset;
+    // T_AA' = T_CA' + T_MC + T_WM + T_EW + T_AE
+    // this->optitrackArmOffset = rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame - this->targetBaseLinkPose + this->armMarkerOffset;
+
+    // T_WS = T_MS + T_CM + T_AC + T_EA + T_WE
+    this->optitrackArmOffset = this->monitorOptitrackFrame -rawMarkerPose - this->armMarkerOffset + this->targetBaseLinkPose;
     this->armOffsetInitialized = true;
   }
   else
   {
-    // T_WE = T_AE + T_A'A + T_CA' + T_SC + T_WS
-    this->targetBaseLinkPose = this->armMarkerOffset -this->optitrackArmOffset + rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame;
+    // T_WE = T_AE + T_A'A + T_CA' + T_MC + T_WM
+    //this->targetBaseLinkPose = this->armMarkerOffset -this->optitrackArmOffset + rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame;
+
+    // T_WE = T_AE + T_CA + T_MC + T_SM + T_WS
+    this->targetBaseLinkPose = this->armMarkerOffset + rawMarkerPose - this->monitorOptitrackFrame + this->optitrackArmOffset;
+
+    // This looks pretty good
+    // so it's clear that we're calculating the wrong offset
     //this->targetBaseLinkPose = rawMarkerPose - this->monitorOptitrackFrame;
   }
 }
