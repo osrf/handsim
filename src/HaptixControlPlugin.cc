@@ -241,7 +241,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->optitrackWorldArmRot = gazebo::math::Pose(
                                gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(0, 0, M_PI));
+                               //gazebo::math::Quaternion(0, 0, M_PI));
+                               gazebo::math::Quaternion(0, 0, 0));
 
   this->worldToScreen = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
