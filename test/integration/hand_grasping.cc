@@ -19,7 +19,7 @@
 
 #include "gazebo/physics/physics.hh"
 #include <haptix/comm/haptix.h>
-#include "test/ServerFixture.hh"
+#include "gazebo/test/ServerFixture.hh"
 
 using namespace gazebo;
 
