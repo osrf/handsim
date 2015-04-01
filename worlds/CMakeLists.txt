@@ -1,5 +1,6 @@
 set (files 
   arat.world
+  arat_left.world
   wood_stack.world
 )
 

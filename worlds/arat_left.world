@@ -7,7 +7,7 @@
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.6 1.3  0 0.4 1.57</pose>
+        <pose>0 -0.7 1.5  0 0.4 1.57</pose>
       </camera>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
@@ -17,94 +17,94 @@
         <color_no_contact>255 255 255 0</color_no_contact>
         <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
-        <hand_side>right</hand_side>
+        <hand_side>left</hand_side>
         <timer_topic>~/timer_control</timer_topic> 
 
         <contacts>
-          <contact name="mpl::rPalm0">
-            <pos>150 200</pos>
+          <contact name="mpl::lPalm0">
+            <pos>125 200</pos>
             <index>0</index>
             <size>50 100</size>
           </contact>
-          <contact name="mpl::rPalm1">
+          <contact name="mpl::lPalm1">
+            <pos>195 200</pos>
             <index>1</index>
             <size>50 100</size>
-            <pos>85 200</pos>
           </contact>
 
-          <contact name="mpl::rHandEdge">
-            <pos>10 235</pos>
+
+          <contact name="mpl::lHandEdge">
+            <pos>275 235</pos>
             <index>2</index>
             <size>40 70</size>
           </contact>
-          <contact name="mpl::rHandTop">
-            <pos>299 55</pos>
+          <contact name="mpl::lHandTop">
+            <pos>-2 55</pos>
             <index>3</index>
             <size>25 31</size>
           </contact>
-
-          <contact name="mpl::rThProximal1">
-            <pos>245 240</pos>
+          <contact name="mpl::lThProximal1">
+            <pos>56 240</pos>
             <index>4</index>
           </contact>
-          <contact name="mpl::rThProximal2">
-            <pos>275 195</pos>
+          <contact name="mpl::lThProximal2">
+            <pos>26 195</pos>
             <index>5</index>
           </contact>
-          <contact name="mpl::rThDistal">
-            <pos>302 130</pos>
+          <contact name="mpl::lThDistal">
+            <pos>-4 130</pos>
             <index>6</index>
           </contact>
 
-          <contact name="mpl::rIndProximal">
-            <pos>218 116</pos>
+          <contact name="mpl::lIndProximal">
+            <pos>83 116</pos>
             <index>7</index>
           </contact>
-          <contact name="mpl::rIndMedial">
-            <pos>233 43</pos>
+          <contact name="mpl::lIndMedial">
+            <pos>68 43</pos>
             <index>8</index>
           </contact>
-          <contact name="mpl::rIndDistal">
-            <pos>248 -30</pos>
+          <contact name="mpl::lIndDistal">
+            <pos>53 -30</pos>
             <index>9</index>
           </contact>
 
-          <contact name="mpl::rMidProximal">
-            <pos>152 98</pos>
+          <contact name="mpl::lMidProximal">
+            <pos>149 98</pos>
             <index>10</index>
           </contact>
-          <contact name="mpl::rMidMedial">
-            <pos>155 19</pos>
+          <contact name="mpl::lMidMedial">
+            <pos>146 19</pos>
             <index>11</index>
           </contact>
-          <contact name="mpl::rMidDistal">
-            <pos>153 -60</pos>
+          <contact name="mpl::lMidDistal">
+            <pos>148 -60</pos>
             <index>12</index>
           </contact>
 
-          <contact name="mpl::rRingProximal">
-            <pos>84 101</pos>
+          <contact name="mpl::lRingProximal">
+            <pos>217 101</pos>
             <index>13</index>
           </contact>
-          <contact name="mpl::rRingMedial">
-            <pos>74 41</pos>
+          <contact name="mpl::lRingMedial">
+            <pos>227 41</pos>
             <index>14</index>
           </contact>
-          <contact name="mpl::rRingDistal">
-            <pos>64 -19</pos>
+          <contact name="mpl::lRingDistal">
+            <pos>237 -19</pos>
             <index>15</index>
           </contact>
 
-          <contact name="mpl::rLittleProximal">
-            <pos>35 156</pos>
+          <contact name="mpl::lLittleProximal">
+            <pos>266 156</pos>
             <index>16</index>
           </contact>
-          <contact name="mpl::rLittleMedial">
-            <pos>14 105</pos>
+          <contact name="mpl::lLittleMedial">
+            <pos>287 105</pos>
             <index>17</index>
           </contact>
-          <contact name="mpl::rLittleDistal">
-            <pos>-7 54</pos>
+          <contact name="mpl::lLittleDistal">
+            <pos>308 54</pos>
             <index>18</index>
           </contact>
 
@@ -255,6 +255,7 @@
 
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
         <size>155 30</size>
+        <pos>10 10</pos>
         <topic>~/timer_control</topic> 
       </plugin>
 
@@ -325,10 +326,9 @@
       <static>true</static>
     </include>
 
-    <!-- The apl_description model is not (yet) publicly available. -->
     <include>
-     <uri>model://mpl_haptix_right_forearm</uri>
-     <pose>0.4 -0.7 1.2 0 0 3.1416</pose>
+     <uri>model://mpl_haptix_left_forearm</uri>
+     <pose>-0.4 -0.7 1.2 0 0 0</pose>
     </include>
 
     <model name="polhemus_source">
@@ -447,13 +447,6 @@
       <pose>-2.0 250 1.115 0 0 0</pose>
     </include>
 
-    <!--
-    <include>
-      <uri>model://round_tin_base</uri>
-      <pose>-2.2 250 1.015 0 0 0</pose>
-    </include>
--->
-
     <include>
       <uri>model://round_tin_top</uri>
       <pose>-2.4 250 1.015 0 0 0</pose>
@@ -498,60 +491,61 @@
 
       <initial_arrangement>grasp_3</initial_arrangement>
       <arrangement name="demo_practice">
-        <pose model="wood_cube_10cm">-0.500 -0.265 1.020 0 0 0</pose>
-        <pose model="round_tin_base"> 0.500 -0.274 1.036 0 0 0</pose>
-        <pose model="round_tin_top">  0.217  0.040 1.393 0 0 0 </pose>
-        <pose model="marble">         0.500 -0.274 1.036 0 0 0</pose>
-        <pose model="marble2">        0.217 -0.274 1.036 0 0 0</pose>
-        <pose model="cup_1">         -0.100 -0.274 1.034 0 0 0</pose>
+        <pose model="wood_cube_10cm">  0.500 -0.265 1.020 0 0 0</pose>
+        <pose model="round_tin_base">-0.500 -0.274 1.036 0 0 0</pose>
+        <pose model="round_tin_top"> -0.217  0.040 1.393 0 0 0 </pose>
+        <pose model="marble">        -0.500 -0.274 1.036 0 0 0</pose>
+        <pose model="marble2">       -0.217 -0.274 1.036 0 0 0</pose>
+        <pose model="cup_1">           0.100 -0.274 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_1">
-        <pose model="wood_cube_10cm"> 0.217 -0.265 1.04 0 0 0</pose>
+        <pose model="wood_cube_10cm">-0.217 -0.265 1.04 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_2">
-        <pose model="wood_cube_2_5cm"> 0.217 -0.298 1.04 0 0 0</pose>
+        <pose model="wood_cube_2_5cm">-0.217 -0.298 1.04 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_3">
-        <pose model="wood_cube_5cm"> 0.217 -0.284 1.034 0 0 0</pose>
+        <pose model="wood_cube_5cm">-0.217 -0.284 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_4">
-        <pose model="wood_cube_7_5cm"> 0.217 -0.268 1.034 0 0 0</pose>
+        <pose model="wood_cube_7_5cm">-0.217 -0.268 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_5"> 
         <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
-        <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
-        <pose model="cricket_ball"> 0.217 -0.274 1.038 0 0 0</pose>
+        <pose model="round_tin_top">-0.217  0.04 1.393 0 0 0 </pose>
+        <pose model="cricket_ball">-0.217 -0.274 1.038 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_6">
-        <pose model="stone_10_2_5_1cm">0.242 -0.34 1.0475 -1.571074 0 -1.14</pose>
+        <pose model="stone_10_2_5_1cm">-0.242 -0.34 1.0475 -1.571074 0 -1.14</pose>
       </arrangement>
       <arrangement name="grip_1">
         <pose model="cup_1"> 0.00 -0.20 1.034 0 0 0</pose>
-        <pose model="cup_2"> 0.217 -0.20 1.034 0 0 0</pose>
-        <pose model="marble">0.217 -0.20 1.034 0 0 0 </pose>
+        <pose model="cup_2"> -0.217 -0.20 1.034 0 0 0</pose>
+        <pose model="marble">-0.217 -0.20 1.034 0 0 0 </pose>
       </arrangement>
+
       <arrangement name="grip_2">
-        <pose model="wooden_peg_board">0.128 -0.08 1.034 0 0 -1.571074</pose>
-        <pose model="tube_2_25cm">0.216 -0.328 1.034 0 0 0</pose>
+        <pose model="wooden_peg_board">-0.128 -0.08 1.034 0 0 -1.571074</pose>
+        <pose model="tube_2_25cm">-0.216 -0.328 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grip_3">
-        <pose model="metal_peg_board">0.128 -0.08 1.034 0 0 -1.571074</pose>
-        <pose model="tube_9_5mm">0.216 -0.328 1.034 0 0 0</pose>
+        <pose model="metal_peg_board">-0.128 -0.08 1.034 0 0 -1.571074</pose>
+        <pose model="tube_9_5mm">-0.216 -0.328 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grip_4">
-        <pose model="round_tin_top">0.244 -0.281 1.033 0 0 0</pose>
-        <pose model="washer">0.244 -0.281 1.036 0 0 0</pose>
-        <pose model="metal_peg_board">0.128 -0.08 1.034 0 0 -1.571074</pose>
+        <pose model="round_tin_top">-0.244 -0.281 1.033 0 0 0</pose>
+        <pose model="washer">-0.244 -0.281 1.036 0 0 0</pose>
+        <pose model="metal_peg_board">-0.128 -0.08 1.034 0 0 -1.571074</pose>
       </arrangement>
       <arrangement name="pinch_1">
         <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
-        <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
-        <pose model="ball_bearing">0.217 -0.270 1.038 0 0 0</pose>
+        <pose model="round_tin_top">-0.217  0.04 1.393 0 0 0 </pose>
+        <pose model="ball_bearing">-0.217 -0.270 1.038 0 0 0</pose>
       </arrangement>
       <arrangement name="pinch_2">
         <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
-        <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
-        <pose model="marble">0.217 -0.274 1.036 0 0 0</pose>
+        <pose model="round_tin_top">-0.217  0.04 1.393 0 0 0 </pose>
+        <pose model="marble">-0.217 -0.274 1.036 0 0 0</pose>
       </arrangement>
 
     </plugin>
