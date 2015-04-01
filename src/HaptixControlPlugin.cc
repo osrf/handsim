@@ -246,6 +246,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->worldToScreen = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
+  // From marker to elbow of simulated arm
   this->armMarkerOffset = gazebo::math::Pose(
                                //gazebo::math::Vector3(0, 0.23, 0),
                                gazebo::math::Vector3(0, 0, 0),
@@ -1590,27 +1591,14 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    // Paused:
-    //   ArmOffset = T_ME + T_EW + T_WS + T_SM + T_MC + T_CA
-    // or in my notation
-    /*this->optitrackArmOffset = this->armMarkerOffset - this->targetBaseLinkPose
-      + this->worldToScreen - this->monitorOptitrackFrame + rawMarkerPose;*/
-    //this->optitrackArmOffset = rawMarkerPose + this->monitorOptitrackFrame + this->worldToScreen - this->targetBaseLinkPose + this->armMarkerOffset;
-
-    // T_AM = T_EM + T_WE + T_SW + T_MS + T_CM + T_AC
-    this->optitrackArmOffset = -this->armMarkerOffset + this->targetBaseLinkPose - this->worldToScreen - this->monitorOptitrackFrame - rawMarkerPose;
+    // offset = T_CA + T_WC + T_EW + T_AE
+    this->optitrackArmOffset = rawMarkerPose + this->monitorOptitrackFrame - targetBaseLinkPose + this->armMarkerOffset;
     this->armOffsetInitialized = true;
   }
   else
   {
-    // T_WE = T_WS + T_SM + T_MC + T_CA - armOffset + T_ME
-    /*this->targetBaseLinkPose = this->worldToScreen -
-        this->monitorOptitrackFrame + rawMarkerPose - this->optitrackArmOffset
-        + this->armMarkerOffset;*/
-    //this->targetBaseLinkPose = this->worldToScreen - this->monitorOptitrackFrame + rawMarkerPose + this->optitrackArmOffset + this->armMarkerOffset;
-
-    // T_WE = T_ME + T_AM + T_CA + T_MC + T_SM + T_WS
-    this->targetBaseLinkPose = this->armMarkerOffset + this->optitrackArmOffset + rawMarkerPose + this->monitorOptitrackFrame + this->worldToScreen;
+    // T_WE = T_AE + offset + T_CA + T_WC
+    this->targetBaseLinkPose = this->armMarkerOffset - this->optitrackArmOffset + rawMarkerPose + this->monitorOptitrackFrame;
   }
 }
 
@@ -1655,7 +1643,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   double gamma = atan2(gy[2], gz[2]);
 
   gazebo::math::Quaternion monitorRot(gamma, beta, alpha);
-  this->monitorOptitrackFrame.pos = -points[1];
+  this->monitorOptitrackFrame.pos = monitorRot.GetInverse()*points[1];
   this->monitorOptitrackFrame.rot = monitorRot;
 
 
