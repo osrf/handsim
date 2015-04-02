@@ -19,6 +19,7 @@
 
 #include "gazebo/physics/physics.hh"
 #include <haptix/comm/haptix.h>
+//#include "handsim/test/ServerFixture.hh"
 #include "gazebo/test/ServerFixture.hh"
 
 using namespace gazebo;
@@ -42,7 +43,7 @@ void HaptixGraspingTest::HoldGrasps(const std::string &_world)
   // Unthrottle real time (?)
 
   // Find the hand model
-  physics::ModelPtr armModel;
+  /*physics::ModelPtr armModel;
 
   if (_world == "worlds/arat.world")
   {
@@ -109,7 +110,7 @@ void HaptixGraspingTest::HoldGrasps(const std::string &_world)
     EXPECT_NEAR(objectPose.pos.x, finalPose.pos.x, 0.05);
     EXPECT_NEAR(objectPose.pos.y, finalPose.pos.y, 0.05);
     EXPECT_NEAR(objectPose.pos.z, finalPose.pos.z, 0.05);
-  }
+  }*/
 }
 
 /////////////////////////////////////////////////
