@@ -40,44 +40,126 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
 
-  // Parameters for sensor contact visualization
-  // Set the frame background and foreground colors
-  this->setStyleSheet(
-      "QFrame {background-color: rgba(255, 255, 255, 255);"
-      "color: rgba(100, 100, 100, 255);"
-      "}"
-      );
+  // General settings
+  QLabel *generalSettingsLabel = new QLabel(tr("<b>General Settings</b>"));
 
-  // Create the frame to hold all the widgets
-  QFrame *mainFrame = new QFrame();
-  QVBoxLayout *frameLayout = new QVBoxLayout;
-  frameLayout->setContentsMargins(4, 4, 0, 0);
-  mainFrame->setLayout(frameLayout);
+  // Stereo
+  QCheckBox *stereoCheck = new QCheckBox("Stereo");
+  stereoCheck->setToolTip(tr("Enable stereo rendering"));
+  stereoCheck->setFocusPolicy(Qt::NoFocus);
+  stereoCheck->setChecked(true);
+  connect(stereoCheck, SIGNAL(stateChanged(int)), this,
+      SLOT(OnStereoCheck(int)));
 
-  this->setPalette(QPalette(QColor(255, 255, 255, 0)));
+  // Separator
+  QFrame *settingsSeparator = new QFrame(this);
+  settingsSeparator->setFrameShape(QFrame::HLine);
+  settingsSeparator->setFrameShadow(QFrame::Sunken);
+  settingsSeparator->setLineWidth(1);
 
-  // Create the hand
-  // Create a QGraphicsView to draw the finger force contacts
+  // Keyboard settings
+  QLabel *keyboardSettingsLabel = new QLabel(tr("<b>Keyboard Settings</b>"));
+
+  // Local Frame
+  QCheckBox *localCoordMoveCheck = new QCheckBox("Local frame");
+  localCoordMoveCheck->setToolTip(tr("Enable movement in arm's local frame"));
+  localCoordMoveCheck->setFocusPolicy(Qt::NoFocus);
+  localCoordMoveCheck->setChecked(true);
+  connect(localCoordMoveCheck, SIGNAL(stateChanged(int)), this,
+      SLOT(OnLocalCoordMove(int)));
+
+  // Arm move speed
+  QLabel *posScalingLabel = new QLabel(tr("Arm move speed:"));
+
+  QSlider *posScalingSlider = new QSlider(Qt::Horizontal);
+  posScalingSlider->setRange(1, 100);
+  posScalingSlider->setValue(this->posScalingFactor*100);
+  posScalingSlider->setToolTip(tr("Adjust keyboard arm movement speed"));
+  connect(posScalingSlider, SIGNAL(sliderMoved(int)),
+          this, SLOT(OnScalingSlider(int)));
+
+  // Settings layout
+  QVBoxLayout *settingsLayout = new QVBoxLayout;
+  settingsLayout->addWidget(generalSettingsLabel);
+  settingsLayout->addWidget(stereoCheck);
+  settingsLayout->addWidget(settingsSeparator);
+  settingsLayout->addWidget(keyboardSettingsLabel);
+  settingsLayout->addWidget(localCoordMoveCheck);
+  settingsLayout->addWidget(posScalingLabel);
+  settingsLayout->addWidget(posScalingSlider);
+
+  // Settings widget
+  QWidget *settingsWidget = new QWidget;
+  settingsWidget->setLayout(settingsLayout);
+  settingsWidget->setStyleSheet("\
+      QWidget {\
+        background-color: #eeeeee;\
+        color: #333333;\
+      }");
+
+  // Settings menu
+  QMenu *settingsMenu = new QMenu;
+  QWidgetAction *settingsAction = new QWidgetAction(settingsMenu);
+  settingsAction->setDefaultWidget(settingsWidget);
+  settingsMenu->addAction(settingsAction);
+
+  // Mocap status
+  this->mocapStatusIndicator = new QLabel(QString("Motion Capture: No data"));
+  connect(this, SIGNAL(MocapStatusChanged(int)), this,
+      SLOT(OnMocapStatusChanged(int)));
+
+  // Settings button
+  std::string settingsImgFilename =
+      gazebo::common::SystemPaths::Instance()->FindFileURI(
+      "file://media/gui/arat/arat_icons/settings.png");
+  QPixmap settingsPixmap = QPixmap(QString(settingsImgFilename.c_str()));
+
+  QToolButton *settingsButton = new QToolButton();
+  settingsButton->setFixedSize(QSize(30, 30));
+  settingsButton->setIconSize(QSize(40, 40));
+  settingsButton->setToolTip(tr("Settings"));
+  settingsButton->setIcon(settingsPixmap);
+  settingsButton->setToolButtonStyle(Qt::ToolButtonIconOnly);
+  settingsButton->setPopupMode(QToolButton::InstantPopup);
+  settingsButton->setMenu(settingsMenu);
+
+  // Top bar layout
+  QHBoxLayout *topBarLayout = new QHBoxLayout();
+  topBarLayout->addWidget(this->mocapStatusIndicator);
+  topBarLayout->addWidget(settingsButton);
+
+  // Top bar widget
+  this->topBarFrame = new QFrame();
+  this->topBarFrame->setLayout(topBarLayout);
+  this->topBarFrame->setStyleSheet("\
+      QFrame{\
+        background-color: #fc8b03;\
+        color: #eeeeee;\
+      }");
+
+  // Separator
+  QFrame *mainSeparator = new QFrame(this);
+  mainSeparator->setFrameShape(QFrame::HLine);
+  mainSeparator->setFrameShadow(QFrame::Sunken);
+  mainSeparator->setLineWidth(1);
+
+  // Hand pixmap
+  std::string handImgFilename =
+    gazebo::common::SystemPaths::Instance()->FindFileURI(
+      "file://media/gui/arat/arat_icons/hand.svg");
+  QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
+  QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
+  handItem->setPos(-20, -73);
+
+  // Hand scene
   this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
   QGraphicsView *handView = new QGraphicsView(this->handScene);
   handView->setStyleSheet("border: 0px");
   handView->setSizePolicy(QSizePolicy::Expanding,
                           QSizePolicy::MinimumExpanding);
-
-  // Read parameters
-  std::string handImgFilename =
-    gazebo::common::SystemPaths::Instance()->FindFileURI(
-      "file://media/gui/arat/arat_icons/hand_right.svg");
-
-  // Load the hand image
-  QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
-  this->handItem = new QGraphicsPixmapItem(handImg);
-  handItem->setPos(-20, -73);
-
-  // Draw the hand on the canvas
   this->handScene->addItem(handItem);
 
-  // Create the task layout
+  // Tabs
   this->taskTab = new QTabWidget();
   this->taskTab->setStyleSheet(
       "QTabWidget {"
@@ -111,11 +193,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       "}"
       );
 
-  QFrame *tabFrame = new QFrame();
-  tabFrame->setContentsMargins(4, 0, 4, 0);
-  QVBoxLayout *tabFrameLayout = new QVBoxLayout();
-  tabFrame->setLayout(tabFrameLayout);
-
+  // Instructions
   this->instructionsView = new QTextEdit("Instructions:");
   this->instructionsView->setReadOnly(true);
   this->instructionsView->setMaximumHeight(60);
@@ -128,16 +206,20 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       "background-color: #ffffff"
       );
 
+  // Tab layout
+  QVBoxLayout *tabFrameLayout = new QVBoxLayout();
   tabFrameLayout->addWidget(taskTab);
   tabFrameLayout->addWidget(this->instructionsView);
 
-  QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
+  // Tab frame
+  QFrame *tabFrame = new QFrame();
+  tabFrame->setContentsMargins(4, 0, 4, 0);
+  tabFrame->setLayout(tabFrameLayout);
 
-  // reset all button
+  // Reset All button
   QPushButton *resetButton = new QPushButton();
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
-  resetButton->setToolTip(QString("Reset camera view, arm, and objects to original positions."));
   resetButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
@@ -146,24 +228,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
   resetButton->setMaximumWidth(120);
 
-  // next scene button
-  QPushButton *nextButton = new QPushButton();
-  nextButton->setFocusPolicy(Qt::NoFocus);
-  nextButton->setText(QString("Next Test"));
-  nextButton->setToolTip(QString("Skip to the next test."));
-  nextButton->setStyleSheet(
-      "background-color: rgba(120, 120, 120, 255);"
-      "border: 0px;"
-      "border-radius: 4px;"
-      "color: #ffffff");
-  connect(nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
-  nextButton->setMaximumWidth(120);
-
-  // add reset scene only
+  // Reset Scene button
   QPushButton *resetSceneButton = new QPushButton();
   resetSceneButton->setFocusPolicy(Qt::NoFocus);
-  resetSceneButton->setText(QString("Reset Objects"));
-  resetSceneButton->setToolTip(QString("Reset test objects to original positions."));
+  resetSceneButton->setText(QString("Reset Scene"));
   resetSceneButton->setStyleSheet(
       "background-color: rgba(120, 120, 120, 255);"
       "border: 0px;"
@@ -173,10 +241,25 @@ HaptixGUIPlugin::HaptixGUIPlugin()
     SLOT(OnResetSceneClicked()));
   resetSceneButton->setMaximumWidth(120);
 
+  // Next test button
+  QPushButton *nextButton = new QPushButton();
+  nextButton->setFocusPolicy(Qt::NoFocus);
+  nextButton->setText(QString("Next Test"));
+  nextButton->setStyleSheet(
+      "background-color: rgba(120, 120, 120, 255);"
+      "border: 0px;"
+      "border-radius: 4px;"
+      "color: #ffffff");
+  connect(nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
+  nextButton->setMaximumWidth(120);
+
+  // Cycle button layout
+  QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
   cycleButtonLayout->addWidget(resetButton);
   cycleButtonLayout->addWidget(resetSceneButton);
   cycleButtonLayout->addWidget(nextButton);
 
+  // Cycle button frame
   QFrame *cycleButtonFrame = new QFrame;
   cycleButtonFrame->setLayout(cycleButtonLayout);
 
@@ -185,7 +268,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->startStopButton->setFocusPolicy(Qt::NoFocus);
   this->startStopButton->setCheckable(true);
   this->startStopButton->setText(QString("Start"));
-  this->startStopButton->setToolTip(QString("Start/stop timer."));
   this->startStopButton->setDisabled(true);
 
   this->startStyle =
@@ -237,69 +319,48 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(this->startStopButton, SIGNAL(toggled(bool)), this,
       SLOT(OnStartStop(bool)));
 
-  QHBoxLayout *movementLayout = new QHBoxLayout();
-
-  QSlider *posScalingSlider = new QSlider(Qt::Horizontal);
-  posScalingSlider->setRange(1, 100);
-  posScalingSlider->setValue(this->posScalingFactor*100);
-  posScalingSlider->setToolTip(tr("Adjust keyboard arm movement speed"));
-  connect(posScalingSlider, SIGNAL(sliderMoved(int)),
-          this, SLOT(OnScalingSlider(int)));
-
-  QCheckBox *localCoordMoveCheck = new QCheckBox("Local frame");
-  localCoordMoveCheck->setToolTip(tr("Enable movement in arm's local frame"));
-  localCoordMoveCheck->setFocusPolicy(Qt::NoFocus);
-  localCoordMoveCheck->setChecked(true);
-  connect(localCoordMoveCheck, SIGNAL(stateChanged(int)),
-          this, SLOT(OnLocalCoordMove(int)));
-
-  QCheckBox *stereoCheck = new QCheckBox("Stereo");
-  stereoCheck->setToolTip(tr("Enable stereo rendering"));
-  stereoCheck->setFocusPolicy(Qt::NoFocus);
-  stereoCheck->setChecked(true);
-  connect(stereoCheck, SIGNAL(stateChanged(int)),
-          this, SLOT(OnStereoCheck(int)));
-
-  this->mocapStatusIndicator = new QLabel(QString("Mocap: NO DATA"));
-
-  QHBoxLayout *stereoCheckLayout = new QHBoxLayout();
-  stereoCheckLayout->addWidget(stereoCheck);
-  stereoCheckLayout->addStretch(1);
-
-  stereoCheckLayout->addWidget(mocapStatusIndicator);
-  stereoCheckLayout->addSpacing(10);
-
-  movementLayout->addWidget(localCoordMoveCheck);
-  movementLayout->addWidget(new QLabel(tr("Arm move speed:")));
-  movementLayout->addWidget(posScalingSlider);
-
-  frameLayout->addLayout(movementLayout);
-  frameLayout->addLayout(stereoCheckLayout);
-
-  QHBoxLayout *bottomLayout = new QHBoxLayout();
+  // Version
   std::string versionStr = std::string("  v ") + HANDSIM_VERSION_FULL;
   QLabel *versionLabel = new QLabel(tr(versionStr.c_str()));
   versionLabel->setStyleSheet("QLabel {font: 10px}");
+
+  // Bottom layout
+  QHBoxLayout *bottomLayout = new QHBoxLayout();
   bottomLayout->addWidget(versionLabel);
 
-  // Add all widgets to the main frame layout
+  // Frame layout
+  QVBoxLayout *frameLayout = new QVBoxLayout;
+  frameLayout->setContentsMargins(0, 0, 0, 0);
+  frameLayout->addWidget(topBarFrame);
   frameLayout->addWidget(handView, 1.0);
+  frameLayout->addItem(new QSpacerItem(30, 30, QSizePolicy::Minimum,
+      QSizePolicy::Minimum));
+  frameLayout->addWidget(mainSeparator);
   frameLayout->addWidget(tabFrame);
   frameLayout->addWidget(instructionsView);
   frameLayout->addWidget(cycleButtonFrame);
   frameLayout->addWidget(startStopButton);
   frameLayout->addLayout(bottomLayout);
 
+  // Main frame
+  QFrame *mainFrame = new QFrame();
+  mainFrame->setLayout(frameLayout);
+
+  // Main Layout
   QVBoxLayout *mainLayout = new QVBoxLayout();
+  mainLayout->setContentsMargins(0, 0, 0, 0);
   mainLayout->addWidget(mainFrame);
 
-  // Remove margins to reduce space
-  frameLayout->setContentsMargins(0, 0, 0, 0);
-  mainLayout->setContentsMargins(0, 0, 0, 0);
-
+  // Set the frame background and foreground colors
+  this->setStyleSheet(
+      "QFrame {background-color: rgba(255, 255, 255, 255);"
+      "color: rgba(100, 100, 100, 255);"
+      "}"
+      );
   this->setLayout(mainLayout);
+  this->setPalette(QPalette(QColor(255, 255, 255, 0)));
   this->move(10, 10);
-  this->resize(480, 840);
+  this->resize(480, 880);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -960,18 +1021,18 @@ void HaptixGUIPlugin::PollTracking()
       if (!this->trackingPaused)
       {
         // GUI indicator ON
-        this->mocapStatusIndicator->setText("Mocap: ON");
+        this->MocapStatusChanged(1);
       }
       else
       {
         // GUI indicator off
-        this->mocapStatusIndicator->setText("Mocap: PAUSED");
+        this->MocapStatusChanged(2);
       }
     }
     else
     {
       // If the service is stopped, try to restart it.
-      this->mocapStatusIndicator->setText("Mocap: NO DATA");
+      this->MocapStatusChanged(0);
       ret = system("net rpc service -S HAPTIX-WIN-VM start optitrackbridge -U"
             "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
       gzdbg << "Starting optitrackbridge service" << std::endl;
@@ -994,7 +1055,7 @@ void HaptixGUIPlugin::PollTracking()
          this->optitrackUpdateTime).Double() > 3)
     {
       // Try to stop the service to get it in a consistent state
-      this->mocapStatusIndicator->setText("Mocap: NO DATA");
+      this->MocapStatusChanged(0);
       ret = system("net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U"
             "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
       gzdbg << "Stopping optitrackbridge service" << std::endl;
@@ -1398,4 +1459,44 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
 void HaptixGUIPlugin::OnOptitrackAlive(ConstTimePtr& /*_time*/)
 {
   this->optitrackUpdateTime = gazebo::common::Time::GetWallTime();
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
+{
+  switch(_status)
+  {
+    case 0:
+    {
+      this->mocapStatusIndicator->setText("Motion Capture: No data");
+      this->topBarFrame->setStyleSheet("\
+          QFrame{\
+            background-color: #fc8b03;\
+            color: #eeeeee;\
+          }");
+      break;
+    }
+    case 1:
+    {
+      this->mocapStatusIndicator->setText("Motion Capture: On");
+      this->topBarFrame->setStyleSheet("\
+          QFrame{\
+            background-color: #4a8dbf;\
+            color: #eeeeee;\
+          }");
+      break;
+    }
+    case 2:
+    {
+      this->mocapStatusIndicator->setText("Motion Capture: Paused");
+      this->topBarFrame->setStyleSheet("\
+          QFrame{\
+            background-color: #999999;\
+            color: #eeeeee;\
+          }");
+      break;
+    }
+    default:
+      break;
+  }
 }

@@ -56,6 +56,10 @@ namespace haptix_gazebo_plugins
     /// \param[in] _value Force value.
     signals: void SetContactForce(QString _contactName, double _value);
 
+    /// \brief Signal that motion capture status has changed.
+    /// \param[in] _status 0: No data; 1: On; 2: Paused.
+    signals: void MocapStatusChanged(int _status);
+
     /// \brief Handles setting a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
     /// \param[in] _value Force value.
@@ -96,6 +100,10 @@ namespace haptix_gazebo_plugins
     /// \brief Callback triggered when stereo check box is clicked.
     /// \param[in] _state State of the check box.
     private slots: void OnStereoCheck(int _state);
+
+    /// \brief Callback motion capture status has changed.
+    /// \param[in] _status 0: No data; 1: On; 2: Paused.
+    private slots: void OnMocapStatusChanged(int _status);
 
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
@@ -272,8 +280,11 @@ namespace haptix_gazebo_plugins
     /// \brief start a thread to poll contact sensor data
     private: boost::thread pollSensorsThread;
 
-    /// \brief graphical mocap status indicator
-    private: QLabel* mocapStatusIndicator;
+    /// \brief Motion capture status indicator.
+    private: QLabel *mocapStatusIndicator;
+
+    /// \brief Top bar widget.
+    private: QFrame *topBarFrame;
 
     /// \brief start a thread to poll optitrackbridge
     private: boost::thread pollTrackingThread;
