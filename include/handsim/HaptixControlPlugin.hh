@@ -527,7 +527,7 @@ namespace gazebo
 
     /// \brief hardcoded offset between arm sensor and position on link to
     /// control, T_ME
-    private: gazebo::math::Pose armMarkerOffset;
+    private: gazebo::math::Pose armElbow;
 
     private: gazebo::math::Pose worldToScreen;
 
@@ -538,7 +538,11 @@ namespace gazebo
     private: gazebo::math::Pose optitrackWorldArmRot;
 
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
-    private: gazebo::math::Pose monitorOptitrackFrame;
+    private: gazebo::math::Pose cameraMonitor;
+
+    private: gazebo::math::Pose monitorScreen;
+
+    private: gazebo::math::Pose worldScreen;
 
     private: gazebo::math::Pose optitrackArmOffset;
 

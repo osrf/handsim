@@ -237,22 +237,22 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
   // this->optitrackArm = gazebo::math::Pose::Zero;
-  this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
+  //this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
+  this->monitorScreen = gazebo::math::Pose::Zero;
 
-  this->optitrackWorldArmRot = gazebo::math::Pose(
-                               gazebo::math::Vector3(0, 0, 0),
-                               //gazebo::math::Quaternion(0, 0, M_PI));
-                               gazebo::math::Quaternion(0, 0, 0));
+  // x-> -z, y -> -y, z -> -x
+
+  // Screen is actually "window"
+  this->worldScreen = gazebo::math::Pose(0, -0.65, 1.25, 0, 0, 0);
 
   this->worldToScreen = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   // From marker to elbow of simulated arm
-  this->armMarkerOffset = gazebo::math::Pose(
-                               //gazebo::math::Vector3(0, -0.29, 0),
-                               gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(0, 0, 0));
-    //0.00660504 -0.294573  -1.21334e-13 2.77556e-17 -0.0115373
+  this->armElbow = gazebo::math::Pose(
+                                      gazebo::math::Vector3(0, 0.29, 0),
+                                      //gazebo::math::Vector3(0.0, 0.0, 0.0),
+                                      gazebo::math::Quaternion(0, 0, 0));
 
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
@@ -1554,7 +1554,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     {
       this->optitrackHeadOffset = -this->cameraToOptitrackHeadMarker -
           this->userCameraPose + this->worldToScreen +
-          this->monitorOptitrackFrame + rawMarkerPose;
+          -this->cameraMonitor + rawMarkerPose;
       this->headOffsetInitialized = true;
     }
   }
@@ -1563,7 +1563,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     if (this->userCameraPoseValid)
     {
       gazebo::math::Pose targetCameraPose = this->worldToScreen +
-          this->monitorOptitrackFrame + rawMarkerPose -
+          -this->cameraMonitor + rawMarkerPose -
           this->optitrackHeadOffset - this->cameraToOptitrackHeadMarker;
       if (!this->viewpointRotationsEnabled)
       {
@@ -1582,29 +1582,24 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   // If A = T_OP and B = T_PQ, B+A = T_OQ
 
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
+  std::unique_lock<std::mutex> monitorLock(this->optitrackMonitorMutex,
+      std::try_to_lock);
 
-  gazebo::math::Pose rawMarkerPose = this->optitrackWorldArmRot + gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose cameraArm = gazebo::msgs::Convert(*_msg);
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    // T_AA' = T_CA' + T_MC + T_WM + T_EW + T_AE
-    // this->optitrackArmOffset = rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame - this->targetBaseLinkPose + this->armMarkerOffset;
+    // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
 
-    // T_WS = T_MS + T_CM + T_AC + T_EA + T_WE
-    this->optitrackArmOffset = this->monitorOptitrackFrame -rawMarkerPose - this->armMarkerOffset + this->targetBaseLinkPose;
+    this->optitrackArmOffset =  -cameraArm - this->armElbow + this->targetBaseLinkPose
+        - this->worldScreen + this->monitorScreen + this->cameraMonitor;
     this->armOffsetInitialized = true;
   }
-  else
+  else if (this->armOffsetInitialized)
   {
-    // T_WE = T_AE + T_A'A + T_CA' + T_MC + T_WM
-    //this->targetBaseLinkPose = this->armMarkerOffset -this->optitrackArmOffset + rawMarkerPose + this->optitrackWorldArmRot - this->monitorOptitrackFrame;
-
-    // T_WE = T_AE + T_CA + T_MC + T_SM + T_WS
-    this->targetBaseLinkPose = this->armMarkerOffset + rawMarkerPose - this->monitorOptitrackFrame + this->optitrackArmOffset;
-
-    // This looks pretty good
-    // so it's clear that we're calculating the wrong offset
-    //this->targetBaseLinkPose = rawMarkerPose - this->monitorOptitrackFrame;
+    // T_WE = T_AE + T_C'A + T_CC' -T_CM -T_MS + T_WS
+    this->targetBaseLinkPose = this->armElbow + cameraArm + this->optitrackArmOffset -
+        this->cameraMonitor - this->monitorScreen + this->worldScreen;
   }
 }
 
@@ -1622,14 +1617,59 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
     points.push_back(msgs::Convert(_msg->points(i)));
   }
 
-  gazebo::math::Vector3 gx = (points[1] - points[0]).Normalize();
-  gazebo::math::Vector3 gz = (points[1] - points[2]).Normalize();
+  // enforce that points[1] is the middle point, closest to both
+  double lengths[3] = { (points[0] - points[1]).GetLength(),
+      (points[1] - points[2]).GetLength(), (points[2] - points[0]).GetLength()};
+
+  int originPointId = -1;
+  if (lengths[0] > lengths[1] && lengths[0] > lengths[2])
+  {
+    // lengths[0] is hypoteneuse
+    originPointId = 2;
+  }
+  else if (lengths[1] > lengths[0] && lengths[1] > lengths[2])
+  {
+    originPointId = 0;
+  }
+  else if (lengths[2] > lengths[1] && lengths[2] > lengths[0])
+  {
+    originPointId = 1;
+  }
+
+  
+  int i1 = (originPointId + 1) % 3;
+  int i2 = (originPointId + 2) % 3;
+  int shortPointId = i2;
+  int longPointId = i1;
+  if ((points[originPointId]-points[i1]).GetLength() <
+      (points[originPointId]-points[i2]).GetLength())
+  {
+    shortPointId = i1;
+    longPointId = i2;
+  }
+  
+  // X is the longer vector, z is the shorter one
+  // X points to the right of the screen, Z points up
+  // Y points in
+  //gazebo::math::Vector3 gx = points[longPointId] - points[originPointId];
+  gazebo::math::Vector3 gx = points[originPointId] - points[longPointId];
+  gazebo::math::Vector3 gz = points[shortPointId] - points[originPointId];
+
+  if (gx.GetLength() < gz.GetLength())
+  {
+    gzerr << "Swapping gx and gz, this should never happen" << std::endl;
+    gazebo::math::Vector3 tmp = gx;
+    gx = gz;
+    gz = tmp;
+  }
+  gx = gx.Normalize();
+  gz = gz.Normalize();
 
   // gy = gz X gx
   gazebo::math::Vector3 gy = gz.Cross(gx).Normalize();
 
   gx = gy.Cross(gz).Normalize();
-  gz = gx.Cross(gy).Normalize();
+  //gz = gx.Cross(gy).Normalize();
 
   if (abs(gx.Dot(gy)) > 1e-6 || abs(gx.Dot(gz)) > 1e-6
       || abs(gz.Dot(gy)) > 1e-6)
@@ -1638,24 +1678,27 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
     return;
   }
 
-  // The rotational matrix from monitor frame to Optitrack can be
-  // represented with gx, gy, gz as its column vectors
+  // The rotational matrix from the camera (monitor) frame to Gazebo (Screen)
+  // frame can be represented with gx, gy, gz as its column vectors
 
   // Calculate RPY angles from rotation matrix:
   // http://planning.cs.uiuc.edu/node103.html
 
-  double alpha = atan2(gx[1], gx[0]);
+  /*double alpha = atan2(gx[1], gx[0]);
   double beta = atan2(-gx[2], sqrt(pow(gy[2], 2) + pow(gz[2], 2)));
-  double gamma = atan2(gy[2], gz[2]);
+  double gamma = atan2(gy[2], gz[2]);*/
+  math::Matrix3 G;
+  G.SetFromAxes(gx, gy, gz);
+  double qw = sqrt(1 + G[0][0] + G[1][1] + G[2][2] )/2;
+  double qx = (G[2][1] -G[1][2])/(4*qw);
+  double qy = (G[0][2] - G[2][0])/(4*qw);
+  double qz = (G[1][0] - G[0][1])/(4*qw);
 
-  gazebo::math::Quaternion monitorRot(gamma, beta, alpha);
-  this->monitorOptitrackFrame.rot = monitorRot;
-
-
-  /*this->monitorOptitrackFrame.pos =
-      this->monitorPosFilter.Process(this->monitorOptitrackFrame.pos);
-  this->monitorOptitrackFrame.rot =
-      this->monitorOriFilter.Process(this->monitorOptitrackFrame.rot);*/
+  gazebo::math::Quaternion monitorRot(qw, qx, qy, qz);
+  this->monitorScreen.rot = monitorRot.GetInverse();
+  //this->monitorScreen.rot = monitorRot;
+  this->monitorScreen.pos = math::Vector3();
+  this->cameraMonitor.pos = points[1];
 
   // Test: Assert that the inverse of the rotation we calculated rotates
   // gx, gy and gz to their respective unit vectors.
