@@ -19,6 +19,15 @@ macro (handsim_build_tests)
       libgtest_main.a
       pthread
       HaptixTracking
+      gazebo_common
+      gazebo_math
+      gazebo_physics
+      gazebo_sensors
+      gazebo_rendering
+      gazebo_msgs
+      gazebo_transport
+      libgazebo
+      ${Boost_LIBRARIES}
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
