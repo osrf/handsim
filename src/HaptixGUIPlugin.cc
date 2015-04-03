@@ -134,6 +134,14 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   settingsButton->setToolButtonStyle(Qt::ToolButtonIconOnly);
   settingsButton->setPopupMode(QToolButton::InstantPopup);
   settingsButton->setMenu(settingsMenu);
+  settingsButton->setStyleSheet("\
+      QToolButton::menu-indicator {\
+        image: none;\
+      }\
+      QToolButton:hover, QToolButton:pressed {\
+        background-color: #eee;\
+        border: none;\
+      }");
 
   // Top bar layout
   QHBoxLayout *topBarLayout = new QHBoxLayout();
@@ -165,8 +173,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
     gazebo::common::SystemPaths::Instance()->FindFileURI(
       "file://media/gui/arat/arat_icons/hand.svg");
   QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
-  QGraphicsPixmapItem *handItem = new QGraphicsPixmapItem(handImg);
-  handItem->setPos(-20, -73);
+  this->handItem = new QGraphicsPixmapItem(handImg);
+  this->handItem->setPos(-20, -73);
 
   // Hand scene
   this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
@@ -174,7 +182,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   handView->setStyleSheet("border: 0px");
   handView->setSizePolicy(QSizePolicy::Expanding,
                           QSizePolicy::MinimumExpanding);
-  this->handScene->addItem(handItem);
+  this->handScene->addItem(this->handItem);
 
   // Tabs
   this->taskTab = new QTabWidget();
