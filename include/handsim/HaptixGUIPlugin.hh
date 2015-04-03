@@ -97,6 +97,10 @@ namespace haptix_gazebo_plugins
     /// \param[in] _state State of the check box.
     private slots: void OnLocalCoordMove(int _state);
 
+    /// \brief Callback triggered when viewpoint rotations check box is clicked.
+    /// \param[in] _state State of the check box.
+    private slots: void OnViewpointRotationsCheck(int _state);
+
     /// \brief Callback triggered when stereo check box is clicked.
     /// \param[in] _state State of the check box.
     private slots: void OnStereoCheck(int _state);
@@ -211,6 +215,10 @@ namespace haptix_gazebo_plugins
     /// \brief Publisher that talks with the arrange plugin to setup the
     /// scene.
     private: gazebo::transport::PublisherPtr taskPub;
+
+    /// \brief Publisher that talks with the control plugin to enable viewpoint
+    /// rotations.
+    private: gazebo::transport::PublisherPtr viewpointRotationsPub;
 
     /// \brief Publisher that controls the clock
     private: gazebo::transport::PublisherPtr timerPub;

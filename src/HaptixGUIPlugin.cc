@@ -46,6 +46,14 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // General settings
   QLabel *generalSettingsLabel = new QLabel(tr("<b>General Settings</b>"));
 
+  // Viewpoint rotations
+  QCheckBox *viewpointRotationsCheck = new QCheckBox("Viewpoint rotations");
+  viewpointRotationsCheck->setToolTip(tr("Enable viewpoint rotations"));
+  viewpointRotationsCheck->setFocusPolicy(Qt::NoFocus);
+  viewpointRotationsCheck->setChecked(false);
+  connect(viewpointRotationsCheck, SIGNAL(stateChanged(int)), this,
+      SLOT(OnViewpointRotationsCheck(int)));
+
   // Stereo
   QCheckBox *stereoCheck = new QCheckBox("Stereo");
   stereoCheck->setToolTip(tr("Enable stereo rendering"));
@@ -84,6 +92,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Settings layout
   QVBoxLayout *settingsLayout = new QVBoxLayout;
   settingsLayout->addWidget(generalSettingsLabel);
+  settingsLayout->addWidget(viewpointRotationsCheck);
   settingsLayout->addWidget(stereoCheck);
   settingsLayout->addWidget(settingsSeparator);
   settingsLayout->addWidget(keyboardSettingsLabel);
@@ -381,6 +390,11 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Create the publisher that communicates with the arrange plugin
   this->taskPub = this->node->Advertise<gazebo::msgs::GzString>("~/arrange");
+
+  // Create the publisher that communicates with the control plugin
+  this->viewpointRotationsPub =
+      this->node->Advertise<gazebo::msgs::Int>(
+      "~/motion_tracking/viewpoint_rotations");
 
   // Connect to the PreRender Gazebo signal
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
@@ -1402,6 +1416,14 @@ void HaptixGUIPlugin::OnLocalCoordMove(int _state)
 void HaptixGUIPlugin::OnStereoCheck(int _state)
 {
   gazebo::gui::get_active_camera()->EnableStereo(_state);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnViewpointRotationsCheck(int _state)
+{
+  gazebo::msgs::Int msg;
+  msg.set_data(_state);
+  this->viewpointRotationsPub->Publish(msg);
 }
 
 /////////////////////////////////////////////////
