@@ -193,7 +193,11 @@ namespace haptix_gazebo_plugins
     // \brief Set of Gazebo signal connections.
     private: std::vector<gazebo::event::ConnectionPtr> connections;
 
+    // \brief Tab for tasks.
     private: QTabWidget *taskTab;
+
+    // \brief Frame for taskTab.
+    private: QFrame *tabFrame;
 
     /// \brief Text box that hold instructions to the user.
     private: QTextEdit *instructionsView;
@@ -210,6 +214,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief Publisher that controls the clock
     private: gazebo::transport::PublisherPtr timerPub;
+
+    /// \brief Next task button
+    private: QPushButton *nextButton;
+
+    /// \brief Reset scene button
+    private: QPushButton *resetSceneButton;
 
     /// \brief Task start/stop button
     private: QPushButton *startStopButton;

@@ -40,6 +40,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
 
+  int thisWidth = 480;
+  int thisHeight = 920;
+
   // General settings
   QLabel *generalSettingsLabel = new QLabel(tr("<b>General Settings</b>"));
 
@@ -142,6 +145,11 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   mainSeparator->setFrameShape(QFrame::HLine);
   mainSeparator->setFrameShadow(QFrame::Sunken);
   mainSeparator->setLineWidth(1);
+  mainSeparator->setMaximumWidth(thisWidth*0.95);
+
+  QHBoxLayout *mainSeparatorLayout = new QHBoxLayout();
+  mainSeparatorLayout->setContentsMargins(thisWidth*0.01, 0, 0, 0);
+  mainSeparatorLayout->addWidget(mainSeparator);
 
   // Hand pixmap
   std::string handImgFilename =
@@ -193,6 +201,15 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       "}"
       );
 
+  // Tab layout
+  QVBoxLayout *tabFrameLayout = new QVBoxLayout();
+  tabFrameLayout->addWidget(this->taskTab);
+
+  // Tab frame
+  this->tabFrame = new QFrame();
+  this->tabFrame->setContentsMargins(4, 0, 4, 0);
+  this->tabFrame->setLayout(tabFrameLayout);
+
   // Instructions
   this->instructionsView = new QTextEdit("Instructions:");
   this->instructionsView->setReadOnly(true);
@@ -206,58 +223,54 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       "background-color: #ffffff"
       );
 
-  // Tab layout
-  QVBoxLayout *tabFrameLayout = new QVBoxLayout();
-  tabFrameLayout->addWidget(taskTab);
-  tabFrameLayout->addWidget(this->instructionsView);
-
-  // Tab frame
-  QFrame *tabFrame = new QFrame();
-  tabFrame->setContentsMargins(4, 0, 4, 0);
-  tabFrame->setLayout(tabFrameLayout);
+  // Reset/Next buttons style
+  QString buttonsStyle(
+      "QPushButton {\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #666);\
+         border: 2px solid #ccc;\
+         border-radius: 4px;\
+         color: #fff\
+      }\
+      QPushButton:hover {\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #777);\
+      }\
+      QPushButton:pressed {\
+         background: qradialgradient(cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #999);\
+      }");
 
   // Reset All button
   QPushButton *resetButton = new QPushButton();
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
-  resetButton->setStyleSheet(
-      "background-color: rgba(120, 120, 120, 255);"
-      "border: 0px;"
-      "border-radius: 4px;"
-      "color: #ffffff");
-  connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
+  resetButton->setStyleSheet(buttonsStyle);
   resetButton->setMaximumWidth(120);
+  connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
 
   // Reset Scene button
-  QPushButton *resetSceneButton = new QPushButton();
-  resetSceneButton->setFocusPolicy(Qt::NoFocus);
-  resetSceneButton->setText(QString("Reset Scene"));
-  resetSceneButton->setStyleSheet(
-      "background-color: rgba(120, 120, 120, 255);"
-      "border: 0px;"
-      "border-radius: 4px;"
-      "color: #ffffff");
-  connect(resetSceneButton, SIGNAL(clicked()), this,
+  this->resetSceneButton = new QPushButton();
+  this->resetSceneButton->setFocusPolicy(Qt::NoFocus);
+  this->resetSceneButton->setText(QString("Reset Scene"));
+  this->resetSceneButton->setStyleSheet(buttonsStyle);
+  this->resetSceneButton->setMaximumWidth(120);
+  connect(this->resetSceneButton, SIGNAL(clicked()), this,
     SLOT(OnResetSceneClicked()));
-  resetSceneButton->setMaximumWidth(120);
 
   // Next test button
-  QPushButton *nextButton = new QPushButton();
-  nextButton->setFocusPolicy(Qt::NoFocus);
-  nextButton->setText(QString("Next Test"));
-  nextButton->setStyleSheet(
-      "background-color: rgba(120, 120, 120, 255);"
-      "border: 0px;"
-      "border-radius: 4px;"
-      "color: #ffffff");
-  connect(nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
-  nextButton->setMaximumWidth(120);
+  this->nextButton = new QPushButton();
+  this->nextButton->setFocusPolicy(Qt::NoFocus);
+  this->nextButton->setText(QString("Next Test"));
+  this->nextButton->setStyleSheet(buttonsStyle);
+  this->nextButton->setMaximumWidth(120);
+  connect(this->nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
 
   // Cycle button layout
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
   cycleButtonLayout->addWidget(resetButton);
-  cycleButtonLayout->addWidget(resetSceneButton);
-  cycleButtonLayout->addWidget(nextButton);
+  cycleButtonLayout->addWidget(this->resetSceneButton);
+  cycleButtonLayout->addWidget(this->nextButton);
 
   // Cycle button frame
   QFrame *cycleButtonFrame = new QFrame;
@@ -271,48 +284,44 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->startStopButton->setDisabled(true);
 
   this->startStyle =
-      "QPushButton {"
-        "margin: 10px;"
-        "margin-top: 0px;"
-        "margin-bottom: 0px;"
-        "padding: 2px;"
-        "background-color: #7A95D6;"
-        "font: bold 30px;"
-        "border: 0px;"
-        "border-radius: 4px;"
-        "color: #FFFFFF;"
-      "}"
-
-      "QPushButton:hover {"
-        "background-color: rgba(83, 101, 146, 255);"
-      "}"
-
-      "QPushButton::disabled {"
-        "background-color: rgba(180, 180, 180, 255);"
-        "color: rgba(200, 200, 200, 255);"
-      "}";
+      "QPushButton {\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #59b353);\
+         border: 2px solid #8bca88;\
+         border-radius: 4px;\
+         font: bold 30px;\
+         color: #eee;\
+         margin-right: 10px;\
+         margin-left: 10px;\
+      }\
+      QPushButton:hover {\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #70c464);\
+      }\
+      QPushButton:disabled {\
+         background: qradialgradient(cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #aab3aa);\
+      }";
 
   this->stopStyle =
-      "QPushButton {"
-        "margin: 10px;"
-        "margin-top: 0px;"
-        "margin-bottom: 0px;"
-        "padding: 2px;"
-        "background-color: #D85C48;"
-        "font: bold 30px;"
-        "border: 0px;"
-        "border-radius: 4px;"
-        "color: #FFFFFF;"
-      "}"
-
-      "QPushButton:hover {"
-        "background-color: rgba(191, 81, 64, 255);"
-      "}"
-
-      "QPushButton::disabled {"
-        "background-color: rgba(180, 180, 180, 255);"
-        "color: rgba(200, 200, 200, 255);"
-      "}";
+      "QPushButton {\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #D85C48);\
+         border: 2px solid #e18071;\
+         border-radius: 4px;\
+         font: bold 30px;\
+         color: #eee;\
+         margin-right: 10px;\
+         margin-left: 10px;\
+      }\
+      QPushButton:hover {\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #bf5140);\
+      }\
+      QPushButton:disabled {\
+         background: qradialgradient(cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\
+         radius: 1.35, stop: 0 #ddd, stop: 1 #b3aaaa);\
+      }";
 
   this->startStopButton->setStyleSheet(this->startStyle.c_str());
 
@@ -331,13 +340,13 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Frame layout
   QVBoxLayout *frameLayout = new QVBoxLayout;
   frameLayout->setContentsMargins(0, 0, 0, 0);
-  frameLayout->addWidget(topBarFrame);
+  frameLayout->addWidget(this->topBarFrame);
   frameLayout->addWidget(handView, 1.0);
   frameLayout->addItem(new QSpacerItem(30, 30, QSizePolicy::Minimum,
       QSizePolicy::Minimum));
-  frameLayout->addWidget(mainSeparator);
-  frameLayout->addWidget(tabFrame);
-  frameLayout->addWidget(instructionsView);
+  frameLayout->addLayout(mainSeparatorLayout);
+  frameLayout->addWidget(this->tabFrame);
+  frameLayout->addWidget(this->instructionsView);
   frameLayout->addWidget(cycleButtonFrame);
   frameLayout->addWidget(startStopButton);
   frameLayout->addLayout(bottomLayout);
@@ -360,7 +369,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->setLayout(mainLayout);
   this->setPalette(QPalette(QColor(255, 255, 255, 0)));
   this->move(10, 10);
-  this->resize(480, 880);
+  this->resize(thisWidth, thisHeight);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -787,7 +796,15 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 {
   // Populate the taskTab by parsing out SDF
   if (!_elem->HasElement("task_group"))
+  {
+    this->taskTab->hide();
+    this->instructionsView->hide();
+    this->resetSceneButton->hide();
+    this->nextButton->hide();
+    this->startStopButton->hide();
+    this->resize(480, 590);
     return;
+  }
 
   int taskIndex = 0;
   int groupIndex = 0;
