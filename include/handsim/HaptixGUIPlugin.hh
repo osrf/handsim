@@ -51,6 +51,9 @@ namespace haptix_gazebo_plugins
     // Documentation inherited
     public: void Load(sdf::ElementPtr _elem);
 
+    // Qt callback on mouse enter event.
+    protected: virtual void enterEvent(QEvent *event);
+
     /// \brief Signal to set a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
     /// \param[in] _value Force value.
@@ -136,6 +139,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief callback for subscriber to the hydra publisher
     private: void OnHydra(ConstHydraPtr &_msg);
+
+    /// \brief Qt event filter used to filter child widget events.
+    /// \param[in] _obj Object that is watched by the event filter.
+    /// \param[in] _event Qt event.
+    /// \return True if the event is handled.
+    private: bool eventFilter(QObject *_obj, QEvent *_event);
 
     /// \brief Handle position scaling slider movement
     /// \param[in] _state State of the slider
@@ -303,6 +312,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief Top bar widget.
     private: QFrame *topBarFrame;
+
+    /// \brief Settings button.
+    private: QToolButton *settingsButton;
 
     /// \brief start a thread to poll optitrackbridge
     private: boost::thread pollTrackingThread;

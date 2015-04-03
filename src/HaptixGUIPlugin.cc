@@ -126,27 +126,28 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       "file://media/gui/arat/arat_icons/settings.png");
   QPixmap settingsPixmap = QPixmap(QString(settingsImgFilename.c_str()));
 
-  QToolButton *settingsButton = new QToolButton();
-  settingsButton->setFixedSize(QSize(30, 30));
-  settingsButton->setIconSize(QSize(40, 40));
-  settingsButton->setToolTip(tr("Settings"));
-  settingsButton->setIcon(settingsPixmap);
-  settingsButton->setToolButtonStyle(Qt::ToolButtonIconOnly);
-  settingsButton->setPopupMode(QToolButton::InstantPopup);
-  settingsButton->setMenu(settingsMenu);
-  settingsButton->setStyleSheet("\
+  this->settingsButton = new QToolButton();
+  this->settingsButton->installEventFilter(this);
+  this->settingsButton->setFixedSize(QSize(30, 30));
+  this->settingsButton->setIconSize(QSize(40, 40));
+  this->settingsButton->setToolTip(tr("Settings"));
+  this->settingsButton->setIcon(settingsPixmap);
+  this->settingsButton->setToolButtonStyle(Qt::ToolButtonIconOnly);
+  this->settingsButton->setPopupMode(QToolButton::InstantPopup);
+  this->settingsButton->setMenu(settingsMenu);
+  this->settingsButton->setStyleSheet("\
       QToolButton::menu-indicator {\
         image: none;\
       }\
       QToolButton:hover, QToolButton:pressed {\
-        background-color: #eee;\
+        background-color: #d47402;\
         border: none;\
       }");
 
   // Top bar layout
   QHBoxLayout *topBarLayout = new QHBoxLayout();
   topBarLayout->addWidget(this->mocapStatusIndicator);
-  topBarLayout->addWidget(settingsButton);
+  topBarLayout->addWidget(this->settingsButton);
 
   // Top bar widget
   this->topBarFrame = new QFrame();
@@ -260,6 +261,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Reset All button
   QPushButton *resetButton = new QPushButton();
+  resetButton->installEventFilter(this);
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
   resetButton->setToolTip("Reset the view, arm and models");
@@ -269,6 +271,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Reset Scene button
   this->resetSceneButton = new QPushButton();
+  this->resetSceneButton->installEventFilter(this);
   this->resetSceneButton->setFocusPolicy(Qt::NoFocus);
   this->resetSceneButton->setText(QString("Reset Scene"));
   this->resetSceneButton->setToolTip("Reset all models in the scene");
@@ -279,6 +282,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Next test button
   this->nextButton = new QPushButton();
+  this->nextButton->installEventFilter(this);
   this->nextButton->setFocusPolicy(Qt::NoFocus);
   this->nextButton->setText(QString("Next Test"));
   this->nextButton->setToolTip("Next test");
@@ -298,6 +302,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Start/Stop button
   this->startStopButton = new QPushButton();
+  this->startStopButton->installEventFilter(this);
   this->startStopButton->setFocusPolicy(Qt::NoFocus);
   this->startStopButton->setCheckable(true);
   this->startStopButton->setText(QString("Start"));
@@ -867,6 +872,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
       // Create a new button for the task
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
+      taskButton->installEventFilter(this);
       taskButton->setFocusPolicy(Qt::NoFocus);
       taskButton->SetInstructions(instructions);
       taskButton->setEnabled(enabled);
@@ -1524,6 +1530,14 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
             background-color: #fc8b03;\
             color: #eeeeee;\
           }");
+      this->settingsButton->setStyleSheet("\
+          QToolButton::menu-indicator {\
+            image: none;\
+          }\
+          QToolButton:hover, QToolButton:pressed {\
+            background-color: #d47402;\
+            border: none;\
+          }");
       break;
     }
     case 1:
@@ -1533,6 +1547,14 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
           QFrame{\
             background-color: #4a8dbf;\
             color: #eeeeee;\
+          }");
+      this->settingsButton->setStyleSheet("\
+          QToolButton::menu-indicator {\
+            image: none;\
+          }\
+          QToolButton:hover, QToolButton:pressed {\
+            background-color: #356c95;\
+            border: none;\
           }");
       break;
     }
@@ -1544,9 +1566,38 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
             background-color: #999999;\
             color: #eeeeee;\
           }");
+      this->settingsButton->setStyleSheet("\
+          QToolButton::menu-indicator {\
+            image: none;\
+          }\
+          QToolButton:hover, QToolButton:pressed {\
+            background-color: #868686;\
+            border: none;\
+          }");
       break;
     }
     default:
       break;
   }
 }
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::enterEvent(QEvent * /*_event*/)
+{
+  QApplication::setOverrideCursor(Qt::ArrowCursor);
+}
+
+/////////////////////////////////////////////////
+bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
+{
+  QAbstractButton *button = qobject_cast<QAbstractButton *>(_obj);
+  if (button)
+  {
+    if (_event->type() == QEvent::Enter)
+      QApplication::setOverrideCursor(Qt::PointingHandCursor);
+    else if (_event->type() == QEvent::Leave)
+      QApplication::setOverrideCursor(Qt::ArrowCursor);
+  }
+  return QObject::eventFilter(_obj, _event);
+}
+
