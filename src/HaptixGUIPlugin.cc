@@ -262,6 +262,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QPushButton *resetButton = new QPushButton();
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
+  resetButton->setToolTip("Reset the view, arm and models");
   resetButton->setStyleSheet(buttonsStyle);
   resetButton->setMaximumWidth(120);
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
@@ -270,6 +271,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->resetSceneButton = new QPushButton();
   this->resetSceneButton->setFocusPolicy(Qt::NoFocus);
   this->resetSceneButton->setText(QString("Reset Scene"));
+  this->resetSceneButton->setToolTip("Reset all models in the scene");
   this->resetSceneButton->setStyleSheet(buttonsStyle);
   this->resetSceneButton->setMaximumWidth(120);
   connect(this->resetSceneButton, SIGNAL(clicked()), this,
@@ -279,6 +281,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->nextButton = new QPushButton();
   this->nextButton->setFocusPolicy(Qt::NoFocus);
   this->nextButton->setText(QString("Next Test"));
+  this->nextButton->setToolTip("Next test");
   this->nextButton->setStyleSheet(buttonsStyle);
   this->nextButton->setMaximumWidth(120);
   connect(this->nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
