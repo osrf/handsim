@@ -236,23 +236,17 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_erp", 0, 0.0);
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
-  // this->optitrackArm = gazebo::math::Pose::Zero;
-  //this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
   this->monitorScreen = gazebo::math::Pose::Zero;
 
-  // x-> -z, y -> -y, z -> -x
-
   // Screen is actually "window"
-  this->worldScreen = gazebo::math::Pose(0, -0.65, 1.25, 0, 0, 0);
+  this->worldScreen = gazebo::math::Pose(0, -0.65, 1.5, 0, 0, 0);
 
   this->worldToScreen = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   // From marker to elbow of simulated arm
-  this->armElbow = gazebo::math::Pose(
-                                      gazebo::math::Vector3(0, 0.29, 0),
-                                      //gazebo::math::Vector3(0.0, 0.0, 0.0),
-                                      gazebo::math::Quaternion(0, 0, 0));
+  this->armElbow = gazebo::math::Pose(gazebo::math::Vector3(0, -0.29, 0),
+                                      gazebo::math::Quaternion(0, -M_PI/2, M_PI));
 
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
@@ -273,6 +267,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackMonitorSub = this->gazeboNode->Subscribe
               ("~/optitrack/" + haptix::tracking::Optitrack::originTrackerName,
               &HaptixControlPlugin::OnUpdateOptitrackMonitor, this);
+  /*this->optitrackMonitorPoseSub = this->gazeboNode->Subscribe
+              ("~/optitrack/monitorPose",
+              &HaptixControlPlugin::OnUpdateOptitrackMonitorPose, this);*/
 
   this->optitrack.SetWorld(this->world->GetName());
 
@@ -1591,15 +1588,16 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   {
     // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
 
-    this->optitrackArmOffset =  -cameraArm - this->armElbow + this->targetBaseLinkPose
-        - this->worldScreen + this->monitorScreen + this->cameraMonitor;
+    this->optitrackArmOffset =  cameraArm.GetInverse() + this->armElbow.GetInverse()
+        + this->targetBaseLinkPose
+        + this->worldScreen.GetInverse() + this->monitorScreen + this->cameraMonitor;
     this->armOffsetInitialized = true;
   }
   else if (this->armOffsetInitialized)
   {
     // T_WE = T_AE + T_C'A + T_CC' -T_CM -T_MS + T_WS
-    this->targetBaseLinkPose = this->armElbow + cameraArm + this->optitrackArmOffset -
-        this->cameraMonitor - this->monitorScreen + this->worldScreen;
+    this->targetBaseLinkPose = this->armElbow + cameraArm + this->optitrackArmOffset +
+        this->cameraMonitor.GetInverse() + this->monitorScreen.GetInverse() + this->worldScreen;
   }
 }
 
@@ -1653,7 +1651,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   // Y points in
   //gazebo::math::Vector3 gx = points[longPointId] - points[originPointId];
   gazebo::math::Vector3 gx = points[originPointId] - points[longPointId];
-  gazebo::math::Vector3 gz = points[shortPointId] - points[originPointId];
+  gazebo::math::Vector3 gz = points[originPointId] - points[shortPointId];
 
   if (gx.GetLength() < gz.GetLength())
   {
@@ -1690,13 +1688,14 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   math::Matrix3 G;
   G.SetFromAxes(gx, gy, gz);
   double qw = sqrt(1 + G[0][0] + G[1][1] + G[2][2] )/2;
+  assert(qw > 1e-12);
   double qx = (G[2][1] -G[1][2])/(4*qw);
   double qy = (G[0][2] - G[2][0])/(4*qw);
   double qz = (G[1][0] - G[0][1])/(4*qw);
 
   gazebo::math::Quaternion monitorRot(qw, qx, qy, qz);
-  this->monitorScreen.rot = monitorRot.GetInverse();
-  //this->monitorScreen.rot = monitorRot;
+  this->monitorScreen.rot = monitorRot;
+  // Assume screen and monitor axes share the same origin
   this->monitorScreen.pos = math::Vector3();
   this->cameraMonitor.pos = points[1];
 

@@ -190,6 +190,9 @@ namespace gazebo
     /// \brief Callback on Optitrack monitor tracker update
     private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
+    /// \brief Callback on Optitrack monitor tracker update
+    //private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
+
     /// \brief Callback on message to toggle viewpoint rotations due to mocap
     /// \param[in] _msg Message sent by publisher
     private: void OnToggleViewpointRotations(ConstIntPtr &_msg);

@@ -124,6 +124,8 @@ namespace haptix
       /// \brief Gazebo publisher for monitor tracker pose
       private: gazebo::transport::PublisherPtr originPub;
 
+      private: gazebo::transport::PublisherPtr monitorPub;
+
       /// \brief Gazebo publisher for tracker data liveliness
       private: gazebo::transport::PublisherPtr optitrackAlivePub;
 

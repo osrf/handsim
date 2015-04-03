@@ -114,6 +114,8 @@ void Optitrack::StartReception()
                     ("~/optitrack/"+armTrackerName);
   this->originPub = this->gzNode->Advertise<gazebo::msgs::PointCloud>
                     ("~/optitrack/"+originTrackerName);
+  this->monitorPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+                    ("~/optitrack/monitorPose");
 
   // Publisher for sending a pulse to HaptixGUIPlugin
   this->optitrackAlivePub = this->gzNode->Advertise<gazebo::msgs::Time>
@@ -166,6 +168,10 @@ void Optitrack::RunReceptionTask()
       else if (it->first.compare(armTrackerName) == 0)
       {
         this->armPub->Publish(gazebo::msgs::Convert(it->second));
+      }
+      else if (it->first.compare(originTrackerName) == 0)
+      {
+        this->monitorPub->Publish(gazebo::msgs::Convert(it->second));
       }
       else
       {
