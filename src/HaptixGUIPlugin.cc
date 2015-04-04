@@ -41,7 +41,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->posScalingFactor = 0.25;
 
   int thisWidth = 480;
-  int thisHeight = 860;
+  int thisHeight = 840;
 
   // General settings
   QLabel *generalSettingsLabel = new QLabel(tr("<b>General Settings</b>"));
@@ -136,6 +136,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->settingsButton->setPopupMode(QToolButton::InstantPopup);
   this->settingsButton->setMenu(settingsMenu);
   this->settingsButton->setStyleSheet("\
+      QToolButton {\
+        margin: 0px;\
+        padding: 0px;\
+      }\
       QToolButton::menu-indicator {\
         image: none;\
       }\
@@ -146,12 +150,14 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Top bar layout
   QHBoxLayout *topBarLayout = new QHBoxLayout();
+  topBarLayout->setContentsMargins(10, 0, 0, 0);
   topBarLayout->addWidget(this->mocapStatusIndicator);
   topBarLayout->addWidget(this->settingsButton);
 
   // Top bar widget
   this->topBarFrame = new QFrame();
   this->topBarFrame->setLayout(topBarLayout);
+  this->topBarFrame->setMaximumHeight(35);
   this->topBarFrame->setStyleSheet("\
       QFrame{\
         background-color: #fc8b03;\
@@ -314,7 +320,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   frameLayout->setContentsMargins(0, 0, 0, 0);
   frameLayout->addWidget(this->topBarFrame);
   frameLayout->addWidget(handView, 1.0);
-  frameLayout->addItem(new QSpacerItem(30, 30, QSizePolicy::Minimum,
+  frameLayout->addItem(new QSpacerItem(15, 15, QSizePolicy::Minimum,
       QSizePolicy::Minimum));
   frameLayout->addLayout(mainSeparatorLayout);
   frameLayout->addWidget(this->tabFrame);
