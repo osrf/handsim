@@ -41,7 +41,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->posScalingFactor = 0.25;
 
   int thisWidth = 480;
-  int thisHeight = 920;
+  int thisHeight = 860;
 
   // General settings
   QLabel *generalSettingsLabel = new QLabel(tr("<b>General Settings</b>"));
@@ -300,59 +300,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QFrame *cycleButtonFrame = new QFrame;
   cycleButtonFrame->setLayout(cycleButtonLayout);
 
-  // Start/Stop button
-  this->startStopButton = new QPushButton();
-  this->startStopButton->installEventFilter(this);
-  this->startStopButton->setFocusPolicy(Qt::NoFocus);
-  this->startStopButton->setCheckable(true);
-  this->startStopButton->setText(QString("Start"));
-  this->startStopButton->setDisabled(true);
-
-  this->startStyle =
-      "QPushButton {\
-         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
-         radius: 1.35, stop: 0 #ddd, stop: 1 #59b353);\
-         border: 2px solid #8bca88;\
-         border-radius: 4px;\
-         font: bold 30px;\
-         color: #eee;\
-         margin-right: 10px;\
-         margin-left: 10px;\
-      }\
-      QPushButton:hover {\
-         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
-         radius: 1.35, stop: 0 #ddd, stop: 1 #70c464);\
-      }\
-      QPushButton:disabled {\
-         background: qradialgradient(cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\
-         radius: 1.35, stop: 0 #ddd, stop: 1 #aab3aa);\
-      }";
-
-  this->stopStyle =
-      "QPushButton {\
-         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
-         radius: 1.35, stop: 0 #ddd, stop: 1 #D85C48);\
-         border: 2px solid #e18071;\
-         border-radius: 4px;\
-         font: bold 30px;\
-         color: #eee;\
-         margin-right: 10px;\
-         margin-left: 10px;\
-      }\
-      QPushButton:hover {\
-         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
-         radius: 1.35, stop: 0 #ddd, stop: 1 #bf5140);\
-      }\
-      QPushButton:disabled {\
-         background: qradialgradient(cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\
-         radius: 1.35, stop: 0 #ddd, stop: 1 #b3aaaa);\
-      }";
-
-  this->startStopButton->setStyleSheet(this->startStyle.c_str());
-
-  connect(this->startStopButton, SIGNAL(toggled(bool)), this,
-      SLOT(OnStartStop(bool)));
-
   // Version
   std::string versionStr = std::string("  v ") + HANDSIM_VERSION_FULL;
   QLabel *versionLabel = new QLabel(tr(versionStr.c_str()));
@@ -373,7 +320,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   frameLayout->addWidget(this->tabFrame);
   frameLayout->addWidget(this->instructionsView);
   frameLayout->addWidget(cycleButtonFrame);
-  frameLayout->addWidget(startStopButton);
   frameLayout->addLayout(bottomLayout);
 
   // Main frame
@@ -831,7 +777,6 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     this->instructionsView->hide();
     this->resetSceneButton->hide();
     this->nextButton->hide();
-    this->startStopButton->hide();
     this->resize(480, 590);
     return;
   }
@@ -907,7 +852,6 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       {
         this->currentTaskId = taskIndex;
         taskButton->setChecked(true);
-        this->startStopButton->setDisabled(false);
         initialTab = true;
       }
 
@@ -931,9 +875,6 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::OnTaskSent(const int _id)
 {
-  this->startStopButton->setDisabled(false);
-  this->startStopButton->setChecked(false);
-
   // reset the clock when a new task is selected
   this->PublishTimerMessage("reset");
 
@@ -952,9 +893,6 @@ void HaptixGUIPlugin::OnTaskSent(const int _id)
 ////////////////////////////////////////////////
 void HaptixGUIPlugin::OnNextClicked()
 {
-  this->startStopButton->setDisabled(false);
-  this->startStopButton->setChecked(false);
-
   // reset the clock when a new task is selected
   this->PublishTimerMessage("reset");
 
@@ -994,27 +932,8 @@ void HaptixGUIPlugin::PublishTaskMessage(const std::string &_taskId) const
 }
 
 ////////////////////////////////////////////////
-void HaptixGUIPlugin::OnStartStop(bool _checked)
-{
-  if (_checked)
-  {
-    this->startStopButton->setText(tr("Stop"));
-    this->startStopButton->setStyleSheet(this->stopStyle.c_str());
-    this->PublishTimerMessage("start");
-  }
-  else
-  {
-    this->startStopButton->setText(tr("Start"));
-    this->startStopButton->setStyleSheet(this->startStyle.c_str());
-    this->PublishTimerMessage("stop");
-  }
-}
-
-////////////////////////////////////////////////
 void HaptixGUIPlugin::OnResetClicked()
 {
-  this->startStopButton->setChecked(false);
-
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
 
@@ -1028,8 +947,6 @@ void HaptixGUIPlugin::OnResetClicked()
 ////////////////////////////////////////////////
 void HaptixGUIPlugin::OnResetSceneClicked()
 {
-  this->startStopButton->setChecked(false);
-
   // Signal to the TimerPlugin to reset the clock
   this->PublishTimerMessage("reset");
 

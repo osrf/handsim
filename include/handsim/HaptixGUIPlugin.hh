@@ -83,10 +83,6 @@ namespace haptix_gazebo_plugins
     /// \param[in] _msg Message to publish
     private: void PublishTimerMessage(const std::string &_msg) const;
 
-    /// \brief Callback when the start/stop button is pressed.
-    /// \param[in] _checked True if the button was checked.
-    private slots: void OnStartStop(bool _checked);
-
     /// \brief Callback triggered when the next button is clicked
     private slots: void OnNextClicked();
 
@@ -237,15 +233,6 @@ namespace haptix_gazebo_plugins
 
     /// \brief Reset scene button
     private: QPushButton *resetSceneButton;
-
-    /// \brief Task start/stop button
-    private: QPushButton *startStopButton;
-
-    /// \brief QT style for the start setting of the start/stop button
-    private: std::string startStyle;
-
-    /// \brief QT style for the start setting of the start/stop button
-    private: std::string stopStyle;
 
     /// \brief A place to store key-to-motor mappings
     private: std::map<char, std::pair<unsigned int, float> > motorKeys;
