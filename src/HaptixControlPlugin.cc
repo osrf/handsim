@@ -1599,12 +1599,10 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
     // goal: arm sensor orientation should be the same as the screen rotation
     // worldScreen.rot is the screen orientation in the world frame
     // worldArm.rot is the arm orientation in the world frame, just set them to be the same
-    math::Pose worldArmWithScreenRot = worldArm;
-    // worldArmWithScreenRot.rot = this->worldScreen.rot;
-    worldArmWithScreenRot.rot = (this->elbowArm + this->targetBaseLinkPose).rot;
-    // solve for elbowArmCorrected.rot based on new worldArmWithScreenRot
-    math::Pose elbowArmWithScreenRot = worldArmWithScreenRot - this->targetBaseLinkPose;
-    this->elbowArmCorrected.rot = elbowArmWithScreenRot.rot;
+    worldArm.rot = (this->elbowArm + this->targetBaseLinkPose).rot;
+    // solve for elbowArmCorrected.rot based on new worldArm
+    math::Pose elbowArmWithSimArmRot = worldArm - this->targetBaseLinkPose;
+    this->elbowArmCorrected.rot = elbowArmWithSimArmRot.rot;
 
     this->optitrackArmOffset =  cameraArm.GetInverse() + this->elbowArmCorrected
         + this->targetBaseLinkPose
