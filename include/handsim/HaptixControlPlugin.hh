@@ -363,7 +363,10 @@ namespace gazebo
     private: math::Pose cameraToHeadSensor;
 
     /// \brief Transform from camera frame to Optitrack head marker.
-    private: math::Pose cameraToOptitrackHeadMarker;
+    //private: math::Pose cameraToOptitrackHeadMarker;
+    private: math::Pose headMarker;
+
+    private: math::Pose headMarkerCorrected;
 
     /// \brief Transform from hydra sensor orientation to base link frame.
     private: math::Pose baseLinkToHydraSensor;
@@ -528,27 +531,26 @@ namespace gazebo
     /// \brief Subscriber to Optitrack monitor tracker updates
     private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
 
-    /// \brief hardcoded offset between arm sensor and position on link to
-    /// control, T_ME
+    /// \brief hardcoded offset between controlled position of the link and
+    /// arm sensor 
     private: gazebo::math::Pose elbowArm;
+
     /// \brief same as elbowArm but with orientation corrected by screen orientation
     private: gazebo::math::Pose elbowArmCorrected;
-
-    private: gazebo::math::Pose worldToScreen;
 
     /// \brief Pose of the Optitrack in Gazebo frame
     private: gazebo::math::Pose optitrackHeadOffset;
 
-    /// \brief Orthonormal transformation between Optitrack arm and world axes
-    private: gazebo::math::Pose optitrackWorldArmRot;
-
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
     private: gazebo::math::Pose cameraMonitor;
 
+    /// \brief Pose of the fake "screen" frame in the monitor tracker frame
     private: gazebo::math::Pose monitorScreen;
 
+    /// \brief Pose of the fake screen in the world frame
     private: gazebo::math::Pose worldScreen;
 
+    /// \brief Calibration offset for the arm
     private: gazebo::math::Pose optitrackArmOffset;
 
     /// \brief Low-pass filter for head position (reduces jitter)

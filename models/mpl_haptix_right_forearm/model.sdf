@@ -6,6 +6,7 @@
     <hydra_control_point_offset>0 -0.3 0 0 3.1416 -1.5707</hydra_control_point_offset>
     <base_joint>elbow</base_joint>
     <base_link>forearm</base_link>
+    <base_link_sensor_offset>0 0 0.07 3.14159 -1.570796 0</base_link_sensor_offset>
     <base_pid_pos cmd_max="10000.0" cmd_min="-10000.0" d="10.0" i="0" p="700.0"/>
     <base_pid_rot cmd_max="10000.0" cmd_min="-10000.0" d="10.0" i="0" p="800.0"/>
     <!-- order must match hxAPLJoints enumeration -->

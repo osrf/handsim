@@ -164,8 +164,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
   // transformation from camera to marker in camera frame
-  this->cameraToOptitrackHeadMarker = math::Pose(-0.02, -0.025, 0.125,
-                                           -M_PI/2, -M_PI/2, 0);
+  this->headMarker = math::Pose(0.1, -0.07, 0.11, M_PI/2, 0, 0);
+  this->headMarkerCorrected = this->headMarker;
 
   this->viewpointRotationsSub = this->gazeboNode->Subscribe(
       "~/motion_tracking/viewpoint_rotations",
@@ -241,16 +241,15 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // Screen is actually "window"
   this->worldScreen = gazebo::math::Pose(0, -0.65, 1.5, 0, 0, 0);
 
-  this->worldToScreen = gazebo::math::Pose::Zero;
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   // Transform from elbow of simulated arm to marker
   this->elbowArm = gazebo::math::Pose(gazebo::math::Vector3(0.0, -0.20, 0.07),
                                       gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
-  if (this->sdf->HasElement("elbow_arm"))
+  if (this->sdf->HasElement("base_link_sensor_offset"))
   {
-    sdf::ElementPtr elbowArmSdf = this->sdf->GetElement("elbow_arm");
-    this->elbowArm = elbowArmSdf->Get<math::Pose>("elbow_arm");
+    sdf::ElementPtr elbowArmSdf = this->sdf->GetElement("base_link_sensor_offset");
+    this->elbowArm = elbowArmSdf->Get<math::Pose>();
   }
   this->elbowArmCorrected = this->elbowArm;
 
@@ -1528,53 +1527,45 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
-  /// The pose transformation math traverses the following transform tree.
-
-  /// G ---------> O --------> M ---> C
-  /// | \          \__________^ ^     ^
-  /// |  \______________________|     |
-  /// \_______________________________/
-
-  /// G: Gazebo origin
-  /// O: Optitrack origin
-  /// M: Head marker
-  /// C: Gazebo camera
-  /// We will denote the transform from B to A in B's frame as A_B
-
-  /// rawMarkerPose is the pose of the marker in the Optitrack frame: M_O
-  gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
-  rawMarkerPose.pos = this->headPosFilter.Process(rawMarkerPose.pos);
-  rawMarkerPose.rot = this->headOriFilter.Process(rawMarkerPose.rot);
-  std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
+  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+  std::unique_lock<std::mutex> monitorLock(this->optitrackMonitorMutex,
       std::try_to_lock);
 
-  boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+  gazebo::math::Pose cameraHead = gazebo::msgs::Convert(*_msg);
 
-  /// If we're paused, or if we haven't calculated an offset yet...
-  if (this->pauseTracking || !this->headOffsetInitialized)
+  if ((this->pauseTracking || !this->headOffsetInitialized)
+       && this->userCameraPoseValid)
   {
-    if (this->userCameraPoseValid)
-    {
-      this->optitrackHeadOffset = -this->cameraToOptitrackHeadMarker -
-          this->userCameraPose + this->worldToScreen +
-          -this->cameraMonitor + rawMarkerPose;
-      this->headOffsetInitialized = true;
-    }
+    math::Pose worldHead = this->headMarkerCorrected + this->userCameraPose;
+
+    // goal: head sensor orientation should be the same as the screen rotation
+    // worldScreen.rot is the screen orientation in the world frame
+    // worldHead.rot is the head orientation in the world frame, just set them
+    // to be the same
+    worldHead.rot = (this->headMarker + this->userCameraPose).rot;
+
+    // solve for headMarkerCorrected.rot based on new worldHead
+    this->headMarkerCorrected.rot = (worldHead - this->userCameraPose).rot;
+
+    // T_CC' = (-T_CH - T_MS + T_WS) - (-T_C'Marker - T_HMarker + T_WH)
+    this->optitrackHeadOffset = cameraHead.GetInverse() +
+      this->headMarkerCorrected + this->userCameraPose +
+        this->worldScreen.GetInverse() + this->monitorScreen
+          + this->cameraMonitor;
+    this->headOffsetInitialized = true;
   }
-  else
+  else if (this->headOffsetInitialized)
   {
-    if (this->userCameraPoseValid)
+    // T_WH = T_HMarker + T_C'Marker + T_CC' -T_CM -T_MS + T_WS
+    gazebo::math::Pose targetCamera = this->headMarkerCorrected.GetInverse() +
+      cameraHead + this->optitrackHeadOffset + this->cameraMonitor.GetInverse()
+        + this->monitorScreen.GetInverse() + this->worldScreen;
+    if (!this->viewpointRotationsEnabled)
     {
-      gazebo::math::Pose targetCameraPose = this->worldToScreen +
-          -this->cameraMonitor + rawMarkerPose -
-          this->optitrackHeadOffset - this->cameraToOptitrackHeadMarker;
-      if (!this->viewpointRotationsEnabled)
-      {
-        targetCameraPose.rot = this->userCameraPose.rot;
-      }
-      gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
-      this->viewpointJoyPub->Publish(this->joyMsg);
+      targetCamera.rot = this->userCameraPose.rot;
     }
+      gazebo::msgs::Set(&this->joyMsg, targetCamera);
+      this->viewpointJoyPub->Publish(this->joyMsg);
   }
 }
 
@@ -1592,8 +1583,6 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
-
     math::Pose worldArm = this->elbowArmCorrected + this->targetBaseLinkPose;
 
     // goal: arm sensor orientation should be the same as the screen rotation
@@ -1601,20 +1590,20 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
     // worldArm.rot is the arm orientation in the world frame, just set them to be the same
     worldArm.rot = (this->elbowArm + this->targetBaseLinkPose).rot;
     // solve for elbowArmCorrected.rot based on new worldArm
-    math::Pose elbowArmWithSimArmRot = worldArm - this->targetBaseLinkPose;
-    this->elbowArmCorrected.rot = elbowArmWithSimArmRot.rot;
+    this->elbowArmCorrected.rot = (worldArm - this->targetBaseLinkPose).rot;
 
+    // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
     this->optitrackArmOffset =  cameraArm.GetInverse() + this->elbowArmCorrected
-        + this->targetBaseLinkPose
-        + this->worldScreen.GetInverse() + this->monitorScreen + this->cameraMonitor;
+      + this->targetBaseLinkPose + this->worldScreen.GetInverse() +
+        this->monitorScreen + this->cameraMonitor;
     this->armOffsetInitialized = true;
   }
   else if (this->armOffsetInitialized)
   {
     // T_WE = T_AE + T_C'A + T_CC' -T_CM -T_MS + T_WS
-    this->targetBaseLinkPose = this->elbowArmCorrected.GetInverse() + cameraArm +
-    this->optitrackArmOffset + this->cameraMonitor.GetInverse() + this->monitorScreen.GetInverse() +
-    this->worldScreen;
+    this->targetBaseLinkPose = this->elbowArmCorrected.GetInverse() + cameraArm
+        + this->optitrackArmOffset + this->cameraMonitor.GetInverse() +
+            this->monitorScreen.GetInverse() + this->worldScreen;
   }
 }
 
