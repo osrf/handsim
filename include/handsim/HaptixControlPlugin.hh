@@ -530,7 +530,9 @@ namespace gazebo
 
     /// \brief hardcoded offset between arm sensor and position on link to
     /// control, T_ME
-    private: gazebo::math::Pose armElbow;
+    private: gazebo::math::Pose elbowArm;
+    /// \brief same as elbowArm but with orientation corrected by screen orientation
+    private: gazebo::math::Pose elbowArmCorrected;
 
     private: gazebo::math::Pose worldToScreen;
 
