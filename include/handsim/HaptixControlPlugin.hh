@@ -190,9 +190,6 @@ namespace gazebo
     /// \brief Callback on Optitrack monitor tracker update
     private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
-    /// \brief Callback on Optitrack monitor tracker update
-    //private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
-
     /// \brief Callback on message to toggle viewpoint rotations due to mocap
     /// \param[in] _msg Message sent by publisher
     private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
@@ -362,12 +359,6 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    /// \brief Transform from camera frame to Optitrack head marker.
-    //private: math::Pose cameraToOptitrackHeadMarker;
-    private: math::Pose headMarker;
-
-    private: math::Pose headMarkerCorrected;
-
     /// \brief Transform from hydra sensor orientation to base link frame.
     private: math::Pose baseLinkToHydraSensor;
 
@@ -535,11 +526,22 @@ namespace gazebo
     /// arm sensor 
     private: gazebo::math::Pose elbowArm;
 
-    /// \brief same as elbowArm but with orientation corrected by screen orientation
+    /// \brief same as elbowArm but with orientation corrected by screen
+    /// orientation
     private: gazebo::math::Pose elbowArmCorrected;
 
-    /// \brief Pose of the Optitrack in Gazebo frame
+    /// \brief Transform from camera frame to Optitrack head marker.
+    private: math::Pose headMarker;
+
+    /// \brief same as headMarker but with orientation corrected by screen
+    /// orientation
+    private: math::Pose headMarkerCorrected;
+
+    /// \brief Optitrack calibration offset for the head
     private: gazebo::math::Pose optitrackHeadOffset;
+
+    /// \brief Optitrack calibration offset for the arm
+    private: gazebo::math::Pose optitrackArmOffset;
 
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
     private: gazebo::math::Pose cameraMonitor;
@@ -550,20 +552,11 @@ namespace gazebo
     /// \brief Pose of the fake screen in the world frame
     private: gazebo::math::Pose worldScreen;
 
-    /// \brief Calibration offset for the arm
-    private: gazebo::math::Pose optitrackArmOffset;
-
     /// \brief Low-pass filter for head position (reduces jitter)
     private: gazebo::math::OnePoleVector3 headPosFilter;
 
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
-
-    /// \brief Low-pass filter for monitor position (reduces jitter)
-    private: gazebo::math::OnePoleVector3 monitorPosFilter;
-
-    /// \brief Low-pass filter for monitor orientation (reduces jitter)
-    private: gazebo::math::OnePoleQuaternion monitorOriFilter;
 
     /// \brief Receives messages to toggle viewpoint rotations.
     private: gazebo::transport::SubscriberPtr viewpointRotationsSub;

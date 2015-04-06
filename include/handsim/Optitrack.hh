@@ -124,8 +124,6 @@ namespace haptix
       /// \brief Gazebo publisher for monitor tracker pose
       private: gazebo::transport::PublisherPtr originPub;
 
-      private: gazebo::transport::PublisherPtr monitorPub;
-
       /// \brief Gazebo publisher for tracker data liveliness
       private: gazebo::transport::PublisherPtr optitrackAlivePub;
 
@@ -143,8 +141,6 @@ namespace haptix
 
       /// \brief Store names and poses of tracker models to be published
       private: ModelPoses lastModelMap;
-
-      private: std::vector<gazebo::math::Vector3> originMarkers;
 
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;

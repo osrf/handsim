@@ -259,9 +259,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->headPosFilter.SetFc(0.002, 0.3);
   this->headOriFilter.SetFc(0.002, 0.3);
 
-  this->monitorPosFilter.SetFc(0.002, 0.3);
-  this->monitorOriFilter.SetFc(0.002, 0.3);
-
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
               ("~/optitrack/" + haptix::tracking::Optitrack::headTrackerName,
@@ -272,9 +269,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackMonitorSub = this->gazeboNode->Subscribe
               ("~/optitrack/" + haptix::tracking::Optitrack::originTrackerName,
               &HaptixControlPlugin::OnUpdateOptitrackMonitor, this);
-  /*this->optitrackMonitorPoseSub = this->gazeboNode->Subscribe
-              ("~/optitrack/monitorPose",
-              &HaptixControlPlugin::OnUpdateOptitrackMonitorPose, this);*/
 
   this->optitrack.SetWorld(this->world->GetName());
 
