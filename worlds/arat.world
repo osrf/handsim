@@ -7,7 +7,7 @@
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.7 1.5  0 0.4 1.57</pose>
+        <pose>0 -0.6 1.3  0 0.4 1.57</pose>
       </camera>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
@@ -328,7 +328,7 @@
     <!-- The apl_description model is not (yet) publicly available. -->
     <include>
      <uri>model://mpl_haptix_right_forearm</uri>
-     <pose>0.4 -0.7 1.2 0 0 3.1415</pose>
+     <pose>0.4 -0.7 1.2 0 0 3.1416</pose>
     </include>
 
     <model name="polhemus_source">

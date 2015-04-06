@@ -46,51 +46,12 @@
 
 #include "polhemus_driver.h"
 #include "Optitrack.hh"
+#include "MotorInfo.hh"
+#include "WrenchHelper.hh"
+#include "JointHelper.hh"
 
 namespace gazebo
 {
-  class Wrench
-  {
-    /// \brief Operator =
-    /// \param[in] _wrench wrench to set from.
-    /// \return *this
-    public: Wrench &operator =(const Wrench &_wrench)
-            {
-              this->force = _wrench.force;
-              this->torque = _wrench.torque;
-              return *this;
-            }
-
-    /// \brief Operator +
-    /// \param[in] _wrench wrench to add
-    /// \return *this
-    public: inline Wrench &operator +(const Wrench &_wrench)
-            {
-              this->force += _wrench.force;
-              this->torque += _wrench.torque;
-              return *this;
-            }
-
-    /// \brief Operator -
-    /// \param[in] _wrench wrench to subtract
-    /// \return *this
-    public: inline Wrench &operator -(const Wrench &_wrench)
-            {
-              this->force -= _wrench.force;
-              this->torque -= _wrench.torque;
-              return *this;
-            }
-
-    /// \brief linear forces
-    public: math::Vector3 force;
-
-    /// \brief angular torques
-    public: math::Vector3 torque;
-
-    /// \brief reference link frame
-    public: physics::LinkPtr referenceFrame;
-  };
-
   /// \defgroup haptix_control_plugins HAPTIX Control Plugins
   /// \addtogroup haptix_control_plugins
   /// \{
@@ -111,135 +72,26 @@ namespace gazebo
     /// \brief Gazebo loop: Update the controller on every simulation tick.
     private: void GazeboUpdateStates();
 
-    /// \breif A pointer to the world
-    private: physics::WorldPtr world;
-
-    /// \breif A pointer to the parent model
-    private: physics::ModelPtr model;
-
-    /// \brief Pointer to the update event connection
-    private: event::ConnectionPtr updateConnection;
-
-    /// \brief Pointer to the connection for the end of an update
-    private: event::ConnectionPtr updateConnectionEnd;
-
-    /// \brief For computing dt
-    private: common::Time lastTime;
-
-    /// \brief For throttling the update rate
-    private: common::Time lastWallTime;
-
-    /**********************************************/
-    /*                                            */
-    /*       basic polhemus interface stuff       */
-    /*                                            */
-    /**********************************************/
-    /// \brief true if there a working polhemus connected to this computer?
-    private: bool havePolhemus;
-    /// \brief connection handle
-    private: polhemus_conn_t *polhemusConn;
     /// \brief convenience utility function
     private: math::Pose convertPolhemusToPose(double x, double y, double z,
       double roll, double pitch, double yaw);
+
     /// \brief convenience utility function
     private: math::Pose convertPolhemusToPose(const polhemus_pose_t &_pose);
+
     /// \brief polhemus polling thread to detect sensor locations
     private: void UpdatePolhemus();
-    /// \brief polhemus polling thread handle
-    private: boost::thread polhemusThread;
 
-    /**********************************************/
-    /*                                            */
-    /*       arm base control stuff               */
-    /*                                            */
-    /**********************************************/
-    /// \brief: a pointer to the arm base "floating" joint for positioning
-    /// the arm in space. This joint is provides implicit viscous damping
-    /// of the arm base motion.
-    private: physics::JointPtr baseJoint;
-    /// \brief: base link of the arm.
-    private: physics::LinkPtr baseLink;
-    /// \brief: target position for the arm base link in world frame.
-    private: math::Pose targetBaseLinkPose;
-    /// \brief: from spacenav target pose to the arm base link
-    private: math::Pose baseLinktoSpacenavPose;
-    /// \brief base link pose in world frame on startup.  This is where
-    /// the user spawned the base link model.
-    private: math::Pose initialBaseLinkPose;
-    /// \brief PID for controlling arm base link position in world frame.
-    private: common::PID posPid;
-    /// \brief PID for controlling arm base link orientation in world frame.
-    private: common::PID rotPid;
-    /// \brief force for moving the arm base link to target location.
-    private: Wrench wrench;
     /// \brief this actually does the PID force calculation and applies
     /// force to the arm base link.
     /// \param[in] _dt time step size.
     private: void UpdateBaseLink(double _dt);
 
-    /// \brief publish HaptixControlPlugin status
-    private: gazebo::transport::PublisherPtr haptixStatusPub;
-
-    /**********************************************/
-    /*                                            */
-    /*   for polhemus based view point tracking   */
-    /*                                            */
-    /**********************************************/
-    /// \brief gazebo gz transport node for commanding gazebo UserCamera
-    private: gazebo::transport::NodePtr gazeboNode;
-    /// \brief gazebo gz transport node publisher handle
-    private: gazebo::transport::PublisherPtr viewpointJoyPub;
-    /// \brief gazebo gz transport message
-    private: gazebo::msgs::Pose joyMsg;
-    /// \brief initial UserCamera pose in world frame, not used.
-    private: math::Pose initialCameraPose;
-    /// \brief respond to successful pausing of polhemus
-    private: gazebo::transport::PublisherPtr pausePub;
-
-    /**********************************************/
-    /*                                            */
-    /*   get user camera pose                     */
-    /*                                            */
-    /**********************************************/
-    /// \brief subscribe to user camera pose publisher
-    private: gazebo::transport::SubscriberPtr userCameraPoseSub;
     /// \brief callback for subscriber to the user camera pose publisher
     private: void OnUserCameraPose(ConstPosePtr &_msg);
-    /// \brief store camera pose
-    private: math::Pose userCameraPose;
-    /// \brief have we received at least one camera pose?
-    private: bool userCameraPoseValid;
-    /// \brief Mutex to protect access to userCameraPose
-    private: boost::mutex userCameraPoseMessageMutex;
 
-    /// \brief subscribe to hydra
-    private: gazebo::transport::SubscriberPtr hydraSub;
     /// \brief callback for subscriber to the hydra publisher
     private: void OnHydra(ConstHydraPtr &_msg);
-    /// \brief store hydra pose
-    private: math::Pose hydraPose;
-    /// \brief Mutex to protect access to hydraPose
-    private: boost::mutex hydraMessageMutex;
-    /// \brief have a hydra?
-    private: bool haveHydra;
-
-    /**********************************************/
-    /*                                            */
-    /*   variables for pause management           */
-    /*                                            */
-    /**********************************************/
-
-    /// \brief true if motion tracking is paused
-    private: bool pauseTracking;
-
-    /// \brief got command to pause polhemus updates
-    private: bool gotPauseRequest;
-
-    /// \brief Subscriber to spacenav messages.
-    private: gazebo::transport::SubscriberPtr joySub;
-
-    /// \brief Subscriber to pause polhemus
-    private: gazebo::transport::SubscriberPtr pauseSub;
 
     /// \brief Callback for subscriber to spacenav messages.
     /// \param[in] _msg Joystick data.
@@ -248,31 +100,6 @@ namespace gazebo
     /// \brief Callback for subscriber to pause polhemus
     /// \param[in] _msg pause state
     private: void OnPause(ConstIntPtr &_msg);
-
-    /// \brief Copy of latest Joystick message.
-    private: msgs::Joystick latestJoystickMessage;
-
-    /// \brief Flag to indicate when new Joystick message has been received.
-    private: bool newJoystickMessage;
-
-    /// \brief Mutex to protect access to newJoystickMessage
-    private: boost::mutex joystickMessageMutex;
-
-    /// \brief Model for tracking the polhemus source.
-    private: physics::ModelPtr polhemusSourceModel;
-    /// \brief Pose of the polhemus source in the world frame.
-    private: math::Pose sourceWorldPose;
-    /// \brief used to offset polhemus source for arm sensor during calibration
-    private: math::Pose sourceWorldPoseArmOffset;
-    /// \brief used to offset polhemus source for head sensor during calibration
-    private: math::Pose sourceWorldPoseHeadOffset;
-    /// \brief Transform from polhemus sensor orientation to base link frame.
-    private: math::Pose baseLinkToArmSensor;
-    /// \brief Transform from polhemus sensor orientation to camera frame
-    private: math::Pose cameraToHeadSensor;
-
-    /// \brief Transform from hydra sensor orientation to base link frame.
-    private: math::Pose baseLinkToHydraSensor;
 
     /// \brief Update the state of the robot hand based the commanded states.
     private: void GetRobotStateFromSim();
@@ -284,147 +111,11 @@ namespace gazebo
     /// \param[in] _dt time step to be passed into PID class for control update.
     private: void UpdateHandControl(double _dt);
 
-    /// \brief: state and command messages
-    private: haptix::comm::msgs::hxSensor robotState;
-    private: haptix::comm::msgs::hxCommand robotCommand;
-    private: class SimRobotCommand
-    {
-      public: double ref_pos;
-      public: double ref_vel_max;
-      public: double gain_pos;
-      public: double gain_vel;
-    };
-    /// \brief: commanding all the joints in robot, and map
-    /// robotCommand motor joints to a subset of the joints here.
-    private: std::vector<SimRobotCommand> simRobotCommands;
-
-    /// \brief: joint names matching those of gazebo model
-    /// All joints to be controlled by this plugin.
-    /// Joint id's must be consecutive.
-    /// Example:
-    ///   <joint id="0">joint_33</joint>
-    ///   <joint id="1">joint_55</joint>
-    private: std::map<unsigned int, std::string> jointNames;
-    private: std::vector<physics::JointPtr> joints;
-
-    /// \brief: class containing info on motors
-    private: class MotorInfo
-    {
-      /// \brief: motor name
-      public: std::string name;
-      /// \brief: joint name associated with each motor
-      public: std::string jointName;
-
-      /// \brief: max continuous motor torque
-      public: double motorTorque;
-
-      /// \brief: gear_ratio = motor_angle / joint_angle
-      /// assuming the _hxCommand::ref_pos and _hxCommand::ref_vel are
-      /// motor position and motor velocities, use gear_ratio to
-      /// compute simulation joint torques.
-      public: double gearRatio;
-
-      /// \brief: index of joint controlled by this motor
-      public: unsigned int index;
-
-      /// \brief: index of coupled joints
-      public: class GearBox
-      {
-        /// \brief: index of joint controlled by this gearbox
-        public: unsigned int index;
-        /// \brief: see example for motorInfos
-        public: double offset;
-        /// \brief: see example for motorInfos
-        public: double multiplier;
-      };
-      /// \brief: joint coupling enforced at position/velocity command level.
-      public: std::vector<GearBox> gearboxes;
-    };
-    /// \brief: user controllable joints via motor commands in hxCommand.
-    /// <gearbox> joint coupling is only applied at position/velocity command
-    /// level. <gear_ratio> is not used yet.
-    ///
-    /// For example, code below means:
-    ///   joint_33 position = (joint_55 position - 0.1) * 1.5
-    ///
-    /// Example:
-    ///   <motor id="3" name="motor_a">
-    ///     <powered_motor_joint>joint_33</powered_motor_joint>
-    ///     <gear_ratio>399.0</gear_ratio>
-    ///     <gearbox>
-    ///       <joint>joint_55</joint>
-    ///       <offset>0.1</offset>
-    ///       <multiplier>1.5</multiplier>
-    ///     </gearbox>
-    ///   </motor>
-    private: std::map<unsigned int, MotorInfo> motorInfos;
-
-    /// \brief: list of gazebo joints that corresponds to each motor
-    private: std::vector<unsigned int> motors;
-
-    /// \brief: contact sensor names
-    /// Reads from plugin SDF, example:
-    ///   <contactSensor id="0">contact_sensor_0</contactSensor>
-    ///   <contactSensor id="1">contact_sensor_5</contactSensor>
-    private: std::map<unsigned int, std::string> contactSensorNames;
-
-    /// \brief: data structure for storing contact sensor infos
-    class ContactSensorInfo
-    {
-      public: sensors::SensorPtr sensor;
-      public: event::ConnectionPtr connection;
-      // aggregated forces and torques from contact
-      public: math::Vector3 contactForce;
-      public: math::Vector3 contactTorque;
-    };
-    /// \brief: create a list of contact sensors based on contactSensorNames
-    private: std::vector<ContactSensorInfo> contactSensorInfos;
-
     /// \brief: gazebo contact sensors
     private: void OnContactSensorUpdate(int _i);
 
     /// \brief: publish HaptixControlPlugin status
     private: void PublishHaptixControlStatus();
-
-    /// \brief: imu sensor names
-    /// Reads from plugin SDF, example:
-    ///   <imuSensor id="0">imu_sensor_9</imuSensor>
-    ///   <imuSensor id="1">imu_sensor_5</imuSensor>
-    private: std::map<unsigned int, std::string> imuSensorNames;
-
-    /// \brief: gazebo imu sensors
-    /// create a list of imu sensors based on imuSensorNames
-    private: std::vector<sensors::ImuSensorPtr> imuSensors;
-
-    /// \brief: list of predefined grasps
-    /// Give each one a name and the desired positions for the motors. E.g.:
-    ///    <grasp name="MyGrasp">0 0 0 0.7679 0 0 1.3963 0 0 0 0
-    ///                          0.8727 0 0.5236 -0.349</grasp>
-    private: std::map<std::string, std::vector<float> > grasps;
-
-    /// \brief: current desired grasp pose
-    /// If graspMode is true, then these are the desired positions of the finger
-    /// motors.
-    private: std::vector<float> graspPositions;
-
-    /// \brief: are we in predefined grasp mode?
-    /// If true, then only values drawn from predefined grasps are commanded;
-    /// else direct finger motor control is performed.  We start not in
-    /// predefined mode; we enter this mode on receipt of a non-empty request to
-    /// "haptix/gazebo/grasp" service; we exit this mode on receipt of an empty
-    /// request to the same service.
-    private: bool graspMode;
-
-    /// \brief: internal PIDs for holding all actuated joints in gazebo
-    /// One PID controller per joint specified by plugin's <joint> param.
-    /// pid id's must match joint id's.
-    /// Example:
-    ///   <pid id="0"  p="10.0" i="0" d="0" cmd_max="10.0" cmd_min="-10.0"/>
-    ///   <pid id="1"  p="10.0" i="0" d="0" cmd_max="10.0" cmd_min="-10.0"/>
-    private: std::vector<common::PID> pids;
-
-    /// \brief: ignition transport node for talking to haptix comm
-    private: ignition::transport::Node ignNode;
 
     /// \brief: Provide robot info through haptix_comm
     /// \param[in] _service service name
@@ -490,6 +181,321 @@ namespace gazebo
     private: void SetKeyboardPose(const std::string &/*_topic*/,
                                   const msgs::Pose &_pose);
 
+    /// \brief Callback on Optitrack head tracker update
+    private: void OnUpdateOptitrackHead(ConstPosePtr &_pose);
+
+    /// \brief Callback on Optitrack arm tracker update
+    private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
+
+    /// \brief Callback on Optitrack monitor tracker update
+    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+
+    /// \brief Callback on message to toggle viewpoint rotations due to mocap
+    /// \param[in] _msg Message sent by publisher
+    private: void OnToggleViewpointRotations(ConstIntPtr &_msg);
+
+    /// \breif A pointer to the world
+    private: physics::WorldPtr world;
+
+    /// \breif A pointer to the parent model
+    private: physics::ModelPtr model;
+
+    /// \brief Pointer to the update event connection
+    private: event::ConnectionPtr updateConnection;
+
+    /// \brief Pointer to the connection for the end of an update
+    private: event::ConnectionPtr updateConnectionEnd;
+
+    /// \brief For computing dt
+    private: common::Time lastTime;
+
+    /// \brief For user control code throttling
+    private: common::Time lastSimTimeForControlThrottling;
+
+    ////////////////////////////////////////////////
+    //
+    //       basic polhemus interface stuff
+    //
+    ////////////////////////////////////////////////
+
+    /// \brief true if there a working polhemus connected to this computer?
+    private: bool havePolhemus;
+
+    /// \brief connection handle
+    private: polhemus_conn_t *polhemusConn;
+
+    /// \brief polhemus polling thread handle
+    private: boost::thread polhemusThread;
+
+    ////////////////////////////////////////////////
+    //
+    //       arm base control stuff
+    //
+    ////////////////////////////////////////////////
+
+    /// \brief: a pointer to the arm base "floating" joint for positioning
+    /// the arm in space. This joint is provides implicit viscous damping
+    /// of the arm base motion.
+    private: physics::JointPtr baseJoint;
+
+    /// \brief: base link of the arm.
+    private: physics::LinkPtr baseLink;
+
+    /// \brief: target position for the arm base link in world frame.
+    private: math::Pose targetBaseLinkPose;
+
+    /// \brief: from spacenav target pose to the arm base link
+    private: math::Pose baseLinktoSpacenavPose;
+
+    /// \brief base link pose in world frame on startup.  This is where
+    /// the user spawned the base link model.
+    private: math::Pose initialBaseLinkPose;
+
+    /// \brief PID for controlling arm base link position in world frame.
+    private: common::PID posPid;
+
+    /// \brief PID for controlling arm base link orientation in world frame.
+    private: common::PID rotPid;
+
+    /// \brief force for moving the arm base link to target location.
+    private: WrenchHelper wrench;
+
+    /// \brief publish HaptixControlPlugin status
+    private: gazebo::transport::PublisherPtr haptixStatusPub;
+
+    ////////////////////////////////////////////////
+    //
+    //   for polhemus based view point tracking
+    //
+    ////////////////////////////////////////////////
+
+    /// \brief gazebo gz transport node for commanding gazebo UserCamera
+    private: gazebo::transport::NodePtr gazeboNode;
+
+    /// \brief gazebo gz transport node publisher handle
+    private: gazebo::transport::PublisherPtr viewpointJoyPub;
+
+    /// \brief gazebo gz transport message
+    private: gazebo::msgs::Pose joyMsg;
+
+    /// \brief initial UserCamera pose in world frame, not used.
+    private: math::Pose initialCameraPose;
+
+    /// \brief respond to successful pausing of polhemus
+    private: gazebo::transport::PublisherPtr pausePub;
+
+    ////////////////////////////////////////////////
+    //
+    //   get user camera pose
+    //
+    ////////////////////////////////////////////////
+
+    /// \brief subscribe to user camera pose publisher
+    private: gazebo::transport::SubscriberPtr userCameraPoseSub;
+
+    /// \brief store camera pose
+    private: math::Pose userCameraPose;
+
+    /// \brief have we received at least one camera pose?
+    private: bool userCameraPoseValid;
+
+    /// \brief Mutex to protect access to userCameraPose
+    private: boost::mutex userCameraPoseMessageMutex;
+
+    /// \brief subscribe to hydra
+    private: gazebo::transport::SubscriberPtr hydraSub;
+
+    /// \brief store hydra pose
+    private: math::Pose hydraPose;
+
+    /// \brief Mutex to protect access to hydraPose
+    private: boost::mutex hydraMessageMutex;
+
+    /// \brief have a hydra?
+    private: bool haveHydra;
+
+    ////////////////////////////////////////////////
+    //
+    //   variables for pause management
+    //
+    ////////////////////////////////////////////////
+
+    /// \brief true if motion tracking is paused
+    private: bool pauseTracking;
+
+    /// \brief got command to pause polhemus updates
+    private: bool gotPauseRequest;
+
+    /// \brief Subscriber to spacenav messages.
+    private: gazebo::transport::SubscriberPtr joySub;
+
+    /// \brief Subscriber to pause polhemus
+    private: gazebo::transport::SubscriberPtr pauseSub;
+
+    /// \brief Copy of latest Joystick message.
+    private: msgs::Joystick latestJoystickMessage;
+
+    /// \brief Flag to indicate when new Joystick message has been received.
+    private: bool newJoystickMessage;
+
+    /// \brief Mutex to protect access to newJoystickMessage
+    private: boost::mutex joystickMessageMutex;
+
+    /// \brief Model for tracking the polhemus source.
+    private: physics::ModelPtr polhemusSourceModel;
+
+    /// \brief Pose of the polhemus source in the world frame.
+    private: math::Pose sourceWorldPose;
+
+    /// \brief used to offset polhemus source for arm sensor during calibration
+    private: math::Pose sourceWorldPoseArmOffset;
+
+    /// \brief used to offset polhemus source for head sensor during calibration
+    private: math::Pose sourceWorldPoseHeadOffset;
+
+    /// \brief Transform from polhemus sensor orientation to base link frame.
+    private: math::Pose baseLinkToArmSensor;
+
+    /// \brief Transform from polhemus sensor orientation to camera frame
+    private: math::Pose cameraToHeadSensor;
+
+    /// \brief Transform from camera frame to Optitrack head marker.
+    private: math::Pose cameraToOptitrackHeadMarker;
+
+    /// \brief Transform from hydra sensor orientation to base link frame.
+    private: math::Pose baseLinkToHydraSensor;
+
+    /// \brief: state and command messages
+    private: haptix::comm::msgs::hxSensor robotState;
+
+    /// \brief: keep a local copy of hxCommand
+    private: haptix::comm::msgs::hxCommand robotCommand;
+
+    /// \brief: simulation commands for all the pid'd simulation joints
+    private: class SimRobotCommand
+    {
+      public: double ref_pos;
+      public: double ref_vel_max;
+      public: double gain_pos;
+      public: double gain_vel;
+    };
+
+    /// \brief: commanding all the joints in robot, and map
+    /// robotCommand motor joints to a subset of the joints here.
+    private: std::vector<SimRobotCommand> simRobotCommands;
+
+    /// \brief: joint names matching those of gazebo model
+    /// All joints to be controlled by this plugin.
+    /// Joint id's must be consecutive.
+    /// Example:
+    ///   <joint id="0">joint_33</joint>
+    ///   <joint id="1">joint_55</joint>
+    private: std::map<unsigned int, std::string> jointNames;
+
+    private: std::vector<JointHelper*> haptixJoints;
+
+    /// \brief: user controllable joints via motor commands in hxCommand.
+    /// <gearbox> joint coupling is only applied at position/velocity command
+    /// level. <gear_ratio> is not used yet.
+    ///
+    /// Example transmission:
+    ///   <motor id="3" name="motor_a">
+    ///     <powered_motor_joint>joint_33</powered_motor_joint>
+    ///     <gear_ratio>399.0</gear_ratio>
+    ///     <!-- per JHU requirements, transmission is applied in 2 stages,
+    ///          for powered motor joint angle less than offset,
+    ///          multiplier1 is used. For powered motor joint angle
+    ///          greater than minimum offset, multiplier2 is used.
+    ///
+    ///          For example:
+    ///
+    ///            minOffset angle = min(all gearboxes offset angles) = 0.15
+    ///            if (joint_33 angle < minOffset angle)
+    ///              joint_55 angle = 100.0 * joint_33 angle
+    ///              joint_66 angle = 0.0 * joint_33 angle
+    ///            else
+    ///              joint_55 angle = 1.5 * (joint_33 angle - minOffset angle)
+    ///                       + 100.0 * minOffset angle
+    ///              joint_66 angle = 10.5 * (joint_33 angle - minOffset angle)
+    ///                       + 0.0 * minOffset angle
+    ///     -->
+    ///     <gearbox>
+    ///       <joint>joint_55</joint>
+    ///       <offset>0.15</offset>
+    ///       <multiplier1>100.0</multiplier1>
+    ///       <multiplier2>1.5</multiplier2>
+    ///     </gearbox>
+    ///     <gearbox>
+    ///       <joint>joint_66</joint>
+    ///       <offset>0.25</offset>
+    ///       <multiplier1>0.0</multiplier1>
+    ///       <multiplier2>10.5</multiplier2>
+    ///     </gearbox>
+    ///   </motor>
+    private: std::map<unsigned int, MotorInfo> motorInfos;
+
+    /// \brief: list of gazebo joints that corresponds to each motor
+    private: std::vector<unsigned int> motors;
+
+    /// \brief: contact sensor names
+    /// Reads from plugin SDF, example:
+    ///   <contactSensor id="0">contact_sensor_0</contactSensor>
+    ///   <contactSensor id="1">contact_sensor_5</contactSensor>
+    private: std::map<unsigned int, std::string> contactSensorNames;
+
+    /// \brief: data structure for storing contact sensor infos
+    private: class ContactSensorInfo
+    {
+      public: sensors::SensorPtr sensor;
+      public: event::ConnectionPtr connection;
+      // aggregated forces and torques from contact
+      public: math::Vector3 contactForce;
+      public: math::Vector3 contactTorque;
+    };
+
+    /// \brief: create a list of contact sensors based on contactSensorNames
+    private: std::vector<ContactSensorInfo> contactSensorInfos;
+
+    /// \brief: imu sensor names
+    /// Reads from plugin SDF, example:
+    ///   <imuSensor id="0">imu_sensor_9</imuSensor>
+    ///   <imuSensor id="1">imu_sensor_5</imuSensor>
+    private: std::map<unsigned int, std::string> imuSensorNames;
+
+    /// \brief: gazebo imu sensors
+    /// create a list of imu sensors based on imuSensorNames
+    private: std::vector<sensors::ImuSensorPtr> imuSensors;
+
+    /// \brief: list of predefined grasps
+    /// Give each one a name and the desired positions for the motors. E.g.:
+    ///    <grasp name="MyGrasp">0 0 0 0.7679 0 0 1.3963 0 0 0 0
+    ///                          0.8727 0 0.5236 -0.349</grasp>
+    private: std::map<std::string, std::vector<float> > grasps;
+
+    /// \brief: current desired grasp pose
+    /// If graspMode is true, then these are the desired positions of the finger
+    /// motors.
+    private: std::vector<float> graspPositions;
+
+    /// \brief: are we in predefined grasp mode?
+    /// If true, then only values drawn from predefined grasps are commanded;
+    /// else direct finger motor control is performed.  We start not in
+    /// predefined mode; we enter this mode on receipt of a non-empty request to
+    /// "haptix/gazebo/grasp" service; we exit this mode on receipt of an empty
+    /// request to the same service.
+    private: bool graspMode;
+
+    /// \brief: internal PIDs for holding all actuated joints in gazebo
+    /// One PID controller per joint specified by plugin's <joint> param.
+    /// pid id's must match joint id's.
+    /// Example:
+    ///   <pid id="0"  p="10.0" i="0" d="0" cmd_max="10.0" cmd_min="-10.0"/>
+    ///   <pid id="1"  p="10.0" i="0" d="0" cmd_max="10.0" cmd_min="-10.0"/>
+    private: std::vector<common::PID> pids;
+
+    /// \brief: ignition transport node for talking to haptix comm
+    private: ignition::transport::Node ignNode;
+
     /// \brief True if keyboard teleop is enabled, false otherwise.
     private: bool haveKeyboard;
 
@@ -519,18 +525,6 @@ namespace gazebo
     /// \brief Subscriber to Optitrack monitor tracker updates
     private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
 
-    /// \brief Callback on Optitrack head tracker update
-    private: void OnUpdateOptitrackHead(ConstPosePtr &_pose);
-
-    /// \brief Callback on Optitrack arm tracker update
-    private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
-
-    /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
-
-    /// \brief Pose of the optitrack head tracker in the world frame
-    private: gazebo::math::Pose optitrackHead;
-
     /// \brief Pose of the optitrack arm tracker in the world frame
     private: gazebo::math::Pose optitrackArm;
 
@@ -538,12 +532,8 @@ namespace gazebo
     /// pose of arm
     private: gazebo::math::Pose optitrackArmOffset;
 
-    /// \brief Pose offset between initial Optitrack head and desired initial
-    /// viewpoint pose
-    private: gazebo::math::Pose optitrackHeadOffset;
-
-    /// \brief Orthonormal transformation between Optitrack head and world axes
-    private: gazebo::math::Pose optitrackWorldHeadRot;
+    /// \brief Pose of the Optitrack in Gazebo frame
+    private: gazebo::math::Pose gazeboToOptitrack;
 
     /// \brief Orthonormal transformation between Optitrack arm and world axes
     private: gazebo::math::Pose optitrackWorldArmRot;
@@ -556,6 +546,15 @@ namespace gazebo
 
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
+
+    /// \brief Receives messages to toggle viewpoint rotations.
+    private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
+
+    /// \brief Mutex to lock viewpointRotationsEnabled
+    private: std::mutex viewpointRotationsMutex;
+
+    /// \brief True if motion capture rotations the head, false otherwise.
+    private: bool viewpointRotationsEnabled;
 
     /// \brief True if optitrackArmOffset has been initialized
     private: bool armOffsetInitialized;
@@ -570,4 +569,3 @@ namespace gazebo
 /// \}
 }
 #endif
-

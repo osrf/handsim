@@ -42,6 +42,8 @@ add_library(HaptixGUIPlugin SHARED ${HaptixGUIPlugin_MOC}
 
 # build library
 add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
+  WrenchHelper.cc
+  JointHelper.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxGrasp.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSensor.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxRobot.pb.cc
