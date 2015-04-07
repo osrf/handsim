@@ -18,6 +18,7 @@
 #include <gazebo/gui/KeyEventHandler.hh>
 
 #include "handsim/HaptixControlPlugin.hh"
+#include "haptix/comm/msg/hxQuaternion.pb.h"
 
 namespace gazebo
 {
@@ -653,7 +654,7 @@ void HaptixControlPlugin::LoadHandControl()
     angvel->set_x(0);
     angvel->set_y(0);
     angvel->set_z(0);
-    haptix::comm::msgs::quaternion *orientation =
+    haptix::comm::msgs::hxQuaternion *orientation =
       this->robotState.add_imu_orientation();
     orientation->set_x(0);
     orientation->set_y(0);
@@ -1181,7 +1182,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     angvel->set_y(vel.y);
     angvel->set_z(vel.z);
     // Orientation not yet supported
-    haptix::comm::msgs::quaternion *orientation =
+    haptix::comm::msgs::hxQuaternion *orientation =
         this->robotState.mutable_imu_orientation(i);
     orientation->set_x(0);
     orientation->set_y(0);

@@ -24,18 +24,17 @@
 #include <sdf/sdf.hh>
 
 #include <gazebo/common/Plugin.hh>
-//#include <gazebo/transport/transport.hh>
+#include <gazebo/transport/Node.hh>
+#include <gazebo/transport/Publisher.hh>
 #include <gazebo/math/Pose.hh>
 
 #include <ignition/transport.hh>
 #include "haptix/comm/haptix_sim.h"
 #include "haptix/comm/haptix.h"
-#include "haptix/comm/msg/hxCamera.pb.h"
-#include "haptix/comm/msg/hxContact.pb.h"
-#include "haptix/comm/msg/hxContact_V.pb.h"
+#include "haptix/comm/msg/hxContactPoint.pb.h"
+#include "haptix/comm/msg/hxContactPoint_V.pb.h"
 #include "haptix/comm/msg/hxEmpty.pb.h"
 #include "haptix/comm/msg/hxInt.pb.h"
-#include "haptix/comm/msg/hxJacobian.pb.h"
 #include "haptix/comm/msg/hxJoint.pb.h"
 #include "haptix/comm/msg/hxLink.pb.h"
 #include "haptix/comm/msg/hxModel.pb.h"
@@ -44,6 +43,7 @@
 #include "haptix/comm/msg/hxSimInfo.pb.h"
 #include "haptix/comm/msg/hxString.pb.h"
 #include "haptix/comm/msg/hxTransform.pb.h"
+#include "haptix/comm/msg/hxTime.pb.h"
 #include "haptix/comm/msg/hxVector3.pb.h"
 
 namespace gazebo
@@ -74,25 +74,20 @@ namespace gazebo
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result);
 
-    private: void HaptixCameraCallback(
+    private: void HaptixCameraTransformCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
-      haptix::comm::msgs::hxCamera &_rep, bool &_result);
+      haptix::comm::msgs::hxTransform &_rep, bool &_result);
 
-    private: void HaptixCameraTransformCallback(
+    private: void HaptixSetCameraTransformCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxTransform &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    private: void HaptixContactsCallback(
+    private: void HaptixContactPointsCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
-      haptix::comm::msgs::hxContact_V &_rep, bool &_result);
-
-    private: void HaptixJacobianCallback(
-      const std::string &_service,
-      const haptix::comm::msgs::hxParam &_req,
-      haptix::comm::msgs::hxJacobian &_rep, bool &_result);
+      haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
     private: void HaptixStateCallback(
       const std::string &_service,
@@ -120,16 +115,6 @@ namespace gazebo
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
     private: void HaptixAngularVelocityCallback(
-      const std::string &_service,
-      const haptix::comm::msgs::hxParam &_req,
-      haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
-    private: void HaptixLinearAccelCallback(
-      const std::string &_service,
-      const haptix::comm::msgs::hxParam &_req,
-      haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
-    private: void HaptixAngularAccelCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
@@ -164,6 +149,11 @@ namespace gazebo
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    private: void HaptixGetTimerCallback(
+      const std::string &_service,
+      const haptix::comm::msgs::hxEmpty &_req,
+      haptix::comm::msgs::hxTime &_rep, bool &_result);
+
     private: void HaptixStartLoggingCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
@@ -185,34 +175,50 @@ namespace gazebo
     /// \param[in] _in hxTransform to transform
     /// \param[out] _out Gazebo pose output
     /// \return True if the conversion succeeded.
-    private: bool ConvertTransform(const haptix::comm::hxTransform &_in,
-        gazebo::math::Pose &_out) const;
+    public: static bool ConvertTransform(const haptix::comm::msgs::hxTransform &_in,
+        gazebo::math::Pose &_out);
 
     /// \brief Convert from Gazebo Pose to hxTransform
     /// \param[in] _in hxTransform to transform
     /// \param[out] _out Gazebo pose output
     /// \return True if the conversion succeeded.
-    private: bool ConvertTransform(const gazebo::math::Pose &_in,
-        haptix::comm::hxTransform &_out) const;
+    public: static bool ConvertTransform(const gazebo::math::Pose &_in,
+        haptix::comm::msgs::hxTransform &_out);
 
     /// \brief Convert from hxVector3 to Gazebo Vector3
     /// \param[in] _in hxVector3 to transform
     /// \param[out] _out Gazebo Vector3 output
     /// \return True if the conversion succeeded.
-    private: bool ConvertVector(const haptix::comm::hxVector3 &_in,
-        gazebo::math::Vector3 &_out) const;
+    public: static bool ConvertVector(const haptix::comm::msgs::hxVector3 &_in,
+        gazebo::math::Vector3 &_out);
 
     /// \brief Convert from Gazebo Vector3 to hxVector3
     /// \param[in] _in Gazebo Vector3 to transform
     /// \param[out] _out hxVector3 output
     /// \return True if the conversion succeeded.
-    private: bool ConvertVector(const gazebo::math::Vector3 &_in,
-        haptix::comm::hxVector3 &_out) const;
+    public: static bool ConvertVector(const gazebo::math::Vector3 &_in,
+        haptix::comm::msgs::hxVector3 &_out);
 
     /// \brief Convert from hxQuaternion to Gazebo Quaternion
+    public: static bool ConvertQuaternion(
+        const haptix::comm::msgs::hxQuaternion &_in,
+        gazebo::math::Quaternion &_out);
 
     /// \brief Convert from Gazebo Quaternion to hxQuaternion
+    public: static bool ConvertQuaternion(const gazebo::math::Quaternion &_in,
+        haptix::comm::msgs::hxQuaternion &_out);
 
+    /// \brief Convert from Gazebo Model to hxModel
+    public: static bool ConvertModel(const gazebo::physics::Model &_in,
+        haptix::comm::msgs::hxModel &_out);
+
+    /// \brief Convert from Gazebo Link to hxLink
+    public: static bool ConvertLink(const gazebo::physics::Link &_in,
+        haptix::comm::msgs::hxLink &_out);
+
+    /// \brief Convert from Gazebo Joint to hxJoint
+    public: static bool ConvertJoint(gazebo::physics::Joint &_in,
+        haptix::comm::msgs::hxJoint &_out);
 
     ///////////// Member variables /////////////
 
@@ -222,11 +228,14 @@ namespace gazebo
     /// \brief SDF pointer.
     protected: sdf::ElementPtr sdf;
 
+    /// \brief Node for Gazebo transport.
+    protected: transport::NodePtr gzNode;
+
     /// \brief: ignition transport node for talking to haptix comm
     private: ignition::transport::Node ignNode;
 
-    /// \brief Node for Gazebo transport.
-    //protected: transport::NodePtr node;
+    /// \brief For publishing commands to the GUI timer
+    private: transport::PublisherPtr timerPublisher;
 
     /// \brief Subscriber for listening to changing arrangements.
     //protected: transport::SubscriberPtr sub;
