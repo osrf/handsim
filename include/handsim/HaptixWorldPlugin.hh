@@ -26,7 +26,9 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/transport/Node.hh>
 #include <gazebo/transport/Publisher.hh>
+#include <gazebo/physics/Link.hh>
 #include <gazebo/math/Pose.hh>
+#include <gazebo/math/Vector3.hh>
 
 #include <ignition/transport.hh>
 #include "haptix/comm/haptix_sim.h"
@@ -86,7 +88,7 @@ namespace gazebo
 
     private: void HaptixContactPointsCallback(
       const std::string &_service,
-      const haptix::comm::msgs::hxEmpty &_req,
+      const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
     private: void HaptixStateCallback(
@@ -99,9 +101,9 @@ namespace gazebo
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxModel &_rep, bool &_result);
 
-    private: void HaptixRemoveModelIDCallback(
+    private: void HaptixRemoveModelCallback(
       const std::string &_service,
-      const haptix::comm::msgs::hxInt &_req,
+      const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
     private: void HaptixModelTransformCallback(
@@ -170,6 +172,19 @@ namespace gazebo
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
     ///////////// Utility functions /////////////
+    /// \brief Apply a persistent force to a link over a certain time interval.
+    /// \param[in] _link Link to apply the force to.
+    /// \param[in] _force Force to apply.
+    /// \param[in] _duration How long to apply the force. Negative to go on forever.
+    private: void ForceDurationThread(const physics::LinkPtr _link,
+        const math::Vector3 &_force, float _duration);
+
+    /// \brief Apply a persistent torque to a link over a certain time interval.
+    /// \param[in] _link Link to apply the torque to.
+    /// \param[in] _torque Torque to apply.
+    /// \param[in] _duration How long to apply the torque. Negative to go on forever.
+    private: void TorqueDurationThread(const physics::LinkPtr _link,
+        const math::Vector3 &_torque, float _duration);
 
     /// \brief Convert from hxTransform to Gazebo Pose
     /// \param[in] _in hxTransform to transform
@@ -221,6 +236,8 @@ namespace gazebo
         haptix::comm::msgs::hxJoint &_out);
 
     ///////////// Member variables /////////////
+
+    std::vector<std::thread> threadPool;
 
     /// \brief World pointer.
     protected: physics::WorldPtr world;
