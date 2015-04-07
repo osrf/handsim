@@ -237,6 +237,9 @@ namespace gazebo
     /// \brief For publishing commands to the GUI timer
     private: transport::PublisherPtr timerPublisher;
 
+    /// \brief For publishing commands to the server
+    private: transport::PublisherPtr worldControlPub;
+
     /// \brief Subscriber for listening to changing arrangements.
     //protected: transport::SubscriberPtr sub;
   };

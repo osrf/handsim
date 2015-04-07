@@ -51,6 +51,9 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->gzNode->Init(_world->GetName());
   // TODO: different timer topics?
   this->timerPublisher = this->gzNode->Advertise<msgs::GzString>("~/timer_control");
+  this->worldControlPub = this->node->Advertise<gazebo::msgs::WorldControl>
+                                        ("~/world_control");
+
 
   // Advertise haptix sim services.
   this->ignNode.Advertise("/haptix/gazebo/hxs_siminfo",
@@ -265,6 +268,47 @@ void HaptixWorldPlugin::HaptixResetCallback(
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  // Signal to WorldControl to reset the world
+  gazebo::msgs::WorldControl msg;
+  msg.mutable_reset()->set_all(true);
+  this->worldControlPub->Publish(msg);
+
+  if (_req.data())
+  {
+    // Also reset wrist and finger posture
+    /*memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+    this->lastMotorCommand.ref_pos_enabled = 1;
+    //::hxSensor sensor;
+    if (haptix::comm::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
+      gzerr << "hx_update(): Request error.\n" << std::endl;
+    gazebo::msgs::Int pause;
+    pause.set_data(1);
+    this->pausePub->Publish(pause);
+    int maxTries = 30;
+    gzdbg << "waiting for response from motion tracker (max wait 3 sec).\n";
+
+    while (maxTries > 0 && !this->trackingPaused)
+    {
+      --maxTries;
+      usleep(100000);
+    }
+
+    // And zero the grasp, if any.
+    if (this->lastGraspRequest.grasps_size() > 0)
+    {
+      this->lastGraspRequest.mutable_grasps(0)->set_grasp_value(0.0);
+      haptix::comm::msgs::hxCommand resp;
+      bool result;
+      if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                                this->lastGraspRequest,
+                                1000,
+                                resp,
+                                result) || !result)
+      {
+        gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+      }
+    }*/
+  }
 }
 
 /////////////////////////////////////////////////
@@ -324,6 +368,7 @@ void HaptixGetTimerCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTime &_rep, bool &_result)
 {
+  // TODO
 }
 
 /////////////////////////////////////////////////
