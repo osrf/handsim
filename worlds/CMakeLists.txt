@@ -1,6 +1,7 @@
-set (files 
+set (files
   arat.world
   arat_left.world
+  handsim_empty.world
 )
 
 install(FILES ${files}
