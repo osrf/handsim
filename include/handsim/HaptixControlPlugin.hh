@@ -191,7 +191,7 @@ namespace gazebo
     private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
 
     /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
     /// \brief Callback on message to toggle viewpoint rotations due to mocap
     /// \param[in] _msg Message sent by publisher
@@ -362,9 +362,6 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    /// \brief Transform from camera frame to Optitrack head marker.
-    private: math::Pose cameraToOptitrackHeadMarker;
-
     /// \brief Transform from hydra sensor orientation to base link frame.
     private: math::Pose baseLinkToHydraSensor;
 
@@ -528,21 +525,35 @@ namespace gazebo
     /// \brief Subscriber to Optitrack monitor tracker updates
     private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
 
-    /// \brief Pose of the optitrack arm tracker in the world frame
-    private: gazebo::math::Pose optitrackArm;
+    /// \brief hardcoded offset between controlled position of the link and
+    /// arm sensor 
+    private: gazebo::math::Pose elbowArm;
 
-    /// \brief Pose offset between initial Optitrack arm and desired initial
-    /// pose of arm
+    /// \brief same as elbowArm but with orientation corrected by screen
+    /// orientation
+    private: gazebo::math::Pose elbowArmCorrected;
+
+    /// \brief Transform from camera frame to Optitrack head marker.
+    private: math::Pose headMarker;
+
+    /// \brief same as headMarker but with orientation corrected by screen
+    /// orientation
+    private: math::Pose headMarkerCorrected;
+
+    /// \brief Optitrack calibration offset for the head
+    private: gazebo::math::Pose optitrackHeadOffset;
+
+    /// \brief Optitrack calibration offset for the arm
     private: gazebo::math::Pose optitrackArmOffset;
 
-    /// \brief Pose of the Optitrack in Gazebo frame
-    private: gazebo::math::Pose gazeboToOptitrack;
-
-    /// \brief Orthonormal transformation between Optitrack arm and world axes
-    private: gazebo::math::Pose optitrackWorldArmRot;
-
     /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
-    private: gazebo::math::Pose monitorOptitrackFrame;
+    private: gazebo::math::Pose cameraMonitor;
+
+    /// \brief Pose of the fake "screen" frame in the monitor tracker frame
+    private: gazebo::math::Pose monitorScreen;
+
+    /// \brief Pose of the fake screen in the world frame
+    private: gazebo::math::Pose worldScreen;
 
     /// \brief Low-pass filter for head position (reduces jitter)
     private: gazebo::math::OnePoleVector3 headPosFilter;
@@ -555,6 +566,9 @@ namespace gazebo
 
     /// \brief Mutex to lock viewpointRotationsEnabled
     private: std::mutex viewpointRotationsMutex;
+
+    /// \brief Mutex to lock optitrack monitor data
+    private: std::mutex optitrackMonitorMutex;
 
     /// \brief True if motion capture rotations the head, false otherwise.
     private: bool viewpointRotationsEnabled;
