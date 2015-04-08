@@ -52,7 +52,8 @@ namespace haptix_gazebo_plugins
     public: void Load(sdf::ElementPtr _elem);
 
     // Qt callback on mouse enter event.
-    protected: virtual void enterEvent(QEvent *event);
+    // _param[in] Mouse enter event.
+    protected: virtual void enterEvent(QEvent *_event);
 
     /// \brief Signal to set a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.

@@ -1505,7 +1505,7 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
 }
 
 /////////////////////////////////////////////////
-void HaptixGUIPlugin::enterEvent(QEvent * /*_event*/)
+void HaptixGUIPlugin::enterEvent(QEvent */*_event*/)
 {
   QApplication::setOverrideCursor(Qt::ArrowCursor);
 }
