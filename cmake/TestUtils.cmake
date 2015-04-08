@@ -26,7 +26,6 @@ macro (handsim_build_tests)
       gazebo_rendering
       gazebo_msgs
       gazebo_transport
-      libgazebo
       ${Boost_LIBRARIES}
       )
 
