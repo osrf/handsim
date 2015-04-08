@@ -7,17 +7,31 @@ macro (handsim_build_tests)
     if(USE_LOW_MEMORY_TESTS)
       add_definitions(-DUSE_LOW_MEMORY_TESTS=1)
     endif(USE_LOW_MEMORY_TESTS)
-    add_executable(${BINARY_NAME} ${GTEST_SOURCE_file})
+
+    include_directories(
+      ${PROJECT_BINARY_DIR}
+      ${Boost_FILESYSTEM_INCLUDE_DIRS}
+      ${Boost_SYSTEM_INCLUDE_DIRS}
+      ${GAZEBO_INCLUDE_DIRS}
+      ${HAPTIX-COMM_INCLUDE_DIRS}
+      ${IGNITION-TRANSPORT_INCLUDE_DIRS}
+    )
+    link_directories(
+      ${PROJECT_BINARY_DIR}/test
+      ${Boost_FILESYSTEM_LIBRARY_DIRS}
+      ${Boost_SYSTEM_LIBRARY_DIRS}
+      ${GAZEBO_LIBRARY_DIRS}
+      ${HAPTIX-COMM_LIBRARY_DIRS}
+      ${IGNITION-TRANSPORT_LIBRARY_DIRS}
+    )
+
+    add_executable(${BINARY_NAME} ${GTEST_SOURCE_file} ${PROJECT_SOURCE_DIR}/test/ServerFixture.cc)
 
     add_dependencies(${BINARY_NAME}
       lib${PROJECT_NAME_LOWER}
       gtest gtest_main
-      server_fixture
       )
 
-    link_directories(
-      ${GAZEBO_LIBRARY_DIRS}
-      )
     target_link_libraries(${BINARY_NAME}
       libgtest.a
       libgtest_main.a
@@ -25,10 +39,12 @@ macro (handsim_build_tests)
       HaptixTracking
       ${Boost_FILESYSTEM_LIBRARIES}
       ${Boost_SYSTEM_LIBRARIES}
-      ${GAZEBO_LIBRARIES}
-      ${HAPTIX-COMM_LIBRARIES}
+      boost_system
+      boost_thread
+      boost_filesystem
       ${IGNITION-TRANSPORT_LIBRARIES}
-      server_fixture
+      ${HAPTIX-COMM_LIBRARIES}
+      ${GAZEBO_LIBRARIES}
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
