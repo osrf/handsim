@@ -17,7 +17,11 @@
 
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
+#include <gazebo/gui/GLWidget.hh>
 #include <gazebo/gui/GuiIface.hh>
+#include <gazebo/gui/MainWindow.hh>
+#include <gazebo/gui/RenderWidget.hh>
+#include <gazebo/gui/RenderWidget.hh>
 #include <gazebo/physics/ContactManager.hh>
 #include <gazebo/physics/Collision.hh>
 #include <gazebo/physics/Joint.hh>
@@ -26,6 +30,11 @@
 #include <gazebo/physics/World.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/util/LogRecord.hh>
+#include <gazebo/plugins/TimerGUIPlugin.hh>
+
+#include "haptix/comm/msg/hxCommand.pb.h"
+#include "haptix/comm/msg/hxGrasp.pb.h"
+
 #include "handsim/HaptixWorldPlugin.hh"
 
 using namespace gazebo;
@@ -55,9 +64,11 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   // TODO: different timer topics?
   this->timerPublisher =
       this->gzNode->Advertise<msgs::GzString>("~/timer_control");
-  this->worldControlPub = this->node->Advertise<gazebo::msgs::WorldControl>
-                                        ("~/world_control");
+  this->worldControlPub = this->gzNode->Advertise<gazebo::msgs::WorldControl>
+                              ("~/world_control");
 
+  this->pausePub = this->gzNode->Advertise<gazebo::msgs::Int>
+                      ("~/motion_tracking/pause_request");
 
   // Advertise haptix sim services.
   this->ignNode.Advertise("/haptix/gazebo/hxs_siminfo",
@@ -278,11 +289,23 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
       haptix::comm::msgs::hxModel &_rep, bool &_result)
 {
   std::string xml = _req.string_value();
-  // load an SDF element from XML
-  this->world->InsertModelString(xml);
+  sdf::SDF modelSDF;
+  modelSDF.SetFromString(xml);
+  sdf::ElementPtr modelElement = modelSDF.Root();
+  if (!modelElement->HasAttribute("name"))
+  {
+    _result = false;
+    return;
+  }
 
-  // TODO retrieve model pointer
-  physics::ModelPtr model;
+  // Set name
+  modelElement->GetAttribute("name")->Set<std::string>(_req.name());
+
+  // load an SDF element from XML
+  this->world->InsertModelSDF(modelSDF);
+  // problem with this approach: cannot retrieve model pointer?
+
+  physics::ModelPtr model = this->world->GetModel(_req.name());
 
   if (!model)
   {
@@ -290,18 +313,17 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
     return;
   }
 
-  // Set name
-  model->SetName(_req.name());
   math::Pose pose;
   if (!ConvertTransform(_req.transform(), pose))
   {
     _result = false;
     return;
   }
+
   // Set pose
   model->SetWorldPose(pose);
 
-  // TODO create output model message
+  ConvertModel(*model, _rep);
   _result = true;
 }
 
@@ -535,40 +557,34 @@ void HaptixWorldPlugin::HaptixResetCallback(
 
   if (_req.data())
   {
-    // Also reset wrist and finger posture
-    /*memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-    this->lastMotorCommand.ref_pos_enabled = 1;
-    //::hxSensor sensor;
-    if (haptix::comm::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
+    // Reset wrist and finger posture
+    hxCommand command;
+    memset(&command, 0, sizeof(command));
+    command.ref_pos_enabled = 1;
+    hxSensor sensor;
+    if (hx_update(&command, &sensor) != ::hxOK)
       gzerr << "hx_update(): Request error.\n" << std::endl;
+
     gazebo::msgs::Int pause;
     pause.set_data(1);
     this->pausePub->Publish(pause);
-    int maxTries = 30;
-    gzdbg << "waiting for response from motion tracker (max wait 3 sec).\n";
 
-    while (maxTries > 0 && !this->trackingPaused)
-    {
-      --maxTries;
-      usleep(100000);
-    }
-
+    haptix::comm::msgs::hxCommand resp;
+    haptix::comm::msgs::hxGrasp grasp;
+    memset(&grasp, 0, sizeof(grasp));
+    bool result;
     // And zero the grasp, if any.
-    if (this->lastGraspRequest.grasps_size() > 0)
+    // TODO: check if grasp service exists?
+    if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                              grasp,
+                              1000,
+                              resp,
+                              result) || !result)
     {
-      this->lastGraspRequest.mutable_grasps(0)->set_grasp_value(0.0);
-      haptix::comm::msgs::hxCommand resp;
-      bool result;
-      if(!this->ignNode.Request("haptix/gazebo/Grasp",
-                                this->lastGraspRequest,
-                                1000,
-                                resp,
-                                result) || !result)
-      {
-        gzerr << "Failed to call gazebo/Grasp service" << std::endl;
-      }
-    }*/
+      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+    }
   }
+  _result = true;
 }
 
 /////////////////////////////////////////////////
@@ -628,7 +644,39 @@ void HaptixGetTimerCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTime &_rep, bool &_result)
 {
-  // TODO
+  gui::MainWindow *mainWindow = gui::get_main_window();
+  if (!mainWindow)
+  {
+    _result = false;
+    return;
+  }
+
+  gui::RenderWidget *renderWidget = mainWindow->GetRenderWidget();
+  if (!renderWidget)
+  {
+    _result = false;
+    return;
+  }
+
+  gui::GLWidget *glWidget = renderWidget->findChild<gui::GLWidget*>("GLWidget");
+  if (!glWidget)
+  {
+    _result = false;
+    return;
+  }
+
+  TimerGUIPlugin *timer = glWidget->findChild<TimerGUIPlugin*>("TimerGUIPlugin");
+  if (!timer)
+  {
+    _result = false;
+    return;
+  }
+
+  common::Time gzTime = timer->GetCurrentTime();
+  _rep.set_sec(gzTime.sec);
+  _rep.set_nsec(gzTime.nsec);
+
+  _result = true;
 }
 
 /////////////////////////////////////////////////

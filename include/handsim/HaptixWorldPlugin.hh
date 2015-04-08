@@ -237,8 +237,6 @@ namespace gazebo
 
     ///////////// Member variables /////////////
 
-    std::vector<std::thread> threadPool;
-
     /// \brief World pointer.
     protected: physics::WorldPtr world;
 
@@ -257,8 +255,11 @@ namespace gazebo
     /// \brief For publishing commands to the server
     private: transport::PublisherPtr worldControlPub;
 
-    /// \brief Subscriber for listening to changing arrangements.
-    //protected: transport::SubscriberPtr sub;
+    /// \brief For publishing pause commands
+    private: transport::PublisherPtr pausePub;
+
+    /// \brief Thread storage vector
+    private: std::vector<std::thread> threadPool;
   };
 }
 #endif
