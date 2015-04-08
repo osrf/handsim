@@ -41,5 +41,5 @@ set(ServerFixtureSources
 add_library(server_fixture STATIC ${ServerFixtureSources})
 
 add_subdirectory(integration)
-add_subdirectory(performance)
-add_subdirectory(regression)
+# add_subdirectory(performance)
+# add_subdirectory(regression)

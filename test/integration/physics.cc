@@ -15,6 +15,8 @@
  *
 */
 
+#include <gtest/gtest.h>
+
 #include <haptix/comm/haptix.h>
 #include <haptix/comm/msg/hxCommand.pb.h>
 #include <haptix/comm/msg/hxRobot.pb.h>
@@ -22,15 +24,14 @@
 #include <haptix/comm/msg/hxGrasp.pb.h>
 #include <ignition/transport.hh>
 #include <gazebo/common/common.hh>
-#include <gazebo/physics/World.hh>
-#include <gazebo/physics/PhysicsTypes.hh>
-#include <gazebo/physics/PhysicsIface.hh>
+#include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
 #include <gazebo/rendering/rendering.hh>
 #include <gazebo/msgs/msgs.hh>
 
 #include <gazebo/gazebo_config.h>
 #include <gazebo/Server.hh>
+
 #include "ServerFixture.hh"
 
 using namespace gazebo;
@@ -46,9 +47,9 @@ void PhysicsTest::Test1(double _test)
 {
   Load("worlds/arat.world");
   physics::WorldPtr world = physics::get_world("default");
-  ASSERT_TRUE(world != NULL);
-  physics::PhysicsEnginePtr physics = world->GetPhysicsEngine();
-  ASSERT_TRUE(physics != NULL);
+  // ASSERT_TRUE(world != NULL);
+  // physics::PhysicsEnginePtr physics = world->GetPhysicsEngine();
+  // ASSERT_TRUE(physics != NULL);
   // Rotate into IMU's frame
 }
 
