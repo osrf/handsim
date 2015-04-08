@@ -12,11 +12,13 @@ macro (handsim_build_tests)
     add_dependencies(${BINARY_NAME}
       lib${PROJECT_NAME_LOWER}
       gtest gtest_main
+      server_fixture
       )
 
     target_link_libraries(${BINARY_NAME}
       libgtest.a
       libgtest_main.a
+      ${CMAKE_BINARY_DIR}/test/libserver_fixture.a
       pthread
       HaptixTracking
       gazebo_common

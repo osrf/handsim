@@ -18,9 +18,14 @@ include_directories (
   ${PROJECT_SOURCE_DIR}/test/gtest/include
   ${PROJECT_SOURCE_DIR}/test/gtest
   ${PROJECT_SOURCE_DIR}/test
+
+  ${PROJECT_BINARY_DIR}/test # need this for test_config.h
 )
 
-configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
+# Build the server_fixture static library
+add_library(server_fixture STATIC ${PROJECT_SOURCE_DIR}/test/ServerFixture.cc)
+
+configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test/test_config.h)
 
 # Build gtest
 add_library(gtest STATIC gtest/src/gtest-all.cc)
