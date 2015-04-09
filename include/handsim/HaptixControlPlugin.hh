@@ -543,7 +543,7 @@ namespace gazebo
     /// \brief Optitrack calibration offset for the arm
     private: gazebo::math::Pose optitrackArmOffset;
 
-    /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
+    /// \brief Pose of the optitrack monitor tracker in the Optitrack frame
     private: gazebo::math::Pose cameraMonitor;
 
     /// \brief Pose of the fake "screen" frame in the monitor tracker frame

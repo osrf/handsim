@@ -1615,28 +1615,23 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
     points.push_back(msgs::Convert(_msg->points(i)));
   }
 
-  // enforce that points[1] is the middle point, closest to both
-  double lengths[3] = { (points[0] - points[1]).GetLength(),
-      (points[1] - points[2]).GetLength(), (points[2] - points[0]).GetLength()};
-
+  double maxLength = 0;
   int originPointId = -1;
-  if (lengths[0] > lengths[1] && lengths[0] > lengths[2])
+  int i1;
+  int i2;
+  // Find side with maximum length, choose the "origin" as the opposite point
+  for (int i = 0; i < 3; i++)
   {
-    // lengths[0] is hypoteneuse
-    originPointId = 2;
+    i1 = (i + 1) % 3;
+    i2 = (i + 2) % 3;
+    double length = (points[i1] - points[i2]).GetLength();
+    if (length > maxLength)
+    {
+      maxLength = length;
+      originPointId = i;
+    }
   }
-  else if (lengths[1] > lengths[0] && lengths[1] > lengths[2])
-  {
-    originPointId = 0;
-  }
-  else if (lengths[2] > lengths[1] && lengths[2] > lengths[0])
-  {
-    originPointId = 1;
-  }
-
   
-  int i1 = (originPointId + 1) % 3;
-  int i2 = (originPointId + 2) % 3;
   int shortPointId = i2;
   int longPointId = i1;
   if ((points[originPointId]-points[i1]).GetLength() <
@@ -1649,7 +1644,6 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   // X is the longer vector, z is the shorter one
   // X points to the right of the screen, Z points up
   // Y points in
-  //gazebo::math::Vector3 gx = points[longPointId] - points[originPointId];
   gazebo::math::Vector3 gx = points[originPointId] - points[longPointId];
   gazebo::math::Vector3 gz = points[originPointId] - points[shortPointId];
 
@@ -1667,36 +1661,36 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   gazebo::math::Vector3 gy = gz.Cross(gx).Normalize();
 
   gx = gy.Cross(gz).Normalize();
-  //gz = gx.Cross(gy).Normalize();
 
   if (abs(gx.Dot(gy)) > 1e-6 || abs(gx.Dot(gz)) > 1e-6
       || abs(gz.Dot(gy)) > 1e-6)
   {
-    gzwarn << "Basis vectors are not orthogonal!" << std::endl;
+    gzerr << "Basis vectors are not orthogonal!" << std::endl;
     return;
   }
 
   // The rotational matrix from the camera (monitor) frame to Gazebo (Screen)
   // frame can be represented with gx, gy, gz as its column vectors
+  // Convert from this matrix to a quaternion:
+  // http://en.wikipedia.org/wiki/Rotation_matrix#Quaternion
 
-  // Calculate RPY angles from rotation matrix:
-  // http://planning.cs.uiuc.edu/node103.html
-
-  /*double alpha = atan2(gx[1], gx[0]);
-  double beta = atan2(-gx[2], sqrt(pow(gy[2], 2) + pow(gz[2], 2)));
-  double gamma = atan2(gy[2], gz[2]);*/
   math::Matrix3 G;
   G.SetFromAxes(gx, gy, gz);
+
+  if (G[0][0] + G[1][1] + G[2][2] + 1 <= 0)
+  {
+    // TODO: Integrate more robust conversion method in Gazebo
+    gzerr << "Trace of rotation matrix was invalid!" << std::endl;
+    return;
+  }
   double qw = sqrt(1 + G[0][0] + G[1][1] + G[2][2] )/2;
-  assert(qw > 1e-12);
-  double qx = (G[2][1] -G[1][2])/(4*qw);
+  GZ_ASSERT(qw > 1e-12, "stop before division by 0");
+  double qx = (G[2][1] - G[1][2])/(4*qw);
   double qy = (G[0][2] - G[2][0])/(4*qw);
   double qz = (G[1][0] - G[0][1])/(4*qw);
 
   gazebo::math::Quaternion monitorRot(qw, qx, qy, qz);
-  this->monitorScreen.rot = monitorRot;
-  // Assume screen and monitor axes share the same origin
-  this->monitorScreen.pos = math::Vector3();
+
   this->cameraMonitor.pos = points[1];
 
   // Test: Assert that the inverse of the rotation we calculated rotates
@@ -1704,13 +1698,21 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   gazebo::math::Quaternion optitrackToMonitor = monitorRot.GetInverse();
   double xdiff = (gazebo::math::Vector3(1, 0, 0) -
       optitrackToMonitor.RotateVector(gx)).GetLength();
-  assert(xdiff < 1e-6);
   double ydiff = (gazebo::math::Vector3(0, 1, 0) -
       optitrackToMonitor.RotateVector(gy)).GetLength();
-  assert(ydiff < 1e-6);
   double zdiff = (gazebo::math::Vector3(0, 0, 1) -
       optitrackToMonitor.RotateVector(gz)).GetLength();
-  assert(zdiff < 1e-6);
+
+  if (xdiff > 1e-6 || ydiff > 1e-6 || zdiff > 1e-6)
+  {
+    gzerr << "Calculated transform was wrong. Are all the monitor markers "
+          << "visible to the Optitrack?" << std::endl;
+    return;
+  }
+
+  this->monitorScreen.rot = monitorRot;
+  // Assume screen and monitor axes share the same origin
+  this->monitorScreen.pos = math::Vector3();
 }
 
 //////////////////////////////////////////////////
