@@ -93,7 +93,7 @@ namespace gazebo
 
     private: void HaptixStateCallback(
       const std::string &_service,
-      const haptix::comm::msgs::hxParam &_req,
+      const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
     private: void HaptixAddModelCallback(
@@ -151,7 +151,7 @@ namespace gazebo
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    private: void HaptixGetTimerCallback(
+    private: void HaptixTimerCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxTime &_rep, bool &_result);

@@ -83,7 +83,7 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_contacts",
     &HaptixWorldPlugin::HaptixContactPointsCallback, this);
 
-  this->ignNode.Advertise("/haptix/gazebo/hxs_state",
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_state",
     &HaptixWorldPlugin::HaptixStateCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_add_model",
@@ -119,8 +119,8 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_stop_timer",
     &HaptixWorldPlugin::HaptixStopTimerCallback, this);
 
-  this->ignNode.Advertise("/haptix/gazebo/hxs_get_timer",
-    &HaptixWorldPlugin::HaptixGetTimerCallback, this);
+  this->ignNode.Advertise("/haptix/gazebo/hxs_timer",
+    &HaptixWorldPlugin::HaptixTimerCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_is_logging",
     &HaptixWorldPlugin::HaptixIsLoggingCallback, this);
@@ -261,14 +261,11 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixStateCallback(
       const std::string &/*_service*/,
-      const haptix::comm::msgs::hxParam &_req,
+      const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  haptix::comm::msgs::hxModel modelMsg = _req.model();
-  haptix::comm::msgs::hxJoint jointMsg = _req.joint();
-  // TODO consider setting is_static from here?
-  // OR TODO consider making model input pointer a name, not a model?
-  physics::JointPtr joint = this->world->GetModel(modelMsg.name())->
+  // TODO
+  /*physics::JointPtr joint = this->world->GetModel(_req.name())->
       GetJoint(jointMsg.name());
   if (!joint)
   {
@@ -277,7 +274,7 @@ void HaptixWorldPlugin::HaptixStateCallback(
   }
   joint->SetPosition(0, jointMsg.pos());
   joint->SetVelocity(0, jointMsg.vel());
-  joint->SetForce(0, jointMsg.torque_motor());
+  joint->SetForce(0, jointMsg.torque_motor());*/
 
   _result = true;
 }
@@ -639,7 +636,7 @@ void HaptixWorldPlugin::HaptixStopTimerCallback(
 }
 
 /////////////////////////////////////////////////
-void HaptixGetTimerCallback(
+void HaptixTimerCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTime &_rep, bool &_result)
