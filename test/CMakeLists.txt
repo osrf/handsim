@@ -1,10 +1,31 @@
+link_directories(
+  ${CCD_LIBRARY_DIRS}
+  #${ogre_library_dirs}
+  ${Boost_LIBRARY_DIRS}
+  #${ODE_LIBRARY_DIRS}
+  ${SDFormat_LIBRARY_DIRS}
+  ${GAZEBO_LIBRARY_DIRS}
+)
+
 include_directories (
+  #${ODE_INCLUDE_DIRS}
+  #${OPENGL_INCLUDE_DIR}
+  #${OGRE_INCLUDE_DIRS}
+  ${SDFormat_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${GAZEBO_INCLUDE_DIRS}
+
   ${PROJECT_SOURCE_DIR}/test/gtest/include
   ${PROJECT_SOURCE_DIR}/test/gtest
   ${PROJECT_SOURCE_DIR}/test
+
+  ${PROJECT_BINARY_DIR}/test # need this for test_config.h
 )
 
-configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
+# Build the server_fixture static library
+add_library(server_fixture STATIC ${PROJECT_SOURCE_DIR}/test/ServerFixture.cc)
+
+configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test/test_config.h)
 
 # Build gtest
 add_library(gtest STATIC gtest/src/gtest-all.cc)
