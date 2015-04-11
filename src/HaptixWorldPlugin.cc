@@ -636,7 +636,7 @@ void HaptixWorldPlugin::HaptixStopTimerCallback(
 }
 
 /////////////////////////////////////////////////
-void HaptixTimerCallback(
+void HaptixWorldPlugin::HaptixTimerCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTime &_rep, bool &_result)
@@ -662,7 +662,7 @@ void HaptixTimerCallback(
     return;
   }
 
-  TimerGUIPlugin *timer = glWidget->findChild<TimerGUIPlugin*>("TimerGUIPlugin");
+  /*TimerGUIPlugin *timer = glWidget->findChild<TimerGUIPlugin*>("TimerGUIPlugin");
   if (!timer)
   {
     _result = false;
@@ -671,7 +671,7 @@ void HaptixTimerCallback(
 
   common::Time gzTime = timer->GetCurrentTime();
   _rep.set_sec(gzTime.sec);
-  _rep.set_nsec(gzTime.nsec);
+  _rep.set_nsec(gzTime.nsec);*/
 
   _result = true;
 }

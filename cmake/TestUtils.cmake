@@ -29,7 +29,9 @@ macro (handsim_build_tests)
       gazebo_msgs
       gazebo_transport
       ${Boost_LIBRARIES}
-      )
+      haptix-comm
+      haptix-msgs
+    )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
 	--gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${BINARY_NAME}.xml)

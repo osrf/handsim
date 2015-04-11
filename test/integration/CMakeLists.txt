@@ -10,6 +10,7 @@ link_directories(
 set(TEST_TYPE "INTEGRATION")
 
 set(tests
+  sim_api.cc
 )
 
 link_directories(${PROJECT_BINARY_DIR}/test)

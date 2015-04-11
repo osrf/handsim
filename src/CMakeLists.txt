@@ -47,10 +47,27 @@ add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxGrasp.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSensor.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxRobot.pb.cc
-  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxQuaternion.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxTime.pb.cc
+)
 
 add_library(HaptixWorldPlugin SHARED HaptixWorldPlugin.cc
-  ${HAPTIX-COMM_INCLUDE_DIRS})
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxContactPoint.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxContactPoint_V.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxEmpty.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxJoint.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxInt.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxLink.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxModel.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxQuaternion.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxParam.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxSimInfo.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxString.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxTransform.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxTime.pb.cc
+  ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxVector3.pb.cc
+)
 
 # additional library dependencies
 add_dependencies(HaptixControlPlugin
@@ -68,9 +85,9 @@ target_link_libraries(HaptixGUIPlugin ${GAZEBO_LIBRARIES}
   haptix-comm HaptixTracking)
 
 target_link_libraries(HaptixWorldPlugin
-  ${GAZEBO_LIBRARIES}
-  ${HAPTIX_COMM_LIBRARIES}
-  ${IGNITION-TRANSPORT_LIBRARIES})
+  ${GAZEBO_LIBRARIES} ${PROTOBUF_LIBRARIES} 
+  ${IGNITION-TRANSPORT_LIBRARIES} haptix-msgs haptix-comm
+)
 
 # below adds -std=c++11, needed to compile against ign-transport
 set_target_properties(HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin PROPERTIES

@@ -71,101 +71,201 @@ namespace gazebo
 
     ///////////// Callback functions /////////////
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixSimInfoCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result);
 
+    /// \brief hxs_camera_transform callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixCameraTransformCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxTransform &_rep, bool &_result);
 
+    /// \brief hxs_set_camera_transform callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixSetCameraTransformCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxTransform &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_contacts callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixContactPointsCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
+    /// \brief hxs_set_state callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixStateCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_add_model callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixAddModelCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxModel &_rep, bool &_result);
 
+    /// \brief hxs_remove_model callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixRemoveModelCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_model_transform callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixModelTransformCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_linear_velocity callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixLinearVelocityCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_angular_velocity callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixAngularVelocityCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_force callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixForceCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixTorqueCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixResetCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixResetTimerCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixStartTimerCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixStopTimerCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixTimerCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxTime &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixStartLoggingCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixIsLoggingCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxInt &_rep, bool &_result);
 
+    /// \brief hxs_sim_info callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
     private: void HaptixStopLoggingCallback(
       const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
