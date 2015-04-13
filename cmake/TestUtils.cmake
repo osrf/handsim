@@ -23,12 +23,12 @@ macro (handsim_build_tests)
       libgtest_main.a
       pthread
       HaptixTracking
+      ${CMAKE_BINARY_DIR}/test/libserver_fixture.a
       ${Boost_FILESYSTEM_LIBRARIES}
       ${Boost_SYSTEM_LIBRARIES}
       ${GAZEBO_LIBRARIES}
       ${HAPTIX-COMM_LIBRARIES}
       ${IGNITION-TRANSPORT_LIBRARIES}
-      server_fixture
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
