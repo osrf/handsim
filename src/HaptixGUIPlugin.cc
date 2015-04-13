@@ -20,6 +20,7 @@
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
+#include <gazebo/gui/GuiIface.hh>
 
 #include "handsim/config.hh"
 #include "handsim/TaskButton.hh"
@@ -41,7 +42,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->posScalingFactor = 0.25;
 
   int thisWidth = 480;
-  int thisHeight = 840;
+  int thisHeight = 880;
 
   // General settings
   QLabel *generalSettingsLabel = new QLabel(tr("<b>General Settings</b>"));
@@ -112,6 +113,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Settings menu
   QMenu *settingsMenu = new QMenu;
+  settingsMenu->installEventFilter(this);
   QWidgetAction *settingsAction = new QWidgetAction(settingsMenu);
   settingsAction->setDefaultWidget(settingsWidget);
   settingsMenu->addAction(settingsAction);
@@ -165,17 +167,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
         color: #eeeeee;\
       }");
 
-  // Separator
-  QFrame *mainSeparator = new QFrame(this);
-  mainSeparator->setFrameShape(QFrame::HLine);
-  mainSeparator->setFrameShadow(QFrame::Sunken);
-  mainSeparator->setLineWidth(1);
-  mainSeparator->setMaximumWidth(thisWidth*0.95);
-
-  QHBoxLayout *mainSeparatorLayout = new QHBoxLayout();
-  mainSeparatorLayout->setContentsMargins(thisWidth*0.01, 0, 0, 0);
-  mainSeparatorLayout->addWidget(mainSeparator);
-
   // Hand pixmap
   std::string handImgFilename =
     gazebo::common::SystemPaths::Instance()->FindFileURI(
@@ -185,12 +176,23 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->handItem->setPos(-20, -73);
 
   // Hand scene
-  this->handScene = new QGraphicsScene(QRectF(0, 0, 400, 220));
+  this->handScene = new QGraphicsScene(QRectF(0, 50, 400, 220));
   QGraphicsView *handView = new QGraphicsView(this->handScene);
   handView->setStyleSheet("border: 0px");
   handView->setSizePolicy(QSizePolicy::Expanding,
                           QSizePolicy::MinimumExpanding);
   this->handScene->addItem(this->handItem);
+
+  // Separator
+  QFrame *mainSeparator = new QFrame(this);
+  mainSeparator->setFrameShape(QFrame::HLine);
+  mainSeparator->setFrameShadow(QFrame::Sunken);
+  mainSeparator->setLineWidth(1);
+  mainSeparator->setMaximumWidth(thisWidth*0.75);
+
+  QHBoxLayout *mainSeparatorLayout = new QHBoxLayout();
+  mainSeparatorLayout->setContentsMargins(thisWidth*0.03, 0, 0, 0);
+  mainSeparatorLayout->addWidget(mainSeparator);
 
   // Tabs
   this->taskTab = new QTabWidget();
@@ -299,13 +301,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Cycle button layout
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
+  cycleButtonLayout->setContentsMargins(0, 0, 0, 0);
   cycleButtonLayout->addWidget(resetButton);
   cycleButtonLayout->addWidget(this->resetSceneButton);
   cycleButtonLayout->addWidget(this->nextButton);
-
-  // Cycle button frame
-  QFrame *cycleButtonFrame = new QFrame;
-  cycleButtonFrame->setLayout(cycleButtonLayout);
 
   // Version
   std::string versionStr = std::string("  v ") + HANDSIM_VERSION_FULL;
@@ -321,12 +320,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   frameLayout->setContentsMargins(0, 0, 0, 0);
   frameLayout->addWidget(this->topBarFrame);
   frameLayout->addWidget(handView, 1.0);
-  frameLayout->addItem(new QSpacerItem(15, 15, QSizePolicy::Minimum,
-      QSizePolicy::Minimum));
   frameLayout->addLayout(mainSeparatorLayout);
   frameLayout->addWidget(this->tabFrame);
   frameLayout->addWidget(this->instructionsView);
-  frameLayout->addWidget(cycleButtonFrame);
+  frameLayout->addLayout(cycleButtonLayout);
   frameLayout->addLayout(bottomLayout);
 
   // Main frame
@@ -647,7 +644,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 
   gazebo::gui::KeyEventHandler::Instance()->SetAutoRepeat(true);
   gazebo::gui::KeyEventHandler::Instance()->AddPressFilter("arat_gui",
-                          boost::bind(&HaptixGUIPlugin::OnKeyPress, this, _1));
+      boost::bind(&HaptixGUIPlugin::OnKeyPress, this, _1));
 
   // hydra trigger maps to grasp
   this->hydraSub = this->node->Subscribe("~/hydra",
@@ -780,11 +777,11 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
   // Populate the taskTab by parsing out SDF
   if (!_elem->HasElement("task_group"))
   {
-    this->taskTab->hide();
+    this->tabFrame->hide();
     this->instructionsView->hide();
     this->resetSceneButton->hide();
     this->nextButton->hide();
-    this->resize(480, 590);
+    this->resize(480, 570);
     return;
   }
 
@@ -1515,12 +1512,23 @@ void HaptixGUIPlugin::enterEvent(QEvent */*_event*/)
 bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
 {
   QAbstractButton *button = qobject_cast<QAbstractButton *>(_obj);
+  QMenu *menu = qobject_cast<QMenu *>(_obj);
   if (button)
   {
     if (_event->type() == QEvent::Enter)
       QApplication::setOverrideCursor(Qt::PointingHandCursor);
     else if (_event->type() == QEvent::Leave)
       QApplication::setOverrideCursor(Qt::ArrowCursor);
+  }
+  else if (menu && _event->type() == QEvent::KeyPress)
+  {
+    QKeyEvent *qtKeyEvent = (QKeyEvent *)_event;
+
+    gazebo::common::KeyEvent gazeboKeyEvent;
+    gazeboKeyEvent.key = qtKeyEvent->key();
+    gazeboKeyEvent.text = qtKeyEvent->text().toStdString();
+
+    this->OnKeyPress(gazeboKeyEvent);
   }
   return QObject::eventFilter(_obj, _event);
 }
