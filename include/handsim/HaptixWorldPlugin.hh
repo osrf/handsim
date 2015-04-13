@@ -23,6 +23,7 @@
 
 #include <sdf/sdf.hh>
 
+#include <gazebo/common/Event.hh>
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/transport/Node.hh>
 #include <gazebo/transport/Publisher.hh>
@@ -50,6 +51,23 @@
 
 namespace gazebo
 {
+
+  class EffortDuration
+  {
+    public:
+      physics::LinkPtr link;
+      math::Vector3 effort;
+      common::Time timeRemaining;
+      bool isForce;
+      bool persistent;
+
+      EffortDuration() : link(NULL) {}
+      EffortDuration(physics::LinkPtr _link, math::Vector3 _effort,
+          common::Time _duration, bool _isForce, bool _persistent)
+        : link(_link), effort(_effort), timeRemaining(_duration),
+          isForce(_isForce), persistent(_persistent) {}
+  };
+
   class GAZEBO_VISIBLE HaptixWorldPlugin : public WorldPlugin
   {
     /// \brief Constructor.
@@ -271,20 +289,23 @@ namespace gazebo
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief Callback on world update
+    private: void OnWorldUpdate();
+
     ///////////// Utility functions /////////////
     /// \brief Apply a persistent force to a link over a certain time interval.
     /// \param[in] _link Link to apply the force to.
     /// \param[in] _force Force to apply.
     /// \param[in] _duration How long to apply the force. Negative to go on forever.
-    private: void ForceDurationThread(const physics::LinkPtr _link,
-        const math::Vector3 &_force, float _duration);
+    /*private: void EffortDurationThread(const physics::LinkPtr _link,
+        const math::Vector3 &_force, float _duration);*/
 
     /// \brief Apply a persistent torque to a link over a certain time interval.
     /// \param[in] _link Link to apply the torque to.
     /// \param[in] _torque Torque to apply.
     /// \param[in] _duration How long to apply the torque. Negative to go on forever.
-    private: void TorqueDurationThread(const physics::LinkPtr _link,
-        const math::Vector3 &_torque, float _duration);
+    /*private: void TorqueDurationThread(const physics::LinkPtr _link,
+        const math::Vector3 &_torque, float _duration);*/
 
     /// \brief Convert from hxTransform to Gazebo Pose
     /// \param[in] _in hxTransform to transform
@@ -343,6 +364,12 @@ namespace gazebo
     /// \brief SDF pointer.
     protected: sdf::ElementPtr sdf;
 
+    /// \brief Vector of all the models in the world
+    protected: physics::Model_V modelVector;
+
+    /// \brief World update connection for updating modelVector
+    protected: event::ConnectionPtr worldUpdateConnection;
+
     /// \brief Node for Gazebo transport.
     protected: transport::NodePtr gzNode;
 
@@ -359,7 +386,17 @@ namespace gazebo
     private: transport::PublisherPtr pausePub;
 
     /// \brief Thread storage vector
-    private: std::vector<std::thread> threadPool;
+    //private: std::vector<std::thread> threadVec;
+
+    private: std::vector<EffortDuration> effortDurations;
+
+    private: common::Time lastSimUpdateTime;
+
+    /// \brief For synchronization
+    private: std::mutex worldMutex;
+
+    private: std::mutex torqueMutex;
+    private: std::mutex forceMutex;
   };
 }
 #endif

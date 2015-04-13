@@ -59,9 +59,39 @@ HaptixControlPlugin::HaptixControlPlugin()
 // Destructor
 HaptixControlPlugin::~HaptixControlPlugin()
 {
-  this->polhemusThread.join();
-  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
-  event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
+  gzdbg << "In HaptixControlPlugin destructor" << std::endl;
+  // TODO check if thread joinable
+  if (this->havePolhemus)
+  {
+    //this->polhemusSourceModel.reset();
+    gzdbg << "Joining polhemus thread" << std::endl;
+    this->polhemusThread.join();
+  }
+  if (this->updateConnection.get())
+  {
+    event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+    this->updateConnection.reset();
+  }
+  if (this->updateConnectionEnd.get())
+  {
+    event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
+    this->updateConnectionEnd.reset();
+  }
+
+  /*this->baseLink = NULL;
+  this->baseJoint = NULL;
+  this->sdf = NULL;
+  this->world = NULL;
+  this->model = NULL;
+
+  for (auto contactSensorInfo : this->contactSensorInfos)
+  {
+    contactSensorInfo.sensor = NULL;
+  }
+  for (auto imuSensor : this->imuSensors)
+  {
+    imuSensor = NULL;
+  }*/
 }
 
 /////////////////////////////////////////////////
@@ -69,10 +99,10 @@ HaptixControlPlugin::~HaptixControlPlugin()
 void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                                  sdf::ElementPtr _sdf)
 {
-  this->sdf = _sdf;
+  this->sdf = (sdf::ElementPtr) boost::get_pointer(_sdf);
   // Get the world name.
-  this->world = _parent->GetWorld();
-  this->model = _parent;
+  this->world = (physics::WorldPtr) boost::get_pointer(_parent->GetWorld());
+  this->model = (physics::ModelPtr) boost::get_pointer(_parent);
   this->world->EnablePhysicsEngine(true);
 
   // start a transport node for polhemus head pose view point control
@@ -107,8 +137,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   if (this->sdf->HasElement("update_rate"))
     this->updateRate = this->sdf->Get<double>("update_rate");
 
-  this->baseJoint =
-    this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
+  this->baseJoint = (physics::JointPtr)
+    boost::get_pointer(this->model->GetJoint(this->sdf->Get<std::string>("base_joint")));
   if (!this->baseJoint)
   {
     gzerr << "<base_joint>" << this->sdf->Get<std::string>("base_joint")
@@ -116,8 +146,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     return;
   }
 
-  this->baseLink =
-    this->model->GetLink(this->sdf->Get<std::string>("base_link"));
+  this->baseLink = (physics::LinkPtr)
+    boost::get_pointer(this->model->GetLink(this->sdf->Get<std::string>("base_link")));
   if (!this->baseLink)
   {
     gzerr << "<base_link>" << this->sdf->Get<std::string>("base_link")
