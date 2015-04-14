@@ -129,6 +129,11 @@ bool Optitrack::IsActive()
   return this->active;
 }
 
+void Optitrack::Stop()
+{
+  this->active = false;
+}
+
 /////////////////////////////////////////////////
 void Optitrack::RunReceptionTask()
 {
@@ -136,7 +141,7 @@ void Optitrack::RunReceptionTask()
   socklen_t addr_len = sizeof(struct sockaddr);
   sockaddr_in theirAddress;
   int iterations = 0;
-  while (1)
+  while (this->active)
   {
     // Block until we receive a datagram from the network (from anyone
     // including ourselves)
@@ -181,7 +186,6 @@ void Optitrack::RunReceptionTask()
     this->lastModelMap.clear();
     iterations++;
   }
-  this->active = false;
 }
 
 /////////////////////////////////////////////////

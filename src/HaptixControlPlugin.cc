@@ -15,8 +15,6 @@
  *
 */
 
-#include <gazebo/gui/KeyEventHandler.hh>
-
 #include "handsim/HaptixControlPlugin.hh"
 #include "haptix/comm/msg/hxQuaternion.pb.h"
 
@@ -40,7 +38,88 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->headOffsetInitialized = false;
   this->updateRate = 50.0;
   this->viewpointRotationsEnabled = false;
+}
 
+/////////////////////////////////////////////////
+// Destructor
+HaptixControlPlugin::~HaptixControlPlugin()
+{
+  gzdbg << "In HaptixControlPlugin destructor" << std::endl;
+  if (this->polhemusThread.joinable())
+  {
+    this->polhemusThread.join();
+  }
+
+
+  if (this->updateConnection != NULL)
+  {
+    event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+    this->updateConnection.reset();
+  }
+  if (this->updateConnectionEnd != NULL)
+  {
+    event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
+    this->updateConnectionEnd.reset();
+  }
+
+  this->ignNode.Unadvertise("/haptix/gazebo/GetRobotInfo");
+  this->ignNode.Unadvertise("/haptix/gazebo/Update");
+  this->ignNode.Unadvertise("/haptix/gazebo/Grasp");
+  this->ignNode.Unadvertise("/haptix/gazebo/Read");
+  this->ignNode.Unsubscribe("/haptix/arm_pose_inc");
+
+  this->userCameraPoseSub->Unsubscribe();
+  this->userCameraPoseSub.reset();
+  this->hydraSub->Unsubscribe();
+  this->hydraSub.reset();
+  this->joySub->Unsubscribe();
+  this->joySub.reset();
+  this->pauseSub->Unsubscribe();
+  this->pauseSub.reset();
+  this->optitrackHeadSub->Unsubscribe();
+  this->optitrackHeadSub.reset();
+  this->optitrackArmSub->Unsubscribe();
+  this->optitrackArmSub.reset();
+  this->optitrackMonitorSub->Unsubscribe();
+  this->optitrackMonitorSub.reset();
+  this->viewpointRotationsSub->Unsubscribe();
+  this->viewpointRotationsSub.reset();
+
+  this->haptixStatusPub->Fini();
+  this->haptixStatusPub.reset();
+  this->viewpointJoyPub->Fini();
+  this->viewpointJoyPub.reset();
+  this->pausePub->Fini();
+  this->pausePub.reset();
+
+  for (auto contactSensor : this->contactSensorInfos)
+  {
+    contactSensor.sensor->DisconnectUpdated(contactSensor.connection);
+    contactSensor.connection.reset();
+  }
+
+  this->haptixJoints.clear();
+
+  /*this->world.reset();
+  this->baseJoint.reset();
+  this->baseLink.reset();
+  polhemusSourceModel.reset();
+  for (auto contactSensor : this->contactSensorInfos)
+  {
+    contactSensor.sensor.reset();
+  }
+  for (auto imuSensor : this->imuSensors)
+  {
+    imuSensor.reset();
+  }
+  this->sdf.reset();*/
+}
+
+/////////////////////////////////////////////////
+// Load the controller
+void HaptixControlPlugin::Load(physics::ModelPtr _parent,
+                                 sdf::ElementPtr _sdf)
+{
   // Advertise haptix services.
   this->ignNode.Advertise("/haptix/gazebo/GetRobotInfo",
     &HaptixControlPlugin::HaptixGetRobotInfoCallback, this);
@@ -53,38 +132,11 @@ HaptixControlPlugin::HaptixControlPlugin()
 
   this->ignNode.Advertise("/haptix/gazebo/Read",
     &HaptixControlPlugin::HaptixReadCallback, this);
-}
 
-/////////////////////////////////////////////////
-// Destructor
-HaptixControlPlugin::~HaptixControlPlugin()
-{
-  gzdbg << "In HaptixControlPlugin destructor" << std::endl;
-  if (this->havePolhemus && this->polhemusThread.joinable())
-  {
-    this->polhemusThread.join();
-  }
-  if (this->updateConnection.get())
-  {
-    event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
-    this->updateConnection.reset();
-  }
-  if (this->updateConnectionEnd.get())
-  {
-    event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
-    this->updateConnectionEnd.reset();
-  }
-}
-
-/////////////////////////////////////////////////
-// Load the controller
-void HaptixControlPlugin::Load(physics::ModelPtr _parent,
-                                 sdf::ElementPtr _sdf)
-{
-  this->sdf = (sdf::ElementPtr) boost::get_pointer(_sdf);
+  this->sdf = _sdf;
   // Get the world name.
-  this->world = (physics::WorldPtr) boost::get_pointer(_parent->GetWorld());
-  this->model = (physics::ModelPtr) boost::get_pointer(_parent);
+  this->world = _parent->GetWorld();
+  this->model = _parent;
   this->world->EnablePhysicsEngine(true);
 
   // start a transport node for polhemus head pose view point control
@@ -119,8 +171,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   if (this->sdf->HasElement("update_rate"))
     this->updateRate = this->sdf->Get<double>("update_rate");
 
-  this->baseJoint = (physics::JointPtr)
-    boost::get_pointer(this->model->GetJoint(this->sdf->Get<std::string>("base_joint")));
+  this->baseJoint = this->model->GetJoint(this->sdf->Get<std::string>("base_joint"));
   if (!this->baseJoint)
   {
     gzerr << "<base_joint>" << this->sdf->Get<std::string>("base_joint")
@@ -128,8 +179,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     return;
   }
 
-  this->baseLink = (physics::LinkPtr)
-    boost::get_pointer(this->model->GetLink(this->sdf->Get<std::string>("base_link")));
+  this->baseLink = this->model->GetLink(this->sdf->Get<std::string>("base_link"));
   if (!this->baseLink)
   {
     gzerr << "<base_link>" << this->sdf->Get<std::string>("base_link")

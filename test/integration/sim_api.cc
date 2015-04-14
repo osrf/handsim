@@ -70,7 +70,7 @@ TEST_F(SimApiTest, HxsSimInfo)
   math::Pose cameraOut;
   HaptixWorldPlugin::ConvertTransform(simInfo.camera_transform, cameraOut);
 
-  // TODO Verify object locations, camera pose, etc.
+  // Verify object locations, camera pose, etc.
   EXPECT_EQ(cameraPose.pos, cameraOut.pos);
   EXPECT_EQ(cameraPose.rot, -cameraOut.rot);
 
@@ -155,7 +155,17 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
   camera->SetWorldPose(cameraPose);
 
   hxTransform transform;
+  transform.pos.x = 3;
+  transform.pos.y = 2;
+  transform.pos.z = 1;
+
+  transform.orient.w = 4;
+  transform.orient.x = 5;
+  transform.orient.y = 6;
+  transform.orient.z = 7;
+
   EXPECT_EQ(hxs_set_camera_transform(&transform), hxOK);
+
   // TODO verify pose
 }
 

@@ -49,6 +49,31 @@ HaptixWorldPlugin::HaptixWorldPlugin()
 /////////////////////////////////////////////////
 HaptixWorldPlugin::~HaptixWorldPlugin()
 {
+  this->timerPublisher->Fini();
+  this->worldControlPub->Fini();
+
+  event::Events::DisconnectWorldUpdateEnd(this->worldUpdateConnection);
+
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_siminfo");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_camera_transform");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_state");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_add_model");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_remove_model");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_transform");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_linear_velocity");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_angular_velocity");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_force");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_torque");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_reset");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_reset_timer");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_start_timer");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_stop_timer");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_timer");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_is_logging");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_start_logging");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_stop_logging");
 }
 
 /////////////////////////////////////////////////
@@ -58,9 +83,6 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->world = _world;
   this->sdf = _sdf;
 
-  // Advertise haptix sim services.
-  this->ignNode.Advertise("/haptix/gazebo/hxs_siminfo",
-    &HaptixWorldPlugin::HaptixSimInfoCallback, this);
   this->gzNode = transport::NodePtr(new transport::Node());
   this->gzNode->Init(this->world->GetName());
   // TODO: different timer topics?
@@ -74,6 +96,10 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
 
   this->worldUpdateConnection = event::Events::ConnectWorldUpdateEnd(
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
+
+  // Advertise haptix sim services.
+  this->ignNode.Advertise("/haptix/gazebo/hxs_siminfo",
+    &HaptixWorldPlugin::HaptixSimInfoCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_camera_transform",
     &HaptixWorldPlugin::HaptixCameraTransformCallback, this);
@@ -796,21 +822,15 @@ bool HaptixWorldPlugin::ConvertTransform(
 bool HaptixWorldPlugin::ConvertTransform(
     const hxTransform &_in, gazebo::math::Pose &_out)
 {
-  
-  haptix::comm::msgs::hxTransform msg;
+  _out.pos.x = _in.pos.x;
+  _out.pos.y = _in.pos.y;
+  _out.pos.z = _in.pos.z;
 
-  msg.Clear();
-  msg.mutable_pos()->set_x(_in.pos.x);
-  msg.mutable_pos()->set_y(_in.pos.y);
-  msg.mutable_pos()->set_z(_in.pos.z);
+  _out.rot.w = _in.orient.w;
+  _out.rot.x = _in.orient.x;
+  _out.rot.y = _in.orient.y;
+  _out.rot.z = _in.orient.z;
 
-  msg.mutable_orient()->set_w(_in.orient.w);
-  msg.mutable_orient()->set_x(_in.orient.x);
-  msg.mutable_orient()->set_y(_in.orient.y);
-  msg.mutable_orient()->set_z(_in.orient.z);
-
-  HaptixWorldPlugin::ConvertVector(msg.pos(), _out.pos);
-  HaptixWorldPlugin::ConvertQuaternion(msg.orient(), _out.rot);
   return true;
 }
 

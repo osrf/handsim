@@ -70,6 +70,8 @@ namespace haptix
       /// \return True if Optitrack data reception is active..
       public: bool IsActive();
 
+      public: void Stop();
+
       /// \brief Set the name of the world associated with the gz publishers.
       public: void SetWorld(const std::string &_world);
 
@@ -126,6 +128,8 @@ namespace haptix
 
       /// \brief Gazebo publisher for tracker data liveliness
       private: gazebo::transport::PublisherPtr optitrackAlivePub;
+
+      private: gazebo::transport::SubscriberPtr controlSub;
 
       /// \brief Name of head tracker rigid body
       public: static const std::string headTrackerName;
