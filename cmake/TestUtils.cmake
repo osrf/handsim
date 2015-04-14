@@ -21,6 +21,7 @@ macro (handsim_build_tests)
       ${CMAKE_BINARY_DIR}/test/libserver_fixture.a
       pthread
       HaptixTracking
+      haptix-comm
       gazebo_common
       gazebo_math
       gazebo_physics
