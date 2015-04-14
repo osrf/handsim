@@ -59,6 +59,11 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
 }
 
 /////////////////////////////////////////////////
+Optitrack::Optitrack(const Optitrack &/*_optitrack*/)
+{
+}
+
+/////////////////////////////////////////////////
 void Optitrack::StartReception()
 {
   // Create a socket for receiving tracking updates.
@@ -121,19 +126,20 @@ void Optitrack::StartReception()
   this->optitrackAlivePub = this->gzNode->Advertise<gazebo::msgs::Time>
                     ("~/optitrack/"+optitrackAliveTopic);
 
-  this->active = true;
   this->RunReceptionTask();
 }
 
 /////////////////////////////////////////////////
-bool Optitrack::IsActive() const
+bool Optitrack::IsActive()
 {
+  std::lock_guard<std::mutex> lock(this->activeMutex);
   return this->active;
 }
 
 /////////////////////////////////////////////////
 void Optitrack::Stop()
 {
+  std::lock_guard<std::mutex> lock(this->activeMutex);
   this->active = false;
 }
 
@@ -144,7 +150,13 @@ void Optitrack::RunReceptionTask()
   socklen_t addr_len = sizeof(struct sockaddr);
   sockaddr_in theirAddress;
   int iterations = 0;
-  while (this->active)
+
+  {
+    std::lock_guard<std::mutex> lock(this->activeMutex);
+    this->active = true;
+  }
+
+  while (this->IsActive())
   {
     // Block until we receive a datagram from the network (from anyone
     // including ourselves)
@@ -152,9 +164,10 @@ void Optitrack::RunReceptionTask()
     memset(ufds, 0, sizeof(ufds));
     ufds[0].fd = this->dataSocket;
     ufds[0].events = POLLIN; // ???
+    // TODO revents: POLLIN
 
-    // Poll every millisecond
-    int pollReturnCode = poll(ufds, 1, 100);
+    // Poll every 500 milliseconds
+    int pollReturnCode = poll(ufds, 1, 500);
     if (pollReturnCode == -1)
     {
       gzerr << "Polling error!" << std::endl;
@@ -163,6 +176,8 @@ void Optitrack::RunReceptionTask()
     else if (pollReturnCode == 0)
     {
       // Timeout occurred, optitrack is probably not connected
+      if (!this->IsActive())
+        return;
       continue;
     }
 

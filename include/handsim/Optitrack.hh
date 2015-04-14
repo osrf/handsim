@@ -21,7 +21,9 @@
 #include <map>
 #include <string>
 #include <thread>
+#include <mutex>
 #include <vector>
+
 #include <gazebo/transport/transport.hh>
 #include <gazebo/math/Pose.hh>
 #include <gazebo/math/Vector3.hh>
@@ -52,6 +54,8 @@ namespace haptix
                         const bool _verbose = false,
                         const std::string &_world="");
 
+      public: Optitrack(const Optitrack &_optitrack);
+
       /// \brief Default destructor.
       public: ~Optitrack() = default;
 
@@ -68,7 +72,7 @@ namespace haptix
 
       /// \brief Return the status of the Optitrack client initialization.
       /// \return True if Optitrack data reception is active..
-      public: bool IsActive() const;
+      public: bool IsActive();
 
       /// \brief Stop activity.
       public: void Stop();
@@ -147,6 +151,8 @@ namespace haptix
 
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
+
+      private: std::mutex activeMutex;
     };
   }
 }
