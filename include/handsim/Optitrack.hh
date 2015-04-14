@@ -21,7 +21,9 @@
 #include <map>
 #include <string>
 #include <thread>
+#include <mutex>
 #include <vector>
+
 #include <gazebo/transport/transport.hh>
 #include <gazebo/math/Pose.hh>
 #include <gazebo/math/Vector3.hh>
@@ -47,10 +49,14 @@ namespace haptix
       /// needed for requesting commands for tweaking the tracking behavior. The
       /// server IP is not needed for receiving tracking messages. These
       /// messages are received via multicast.
-      /// \param[i] _verbose Whether or not to print incoming packets.
+      /// \param[in] _verbose Whether or not to print incoming packets.
       public: Optitrack(const std::string &_serverIP = "",
                         const bool _verbose = false,
                         const std::string &_world="");
+
+      /// \brief Copy constructor. Currently unimplemented
+      /// \param[in] Optitrack object to copy
+      public: Optitrack(const Optitrack &_optitrack);
 
       /// \brief Default destructor.
       public: ~Optitrack() = default;
@@ -70,6 +76,7 @@ namespace haptix
       /// \return True if Optitrack data reception is active..
       public: bool IsActive();
 
+      /// \brief Stop activity.
       public: void Stop();
 
       /// \brief Set the name of the world associated with the gz publishers.
@@ -129,8 +136,6 @@ namespace haptix
       /// \brief Gazebo publisher for tracker data liveliness
       private: gazebo::transport::PublisherPtr optitrackAlivePub;
 
-      private: gazebo::transport::SubscriberPtr controlSub;
-
       /// \brief Name of head tracker rigid body
       public: static const std::string headTrackerName;
 
@@ -148,6 +153,9 @@ namespace haptix
 
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
+
+      /// \brief Mutex to protect "active" boolean
+      private: std::mutex activeMutex;
     };
   }
 }
