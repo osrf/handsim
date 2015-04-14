@@ -164,7 +164,6 @@ void Optitrack::RunReceptionTask()
     memset(ufds, 0, sizeof(ufds));
     ufds[0].fd = this->dataSocket;
     ufds[0].events = POLLIN; // ???
-    // TODO revents: POLLIN
 
     // Poll every 500 milliseconds
     int pollReturnCode = poll(ufds, 1, 500);
@@ -176,8 +175,11 @@ void Optitrack::RunReceptionTask()
     else if (pollReturnCode == 0)
     {
       // Timeout occurred, optitrack is probably not connected
-      if (!this->IsActive())
-        return;
+      continue;
+    }
+    else if (!(ufds[0].revents && POLLIN)
+    {
+      gzwarn << "Received out of band message in poll" << std::endl;
       continue;
     }
 

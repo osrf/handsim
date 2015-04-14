@@ -49,11 +49,13 @@ namespace haptix
       /// needed for requesting commands for tweaking the tracking behavior. The
       /// server IP is not needed for receiving tracking messages. These
       /// messages are received via multicast.
-      /// \param[i] _verbose Whether or not to print incoming packets.
+      /// \param[in] _verbose Whether or not to print incoming packets.
       public: Optitrack(const std::string &_serverIP = "",
                         const bool _verbose = false,
                         const std::string &_world="");
 
+      /// \brief Copy constructor. Currently unimplemented
+      /// \param[in] Optitrack object to copy
       public: Optitrack(const Optitrack &_optitrack);
 
       /// \brief Default destructor.
@@ -152,6 +154,7 @@ namespace haptix
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
 
+      /// \brief Mutex to protect "active" boolean
       private: std::mutex activeMutex;
     };
   }
