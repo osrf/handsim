@@ -154,7 +154,7 @@ void Optitrack::RunReceptionTask()
     ufds[0].events = POLLIN; // ???
 
     // Poll every millisecond
-    int pollReturnCode = poll(ufds, 1, 1);
+    int pollReturnCode = poll(ufds, 1, 100);
     if (pollReturnCode == -1)
     {
       gzerr << "Polling error!" << std::endl;
