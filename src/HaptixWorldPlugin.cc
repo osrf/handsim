@@ -72,8 +72,8 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->pausePub = this->gzNode->Advertise<gazebo::msgs::Int>
                       ("~/motion_tracking/pause_request");
 
-  /*this->worldUpdateConnection = event::Events::ConnectWorldUpdateEnd(
-      std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));*/
+  this->worldUpdateConnection = event::Events::ConnectWorldUpdateEnd(
+      std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_camera_transform",
     &HaptixWorldPlugin::HaptixCameraTransformCallback, this);
@@ -178,7 +178,7 @@ void HaptixWorldPlugin::OnWorldUpdate()
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &_service,
+void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result)
 {
@@ -204,8 +204,8 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &_service,
     }
   }
 
-  /*rendering::UserCameraPtr camera = gui::get_active_camera();
-  if (!camera)
+  rendering::UserCameraPtr camera = gui::get_active_camera();
+  if (!camera || !camera->GetScene())
   {
     _result = false;
     return;
@@ -215,7 +215,7 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &_service,
   {
     _result = false;
     return;
-  }*/
+  }
 
   _result = true;
 }
@@ -226,9 +226,8 @@ void HaptixWorldPlugin::HaptixCameraTransformCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTransform &_rep, bool &_result)
 {
-  // TODO: Camera mutex/fix what happens if no gui
   rendering::UserCameraPtr camera = gui::get_active_camera();
-  if (!camera)
+  if (!camera || !camera->GetScene())
   {
     _result = false;
     return;
@@ -250,11 +249,10 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
   rendering::UserCameraPtr camera = gui::get_active_camera();
-  if (!camera)
+  if (!camera || !camera->GetScene())
   {
     _result = false;
     return;
-    // TODO make new user camera?
   }
   gazebo::math::Pose pose;
   if (!HaptixWorldPlugin::ConvertTransform(_req, pose))
@@ -317,7 +315,7 @@ void HaptixWorldPlugin::HaptixStateCallback(
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // TODO
+  // TODO: more feedback from sim api review?
   /*
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
@@ -409,7 +407,6 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
   physics::ModelPtr model = this->world->GetModel(_req.data());
   if (!model)
   {
-    // should this be false?
     _result = true;
     return;
   }
@@ -461,7 +458,6 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
-    gzerr << "World was NULL in LinearVelocityCallback" << std::endl;
     _result = false;
     return;
   }
@@ -469,14 +465,12 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
   physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!model)
   {
-    gzerr << "Model was NULL in LinearVelocityCallback: " << _req.name() << std::endl;
     _result = false;
     return;
   }
   math::Vector3 linvel;
   if (!ConvertVector(_req.vector3(), linvel))
   {
-    gzerr << "Could not convert vector in LinearVelocityCallback" << std::endl;
     _result = false;
     return;
   }
@@ -557,52 +551,6 @@ void HaptixWorldPlugin::HaptixForceCallback(
 }
 
 /////////////////////////////////////////////////
-/*void HaptixWorldPlugin::TorqueDurationThread(const physics::LinkPtr _link,
-    const math::Vector3 &_torque, float _duration)
-{
-  common::Time interval;
-  {
-    std::lock_guard<std::mutex> lock(this->worldMutex);
-    if (!this->world || !this->world->GetPhysicsEngine())
-    {
-      // TODO error handling for this case
-      return;
-    }
-
-    interval.Set(1/this->world->GetPhysicsEngine()->GetRealTimeUpdateRate());
-  }
-
-  if (_duration < 0)
-  {
-    // Negative is persistent application
-    while (true)
-    {
-      {
-        std::lock_guard<std::mutex> lock(this->torqueMutex);
-        _link->AddTorque(_torque);
-      }
-      // Try to sleep for the length of a physics timestep
-      common::Time::Sleep(interval);
-    }
-    return;
-  }
-
-  // TODO: Treat duration as sim time, not wall time
-  common::Time startTime = common::Time::GetWallTime();
-  while ((common::Time::GetWallTime() - startTime).Float() < _duration)
-  {
-    {
-      std::lock_guard<std::mutex> lock(this->torqueMutex);
-      _link->AddTorque(_torque);
-    }
-    this->torqueMutex.unlock();
-    // Try to sleep for the length of a physics timestep
-    common::Time::Sleep(interval);
-  }
-}*/
-
-
-/////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixTorqueCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
@@ -638,11 +586,6 @@ void HaptixWorldPlugin::HaptixTorqueCallback(
     return;
   }
 
-  // start a thread to call Link::AddTorque over a duration
-  // TODO: Join threads at end
-  /*this->threadVec.push_back(std::thread(
-    std::bind(&HaptixWorldPlugin::TorqueDurationThread, this, link, torque, duration)));*/
-
   effortDurations.push_back(EffortDuration(link, torque,
       common::Time(duration), false, duration < 0));
   _result = true;
@@ -654,7 +597,6 @@ void HaptixWorldPlugin::HaptixResetCallback(
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // TODO mutex for WorldControlPub?
   // Signal to WorldControl to reset the world
   gazebo::msgs::WorldControl msg;
   msg.mutable_reset()->set_all(true);
@@ -688,7 +630,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
                               resp,
                               result) || !result)
     {
-      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+      gzwarn << "Failed to call gazebo/Grasp service" << std::endl;
     }
   }
   _result = true;
@@ -773,6 +715,7 @@ void HaptixWorldPlugin::HaptixTimerCallback(
     return;
   }
 
+  // TODO: link against plugin
   /*TimerGUIPlugin *timer = glWidget->findChild<TimerGUIPlugin*>("TimerGUIPlugin");
   if (!timer)
   {
@@ -850,6 +793,27 @@ bool HaptixWorldPlugin::ConvertTransform(
   return true;
 }
 
+bool HaptixWorldPlugin::ConvertTransform(
+    const hxTransform &_in, gazebo::math::Pose &_out)
+{
+  
+  haptix::comm::msgs::hxTransform msg;
+
+  msg.Clear();
+  msg.mutable_pos()->set_x(_in.pos.x);
+  msg.mutable_pos()->set_y(_in.pos.y);
+  msg.mutable_pos()->set_z(_in.pos.z);
+
+  msg.mutable_orient()->set_w(_in.orient.w);
+  msg.mutable_orient()->set_x(_in.orient.x);
+  msg.mutable_orient()->set_y(_in.orient.y);
+  msg.mutable_orient()->set_z(_in.orient.z);
+
+  HaptixWorldPlugin::ConvertVector(msg.pos(), _out.pos);
+  HaptixWorldPlugin::ConvertQuaternion(msg.orient(), _out.rot);
+  return true;
+}
+
 bool HaptixWorldPlugin::ConvertTransform(const gazebo::math::Pose &_in,
     haptix::comm::msgs::hxTransform &_out)
 {
@@ -908,7 +872,6 @@ bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
   haptix::comm::msgs::hxModel &_out)
 {
   _out.set_name(_in.GetName());
-  gzmsg << "Sending model: " << _in.GetName() << std::endl;
 
   math::Pose modelPose = _in.GetWorldPose();
   HaptixWorldPlugin::ConvertTransform(modelPose, *_out.mutable_transform());

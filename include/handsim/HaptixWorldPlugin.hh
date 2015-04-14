@@ -307,11 +307,18 @@ namespace gazebo
     /*private: void TorqueDurationThread(const physics::LinkPtr _link,
         const math::Vector3 &_torque, float _duration);*/
 
-    /// \brief Convert from hxTransform to Gazebo Pose
+    /// \brief Convert from hxTransform (message type) to Gazebo Pose
     /// \param[in] _in hxTransform to transform
     /// \param[out] _out Gazebo pose output
     /// \return True if the conversion succeeded.
     public: static bool ConvertTransform(const haptix::comm::msgs::hxTransform &_in,
+        gazebo::math::Pose &_out);
+
+    /// \brief Convert from hxTransform to Gazebo Pose
+    /// \param[in] _in hxTransform to transform
+    /// \param[out] _out Gazebo pose output
+    /// \return True if the conversion succeeded.
+    public: static bool ConvertTransform(const hxTransform &_in,
         gazebo::math::Pose &_out);
 
     /// \brief Convert from Gazebo Pose to hxTransform

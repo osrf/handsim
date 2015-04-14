@@ -60,11 +60,8 @@ HaptixControlPlugin::HaptixControlPlugin()
 HaptixControlPlugin::~HaptixControlPlugin()
 {
   gzdbg << "In HaptixControlPlugin destructor" << std::endl;
-  // TODO check if thread joinable
-  if (this->havePolhemus)
+  if (this->havePolhemus && this->polhemusThread.joinable())
   {
-    //this->polhemusSourceModel.reset();
-    gzdbg << "Joining polhemus thread" << std::endl;
     this->polhemusThread.join();
   }
   if (this->updateConnection.get())
@@ -77,21 +74,6 @@ HaptixControlPlugin::~HaptixControlPlugin()
     event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
     this->updateConnectionEnd.reset();
   }
-
-  /*this->baseLink = NULL;
-  this->baseJoint = NULL;
-  this->sdf = NULL;
-  this->world = NULL;
-  this->model = NULL;
-
-  for (auto contactSensorInfo : this->contactSensorInfos)
-  {
-    contactSensorInfo.sensor = NULL;
-  }
-  for (auto imuSensor : this->imuSensors)
-  {
-    imuSensor = NULL;
-  }*/
 }
 
 /////////////////////////////////////////////////

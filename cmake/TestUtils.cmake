@@ -31,6 +31,7 @@ macro (handsim_build_tests)
       ${Boost_LIBRARIES}
       haptix-comm
       haptix-msgs
+      HaptixWorldPlugin
     )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
