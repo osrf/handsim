@@ -68,7 +68,10 @@ namespace haptix
 
       /// \brief Return the status of the Optitrack client initialization.
       /// \return True if Optitrack data reception is active..
-      public: bool IsActive();
+      public: bool IsActive() const;
+
+      /// \brief Stop activity.
+      public: void Stop();
 
       /// \brief Set the name of the world associated with the gz publishers.
       public: void SetWorld(const std::string &_world);

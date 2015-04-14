@@ -28,6 +28,8 @@
 // For sockaddr_in
 #include <netinet/in.h>
 
+#include <poll.h>
+
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -124,9 +126,15 @@ void Optitrack::StartReception()
 }
 
 /////////////////////////////////////////////////
-bool Optitrack::IsActive()
+bool Optitrack::IsActive() const
 {
   return this->active;
+}
+
+/////////////////////////////////////////////////
+void Optitrack::Stop()
+{
+  this->active = false;
 }
 
 /////////////////////////////////////////////////
@@ -136,10 +144,28 @@ void Optitrack::RunReceptionTask()
   socklen_t addr_len = sizeof(struct sockaddr);
   sockaddr_in theirAddress;
   int iterations = 0;
-  while (1)
+  while (this->active)
   {
     // Block until we receive a datagram from the network (from anyone
     // including ourselves)
+    struct pollfd ufds[1];
+    memset(ufds, 0, sizeof(ufds));
+    ufds[0].fd = this->dataSocket;
+    ufds[0].events = POLLIN; // ???
+
+    // Poll every millisecond
+    int pollReturnCode = poll(ufds, 1, 1);
+    if (pollReturnCode == -1)
+    {
+      gzerr << "Polling error!" << std::endl;
+      continue;
+    }
+    else if (pollReturnCode == 0)
+    {
+      // Timeout occurred, optitrack is probably not connected
+      continue;
+    }
+
     if (recvfrom(this->dataSocket, buffer, sizeof(buffer), 0,
          (sockaddr *)&theirAddress, &addr_len) < 0)
     {
@@ -181,7 +207,6 @@ void Optitrack::RunReceptionTask()
     this->lastModelMap.clear();
     iterations++;
   }
-  this->active = false;
 }
 
 /////////////////////////////////////////////////
