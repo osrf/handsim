@@ -38,19 +38,13 @@ using namespace gazebo;
 
 class PhysicsTest : public ServerFixture
 {
-  /// \breif test physics
-  /// \param[in] _test
-  private: void Test1(double _test);
 };
 
-void PhysicsTest::Test1(double _test)
+TEST_F(PhysicsTest, Test1)
 {
   Load("worlds/arat.world");
   physics::WorldPtr world = physics::get_world("default");
-  // ASSERT_TRUE(world != NULL);
-  // physics::PhysicsEnginePtr physics = world->GetPhysicsEngine();
-  // ASSERT_TRUE(physics != NULL);
-  // Rotate into IMU's frame
+  ASSERT_TRUE(world != NULL);
 }
 
 int main(int argc, char **argv)
