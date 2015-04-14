@@ -177,7 +177,7 @@ void Optitrack::RunReceptionTask()
       // Timeout occurred, optitrack is probably not connected
       continue;
     }
-    else if (!(ufds[0].revents && POLLIN)
+    else if (!(ufds[0].revents && POLLIN))
     {
       gzwarn << "Received out of band message in poll" << std::endl;
       continue;
