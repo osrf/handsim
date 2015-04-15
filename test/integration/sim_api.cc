@@ -217,9 +217,59 @@ TEST_F(SimApiTest, HxsContacts)
   world->Step(20);
 
   hxContactPoints contactPoints;
+
+  physics::ContactManager *contactManager =
+      world->GetPhysicsEngine()->GetContactManager();
+  ASSERT_TRUE(contactManager != NULL);
+
+  physics::ModelPtr tableModel = world->GetModel("table");
+
   ASSERT_EQ(hxs_contacts("table", &contactPoints), hxOK);
 
-  // TODO
+  // Have to find contacts and sort them by distance to compare
+  // since they don't have string keys
+
+  for (auto contact : contactManager->GetContacts())
+  {
+    if (contact->collision1->GetModel() == tableModel)
+    {
+      for (int i = 0; i < contact->count; i++)
+      {
+        math::Vector3 linkPos = contact->collision1->GetLink()->GetWorldPose().pos;
+        contact->positions[i] -= linkPos;
+        contact->normals[i] -= linkPos;
+
+        // Now find matching contact point as returned by hxs_contacts
+        int j = 0;
+        for (; j < contactPoints.contactCount; j++)
+        {
+          bool link1NameMatch = std::string(contactPoints.contacts[i].link1) ==
+              contact->collision1->GetLink()->GetName();
+          bool link2NameMatch = std::string(contactPoints.contacts[i].link2) ==
+              contact->collision2->GetLink()->GetName();
+          math::Vector3 contactPos, contactNormal, contactForce, contactTorque;
+          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].point,
+              contactPos);
+          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].normal,
+              contactNormal);
+          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].force,
+              contactForce);
+          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].torque,
+              contactTorque);
+          if (link1NameMatch && link2NameMatch &&
+              contactPos == contact->positions[i] &&
+              contactNormal == contact->normals[i] &&
+              contactForce == contact->wrench[i].body1Force &&
+              contactTorque == contact->wrench[i].body1Torque &&
+              contactPoints.contacts[i].distance == contact->depths[i])
+          {
+            break;
+          }
+        }
+        EXPECT_LT(j, contactPoints.contactCount);
+      }
+    }
+  }
 }
 
 TEST_F(SimApiTest, HxsSetState)
@@ -580,34 +630,6 @@ TEST_F(SimApiTest, HxsReset)
   }
 }
 
-TEST_F(SimApiTest, HxsResetTimer)
-{
-  // TODO
-}
-
-TEST_F(SimApiTest, HxsStartTimer)
-{
-  // TODO
-}
-
-
-TEST_F(SimApiTest, HxsTimer)
-{
-  // TODO
-}
-
-
-TEST_F(SimApiTest, HxsStartLogging)
-{
-  // TODO
-}
-
-
-TEST_F(SimApiTest, HxsStopLogging)
-{
-  // TODO
-}
-
 TEST_F(SimApiTest, HxsModelGravity)
 {
   Load("worlds/arat_test.world", true);
@@ -641,6 +663,20 @@ TEST_F(SimApiTest, HxsSetModelGravity)
     EXPECT_FALSE(link->GetGravityMode());
   }
 }
+
+// TODO Implement stubbed out tests.
+/*
+
+// Logging tests will be implemented once logging is fully implemented.
+TEST_F(SimApiTest, HxsStartLogging)
+{
+}
+
+
+TEST_F(SimApiTest, HxsStopLogging)
+{
+}
+*/
 
 int main(int argc, char **argv)
 {

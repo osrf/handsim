@@ -87,7 +87,7 @@ target_link_libraries(HaptixGUIPlugin ${GAZEBO_LIBRARIES}
   haptix-comm HaptixTracking)
 
 target_link_libraries(HaptixWorldPlugin
-  ${GAZEBO_LIBRARIES} ${PROTOBUF_LIBRARIES} 
+  ${GAZEBO_LIBRARIES} ${GAZEBO_PLUGIN_PATH}/libTimerGUIPlugin.so ${PROTOBUF_LIBRARIES} 
   ${IGNITION-TRANSPORT_LIBRARIES} haptix-msgs haptix-comm
 )
 

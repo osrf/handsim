@@ -330,13 +330,20 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
       contactMsg->set_link1(contact->collision1->GetLink()->GetName());
       contactMsg->set_link2(contact->collision2->GetLink()->GetName());
 
-      // TODO !!!!!! Adjust positions from relative to CoM of link to global
-      // TODO tangents
-      // frame/contact frame
-      ConvertVector(contact->positions[i], *contactMsg->mutable_point());
-      ConvertVector(contact->normals[i], *contactMsg->mutable_normal());
+      math::Vector3 linkPosition = 
+          contact->collision1->GetLink()->GetWorldPose().pos;
+
+      // All vectors are relative to the link frame.
+      ConvertVector(contact->positions[i] - linkPosition,
+          *contactMsg->mutable_point());
+
+      ConvertVector(contact->normals[i] - linkPosition,
+          *contactMsg->mutable_normal());
+
       // force is always body1 onto body2
+      // Don't need to subtract link pos, force and torque are in link frame
       ConvertVector(contact->wrench[i].body2Force, *contactMsg->mutable_force());
+      ConvertVector(contact->wrench[i].body2Torque, *contactMsg->mutable_torque());
       contactMsg->set_distance(contact->depths[i]);
     }
   }
@@ -797,8 +804,7 @@ void HaptixWorldPlugin::HaptixTimerCallback(
     return;
   }
 
-  // TODO: link against plugin
-  /*TimerGUIPlugin *timer = glWidget->findChild<TimerGUIPlugin*>("TimerGUIPlugin");
+  TimerGUIPlugin *timer = glWidget->findChild<TimerGUIPlugin*>("TimerGUIPlugin");
   if (!timer)
   {
     _result = false;
@@ -807,7 +813,7 @@ void HaptixWorldPlugin::HaptixTimerCallback(
 
   common::Time gzTime = timer->GetCurrentTime();
   _rep.set_sec(gzTime.sec);
-  _rep.set_nsec(gzTime.nsec);*/
+  _rep.set_nsec(gzTime.nsec);
 
   _result = true;
 }
@@ -1060,9 +1066,6 @@ bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
     hxModel &_out)
 {
   gzdbg << "Convert model to hxModel: " << _in.GetName() << std::endl;
-  delete _out.name;
-  _out.name = (char*) malloc(_in.GetName().length()+1);
-  memset(_out.name, 0, _in.GetName().length()+1);
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
   HaptixWorldPlugin::ConvertTransform(_in.GetWorldPose(), _out.transform);
@@ -1121,9 +1124,6 @@ bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
 bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
     hxLink &_out)
 {
-  delete _out.name;
-  _out.name = (char*) malloc(_in.GetName().length()+1);
-  memset(_out.name, 0, _in.GetName().length()+1);
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
   ConvertTransform(_in.GetWorldPose(), _out.transform);
@@ -1156,9 +1156,6 @@ bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
 
 bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in, hxJoint &_out)
 {
-  delete _out.name;
-  _out.name = (char*) malloc(_in.GetName().length()+1);
-  memset(_out.name, 0, _in.GetName().length()+1);
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
   _out.pos = _in.GetAngle(0).Radian();
