@@ -15,16 +15,17 @@
  *
 */
 
-#include "ServerFixture.hh"
-#include "haptix/comm/haptix_sim.h"
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiIface.hh>
+
+#include "ServerFixture.hh"
 #include "handsim/HaptixWorldPlugin.hh"
+
+#include "haptix/comm/haptix_sim.h"
 
 using namespace gazebo;
 
 class SimApiTest : public ServerFixture
-                   //public testing::WithParamInterface<const char*>
 {
 };
 
@@ -53,7 +54,7 @@ TEST_F(SimApiTest, HxsSimInfo)
   camera->Init();
   math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
   camera->SetWorldPose(cameraPose);
-  
+
   // Wait a little while for the world to initialize
   world->Step(20);
 
@@ -82,7 +83,8 @@ TEST_F(SimApiTest, HxsSimInfo)
 
     for (int j = 0; j < simInfo.models[i].link_count; ++j)
     {
-      physics::LinkPtr gzLink = gzModel->GetLink(simInfo.models[i].links[j].name);
+      physics::LinkPtr gzLink =
+          gzModel->GetLink(simInfo.models[i].links[j].name);
       ASSERT_TRUE(gzLink != NULL);
 
       math::Pose linkPose;
@@ -106,7 +108,8 @@ TEST_F(SimApiTest, HxsSimInfo)
 
     for (int j = 0; j < simInfo.models[i].joint_count; ++j)
     {
-      physics::JointPtr gzJoint = gzModel->GetJoint(simInfo.models[i].joints[j].name);
+      physics::JointPtr gzJoint =
+          gzModel->GetJoint(simInfo.models[i].joints[j].name);
       ASSERT_TRUE(gzJoint != NULL);
 
       EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].pos,
@@ -235,7 +238,8 @@ TEST_F(SimApiTest, HxsContacts)
     {
       for (int i = 0; i < contact->count; i++)
       {
-        math::Vector3 linkPos = contact->collision1->GetLink()->GetWorldPose().pos;
+        math::Vector3 linkPos =
+            contact->collision1->GetLink()->GetWorldPose().pos;
         contact->positions[i] -= linkPos;
         contact->normals[i] -= linkPos;
 
@@ -320,56 +324,56 @@ TEST_F(SimApiTest, HxsAddModel)
   world->Step(20);
 
   std::string modelSDF =
-    "<sdf version=\"1.5\">\
-      <model name=\"new_model\">\
-        <link name=\"link1\">\
-          <pose>0 0 0.0375 0 0 0</pose>\
-          <collision name=\"collision\">\
-            <geometry>\
-              <box>\
-                <size>0.075 0.075 0.075</size>\
-              </box>\
-            </geometry>\
-          </collision>\
-          <visual name=\"visual\">\
-            <geometry>\
-              <box>\
-                <size>0.075 0.075 0.075</size>\
-              </box>\
-            </geometry>\
-          </visual>\
-        </link>\
-        <link name=\"link2\">\
-          <pose>0.06 0 0.0375 0 0 0</pose>\
-          <collision name=\"collision\">\
-            <geometry>\
-              <box>\
-                <size>0.075 0.075 0.075</size>\
-              </box>\
-            </geometry>\
-          </collision>\
-          <visual name=\"visual\">\
-            <geometry>\
-              <box>\
-                <size>0.075 0.075 0.075</size>\
-              </box>\
-            </geometry>\
-          </visual>\
-        </link>\
-        <joint name=\"joint\" type=\"revolute\">\
-          <parent>link1</parent>\
-          <child>link2</child>\
-          <axis>\
-            <xyz>0 0 1</xyz>\
-            <limit>\
-              <lower>0</lower>\
-              <upper>0</upper>\
-            </limit>\
-            <use_parent_model_frame>true</use_parent_model_frame>\
-          </axis>\
-        </joint>\
-      </model>\
-    </sdf>";
+    "<sdf version=\"1.5\">" +
+      "<model name=\"new_model\">" +
+        "<link name=\"link1\">" +
+          "<pose>0 0 0.0375 0 0 0</pose>" +
+          "<collision name=\"collision\">" +
+            "<geometry>" +
+              "<box>" +
+                "<size>0.075 0.075 0.075</size>" +
+              "</box>" +
+            "</geometry>" +
+          "</collision>" +
+          "<visual name=\"visual\">" +
+            "<geometry>" +
+              "<box>" +
+                "<size>0.075 0.075 0.075</size>" +
+              "</box>" +
+            "</geometry>" +
+          "</visual>" +
+        "</link>" +
+        "<link name=\"link2\">" +
+          "<pose>0.06 0 0.0375 0 0 0</pose>" +
+          "<collision name=\"collision\">" +
+            "<geometry>" +
+              "<box>" +
+                "<size>0.075 0.075 0.075</size>" +
+              "</box>" +
+            "</geometry>" +
+          "</collision>" +
+          "<visual name=\"visual\">" +
+            "<geometry>" +
+              "<box>" +
+                "<size>0.075 0.075 0.075</size>" +
+              "</box>" +
+            "</geometry>" +
+          "</visual>" +
+        "</link>" +
+        "<joint name=\"joint\" type=\"revolute\">" +
+          "<parent>link1</parent>" +
+          "<child>link2</child>" +
+          "<axis>" +
+            "<xyz>0 0 1</xyz>" +
+            "<limit>" +
+              "<lower>0</lower>" +
+              "<upper>0</upper>" +
+            "</limit>" +
+            "<use_parent_model_frame>true</use_parent_model_frame>" +
+          "</axis>" +
+        "</joint>" +
+      "</model>" +
+    "</sdf>";
 
   std::string name = "new_model";
   hxModel model;
@@ -416,7 +420,7 @@ TEST_F(SimApiTest, HxsLinearVel)
   linvel.z = -0.03;
 
   ASSERT_EQ(hxs_linear_velocity("wood_cube_5cm", &linvel), hxOK);
-  
+
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
   EXPECT_EQ(model->GetWorldLinearVel(), math::Vector3(-0.01, -0.02, -0.03));
@@ -437,7 +441,7 @@ TEST_F(SimApiTest, HxsAngularVel)
   angvel.z = -0.03;
 
   ASSERT_EQ(hxs_angular_velocity("wood_cube_5cm", &angvel), hxOK);
-  
+
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
 
@@ -571,21 +575,22 @@ TEST_F(SimApiTest, HxsReset)
     targetPose.pos += math::Vector3(1, 2, 3);
     model->SetWorldPose(targetPose);
   }
-  
+
   world->Step(1);
 
   ASSERT_EQ(hxs_reset(0), hxOK);
   world->Step(1);
   for (auto model : world->GetModels())
   {
-    EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
-    EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
-    EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
+    math::Pose modelPose = model->GetWorldPose();
+    EXPECT_NEAR(modelPose.pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
+    EXPECT_NEAR(modelPose.pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
+    EXPECT_NEAR(modelPose.pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
 
-    EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 5e-2);
-    EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 5e-2);
-    EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 5e-2);
-    EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
+    EXPECT_NEAR(modelPose.rot.w, initialPoses[model->GetName()].rot.w, 5e-2);
+    EXPECT_NEAR(modelPose.rot.x, initialPoses[model->GetName()].rot.x, 5e-2);
+    EXPECT_NEAR(modelPose.rot.y, initialPoses[model->GetName()].rot.y, 5e-2);
+    EXPECT_NEAR(modelPose.rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
   }
 
   // Move everything again
@@ -604,14 +609,15 @@ TEST_F(SimApiTest, HxsReset)
   {
     if (model->GetName() != "mpl_haptix_right_forearm")
     {
-      EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
-      EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
-      EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
+      math::Pose modelPose = model->GetWorldPose();
+      EXPECT_NEAR(modelPose.pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
+      EXPECT_NEAR(modelPose.pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
+      EXPECT_NEAR(modelPose.pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
 
-      EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 5e-2);
-      EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 5e-2);
-      EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 5e-2);
-      EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
+      EXPECT_NEAR(modelPose.rot.w, initialPoses[model->GetName()].rot.w, 5e-2);
+      EXPECT_NEAR(modelPose.rot.x, initialPoses[model->GetName()].rot.x, 5e-2);
+      EXPECT_NEAR(modelPose.rot.y, initialPoses[model->GetName()].rot.y, 5e-2);
+      EXPECT_NEAR(modelPose.rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
     }
     else
     {

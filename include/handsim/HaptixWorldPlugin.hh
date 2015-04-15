@@ -20,6 +20,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include <sdf/sdf.hh>
 
@@ -51,7 +52,6 @@
 
 namespace gazebo
 {
-
   class EffortDuration
   {
     public:
@@ -61,14 +61,14 @@ namespace gazebo
       bool isForce;
       bool persistent;
 
-      EffortDuration() : link(NULL) {}
+      EffortDuration() : link(NULL), isForce(true), persistent(false) {}
       EffortDuration(physics::LinkPtr _link, math::Vector3 _effort,
           common::Time _duration, bool _isForce, bool _persistent)
         : link(_link), effort(_effort), timeRemaining(_duration),
           isForce(_isForce), persistent(_persistent) {}
   };
 
-  class GAZEBO_VISIBLE HaptixWorldPlugin : public WorldPlugin
+  class HaptixWorldPlugin : public WorldPlugin
   {
     /// \brief Constructor.
     public: HaptixWorldPlugin();
@@ -94,8 +94,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixSimInfoCallback(
-      const std::string &_service,
+    private: void HaptixSimInfoCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result);
 
@@ -104,8 +103,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixCameraTransformCallback(
-      const std::string &_service,
+    private: void HaptixCameraTransformCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxTransform &_rep, bool &_result);
 
@@ -114,8 +112,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixSetCameraTransformCallback(
-      const std::string &_service,
+    private: void HaptixSetCameraTransformCallback(const std::string &_service,
       const haptix::comm::msgs::hxTransform &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -124,8 +121,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixContactPointsCallback(
-      const std::string &_service,
+    private: void HaptixContactPointsCallback(const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
@@ -134,8 +130,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixStateCallback(
-      const std::string &_service,
+    private: void HaptixStateCallback(const std::string &_service,
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -144,8 +139,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixAddModelCallback(
-      const std::string &_service,
+    private: void HaptixAddModelCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxModel &_rep, bool &_result);
 
@@ -154,8 +148,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixRemoveModelCallback(
-      const std::string &_service,
+    private: void HaptixRemoveModelCallback(const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -164,8 +157,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixModelTransformCallback(
-      const std::string &_service,
+    private: void HaptixModelTransformCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -174,8 +166,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixLinearVelocityCallback(
-      const std::string &_service,
+    private: void HaptixLinearVelocityCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -184,8 +175,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixAngularVelocityCallback(
-      const std::string &_service,
+    private: void HaptixAngularVelocityCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -194,98 +184,88 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixForceCallback(
-      const std::string &_service,
+    private: void HaptixForceCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_torque callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixTorqueCallback(
-      const std::string &_service,
+    private: void HaptixTorqueCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_reset callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixResetCallback(
-      const std::string &_service,
+    private: void HaptixResetCallback(const std::string &_service,
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_reset_timer callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixResetTimerCallback(
-      const std::string &_service,
+    private: void HaptixResetTimerCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_start_timer callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixStartTimerCallback(
-      const std::string &_service,
+    private: void HaptixStartTimerCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_stop_timer callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixStopTimerCallback(
-      const std::string &_service,
+    private: void HaptixStopTimerCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_timer callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixTimerCallback(
-      const std::string &_service,
+    private: void HaptixTimerCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxTime &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_start_logging callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixStartLoggingCallback(
-      const std::string &_service,
+    private: void HaptixStartLoggingCallback(const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_is_logging callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixIsLoggingCallback(
-      const std::string &_service,
+    private: void HaptixIsLoggingCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxInt &_rep, bool &_result);
 
-    /// \brief hxs_sim_info callback.
+    /// \brief hxs_stop_logging callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixStopLoggingCallback(
-      const std::string &_service,
+    private: void HaptixStopLoggingCallback(const std::string &_service,
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -294,8 +274,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixModelGravityCallback(
-      const std::string &_service,
+    private: void HaptixModelGravityCallback(const std::string &_service,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxInt &_rep, bool &_result);
 
@@ -304,8 +283,7 @@ namespace gazebo
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixSetModelGravityCallback(
-      const std::string &_service,
+    private: void HaptixSetModelGravityCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -318,74 +296,99 @@ namespace gazebo
     /// \param[in] _in hxTransform to transform
     /// \param[out] _out Gazebo pose output
     /// \return True if the conversion succeeded.
-    public: static bool ConvertTransform(const haptix::comm::msgs::hxTransform &_in,
-        gazebo::math::Pose &_out);
+    public: static bool ConvertTransform(
+        const haptix::comm::msgs::hxTransform &_in, gazebo::math::Pose &_out);
 
     /// \brief Convert from hxTransform to Gazebo Pose
     /// \param[in] _in hxTransform to transform
     /// \param[out] _out Gazebo pose output
     /// \return True if the conversion succeeded.
-    public: static bool ConvertTransform(const hxTransform &_in,
-        gazebo::math::Pose &_out);
+    public: static bool ConvertTransform(
+        const hxTransform &_in, gazebo::math::Pose &_out);
 
-    public: static bool ConvertTransform(const gazebo::math::Pose &_out,
-        hxTransform &_in);
+    public: static bool ConvertTransform(
+        const gazebo::math::Pose &_out, hxTransform &_in);
 
     /// \brief Convert from Gazebo Pose to hxTransform
     /// \param[in] _in hxTransform to transform
     /// \param[out] _out Gazebo pose output
     /// \return True if the conversion succeeded.
-    public: static bool ConvertTransform(const gazebo::math::Pose &_in,
-        haptix::comm::msgs::hxTransform &_out);
+    public: static bool ConvertTransform(
+        const gazebo::math::Pose &_in, haptix::comm::msgs::hxTransform &_out);
 
     /// \brief Convert from hxVector3 to Gazebo Vector3
     /// \param[in] _in hxVector3 to transform
     /// \param[out] _out Gazebo Vector3 output
     /// \return True if the conversion succeeded.
-    public: static bool ConvertVector(const haptix::comm::msgs::hxVector3 &_in,
-        gazebo::math::Vector3 &_out);
+    public: static bool ConvertVector(
+        const haptix::comm::msgs::hxVector3 &_in, gazebo::math::Vector3 &_out);
 
     /// \brief Convert from Gazebo Vector3 to hxVector3 (message type)
     /// \param[in] _in Gazebo Vector3 to transform
     /// \param[out] _out hxVector3 output
     /// \return True if the conversion succeeded.
-    public: static bool ConvertVector(const gazebo::math::Vector3 &_in,
-        haptix::comm::msgs::hxVector3 &_out);
+    public: static bool ConvertVector(
+        const gazebo::math::Vector3 &_in, haptix::comm::msgs::hxVector3 &_out);
 
-    public: static bool ConvertVector(const gazebo::math::Vector3 &_in,
-        hxVector3 &_out);
+    /// \brief Convert from Gazebo Vector3 to hxVector3
+    /// \param[in] _in Gazebo Vector3 to transform
+    /// \param[out] _out hxVector3 output
+    /// \return True if the conversion succeeded.
+    public: static bool ConvertVector(
+        const gazebo::math::Vector3 &_in, hxVector3 &_out);
 
+    /// \brief Convert from hxVector3 to Gazebo Vector3
+    /// \param[in] _in hxVector3 to transform
+    /// \param[out] _out Gazebo Vector3 output
+    /// \return True if the conversion succeeded.
     public: static bool ConvertVector(const hxVector3 &_in,
         gazebo::math::Vector3 &_out);
 
     /// \brief Convert from hxQuaternion to Gazebo Quaternion
+    /// \param[in] _in
+    /// \param[out] _out
     public: static bool ConvertQuaternion(
         const haptix::comm::msgs::hxQuaternion &_in,
         gazebo::math::Quaternion &_out);
 
     /// \brief Convert from Gazebo Quaternion to hxQuaternion
-    public: static bool ConvertQuaternion(const gazebo::math::Quaternion &_in,
+    /// \param[in] _in
+    /// \param[out] _out
+    public: static bool ConvertQuaternion(
+        const gazebo::math::Quaternion &_in,
         haptix::comm::msgs::hxQuaternion &_out);
 
     /// \brief Convert from Gazebo Model to hxModel (message type)
+    /// \param[in] _in
+    /// \param[out] _out
     public: static bool ConvertModel(const gazebo::physics::Model &_in,
         haptix::comm::msgs::hxModel &_out);
 
     /// \brief Convert from Gazebo Model to hxModel
+    /// \param[in] _in
+    /// \param[out] _out
     public: static bool ConvertModel(const gazebo::physics::Model &_in,
         hxModel &_out);
 
     /// \brief Convert from Gazebo Link to hxLink (message type)
+    /// \param[in] _in
+    /// \param[out] _out
     public: static bool ConvertLink(const gazebo::physics::Link &_in,
         haptix::comm::msgs::hxLink &_out);
 
+    /// \param[in] _in
+    /// \param[out] _out
     public: static bool ConvertLink(const gazebo::physics::Link &_in,
         hxLink &_out);
 
     /// \brief Convert from Gazebo Joint to hxJoint (message type)
+    /// \param[in] _in
+    /// \param[out] _out
     public: static bool ConvertJoint(gazebo::physics::Joint &_in,
         haptix::comm::msgs::hxJoint &_out);
 
+    /// \param[in] _in
+    /// \param[out] _out
     public: static bool ConvertJoint(gazebo::physics::Joint &_in,
         hxJoint &_out);
 
@@ -418,18 +421,14 @@ namespace gazebo
     /// \brief For publishing pause commands
     private: transport::PublisherPtr pausePub;
 
-    /// \brief Thread storage vector
-    //private: std::vector<std::thread> threadVec;
-
+    /// \brief For storing forces and torques applied over time.
     private: std::vector<EffortDuration> effortDurations;
 
+    /// \brief Last time the effort vectors were updates
     private: common::Time lastSimUpdateTime;
 
-    /// \brief For synchronization
+    /// \brief Mutex to protect the World pointer
     private: std::mutex worldMutex;
-
-    private: std::mutex torqueMutex;
-    private: std::mutex forceMutex;
   };
 }
 #endif
