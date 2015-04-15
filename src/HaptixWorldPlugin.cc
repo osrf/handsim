@@ -158,6 +158,12 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_stop_logging",
     &HaptixWorldPlugin::HaptixStopLoggingCallback, this);
 
+  this->ignNode.Advertise("/haptix/gazebo/hxs_model_gravity",
+    &HaptixWorldPlugin::HaptixModelGravityCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_gravity",
+    &HaptixWorldPlugin::HaptixSetModelGravityCallback, this);
+
   this->lastSimUpdateTime = this->world->GetSimTime();
 }
 
@@ -223,7 +229,7 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
   for (auto &model : this->modelVector)
   {
     haptix::comm::msgs::hxModel* modelMsg = _rep.add_models();
-    if (!HaptixWorldPlugin::ConvertModel(*model, *modelMsg))
+    if (!ConvertModel(*model, *modelMsg))
     {
       _result = false;
       return;
@@ -373,9 +379,17 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   std::string xml = _req.string_value();
   sdf::SDF modelSDF;
   modelSDF.SetFromString(xml);
-  sdf::ElementPtr modelElement = modelSDF.Root();
-  if (!modelElement->HasAttribute("name"))
+  if (!modelSDF.Root() || !modelSDF.Root()->HasElement("model"))
   {
+    gzdbg << "Model SDF was invalid" << std::endl;
+    _result = false;
+    return;
+  }
+  sdf::ElementPtr modelElement = modelSDF.Root()->GetElement("model");
+
+  if (!modelElement || !modelElement->HasAttribute("name"))
+  {
+    gzdbg << "Model element invalid" << std::endl;
     _result = false;
     return;
   }
@@ -386,31 +400,41 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzdbg << "World pointer NULL" << std::endl;
     _result = false;
     return;
   }
 
+  xml = modelSDF.ToString();
+
   // load an SDF element from XML
-  this->world->InsertModelSDF(modelSDF);
-  // problem with this approach: cannot retrieve model pointer?
+  this->world->InsertModelString(xml);
 
   physics::ModelPtr model = this->world->GetModel(_req.name());
 
-  if (!model)
+  int tries = 0;
+  while (!model)
   {
-    _result = false;
-    return;
+    if (tries > 10)
+    {
+      gzdbg << "Model not found: " << _req.name() << std::endl;
+      _result = false;
+      return;
+    }
+    tries++;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    model = this->world->GetModel(_req.name());
   }
 
-  math::Pose pose;
-  if (!ConvertTransform(_req.transform(), pose))
-  {
-    _result = false;
-    return;
-  }
+  math::Pose pose(_req.vector3().x(), _req.vector3().y(), _req.vector3().z(),
+      _req.orientation().roll(), _req.orientation().pitch(),
+      _req.orientation().yaw());
 
   // Set pose
   model->SetWorldPose(pose);
+
+  bool gravity = _req.gravity();
+  model->SetGravityMode(gravity);
 
   ConvertModel(*model, _rep);
   _result = true;
@@ -438,10 +462,14 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
   }
   this->world->RemoveModel(model);
 
-  // If model still exists
+  // Wait while model still exists
+  int tries = 0;
   while (this->world->GetModel(_req.data()))
   {
     _result = false;
+    tries++;
+    if (tries > 100)
+      return;
   }
   _result = true;
 }
@@ -808,6 +836,51 @@ void HaptixWorldPlugin::HaptixStopLoggingCallback(
   _result = true;
 }
 
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixModelGravityCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxString &_req,
+      haptix::comm::msgs::hxInt &_rep, bool &_result)
+{
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+
+  physics::ModelPtr model = this->world->GetModel(_req.data());
+  bool gravity = false;
+  for (auto links : model->GetLinks())
+  {
+    gravity |= links->GetGravityMode();
+  }
+
+  _rep.set_data(gravity);
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixSetModelGravityCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+
+  physics::ModelPtr model = this->world->GetModel(_req.name());
+
+  model->SetGravityMode(_req.int_value());
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+
 bool HaptixWorldPlugin::ConvertTransform(
     const haptix::comm::msgs::hxTransform &_in, gazebo::math::Pose &_out)
 {
@@ -830,6 +903,19 @@ bool HaptixWorldPlugin::ConvertTransform(
   _out.rot.x = _in.orient.x;
   _out.rot.y = _in.orient.y;
   _out.rot.z = _in.orient.z;
+
+  return true;
+}
+
+bool HaptixWorldPlugin::ConvertTransform(
+    const gazebo::math::Pose &_in, hxTransform &_out)
+{
+  ConvertVector(_in.pos, _out.pos);
+
+  _out.orient.w = _in.rot.w;
+  _out.orient.x = _in.rot.x;
+  _out.orient.y = _in.rot.y;
+  _out.orient.z = _in.rot.z;
 
   return true;
 }
@@ -869,6 +955,26 @@ bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
   return true;
 }
 
+bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
+    hxVector3 &_out)
+{
+  _out.x = _in.x;
+  _out.y = _in.y;
+  _out.z = _in.z;
+
+  return true;
+}
+
+bool HaptixWorldPlugin::ConvertVector(const hxVector3 &_in,
+    math::Vector3 &_out)
+{
+  _out.x = _in.x;
+  _out.y = _in.y;
+  _out.z = _in.z;
+
+  return true;
+}
+
 bool HaptixWorldPlugin::ConvertQuaternion(const haptix::comm::msgs::hxQuaternion &_in,
     gazebo::math::Quaternion &_out)
 {
@@ -889,7 +995,7 @@ bool HaptixWorldPlugin::ConvertQuaternion(const gazebo::math::Quaternion &_in,
 }
 
 bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
-  haptix::comm::msgs::hxModel &_out)
+    haptix::comm::msgs::hxModel &_out)
 {
   _out.set_name(_in.GetName());
 
@@ -899,39 +1005,104 @@ bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
   _out.set_id(_in.GetId());
   
   _out.clear_links();
+
+  // Gravity mode is only false if all links have gravity set to false
+  bool gravity = false;
   for (auto link : _in.GetLinks())
   {
     haptix::comm::msgs::hxLink *linkMsg = _out.add_links();
     ConvertLink(*link, *linkMsg);
+
+    // Check gravity mode
+    gravity |= link->GetGravityMode();
   }
+
+  _out.set_gravity(gravity);
+
   _out.clear_joints();
   for (auto joint : _in.GetJoints())
   {
     haptix::comm::msgs::hxJoint *jointMsg = _out.add_joints();
     ConvertJoint(*joint, *jointMsg);
   }
+
+  return true;
+}
+
+bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
+    hxModel &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
+  HaptixWorldPlugin::ConvertTransform(_in.GetWorldPose(), _out.transform);
+
+  _out.id = _in.GetId();
+  
+  // Gravity mode is only false if all links have gravity set to false
+  bool gravity = false;
+  // TODO memsets
+  int i = 0;
+  for (auto link : _in.GetLinks())
+  {
+    hxLink simLink;
+    ConvertLink(*link, simLink);
+    _out.links[i] = simLink;
+    i++;
+
+    // Check gravity mode
+    gravity |= link->GetGravityMode();
+  }
+
+  _out.gravity = gravity;
+
+  for (auto joint : _in.GetJoints())
+  {
+    hxJoint simJoint;
+    ConvertJoint(*joint, simJoint);
+    _out.joints[i] = simJoint;
+    i++;
+  }
+
   return true;
 }
 
 bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
-  haptix::comm::msgs::hxLink &_out)
+    haptix::comm::msgs::hxLink &_out)
 {
   _out.set_name(_in.GetName());
 
   math::Pose linkPose = _in.GetWorldPose();
-  HaptixWorldPlugin::ConvertTransform(linkPose, *(_out.mutable_transform()));
+  ConvertTransform(linkPose, *(_out.mutable_transform()));
 
   math::Vector3 linVel = _in.GetWorldLinearVel();
-  HaptixWorldPlugin::ConvertVector(linVel, *_out.mutable_linvel());
+  ConvertVector(linVel, *_out.mutable_linvel());
 
   math::Vector3 angVel = _in.GetWorldAngularVel();
-  HaptixWorldPlugin::ConvertVector(angVel, *_out.mutable_angvel());
+  ConvertVector(angVel, *_out.mutable_angvel());
 
   math::Vector3 linAccel = _in.GetWorldLinearAccel();
-  HaptixWorldPlugin::ConvertVector(linAccel, *_out.mutable_linacc());
+  ConvertVector(linAccel, *_out.mutable_linacc());
 
   math::Vector3 angAccel = _in.GetWorldAngularAccel();
-  HaptixWorldPlugin::ConvertVector(angAccel, *_out.mutable_angacc());
+  ConvertVector(angAccel, *_out.mutable_angacc());
+  return true;
+}
+
+bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
+    hxLink &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
+  ConvertTransform(_in.GetWorldPose(), _out.transform);
+
+  ConvertVector(_in.GetWorldLinearVel(), _out.linvel);
+
+  ConvertVector(_in.GetWorldAngularVel(), _out.angvel);
+
+  ConvertVector(_in.GetWorldLinearAccel(), _out.linacc);
+
+  ConvertVector(_in.GetWorldAngularAccel(), _out.angacc);
+
   return true;
 }
 
@@ -947,5 +1118,16 @@ bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
   _out.set_torque_passive(_in.GetForceTorque(0).body1Torque.GetLength());
 
   _out.set_torque_motor(_in.GetLinkTorque(0).GetLength());
+  return true;
+}
+
+bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in, hxJoint &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+  _out.pos = _in.GetAngle(0).Radian();
+  _out.vel = _in.GetVelocity(0);
+  _out.torque_passive = _in.GetForceTorque(0).body1Torque.GetLength();
+  _out.torque_motor = _in.GetForceTorque(0).body1Torque.GetLength();
+
   return true;
 }

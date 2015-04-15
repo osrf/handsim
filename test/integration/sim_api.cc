@@ -58,7 +58,7 @@ TEST_F(SimApiTest, HxsSimInfo)
   }
   camera->Load();
   camera->Init();
-  math::Pose cameraPose(1, 2, 3, 4, 5, 6);
+  math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
   camera->SetWorldPose(cameraPose);
   
   // Wait a little while for the world to initialize
@@ -72,13 +72,63 @@ TEST_F(SimApiTest, HxsSimInfo)
 
   // Verify object locations, camera pose, etc.
   EXPECT_EQ(cameraPose.pos, cameraOut.pos);
-  EXPECT_EQ(cameraPose.rot, -cameraOut.rot);
 
-  /*EXPECT_EQ();
+  EXPECT_FLOAT_EQ(cameraPose.rot.w, cameraOut.rot.w);
+  EXPECT_FLOAT_EQ(cameraPose.rot.x, cameraOut.rot.x);
+  EXPECT_FLOAT_EQ(cameraPose.rot.y, cameraOut.rot.y);
+  EXPECT_FLOAT_EQ(cameraPose.rot.z, cameraOut.rot.z);
 
-  for (auto model : simInfo.models)
+  for (int i = 0; i < simInfo.modelCount; ++i)
   {
-  }*/
+    physics::ModelPtr gzModel = world->GetModel(simInfo.models[i].name);
+    if (!gzModel)
+      FAIL();
+
+    math::Pose modelPose;
+    HaptixWorldPlugin::ConvertTransform(simInfo.models[i].transform, modelPose);
+    EXPECT_EQ(modelPose, gzModel->GetWorldPose());
+
+    for (int j = 0; j < simInfo.models[i].link_count; ++j)
+    {
+      physics::LinkPtr gzLink = gzModel->GetLink(simInfo.models[i].links[j].name);
+      if (!gzLink)
+        FAIL();
+
+      math::Pose linkPose;
+      HaptixWorldPlugin::ConvertTransform(simInfo.models[i].links[j].transform,
+          linkPose);
+      EXPECT_EQ(linkPose, gzLink->GetWorldPose());
+
+      math::Vector3 tmp;
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].linvel, tmp);
+      EXPECT_EQ(tmp, gzLink->GetWorldLinearVel());
+
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].angvel, tmp);
+      EXPECT_EQ(tmp, gzLink->GetWorldAngularVel());
+
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].linacc, tmp);
+      EXPECT_EQ(tmp, gzLink->GetWorldLinearAccel());
+
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].angacc, tmp);
+      EXPECT_EQ(tmp, gzLink->GetWorldAngularAccel());
+    }
+
+    for (int j = 0; j < simInfo.models[i].joint_count; ++j)
+    {
+      physics::JointPtr gzJoint = gzModel->GetJoint(simInfo.models[i].joints[j].name);
+      if (!gzJoint)
+        FAIL();
+
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].pos,
+          gzJoint->GetAngle(0).Radian());
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].vel, gzJoint->GetVelocity(0));
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].torque_passive,
+          gzJoint->GetForceTorque(0).body1Torque.GetLength());
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].torque_motor,
+          gzJoint->GetLinkTorque(0).GetLength());
+    }
+    // TODO gravity test?
+  }
 }
 
 TEST_F(SimApiTest, HxsCameraTransform)
@@ -112,13 +162,22 @@ TEST_F(SimApiTest, HxsCameraTransform)
   }
   camera->Load();
   camera->Init();
-  math::Pose cameraPose(1, 2, 3, 4, 5, 6);
+  math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
   camera->SetWorldPose(cameraPose);
 
   hxTransform transform;
   EXPECT_EQ(hxs_camera_transform(&transform), hxOK);
 
-  // TODO verify pose
+  math::Pose cameraOut;
+  HaptixWorldPlugin::ConvertTransform(transform, cameraOut);
+
+  // Verify object locations, camera pose, etc.
+  EXPECT_EQ(cameraPose.pos, cameraOut.pos);
+
+  EXPECT_FLOAT_EQ(cameraPose.rot.w, cameraOut.rot.w);
+  EXPECT_FLOAT_EQ(cameraPose.rot.x, cameraOut.rot.x);
+  EXPECT_FLOAT_EQ(cameraPose.rot.y, cameraOut.rot.y);
+  EXPECT_FLOAT_EQ(cameraPose.rot.z, cameraOut.rot.z);
 }
 
 TEST_F(SimApiTest, HxsSetCameraTransform)
@@ -151,22 +210,29 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
   }
   camera->Load();
   camera->Init();
-  math::Pose cameraPose(1, 2, 3, 4, 5, 6);
-  camera->SetWorldPose(cameraPose);
+
 
   hxTransform transform;
-  transform.pos.x = 3;
+  transform.pos.x = 1;
   transform.pos.y = 2;
-  transform.pos.z = 1;
+  transform.pos.z = 3;
 
-  transform.orient.w = 4;
-  transform.orient.x = 5;
-  transform.orient.y = 6;
-  transform.orient.z = 7;
+  math::Quaternion q(3.14159, 1.570796, 0);
+
+  transform.orient.w = q.w;
+  transform.orient.x = q.x;
+  transform.orient.y = q.y;
+  transform.orient.z = q.z;
 
   EXPECT_EQ(hxs_set_camera_transform(&transform), hxOK);
 
-  // TODO verify pose
+  math::Pose outputPose = gui::get_active_camera()->GetWorldPose();
+  EXPECT_EQ(outputPose.pos, math::Vector3(1, 2, 3));
+
+  EXPECT_FLOAT_EQ(outputPose.rot.w, q.w);
+  EXPECT_FLOAT_EQ(outputPose.rot.x, q.x);
+  EXPECT_FLOAT_EQ(outputPose.rot.y, q.y);
+  EXPECT_FLOAT_EQ(outputPose.rot.z, q.z);
 }
 
 TEST_F(SimApiTest, HxsContacts)
@@ -209,31 +275,83 @@ TEST_F(SimApiTest, HxsAddModel)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  // TODO SDF
-  std::string modelSDF = "";
+  std::string modelSDF =
+    "<sdf version=\"1.5\">\
+      <model name=\"new_model\">\
+        <link name=\"link1\">\
+          <pose>0 0 0.0375 0 0 0</pose>\
+          <collision name=\"collision\">\
+            <geometry>\
+              <box>\
+                <size>0.075 0.075 0.075</size>\
+              </box>\
+            </geometry>\
+          </collision>\
+          <visual name=\"visual\">\
+            <geometry>\
+              <box>\
+                <size>0.075 0.075 0.075</size>\
+              </box>\
+            </geometry>\
+          </visual>\
+        </link>\
+        <link name=\"link2\">\
+          <pose>0.06 0 0.0375 0 0 0</pose>\
+          <collision name=\"collision\">\
+            <geometry>\
+              <box>\
+                <size>0.075 0.075 0.075</size>\
+              </box>\
+            </geometry>\
+          </collision>\
+          <visual name=\"visual\">\
+            <geometry>\
+              <box>\
+                <size>0.075 0.075 0.075</size>\
+              </box>\
+            </geometry>\
+          </visual>\
+        </link>\
+        <joint name=\"joint\" type=\"revolute\">\
+          <parent>link1</parent>\
+          <child>link2</child>\
+          <axis>\
+            <xyz>0 0 1</xyz>\
+            <limit>\
+              <lower>0</lower>\
+              <upper>0</upper>\
+            </limit>\
+            <use_parent_model_frame>true</use_parent_model_frame>\
+          </axis>\
+        </joint>\
+      </model>\
+    </sdf>";
+
   std::string name = "new_model";
   hxModel model;
 
-  float x = 1.0;
-  float y = 2.0;
-  float z = 3.0;
-  float roll = 4.0;
-  float pitch = 5.0;
-  float yaw = 6.0;
+  float x = 0;
+  float y = 0.1;
+  float z = 0.2;
+  float roll = 3.14159;
+  float pitch = 1.570796;
+  float yaw = -1.570796;
+
+  math::Quaternion q(roll, pitch, yaw);
 
   // Create a new model.
-  EXPECT_EQ(hxs_add_model(modelSDF.c_str(), name.c_str(), x, y, z, roll, pitch, yaw,
-    &model), hxOK);
+  EXPECT_EQ(hxs_add_model(modelSDF.c_str(), name.c_str(), x, y, z, roll,
+    pitch, yaw, false, &model), hxOK);
 
   // Verify that the new model matches the pose we specified.
   EXPECT_FLOAT_EQ(model.transform.pos.x, 0);
   EXPECT_FLOAT_EQ(model.transform.pos.y, 0.1);
   EXPECT_FLOAT_EQ(model.transform.pos.z, 0.2);
-  EXPECT_FLOAT_EQ(model.transform.orient.w, 0.3);
-  EXPECT_FLOAT_EQ(model.transform.orient.x, 0.4);
-  EXPECT_FLOAT_EQ(model.transform.orient.y, 0.5);
 
-  EXPECT_FLOAT_EQ(model.transform.orient.z, 0.6);
+  EXPECT_FLOAT_EQ(model.transform.orient.w, q.w);
+  EXPECT_FLOAT_EQ(model.transform.orient.x, q.x);
+  EXPECT_FLOAT_EQ(model.transform.orient.y, q.y);
+  EXPECT_FLOAT_EQ(model.transform.orient.z, q.z);
 
   // TODO Expect that its links and joints match what was specified in SDF
 }
@@ -298,6 +416,7 @@ TEST_F(SimApiTest, HxsForce)
   {
     FAIL();
   }
+  // TODO disable gravity
   // Wait a little while for the world to initialize
   world->Step(20);
 
@@ -307,6 +426,7 @@ TEST_F(SimApiTest, HxsForce)
   force.z = 0.03;
 
   float duration = 1.0;
+
 
   EXPECT_EQ(hxs_force("wood_cube_5cm", "link", &force, duration), hxOK);
 
@@ -322,6 +442,7 @@ TEST_F(SimApiTest, HxsTorque)
   {
     FAIL();
   }
+  // TODO disable gravity
   // Wait a little while for the world to initialize
   world->Step(20);
 
@@ -402,6 +523,45 @@ TEST_F(SimApiTest, HxsStartLogging)
 TEST_F(SimApiTest, HxsStopLogging)
 {
   // TODO
+}
+
+TEST_F(SimApiTest, HxsModelGravity)
+{
+  Load("worlds/arat_test.world", true);
+  physics::WorldPtr world = physics::get_world("default");
+  if (world == NULL)
+  {
+    FAIL();
+  }
+  int gravity;
+  EXPECT_EQ(hxs_model_gravity("wood_cube_5cm", &gravity), hxOK);
+
+  EXPECT_EQ(gravity, 1);
+
+  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  model->SetGravityMode(0);
+
+  EXPECT_EQ(hxs_model_gravity("wood_cube_5cm", &gravity), hxOK);
+
+  EXPECT_EQ(gravity, 0);
+}
+
+TEST_F(SimApiTest, HxsSetModelGravity)
+{
+  Load("worlds/arat_test.world", true);
+  physics::WorldPtr world = physics::get_world("default");
+  if (world == NULL)
+  {
+    FAIL();
+  }
+  int gravity = 0;
+  EXPECT_EQ(hxs_set_model_gravity("wood_cube_5cm", gravity), hxOK);
+
+  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  for (auto link : model->GetLinks())
+  {
+    EXPECT_FALSE(link->GetGravityMode());
+  }
 }
 
 int main(int argc, char **argv)

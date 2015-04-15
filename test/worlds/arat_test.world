@@ -263,7 +263,6 @@
     </gui>
 
    <physics type="ode">
-      <gravity>0.000000 0.000000 0</gravity>
       <ode>
         <solver>
           <type>quick</type>

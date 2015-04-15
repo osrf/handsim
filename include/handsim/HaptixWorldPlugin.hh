@@ -289,23 +289,30 @@ namespace gazebo
       const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_model_gravity callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixModelGravityCallback(
+      const std::string &_service,
+      const haptix::comm::msgs::hxString &_req,
+      haptix::comm::msgs::hxInt &_rep, bool &_result);
+
+    /// \brief hxs_set_model_gravity callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixSetModelGravityCallback(
+      const std::string &_service,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result);
+
     /// \brief Callback on world update
     private: void OnWorldUpdate();
 
     ///////////// Utility functions /////////////
-    /// \brief Apply a persistent force to a link over a certain time interval.
-    /// \param[in] _link Link to apply the force to.
-    /// \param[in] _force Force to apply.
-    /// \param[in] _duration How long to apply the force. Negative to go on forever.
-    /*private: void EffortDurationThread(const physics::LinkPtr _link,
-        const math::Vector3 &_force, float _duration);*/
-
-    /// \brief Apply a persistent torque to a link over a certain time interval.
-    /// \param[in] _link Link to apply the torque to.
-    /// \param[in] _torque Torque to apply.
-    /// \param[in] _duration How long to apply the torque. Negative to go on forever.
-    /*private: void TorqueDurationThread(const physics::LinkPtr _link,
-        const math::Vector3 &_torque, float _duration);*/
 
     /// \brief Convert from hxTransform (message type) to Gazebo Pose
     /// \param[in] _in hxTransform to transform
@@ -321,6 +328,9 @@ namespace gazebo
     public: static bool ConvertTransform(const hxTransform &_in,
         gazebo::math::Pose &_out);
 
+    public: static bool ConvertTransform(const gazebo::math::Pose &_out,
+        hxTransform &_in);
+
     /// \brief Convert from Gazebo Pose to hxTransform
     /// \param[in] _in hxTransform to transform
     /// \param[out] _out Gazebo pose output
@@ -335,12 +345,18 @@ namespace gazebo
     public: static bool ConvertVector(const haptix::comm::msgs::hxVector3 &_in,
         gazebo::math::Vector3 &_out);
 
-    /// \brief Convert from Gazebo Vector3 to hxVector3
+    /// \brief Convert from Gazebo Vector3 to hxVector3 (message type)
     /// \param[in] _in Gazebo Vector3 to transform
     /// \param[out] _out hxVector3 output
     /// \return True if the conversion succeeded.
     public: static bool ConvertVector(const gazebo::math::Vector3 &_in,
         haptix::comm::msgs::hxVector3 &_out);
+
+    public: static bool ConvertVector(const gazebo::math::Vector3 &_in,
+        hxVector3 &_out);
+
+    public: static bool ConvertVector(const hxVector3 &_in,
+        gazebo::math::Vector3 &_out);
 
     /// \brief Convert from hxQuaternion to Gazebo Quaternion
     public: static bool ConvertQuaternion(
@@ -351,17 +367,27 @@ namespace gazebo
     public: static bool ConvertQuaternion(const gazebo::math::Quaternion &_in,
         haptix::comm::msgs::hxQuaternion &_out);
 
-    /// \brief Convert from Gazebo Model to hxModel
+    /// \brief Convert from Gazebo Model to hxModel (message type)
     public: static bool ConvertModel(const gazebo::physics::Model &_in,
         haptix::comm::msgs::hxModel &_out);
 
-    /// \brief Convert from Gazebo Link to hxLink
+    /// \brief Convert from Gazebo Model to hxModel
+    public: static bool ConvertModel(const gazebo::physics::Model &_in,
+        hxModel &_out);
+
+    /// \brief Convert from Gazebo Link to hxLink (message type)
     public: static bool ConvertLink(const gazebo::physics::Link &_in,
         haptix::comm::msgs::hxLink &_out);
 
-    /// \brief Convert from Gazebo Joint to hxJoint
+    public: static bool ConvertLink(const gazebo::physics::Link &_in,
+        hxLink &_out);
+
+    /// \brief Convert from Gazebo Joint to hxJoint (message type)
     public: static bool ConvertJoint(gazebo::physics::Joint &_in,
         haptix::comm::msgs::hxJoint &_out);
+
+    public: static bool ConvertJoint(gazebo::physics::Joint &_in,
+        hxJoint &_out);
 
     ///////////// Member variables /////////////
 
