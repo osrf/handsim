@@ -518,41 +518,62 @@ TEST_F(SimApiTest, HxsReset)
   for (auto model : world->GetModels())
   {
     math::Pose targetPose = initialPoses[model->GetName()];
-    targetPose.pos += math::Vector3(0.1, 0.2, 0.3);
+    targetPose.pos += math::Vector3(1, 2, 3);
     model->SetWorldPose(targetPose);
   }
-  world->Step(20);
+  world->Step(2);
 
   ASSERT_EQ(hxs_reset(0), hxOK);
-  world->Step(5);
+  world->Step(2);
+  for (auto model : world->GetModels())
+  {
+    EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 1.3e-2);
+    EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 1.3e-2);
+    EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 1.3e-2);
+
+    EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 1.3e-2);
+    EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 1.3e-2);
+    EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 1.3e-2);
+    EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 1.3e-2);
+  }
+
+  // Move everything again
+  for (auto model : world->GetModels())
+  {
+    math::Pose targetPose = initialPoses[model->GetName()];
+    targetPose.pos += math::Vector3(1, 2, 3);
+    model->SetWorldPose(targetPose);
+  }
+  world->Step(2);
+
+  ASSERT_EQ(hxs_reset(1), hxOK);
+  world->Step(2);
+  // Expect that everything is in its initial state
+  // TODO move arm command!
   for (auto model : world->GetModels())
   {
     if (model->GetName() != "mpl_haptix_right_forearm")
     {
-      EXPECT_EQ(model->GetWorldPose(), initialPoses[model->GetName()]);
+      EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 1.3e-2);
+      EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 1.3e-2);
+      EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 1.3e-2);
+
+      EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 1.3e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 1.3e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 1.3e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 1.3e-2);
     }
     else
     {
       math::Pose targetPose = initialPoses[model->GetName()];
-      targetPose.pos += math::Vector3(0.1, 0.2, 0.3);
-      EXPECT_EQ(model->GetWorldPose(), targetPose);
+      targetPose.pos += math::Vector3(1, 2, 3);
+      EXPECT_EQ(model->GetWorldPose().pos, targetPose.pos);
+
+      EXPECT_NEAR(model->GetWorldPose().rot.w, targetPose.rot.w, 1e-1);
+      EXPECT_NEAR(model->GetWorldPose().rot.x, targetPose.rot.x, 1e-1);
+      EXPECT_NEAR(model->GetWorldPose().rot.y, targetPose.rot.y, 1e-1);
+      EXPECT_NEAR(model->GetWorldPose().rot.z, targetPose.rot.z, 1e-1);
     }
-  }
-
-  // Now move everything again
-  for (auto model : world->GetModels())
-  {
-    math::Pose targetPose = initialPoses[model->GetName()];
-    targetPose.pos += math::Vector3(0.1, 0.2, 0.3);
-    model->SetWorldPose(targetPose);
-  }
-
-  ASSERT_EQ(hxs_reset(1), hxOK);
-  world->Step(5);
-  // Expect that everything is in its initial state
-  for (auto model : world->GetModels())
-  {
-    EXPECT_EQ(model->GetWorldPose(), initialPoses[model->GetName()]);
   }
 }
 

@@ -667,13 +667,14 @@ void HaptixWorldPlugin::HaptixResetCallback(
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // Signal to WorldControl to reset the world
-  gazebo::msgs::WorldControl msg;
-  msg.mutable_reset()->set_all(true);
-  this->worldControlPub->Publish(msg);
-
-  if (_req.data())
+  // TODO initial camera pos
+  if (_req.data() == 0)
   {
+    // Signal to WorldControl to reset the world
+    gazebo::msgs::WorldControl msg;
+    msg.mutable_reset()->set_model_only(true);
+    this->worldControlPub->Publish(msg);
+
     // Reset wrist and finger posture
     hxCommand command;
     memset(&command, 0, sizeof(command));
@@ -703,6 +704,17 @@ void HaptixWorldPlugin::HaptixResetCallback(
       gzwarn << "Failed to call gazebo/Grasp service" << std::endl;
     }
   }
+  else
+  {
+    for (auto model : world->GetModels())
+    {
+      if (model->GetName() != "mpl_haptix_right_forearm")
+      {
+        model->Reset();
+      }
+    }
+  }
+
   _result = true;
 }
 
