@@ -521,20 +521,21 @@ TEST_F(SimApiTest, HxsReset)
     targetPose.pos += math::Vector3(1, 2, 3);
     model->SetWorldPose(targetPose);
   }
-  world->Step(2);
+  
+  world->Step(1);
 
   ASSERT_EQ(hxs_reset(0), hxOK);
-  world->Step(2);
+  world->Step(1);
   for (auto model : world->GetModels())
   {
-    EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 1.3e-2);
-    EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 1.3e-2);
-    EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 1.3e-2);
+    EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
+    EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
+    EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
 
-    EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 1.3e-2);
-    EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 1.3e-2);
-    EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 1.3e-2);
-    EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 1.3e-2);
+    EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 5e-2);
+    EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 5e-2);
+    EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 5e-2);
+    EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
   }
 
   // Move everything again
@@ -544,35 +545,37 @@ TEST_F(SimApiTest, HxsReset)
     targetPose.pos += math::Vector3(1, 2, 3);
     model->SetWorldPose(targetPose);
   }
-  world->Step(2);
+  world->Step(1);
 
   ASSERT_EQ(hxs_reset(1), hxOK);
-  world->Step(2);
+  world->Step(1);
   // Expect that everything is in its initial state
-  // TODO move arm command!
   for (auto model : world->GetModels())
   {
     if (model->GetName() != "mpl_haptix_right_forearm")
     {
-      EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 1.3e-2);
-      EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 1.3e-2);
-      EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 1.3e-2);
+      EXPECT_NEAR(model->GetWorldPose().pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
 
-      EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 1.3e-2);
-      EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 1.3e-2);
-      EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 1.3e-2);
-      EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 1.3e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.w, initialPoses[model->GetName()].rot.w, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.x, initialPoses[model->GetName()].rot.x, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.y, initialPoses[model->GetName()].rot.y, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
     }
     else
     {
       math::Pose targetPose = initialPoses[model->GetName()];
       targetPose.pos += math::Vector3(1, 2, 3);
-      EXPECT_EQ(model->GetWorldPose().pos, targetPose.pos);
 
-      EXPECT_NEAR(model->GetWorldPose().rot.w, targetPose.rot.w, 1e-1);
-      EXPECT_NEAR(model->GetWorldPose().rot.x, targetPose.rot.x, 1e-1);
-      EXPECT_NEAR(model->GetWorldPose().rot.y, targetPose.rot.y, 1e-1);
-      EXPECT_NEAR(model->GetWorldPose().rot.z, targetPose.rot.z, 1e-1);
+      EXPECT_NEAR(model->GetWorldPose().pos.x, targetPose.pos.x, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().pos.y, targetPose.pos.y, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().pos.z, targetPose.pos.z, 5e-2);
+
+      EXPECT_NEAR(model->GetWorldPose().rot.w, targetPose.rot.w, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.x, targetPose.rot.x, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.y, targetPose.rot.y, 5e-2);
+      EXPECT_NEAR(model->GetWorldPose().rot.z, targetPose.rot.z, 5e-2);
     }
   }
 }
