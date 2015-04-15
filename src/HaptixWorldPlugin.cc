@@ -52,7 +52,7 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
   this->timerPublisher->Fini();
   this->worldControlPub->Fini();
 
-  event::Events::DisconnectWorldUpdateEnd(this->worldUpdateConnection);
+  event::Events::DisconnectWorldUpdateBegin(this->worldUpdateConnection);
 
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_siminfo");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_camera_transform");
@@ -94,7 +94,7 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->pausePub = this->gzNode->Advertise<gazebo::msgs::Int>
                       ("~/motion_tracking/pause_request");
 
-  this->worldUpdateConnection = event::Events::ConnectWorldUpdateEnd(
+  this->worldUpdateConnection = event::Events::ConnectWorldUpdateBegin(
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
 
   // Advertise haptix sim services.
@@ -182,7 +182,7 @@ void HaptixWorldPlugin::OnWorldUpdate()
 {
   common::Time elapsed = this->world->GetSimTime() - this->lastSimUpdateTime;
   for (auto iter = this->effortDurations.begin();
-       iter != this->effortDurations.end(); ++iter)
+       iter != this->effortDurations.end();)
   {
     // Time elapsed since last update
     if (iter->timeRemaining < elapsed && !iter->persistent)
@@ -203,6 +203,8 @@ void HaptixWorldPlugin::OnWorldUpdate()
       {
         iter->link->AddTorque(iter->effort);
       }
+
+      ++iter;
     }
   }
 
@@ -348,24 +350,38 @@ void HaptixWorldPlugin::HaptixStateCallback(
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
   // TODO: more feedback from sim api review?
-  /*
+
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World was NULL" << std::endl;
     _result = false;
     return;
   }
 
-  physics::JointPtr joint = this->world->GetModel(_req.name())->
-      GetJoint(jointMsg.name());
-  if (!joint)
+  physics::ModelPtr model = this->world->GetModel(_req.name());
+
+  if (!model)
   {
+    gzerr << "Model was NULL: " << _req.name() << std::endl;
     _result = false;
     return;
   }
-  joint->SetPosition(0, jointMsg.pos());
-  joint->SetVelocity(0, jointMsg.vel());
-  joint->SetForce(0, jointMsg.torque_motor());*/
+
+  for (int i = 0; i < _req.joints_size(); i++)
+  {
+    physics::JointPtr joint = model->GetJoint(_req.joints(i).name());
+    if (!joint)
+    {
+      gzerr << "Joint was NULL: " << _req.joints(i).name() << std::endl;
+      _result = false;
+      return;
+    }
+
+    joint->SetPosition(0, _req.joints(i).pos());
+    joint->SetVelocity(0, _req.joints(i).vel());
+    gzdbg << "Gazebo got velocity of " <<_req.joints(i).name() << " as: " << joint->GetVelocity(0) << std::endl;
+  }
 
   _result = true;
 }
@@ -590,7 +606,7 @@ void HaptixWorldPlugin::HaptixForceCallback(
     return;
   }
 
-  if (fabs(duration < 1e-6))
+  if (fabs(duration) < 1e-6)
   {
     // 0 is impulse 
     link->AddLinkForce(force);
@@ -598,7 +614,7 @@ void HaptixWorldPlugin::HaptixForceCallback(
     return;
   }
 
-  effortDurations.push_back(EffortDuration(link, force, common::Time(duration),
+  this->effortDurations.push_back(EffortDuration(link, force, common::Time(duration),
       true, duration < 0));
 
   _result = true;
@@ -632,7 +648,7 @@ void HaptixWorldPlugin::HaptixTorqueCallback(
     return;
   }
 
-  if (fabs(duration < 1e-6))
+  if (fabs(duration) < 1e-6)
   {
     // 0 is impulse 
     link->AddTorque(torque);
@@ -880,7 +896,6 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
 }
 
 /////////////////////////////////////////////////
-
 bool HaptixWorldPlugin::ConvertTransform(
     const haptix::comm::msgs::hxTransform &_in, gazebo::math::Pose &_out)
 {
@@ -1032,6 +1047,10 @@ bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
 bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
     hxModel &_out)
 {
+  gzdbg << "Convert model to hxModel: " << _in.GetName() << std::endl;
+  delete _out.name;
+  _out.name = (char*) malloc(_in.GetName().length()+1);
+  memset(_out.name, 0, _in.GetName().length()+1);
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
   HaptixWorldPlugin::ConvertTransform(_in.GetWorldPose(), _out.transform);
@@ -1044,24 +1063,23 @@ bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
   int i = 0;
   for (auto link : _in.GetLinks())
   {
-    hxLink simLink;
-    ConvertLink(*link, simLink);
-    _out.links[i] = simLink;
+    ConvertLink(*link, _out.links[i]);
     i++;
 
     // Check gravity mode
     gravity |= link->GetGravityMode();
   }
+  _out.link_count = i;
 
   _out.gravity = gravity;
 
+  i = 0;
   for (auto joint : _in.GetJoints())
   {
-    hxJoint simJoint;
-    ConvertJoint(*joint, simJoint);
-    _out.joints[i] = simJoint;
+    ConvertJoint(*joint, _out.joints[i]);
     i++;
   }
+  _out.joint_count = i;
 
   return true;
 }
@@ -1091,6 +1109,9 @@ bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
 bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
     hxLink &_out)
 {
+  delete _out.name;
+  _out.name = (char*) malloc(_in.GetName().length()+1);
+  memset(_out.name, 0, _in.GetName().length()+1);
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
   ConvertTransform(_in.GetWorldPose(), _out.transform);
@@ -1123,7 +1144,11 @@ bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
 
 bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in, hxJoint &_out)
 {
+  delete _out.name;
+  _out.name = (char*) malloc(_in.GetName().length()+1);
+  memset(_out.name, 0, _in.GetName().length()+1);
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
   _out.pos = _in.GetAngle(0).Radian();
   _out.vel = _in.GetVelocity(0);
   _out.torque_passive = _in.GetForceTorque(0).body1Torque.GetLength();

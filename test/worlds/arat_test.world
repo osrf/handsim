@@ -321,6 +321,12 @@
     </include>
 
     <include>
+      <uri>model://drc_practice_hinged_door</uri>
+      <pose>-2 1 0 0 0 0</pose>
+      <name>door</name>
+    </include>
+
+    <include>
       <uri>model://wooden_case</uri>
       <pose>0 0.037 1.015 0 0 -1.570796</pose>
       <static>true</static>
