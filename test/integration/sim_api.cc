@@ -159,8 +159,6 @@ TEST_F(SimApiTest, HxsCameraTransform)
   EXPECT_FLOAT_EQ(cameraPose.rot.x, cameraOut.rot.x);
   EXPECT_FLOAT_EQ(cameraPose.rot.y, cameraOut.rot.y);
   EXPECT_FLOAT_EQ(cameraPose.rot.z, cameraOut.rot.z);
-
-  // Verify model locations TODO
 }
 
 TEST_F(SimApiTest, HxsSetCameraTransform)
@@ -510,22 +508,58 @@ TEST_F(SimApiTest, HxsReset)
 
   // Wait a little while for the world to initialize
   world->Step(20);
+  // Get everything's initial pose
+  std::map<std::string, math::Pose> initialPoses;
+  for (auto model : world->GetModels())
+  {
+    initialPoses[model->GetName()] = model->GetWorldPose();
+  }
+  // Move everything
+  for (auto model : world->GetModels())
+  {
+    math::Pose targetPose = initialPoses[model->GetName()];
+    targetPose.pos += math::Vector3(0.1, 0.2, 0.3);
+    model->SetWorldPose(targetPose);
+  }
+  world->Step(20);
 
   ASSERT_EQ(hxs_reset(0), hxOK);
+  world->Step(5);
+  for (auto model : world->GetModels())
+  {
+    if (model->GetName() != "mpl_haptix_right_forearm")
+    {
+      EXPECT_EQ(model->GetWorldPose(), initialPoses[model->GetName()]);
+    }
+    else
+    {
+      math::Pose targetPose = initialPoses[model->GetName()];
+      targetPose.pos += math::Vector3(0.1, 0.2, 0.3);
+      EXPECT_EQ(model->GetWorldPose(), targetPose);
+    }
+  }
 
-  // TODO Check that everything is in its initial state
-  // TODO move stuff
+  // Now move everything again
+  for (auto model : world->GetModels())
+  {
+    math::Pose targetPose = initialPoses[model->GetName()];
+    targetPose.pos += math::Vector3(0.1, 0.2, 0.3);
+    model->SetWorldPose(targetPose);
+  }
 
   ASSERT_EQ(hxs_reset(1), hxOK);
-
-  // TODO Check that the limb pose was also reset
+  world->Step(5);
+  // Expect that everything is in its initial state
+  for (auto model : world->GetModels())
+  {
+    EXPECT_EQ(model->GetWorldPose(), initialPoses[model->GetName()]);
+  }
 }
 
 TEST_F(SimApiTest, HxsResetTimer)
 {
   // TODO
 }
-
 
 TEST_F(SimApiTest, HxsStartTimer)
 {
