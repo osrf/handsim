@@ -6,7 +6,8 @@
 
   # Inertial parameters
   # Aluminum 2700 kg/m^3
-  density = 2700.0
+  # wood: 160 kg/m^3
+  density = 160.0
 
   # Constant parameters for each star 
   radius_outer0 = 0.06
