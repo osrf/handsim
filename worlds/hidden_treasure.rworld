@@ -7,7 +7,7 @@
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.7 1  0 0.7 1.57</pose>
+        <pose>0 -0.087 0.9  0 1.5 1.57</pose>
       </camera>
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <default_size>25 25</default_size>
@@ -68,7 +68,7 @@
       <ode>
         <solver>
           <type>quick</type>
-          <iters>100</iters>
+          <iters>70</iters>
           <precon_iters>0</precon_iters>
           <sor>1.000000</sor>
         </solver>
@@ -120,7 +120,7 @@
 
     <include>
      <uri>model://mpl_haptix_right_forearm</uri>
-     <pose>0.4 -0.7 0.5 0 0 3.1415</pose>
+     <pose>0.3 -0.7 0.4 0 0 3.1415</pose>
     </include>
 
     <!-- treasure!!! -->
@@ -129,9 +129,9 @@
       <uri>model://sandbox</uri>
     </include>
 
-    <% box_x = 1.5
-       box_y = 1.0
-       box_z = 0.3
+    <% box_x = 1.0
+       box_y = 0.75
+       box_z = 0.2
        wall_dim = 0.075
        radius = 0.0375
        clearance = 0.001
@@ -170,6 +170,7 @@
                   <radius><%= radius %></radius>
                 </sphere>
               </geometry>
+              <max_contacts>3</max_contacts>
             </collision>
 
             <visual name="visual">
