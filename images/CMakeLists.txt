@@ -1,4 +1,4 @@
-set (files 
+set (files
      grasp_1.jpg
      grasp_3.jpg
      grasp_2.jpg
@@ -13,6 +13,7 @@ set (files
      hand_right.svg
      pinch_1.jpg
      pinch_2.jpg
+     settings.png
 )
 
 install(FILES ${files} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/gazebo-${GAZEBO_VERSION}/media/gui/arat/arat_icons)
