@@ -18,6 +18,95 @@
         <color_min>255 227 32 255</color_min>
         <hand_side>right</hand_side>
         <timer_topic>~/timer_control</timer_topic> 
+        <contacts>
+          <contact name="mpl::rPalm0">
+            <pos>150 200</pos>
+            <index>0</index>
+            <size>50 100</size>
+          </contact>
+          <contact name="mpl::rPalm1">
+            <index>1</index>
+            <size>50 100</size>
+            <pos>85 200</pos>
+          </contact>
+
+          <contact name="mpl::rHandEdge">
+            <pos>10 235</pos>
+            <index>2</index>
+            <size>40 70</size>
+          </contact>
+          <contact name="mpl::rHandTop">
+            <pos>299 55</pos>
+            <index>3</index>
+            <size>25 31</size>
+          </contact>
+
+          <contact name="mpl::rThProximal1">
+            <pos>245 240</pos>
+            <index>4</index>
+          </contact>
+          <contact name="mpl::rThProximal2">
+            <pos>275 195</pos>
+            <index>5</index>
+          </contact>
+          <contact name="mpl::rThDistal">
+            <pos>302 130</pos>
+            <index>6</index>
+          </contact>
+
+          <contact name="mpl::rIndProximal">
+            <pos>218 116</pos>
+            <index>7</index>
+          </contact>
+          <contact name="mpl::rIndMedial">
+            <pos>233 43</pos>
+            <index>8</index>
+          </contact>
+          <contact name="mpl::rIndDistal">
+            <pos>248 -30</pos>
+            <index>9</index>
+          </contact>
+
+          <contact name="mpl::rMidProximal">
+            <pos>152 98</pos>
+            <index>10</index>
+          </contact>
+          <contact name="mpl::rMidMedial">
+            <pos>155 19</pos>
+            <index>11</index>
+          </contact>
+          <contact name="mpl::rMidDistal">
+            <pos>153 -60</pos>
+            <index>12</index>
+          </contact>
+
+          <contact name="mpl::rRingProximal">
+            <pos>84 101</pos>
+            <index>13</index>
+          </contact>
+          <contact name="mpl::rRingMedial">
+            <pos>74 41</pos>
+            <index>14</index>
+          </contact>
+          <contact name="mpl::rRingDistal">
+            <pos>64 -19</pos>
+            <index>15</index>
+          </contact>
+
+          <contact name="mpl::rLittleProximal">
+            <pos>35 156</pos>
+            <index>16</index>
+          </contact>
+          <contact name="mpl::rLittleMedial">
+            <pos>14 105</pos>
+            <index>17</index>
+          </contact>
+          <contact name="mpl::rLittleDistal">
+            <pos>-7 54</pos>
+            <index>18</index>
+          </contact>
+
+        </contacts>
 
         <arm_keys>
           <arm inc_key="w" dec_key="s" index="0" increment=0.025></arm>
