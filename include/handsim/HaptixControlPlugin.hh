@@ -17,15 +17,25 @@
 #ifndef _HANDSIM_HAPTIX_CONTROL_PLUGIN_HH_
 #define _HANDSIM_HAPTIX_CONTROL_PLUGIN_HH_
 
+#include <math.h>
+#include <handsim/polhemus_driver.h>
+
+#include <haptix/comm/haptix.h>
+
+#include <haptix/comm/msg/hxCommand.pb.h>
+#include <haptix/comm/msg/hxRobot.pb.h>
+#include <haptix/comm/msg/hxSensor.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
+#include <ignition/transport.hh>
+
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <string>
 #include <map>
 #include <memory>
 #include <thread>
 #include <vector>
-#include <math.h>
-
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
@@ -37,18 +47,10 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/PID.hh>
 
-#include <haptix/comm/haptix.h>
-#include <haptix/comm/msg/hxCommand.pb.h>
-#include <haptix/comm/msg/hxRobot.pb.h>
-#include <haptix/comm/msg/hxSensor.pb.h>
-#include <haptix/comm/msg/hxGrasp.pb.h>
-#include <ignition/transport.hh>
-
-#include "polhemus_driver.h"
-#include "Optitrack.hh"
-#include "MotorInfo.hh"
-#include "WrenchHelper.hh"
-#include "JointHelper.hh"
+#include <handsim/Optitrack.hh>
+#include <handsim/MotorInfo.hh>
+#include <handsim/WrenchHelper.hh>
+#include <handsim/JointHelper.hh>
 
 namespace gazebo
 {
@@ -523,7 +525,7 @@ namespace gazebo
     private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
 
     /// \brief hardcoded offset between controlled position of the link and
-    /// arm sensor 
+    /// arm sensor
     private: gazebo::math::Pose elbowArm;
 
     /// \brief same as elbowArm but with orientation corrected by screen

@@ -15,11 +15,11 @@
  *
 */
 
+#include <cassert>
 #include <gazebo/gui/KeyEventHandler.hh>
 
 #include "handsim/HaptixControlPlugin.hh"
 
-#include <cassert>
 
 namespace gazebo
 {
@@ -84,8 +84,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->viewpointJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
-  this->pausePub =
-    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_response");
+  this->pausePub = this->gazeboNode->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_response");
 
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
@@ -592,7 +591,7 @@ void HaptixControlPlugin::LoadHandControl()
 
   // Get predefined grasp poses
   sdf::ElementPtr grasp = this->sdf->GetElement("grasp");
-  while(grasp)
+  while (grasp)
   {
     std::string name;
     grasp->GetAttribute("name")->Get(name);
@@ -601,7 +600,7 @@ void HaptixControlPlugin::LoadHandControl()
     std::istringstream iss(graspBuffer);
     std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
                                     std::istream_iterator<std::string>{}};
-    for(unsigned int i = 0; i < tokens.size(); i++)
+    for (unsigned int i = 0; i < tokens.size(); i++)
       this->grasps[name].push_back(stof(tokens[i]));
     grasp = grasp->GetNextElement("grasp");
   }
@@ -1011,7 +1010,7 @@ void HaptixControlPlugin::GetHandControlFromClient()
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
   // command all joints
-  for(unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
     // get joint positions and velocities
     double position = this->haptixJoints[i]->GetAngle(0).Radian();
@@ -1418,14 +1417,14 @@ void HaptixControlPlugin::HaptixGraspCallback(
   _rep.set_gain_pos_enabled(this->robotCommand.gain_pos_enabled());
   _rep.set_gain_vel_enabled(this->robotCommand.gain_vel_enabled());
 
-  for (int i=0; i < _req.grasps_size(); ++i)
+  for (int i = 0; i < _req.grasps_size(); ++i)
   {
     std::string name = _req.grasps(i).grasp_name();
     std::map<std::string, std::vector<float> >::const_iterator g =
       this->grasps.find(name);
     if (g != this->grasps.end())
     {
-      for (unsigned int j=0;
+      for (unsigned int j = 0;
           j < g->second.size() && j < this->graspPositions.size(); ++j)
       {
         float value = _req.grasps(i).grasp_value();
@@ -1631,16 +1630,16 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
       originPointId = i;
     }
   }
-  
+
   int shortPointId = i2;
   int longPointId = i1;
-  if ((points[originPointId]-points[i1]).GetLength() <
-      (points[originPointId]-points[i2]).GetLength())
+  if ((points[originPointId]-points[longPointId]).GetLength() <
+      (points[originPointId]-points[shortPointId]).GetLength())
   {
     shortPointId = i1;
     longPointId = i2;
   }
-  
+
   // X is the longer vector, z is the shorter one
   // X points to the right of the screen, Z points up
   // Y points in
@@ -1683,7 +1682,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
     gzerr << "Trace of rotation matrix was invalid!" << std::endl;
     return;
   }
-  double qw = sqrt(1 + G[0][0] + G[1][1] + G[2][2] )/2;
+  double qw = sqrt(1 + G[0][0] + G[1][1] + G[2][2])/2;
   GZ_ASSERT(qw > 1e-12, "stop before division by 0");
   double qx = (G[2][1] - G[1][2])/(4*qw);
   double qy = (G[0][2] - G[2][0])/(4*qw);
