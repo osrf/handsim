@@ -11,11 +11,11 @@
       <link name="upper_disk">
           <pose>0 0 0.005  0 0 0</pose>
         <inertial>
-          <mass>0.01696460032938488</mass>
+          <mass>0.03392920065876976</mass>
           <inertia>
-            <ixx>9.938428359631308e-05</ixx>
-            <iyy>9.938428359631308e-05</iyy>
-            <izz>0.0001984858238538031</izz>
+            <ixx>0.00019876856719262616</ixx>
+            <iyy>0.00019876856719262616</iyy>
+            <izz>0.0003969716477076062</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -318,11 +318,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.015 0 0 0 </pose>
         <inertial>
-          <mass>0.006361725123519332</mass>
+          <mass>0.012723450247038665</mass>
           <inertia>
-            <ixx>7.634070148223197e-06</ixx>
-            <iyy>7.634070148223197e-06</iyy>
-            <izz>1.4313881527918497e-05</izz>
+            <ixx>1.5268140296446393e-05</ixx>
+            <iyy>1.5268140296446393e-05</iyy>
+            <izz>2.8627763055836994e-05</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -442,11 +442,11 @@
       <link name="upper_disk">
           <pose>0 0 0.005  0 0 0</pose>
         <inertial>
-          <mass>0.012566370614359173</mass>
+          <mass>0.025132741228718346</mass>
           <inertia>
-            <ixx>5.602506898901799e-05</ixx>
-            <iyy>5.602506898901799e-05</iyy>
-            <izz>0.00011184069846779666</izz>
+            <ixx>0.00011205013797803598</ixx>
+            <iyy>0.00011205013797803598</iyy>
+            <izz>0.00022368139693559332</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -739,11 +739,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.015 0 0 0 </pose>
         <inertial>
-          <mass>0.006361725123519332</mass>
+          <mass>0.012723450247038665</mass>
           <inertia>
-            <ixx>7.634070148223197e-06</ixx>
-            <iyy>7.634070148223197e-06</iyy>
-            <izz>1.4313881527918497e-05</izz>
+            <ixx>1.5268140296446393e-05</ixx>
+            <iyy>1.5268140296446393e-05</iyy>
+            <izz>2.8627763055836994e-05</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -853,14 +853,14 @@
     <model name="peg1">
       <static>true</static>
       <link name="link">
-          <pose> 0 0 1.025 0 0 0</pose>
+          <pose> 0 0 1.1 0 0 0</pose>
         <self_collide>0</self_collide>
         <visual name="vis_peg">
           <pose>0 0 0 0 0 0</pose>
           <geometry>
             <cylinder>
                 <radius>0.01</radius>
-              <length>0.25</length>
+              <length>0.4</length>
             </cylinder>
           </geometry>
           <material>
@@ -875,7 +875,7 @@
           <geometry>
             <cylinder>
               <radius>0.01</radius>
-              <length>0.25</length>
+              <length>0.4</length>
             </cylinder>
           </geometry>
           <surface>
@@ -895,14 +895,14 @@
     <model name="peg2">
       <static>true</static>
       <link name="link">
-          <pose>0.5 0 1.025 0 0 0</pose>
+          <pose>0.5 0 1.1 0 0 0</pose>
         <self_collide>0</self_collide>
         <visual name="vis_peg2">
           <pose>0.0 0.0 0 0 0 0</pose>
           <geometry>
             <cylinder>
               <radius>0.01</radius>
-              <length>0.25</length>
+              <length>0.4</length>
             </cylinder>
           </geometry>
           <material>
@@ -917,7 +917,7 @@
           <geometry>
             <cylinder>
               <radius>0.01</radius>
-              <length>0.25</length>
+              <length>0.4</length>
             </cylinder>
           </geometry>
           <surface>
@@ -944,7 +944,7 @@
           <geometry>
             <cylinder>
               <radius>0.01</radius>
-              <length>0.25</length>
+              <length>0.4</length>
             </cylinder>
           </geometry>
           <material>
@@ -959,7 +959,7 @@
           <geometry>
             <cylinder>
               <radius>0.01</radius>
-              <length>0.25</length>
+              <length>0.4</length>
             </cylinder>
           </geometry>
           <surface>
@@ -979,6 +979,12 @@
     <include>
       <uri>model://table</uri>
       <pose>0.45 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://camera</uri>
+      <pose>0 -0.6 1.3  0 0.0 1.57</pose>
+      <static>true</static>
     </include>
 
     <gui>
@@ -1237,6 +1243,8 @@
       <pivot>0.04 0 0</pivot>
       <grab>0.12 0 0</grab>
     </plugin>
+
+    
 
   </world>
 </sdf>

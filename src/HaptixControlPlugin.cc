@@ -931,7 +931,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   {
     haptix::comm::msgs::hxGrasp graspTmp;
     haptix::comm::msgs::hxGrasp::hxGraspValue* gv = graspTmp.add_grasps();
-    gv->set_grasp_name("Spherical");
+    gv->set_grasp_name("FinePinch(British)");
     gv->set_grasp_value(1.4-dist*10);
     haptix::comm::msgs::hxCommand resp;
     bool result;
