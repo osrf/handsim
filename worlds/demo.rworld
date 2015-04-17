@@ -1,0 +1,679 @@
+<?xml version="1.0" ?>
+
+<%
+  distance_offset = 45
+%>
+
+<!--begin stars -->
+<%
+  # Inertial parameters
+  # Aluminum 2700 kg/m^3
+  density = 2700.0
+
+  # Constant parameters for each star 
+  radius_outer0 = 0.06
+  star_ratio = 0.55
+  height = 0.02
+  star_number = 6
+  star_point_number = 5
+  # the radius of the hole, shared by the disk and lowr separation part
+  radius_hole = 0.02
+  # the outer radius of lower separation part
+  # radius_lower = 0.04
+  points_hole = 10
+  height_hole = 0.025
+  color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
+
+  z_offset = 0.9  
+%>
+
+<sdf version="1.5">
+  <world name="default">
+
+<%
+  star_number.times do |j|
+    #radius_outer = radius_outer0*(star_number - j)
+    radius_outer = radius_outer0*(1.2**(star_number-j))
+    radius_inner = star_ratio*radius_outer
+    # the outer radius of the lower sepeartion part
+    radius_lower = 0.85*(star_ratio * radius_outer0 * (1.2**(star_number-j+1)))
+
+    # offset between each star
+    angle0 = (j+1)*Math::PI/12.0;
+
+    # approximate the inertia for star 
+    volume = Math::PI * (radius_outer**2 - radius_inner**2) * height
+    mass = density * volume
+    ixx = 1.0 / 12 * mass * (3*(radius_inner**2 + radius_outer**2) + height**2)
+    iyy = ixx
+    izz = 0.5 * mass * (radius_inner**2 + radius_outer**2)
+
+    # the inertia for the separation lower part
+    volume_low = Math::PI * (radius_lower**2 - radius_hole**2) * height_hole
+    mass_low = density * volume_low
+    ixx_low = 1.0 / 12 * mass_low * (3*(radius_hole**2 + radius_lower**2) + height_hole**2)
+    iyy_low = ixx_low
+    izz_low = 0.5 * mass_low * (radius_hole**2 + radius_lower**2)
+
+    def star_points_s(outer_radius, inner_radius, angle0, points=5)
+      polyline = []
+      points.times do |i|
+        inner_angle = 2*Math::PI * i / points.to_f + angle0;
+        # outer_angle(i) = (inner_angle(i) + inner_angle(i+1)) / 2.0
+        outer_angle = Math::PI * (2*i+1) / points.to_f + angle0;
+        polyline << [inner_radius*Math.cos(inner_angle), inner_radius*Math.sin(inner_angle)]
+        polyline << [outer_radius*Math.cos(outer_angle), outer_radius*Math.sin(outer_angle)]
+      end
+      polyline << [inner_radius*Math.cos(angle0), inner_radius*Math.sin(angle0)]
+      
+      points_s = ""
+      polyline.each do |p| 
+        points_s += "<point>" \
+                 + p[0].to_s + " " + p[1].to_s \
+                 + "</point>\n"
+      end
+      points_s 
+    end
+
+    def hole_points_s(hole_radius, hole_points=10)
+      polyline = []
+      hole_points.times do |i|
+        angle = 2*Math::PI * i / hole_points.to_f;
+        polyline << [hole_radius*Math.cos(angle), hole_radius*Math.sin(angle)]
+      end
+      
+      points_s = ""
+      polyline.each do |p| 
+        points_s += "<point>" \
+                 + p[0].to_s + " " + p[1].to_s \
+                 + "</point>\n"
+      end
+      points_s 
+    end
+
+    geometry_s = "<geometry>\n"  \
+               + "<polyline>\n"  \
+               + star_points_s(radius_outer, radius_inner, angle0, star_point_number) \
+               + "<height>" + height.to_s + "</height>\n"  \
+               + "</polyline>\n" \
+               + "<polyline>\n"  \
+               + hole_points_s(radius_hole, points_hole) \
+               + "<height>" + height.to_s + "</height>\n"  \
+               + "</polyline>\n" \
+               + "</geometry>\n"
+
+    geometry_s_l = "<geometry>\n"  \
+                 + "<polyline>\n"  \
+                 + hole_points_s(radius_lower, 20) \
+                 + "<height>" + height_hole.to_s + "</height>\n"  \
+                 + "</polyline>\n" \
+                 + "<polyline>\n"  \
+                 + hole_points_s(radius_hole, 10) \
+                 + "<height>" + height_hole.to_s + "</height>\n"  \
+                 + "</polyline>\n" \
+                 + "</geometry>\n"
+%>
+    <%= '<model name="star_' + radius_outer.to_s + '">' %>
+      <pose><%= distance_offset%> 0 <%= 0.1 + (height+height_hole + 0.02)*j + height_hole + z_offset%>  0 0 0</pose>
+      <link name="upper_disk">
+          <pose>0 0 <%= height/2.0 %>  0 0 0</pose>
+        <inertial>
+          <mass><%= mass %></mass>
+          <inertia>
+            <ixx><%= ixx %></ixx>
+            <iyy><%= iyy %></iyy>
+            <izz><%= izz %></izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <%= geometry_s %>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <%= geometry_s %>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <%= '<name>Gazebo/' + color[j%star_number].to_s + '</name>'%>
+            </script>
+          </material>
+        </visual>
+      </link>
+
+      <link name="lower_gap">
+          <pose>0 0 <%= -height_hole/2.0 %> </pose>
+        <inertial>
+          <mass><%= mass_low %></mass>
+          <inertia>
+            <ixx><%= ixx_low %></ixx>
+            <iyy><%= iyy_low %></iyy>
+            <izz><%= izz_low %></izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision">
+          <%= geometry_s_l %>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <%= geometry_s_l %>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <%= '<name>Gazebo/' + color[j%star_number].to_s + '</name>'%>
+            </script>
+          </material>
+        </visual>
+      </link>
+      <joint name="hanoi_joint" type="revolute">
+          <pose> 0 0 0 </pose>
+          <child>lower_gap</child>
+          <parent>upper_disk</parent>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <upper>0</upper>
+              <lower>0</lower>
+            </limit>
+          </axis>
+      </joint>
+    </model>
+<%
+    end
+%>
+    <model name="peg1">
+      <static>true</static>
+      <link name="link">
+        <pose> <%= distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
+        <self_collide>0</self_collide>
+        <visual name="vis_peg">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+           </script>
+          </material>
+        </visual>
+        <collision name="col_peg">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+    </model>
+
+    <model name="peg2">
+      <static>true</static>
+      <link name="link">
+        <pose><%= 0.5+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
+        <self_collide>0</self_collide>
+        <visual name="vis_peg2">
+          <pose>0.0 0.0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+           </script>
+          </material>
+        </visual>
+        <collision name="col_peg2">
+          <pose>0.0 0.0 0.0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+    </model>
+
+    <model name="peg3">
+      <static>true</static>
+      <link name="link">
+        <pose><%= 1.0+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
+        <self_collide>0</self_collide>
+        <visual name="vis_peg3">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+           </script>
+          </material>
+        </visual>
+        <collision name="col_peg3">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.6</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+    </model>
+    <!-- end stars-->
+
+    <include>
+      <uri>model://table</uri>
+      <pose><%= 0.45+distance_offset%> 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://wood_block_stack</uri>
+      <pose><%=distance_offset %> 0 0 0 0 0</pose>
+    </include>
+
+    <gui>
+      <camera name="user_camera">
+        <pose>0 -0.6 1.3  0 0.4 1.57</pose>
+      </camera>
+
+      <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
+        <default_size>25 25</default_size>
+        <force_min>0.001</force_min>
+        <force_max>20</force_max>
+        <color_no_contact>255 255 255 0</color_no_contact>
+        <color_max>255 0 0 255</color_max>
+        <color_min>255 227 32 255</color_min>
+        <hand_side>right</hand_side>
+
+        <contacts>
+          <contact name="mpl::rPalm0">
+            <pos>150 200</pos>
+            <index>0</index>
+            <size>50 100</size>
+          </contact>
+          <contact name="mpl::rPalm1">
+            <index>1</index>
+            <size>50 100</size>
+            <pos>85 200</pos>
+          </contact>
+
+          <contact name="mpl::rHandEdge">
+            <pos>10 235</pos>
+            <index>2</index>
+            <size>40 70</size>
+          </contact>
+          <contact name="mpl::rHandTop">
+            <pos>299 55</pos>
+            <index>3</index>
+            <size>25 31</size>
+          </contact>
+
+          <contact name="mpl::rThProximal1">
+            <pos>245 240</pos>
+            <index>4</index>
+          </contact>
+          <contact name="mpl::rThProximal2">
+            <pos>275 195</pos>
+            <index>5</index>
+          </contact>
+          <contact name="mpl::rThDistal">
+            <pos>302 130</pos>
+            <index>6</index>
+          </contact>
+
+          <contact name="mpl::rIndProximal">
+            <pos>218 116</pos>
+            <index>7</index>
+          </contact>
+          <contact name="mpl::rIndMedial">
+            <pos>233 43</pos>
+            <index>8</index>
+          </contact>
+          <contact name="mpl::rIndDistal">
+            <pos>248 -30</pos>
+            <index>9</index>
+          </contact>
+
+          <contact name="mpl::rMidProximal">
+            <pos>152 98</pos>
+            <index>10</index>
+          </contact>
+          <contact name="mpl::rMidMedial">
+            <pos>155 19</pos>
+            <index>11</index>
+          </contact>
+          <contact name="mpl::rMidDistal">
+            <pos>153 -60</pos>
+            <index>12</index>
+          </contact>
+
+          <contact name="mpl::rRingProximal">
+            <pos>84 101</pos>
+            <index>13</index>
+          </contact>
+          <contact name="mpl::rRingMedial">
+            <pos>74 41</pos>
+            <index>14</index>
+          </contact>
+          <contact name="mpl::rRingDistal">
+            <pos>64 -19</pos>
+            <index>15</index>
+          </contact>
+
+          <contact name="mpl::rLittleProximal">
+            <pos>35 156</pos>
+            <index>16</index>
+          </contact>
+          <contact name="mpl::rLittleMedial">
+            <pos>14 105</pos>
+            <index>17</index>
+          </contact>
+          <contact name="mpl::rLittleDistal">
+            <pos>-7 54</pos>
+            <index>18</index>
+          </contact>
+        </contacts>
+
+        <task_group name="DRC Demo Games">
+          <task id="hanoi" name="Towers of Hanoi">
+            <enabled>1</enabled>
+            <icon>file://media/gui/arat/arat_icons/grasp_1.jpg</icon>
+            <instructions>
+              Solve the classic Towers of Hanoi game.
+            </instructions>
+          </task>
+
+          <task id="treasure" name="Hidden Treasure">
+            <enabled>1</enabled>
+            <initial>1</initial>
+            <icon>file://media/gui/arat/arat_icons/grasp_2.jpg</icon>
+            <instructions>
+              Dig for treasure hidden in a sandbox of junk.
+            </instructions>
+          </task>
+
+          <task id="jenga" name="Jenga">
+            <enabled>1</enabled>
+            <icon>file://media/gui/arat/arat_icons/grasp_3.jpg</icon>
+            <instructions>
+              Try stacking the Jenga blocks... or watch the tower topple!
+            </instructions>
+          </task>
+        </task_group>
+
+        <arm_keys>
+	  <!-- Indices 0-5 are: tx, ty, tz, rx, ry, rz -->
+          <arm inc_key="w" dec_key="s" index="0" increment=0.025></arm>
+          <arm inc_key="a" dec_key="d" index="1" increment=0.025></arm>
+          <arm inc_key="q" dec_key="e" index="2" increment=0.025></arm>
+          <arm inc_key="W" dec_key="S" index="3" increment=0.025></arm>
+          <arm inc_key="A" dec_key="D" index="4" increment=0.025></arm>
+          <arm inc_key="Q" dec_key="E" index="5" increment=0.025></arm>
+        </arm_keys>
+
+        <motor_keys>
+          <motor inc_key="z" dec_key="Z" index=0 increment=0.05></motor>
+          <motor inc_key="x" dec_key="X" index=1 increment=0.05></motor>
+          <motor inc_key="c" dec_key="C" index=2 increment=0.05></motor>
+          <motor inc_key="1" dec_key="!" index=3 increment=0.05></motor>
+          <motor inc_key="2" dec_key="@" index=4 increment=0.05></motor>
+          <motor inc_key="3" dec_key="#" index=5 increment=0.05></motor>
+          <motor inc_key="4" dec_key="$" index=6 increment=0.05></motor>
+          <motor inc_key="5" dec_key="%" index=7 increment=0.05></motor>
+          <motor inc_key="6" dec_key="^" index=8 increment=0.05></motor>
+	  <!-- I'm having trouble parsing "&" and "&amp;", so I'll just use
+	       "amp" and handle it in the code. -->
+          <motor inc_key="7" dec_key="amp" index=9 increment=0.05></motor>
+          <motor inc_key="8" dec_key="*" index=10 increment=0.05></motor>
+          <motor inc_key="9" dec_key="(" index=11 increment=0.05></motor>
+          <motor inc_key="0" dec_key=")" index=12 increment=0.05></motor>
+        </motor_keys>
+
+        <grasp_keys>
+          <grasp inc_key="1" dec_key="!" name="Spherical" increment="0.015"></grasp>
+          <grasp inc_key="2" dec_key="@" name="Cylindrical" increment="0.015"></grasp>
+          <grasp inc_key="3" dec_key="#" name="FinePinch(British)" increment="0.015"></grasp>
+          <grasp inc_key="4" dec_key="$" name="FinePinch(American)" increment="0.015"></grasp>
+          <grasp inc_key="5" dec_key="%" name="ThreeFingerPinch" increment="0.015"></grasp>
+          <grasp inc_key="6" dec_key="^" name="Palmar(Tray)" increment="0.015"></grasp>
+          <grasp inc_key="7" dec_key="amp" name="Hook" increment="0.015"></grasp>
+        </grasp_keys>
+
+      </plugin>
+
+    </gui>
+
+   <physics type="ode">
+      <gravity>0.000000 0.000000 -9.810000</gravity>
+      <ode>
+        <solver>
+          <type>quick</type>
+          <iters>100</iters>
+          <precon_iters>0</precon_iters>
+          <sor>1.000000</sor>
+        </solver>
+        <constraints>
+          <cfm>0.000000</cfm>
+          <erp>0.200000</erp>
+          <contact_max_correcting_vel>0.000000</contact_max_correcting_vel>
+          <contact_surface_layer>0.00000</contact_surface_layer>
+        </constraints>
+      </ode>
+      <bullet>
+        <solver>
+          <type>sequential_impulse</type>
+          <iters>100</iters>
+          <sor>1.000000</sor>
+        </solver>
+        <constraints>
+          <cfm>0.000000</cfm>
+          <erp>0.200000</erp>
+          <split_impulse>true</split_impulse>
+          <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+          <contact_surface_layer>0.01000</contact_surface_layer>
+        </constraints>
+      </bullet>
+      <simbody>
+        <accuracy>0.001</accuracy>
+        <max_transient_velocity>0.01</max_transient_velocity>
+        <contact>
+          <stiffness>1e8</stiffness>
+          <dissipation>10</dissipation>
+          <static_friction>0.15</static_friction>
+          <dynamic_friction>0.1</dynamic_friction>
+          <viscous_friction>0.0</viscous_friction>
+        </contact>
+      </simbody>
+      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.001000</max_step_size>
+    </physics>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- The apl_description model is not (yet) publicly available. -->
+    <include>
+     <uri>model://mpl_haptix_right_forearm</uri>
+     <pose>0.4 -0.9 1.2 0 0 3.1416</pose>
+    </include>
+
+    <model name="polhemus_source">
+      <pose>-.5 260 1.3 0 3.1416 1.57</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>0.05 0.05 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+
+    <model name="camera">
+      <static>true</static>
+      <pose>0 -1 1.3 0 0.4 3.14159</pose>
+      <link name="link">
+        <visual name="visual">
+          <geometry>
+            <box>
+              <size>1e-6 1e-6 1e-6</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+    </model>
+
+
+    <plugin name="arrange_polhemus" filename="libArrangePlugin.so">
+      <topic_name>~/arrange_polhemus</topic_name>
+      <model_name>polhemus_source</model_name>
+
+      <initial_arrangement>no_polhemus</initial_arrangement>
+      <arrangement name="no_polhemus">
+        <pose model="polhemus_source">-.5 260 1.3 0 3.1416 1.57</pose>
+      </arrangement>
+      <arrangement name="have_polhemus">
+        <pose model="polhemus_source">-.5 0 1.3 0 3.1416 1.57</pose>
+      </arrangement>
+    </plugin>
+
+    <plugin name="hydra" filename="libHydraPlugin.so">
+      <pivot>0.04 0 0</pivot>
+      <grab>0.12 0 0</grab>
+    </plugin>
+
+    <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
+      <size>155 80</size>
+      <start_stop_button>1</start_stop_button>
+      <topic>~/timer_control</topic>
+    </plugin>
+
+    <plugin name="arrange_plugin" filename="libArrangePlugin.so">
+      <topic_name>~/arrange</topic_name>
+
+      <model_name>camera</model_name>
+
+      <!-- TODO generate list of model names using ERB and print them out -->
+      <!-- do the same with initial positions? -->
+      <!-- Hanoi -->
+      <model_name>peg1</model_name>
+      <model_name>peg2</model_name>
+      <model_name>peg3</model_name>
+      <model_name>table</model_name>
+
+      <!-- Hidden treasure -->
+      <model_name>sandbox</model_name>
+
+      <!-- Jenga -->
+      <model_name>wood_block_stack</model_name>
+
+      <initial_arrangement>hidden_treasure</initial_arrangement>
+
+      <arrangement name="hanoi">
+        <pose model="camera">0 -1 1.3 0 0.4 3.14159</pose>
+        <pose model="table">0.45 0 0 </pose>
+        <pose model="peg1">0 0 <%= 0.5+z_offset%> </pose>
+        <pose model="peg2">0.5 0 <%= 0.5+z_offset%></pose>
+        <pose model="peg3">1.0 0 <%= 0.5+z_offset%></pose>
+        <!-- TODO: Stars -->
+      </arrangement>
+
+      <arrangement name="hidden_treasure">
+        <pose model="camera">0 -0.087 0.9 0 1.5 3.14159</pose>
+        <!-- TODO -->
+      </arrangement>
+
+      <arrangement name="jenga">
+        <pose model="camera">0 -0.6 1.3 0 0.4 3.14159</pose>
+        <pose model="table">0 0 0</pose>
+        <pose model="wood_block_stack">0 0 1.0</pose>
+      </arrangement>
+    </plugin>
+
+  </world>
+</sdf>
