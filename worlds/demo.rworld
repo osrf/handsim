@@ -1,11 +1,13 @@
 <?xml version="1.0" ?>
 
 <%
-  distance_offset = 45
+  distance_offset = 100
 %>
 
 <!--begin stars -->
 <%
+  star_names = Array.new
+
   # Inertial parameters
   # Aluminum 2700 kg/m^3
   density = 2700.0
@@ -113,6 +115,7 @@
                  + "</polyline>\n" \
                  + "</geometry>\n"
 %>
+    <% star_names.push("star_" + radius_outer.to_s ) %>
     <%= '<model name="star_' + radius_outer.to_s + '">' %>
       <pose><%= distance_offset%> 0 <%= 0.1 + (height+height_hole + 0.02)*j + height_hole + z_offset%>  0 0 0</pose>
       <link name="upper_disk">
@@ -205,9 +208,9 @@
     end
 %>
     <model name="peg1">
-      <static>true</static>
-      <link name="link">
-        <pose> <%= distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
+      <pose> <%= distance_offset%> 1 <%= 0.4+z_offset %> 0 0 0</pose>
+      <!--<static>true</static>-->
+      <link name="link_peg">
         <self_collide>0</self_collide>
         <visual name="vis_peg">
           <pose>0 0 0 0 0 0</pose>
@@ -247,9 +250,9 @@
     </model>
 
     <model name="peg2">
+      <pose><%= 0.5+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <pose><%= 0.5+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
         <self_collide>0</self_collide>
         <visual name="vis_peg2">
           <pose>0.0 0.0 0 0 0 0</pose>
@@ -289,9 +292,9 @@
     </model>
 
     <model name="peg3">
+      <pose><%= 1.0+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
       <static>true</static>
       <link name="link">
-        <pose><%= 1.0+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
         <self_collide>0</self_collide>
         <visual name="vis_peg3">
           <pose>0 0 0 0 0 0</pose>
@@ -331,10 +334,10 @@
     </model>
     <!-- end stars-->
 
-    <include>
+    <!--<include>
       <uri>model://table</uri>
-      <pose><%= 0.45+distance_offset%> 0 0 0 0 0</pose>
-    </include>
+      <pose>0 0 0 0 0 0</pose>
+    </include>-->
 
     <include>
       <uri>model://wood_block_stack</uri>
@@ -345,6 +348,12 @@
       <camera name="user_camera">
         <pose>0 -0.6 1.3  0 0.4 1.57</pose>
       </camera>
+
+      <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
+        <size>155 80</size>
+        <start_stop_button>1</start_stop_button>
+        <topic>~/timer_control</topic>
+      </plugin>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <default_size>25 25</default_size>
@@ -449,7 +458,7 @@
             <enabled>1</enabled>
             <icon>file://media/gui/arat/arat_icons/grasp_1.jpg</icon>
             <instructions>
-              Solve the classic Towers of Hanoi game.
+              Solve the classic Towers of Hanoi puzzle.
             </instructions>
           </task>
 
@@ -608,6 +617,10 @@
       </link>
     </model>
 
+    <include>
+      <uri>model://tinybot</uri>
+      <pose><%= distance_offset %> 2 0 0 0 0 </pose>
+    </include>
 
     <plugin name="arrange_polhemus" filename="libArrangePlugin.so">
       <topic_name>~/arrange_polhemus</topic_name>
@@ -627,16 +640,10 @@
       <grab>0.12 0 0</grab>
     </plugin>
 
-    <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
-      <size>155 80</size>
-      <start_stop_button>1</start_stop_button>
-      <topic>~/timer_control</topic>
-    </plugin>
-
     <plugin name="arrange_plugin" filename="libArrangePlugin.so">
       <topic_name>~/arrange</topic_name>
 
-      <model_name>camera</model_name>
+      <!--<model_name>camera</model_name>-->
 
       <!-- TODO generate list of model names using ERB and print them out -->
       <!-- do the same with initial positions? -->
@@ -644,35 +651,29 @@
       <model_name>peg1</model_name>
       <model_name>peg2</model_name>
       <model_name>peg3</model_name>
-      <model_name>table</model_name>
 
       <!-- Hidden treasure -->
-      <model_name>sandbox</model_name>
+      <model_name>tinybot</model_name>
 
       <!-- Jenga -->
       <model_name>wood_block_stack</model_name>
 
-      <initial_arrangement>hidden_treasure</initial_arrangement>
+      <initial_arrangement>treasure</initial_arrangement>
 
       <arrangement name="hanoi">
-        <pose model="camera">0 -1 1.3 0 0.4 3.14159</pose>
-        <pose model="table">0.45 0 0 </pose>
-        <pose model="peg1">0 0 <%= 0.5+z_offset%> </pose>
-        <pose model="peg2">0.5 0 <%= 0.5+z_offset%></pose>
-        <pose model="peg3">1.0 0 <%= 0.5+z_offset%></pose>
-        <!-- TODO: Stars -->
+        <!--<pose model="camera">0 -1 1.3 0 0.4 3.14159</pose>
+        <pose model="peg1">0 0 <%= 0.5+z_offset%> 0 0 0</pose>
+        <pose model="peg2">0.5 0 <%= 0.5+z_offset%> 0 0 0</pose>-->
+        <pose model="peg3">1.0 0 <%= 0.5+z_offset%> 0 0 0</pose>
       </arrangement>
 
-      <arrangement name="hidden_treasure">
-        <pose model="camera">0 -0.087 0.9 0 1.5 3.14159</pose>
-        <!-- TODO -->
+      <arrangement name="treasure">
+        <pose model="tinybot">0 0 0 0 0 0</pose>
       </arrangement>
 
-      <arrangement name="jenga">
-        <pose model="camera">0 -0.6 1.3 0 0.4 3.14159</pose>
-        <pose model="table">0 0 0</pose>
-        <pose model="wood_block_stack">0 0 1.0</pose>
-      </arrangement>
+      <!--<arrangement name="jenga">
+        <pose model="wood_block_stack">0 0 1.0 0 0 0</pose>
+      </arrangement>-->
     </plugin>
 
   </world>

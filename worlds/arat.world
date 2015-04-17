@@ -370,6 +370,7 @@
     </include>
 
     <include>
+      <static>true</static>
       <uri>model://wood_cube_10cm</uri>
       <pose> 0.2 250 1.015 0 0 0</pose>
     </include>
