@@ -4,9 +4,9 @@
   # Hanoi demo
   # Inertial parameters
   # Red wood density 510 kg/m^3
-  density = 50.0
+  density = 25.0
 
-  peg_height = 0.4 
+  peg_height = 0.25
   peg_radius = 0.01
 
   # Constant parameters for each ring 
@@ -14,7 +14,7 @@
   radius_lo  = 0.06
   height_up  = 0.01
   height_lo  = 0.03
-  radius_hole = 0.02
+  radius_hole = 0.03
   radius_increment = 0.02
   radius_grasp = 0.02
 
