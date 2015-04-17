@@ -4,7 +4,7 @@
   # Hanoi demo
   # Inertial parameters
   # Red wood density 510 kg/m^3
-  density = 510.0
+  density = 50.0
 
   peg_height = 0.4 
   peg_radius = 0.01
