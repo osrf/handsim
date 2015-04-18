@@ -133,31 +133,8 @@
             </contact>
           </surface>
         </collision>
-        <visual name="visual">
-          <%= geometry_s_up %>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%disk_number].to_s + '</name>'%>
-            </script>
-          </material>
-        </visual>
-      </link>
-
-      <link name="lower_gap">
-          <pose>0 0 <%= -height_lo/2.0 %> 0 0 0 </pose>
-        <inertial>
-          <mass><%= mass_lo %></mass>
-          <inertia>
-            <ixx><%= ixx_lo %></ixx>
-            <iyy><%= iyy_lo %></iyy>
-            <izz><%= izz_lo %></izz>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyz>0.0</iyz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
+        <collision name="collision2">
+            <pose>0 0 <%= - height_up/2.0 - height_lo/2.0 %> 0 0 0 </pose>
           <%= geometry_s_lo %>
           <surface>
             <contact>
@@ -171,7 +148,7 @@
           </surface>
         </collision>
         <visual name="visual">
-          <%= geometry_s_lo %>
+          <%= geometry_s_up %>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
@@ -179,19 +156,17 @@
             </script>
           </material>
         </visual>
+      <visual name="visual2">
+          <pose>0 0 <%= - height_up/2.0 - height_lo/2.0 %> 0 0 0 </pose>
+          <%= geometry_s_lo %>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <%= '<name>Gazebo/' + color[j%disk_number].to_s + '</name>'%>
+            </script>
+          </material>
+      </visual>
       </link>
-      <joint name="hanoi_joint" type="revolute">
-          <pose> 0 0 0 0 0 0</pose>
-          <child>lower_gap</child>
-          <parent>upper_disk</parent>
-          <axis>
-            <xyz>0 0 1</xyz>
-            <limit>
-              <upper>0</upper>
-              <lower>0</lower>
-            </limit>
-          </axis>
-      </joint>
     </model>
 <%
     end
@@ -283,7 +258,7 @@
     <model name="peg3">
       <static>true</static>
       <link name="link">
-        <pose>1.0 0 <%= 0.4+z_offset %> 0 0 0</pose>
+        <pose>1.0 0 <%= peg_height/2.0+z_offset %> 0 0 0</pose>
         <self_collide>0</self_collide>
         <visual name="vis_peg3">
           <pose>0 0 0 0 0 0</pose>
@@ -324,7 +299,7 @@
 
     <include>
       <uri>model://table</uri>
-      <pose>0.45 0 0 0 0 0</pose>
+      <pose>0.45 0.36 0 0 0 0</pose>
     </include>
 
     <gui>
