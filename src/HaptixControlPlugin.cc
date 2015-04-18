@@ -823,6 +823,34 @@ void HaptixControlPlugin::UpdatePolhemus()
           this->viewpointJoyPub->Publish(this->joyMsg);
         }
       }
+
+      int thumbId = 2;
+      math::Pose thumbSensorPose;
+      if (thumbId < numPoses)
+      {
+        thumbSensorPose = this->convertPolhemusToPose(poses[thumbId]);
+      }
+
+      int fingersId = 3;
+      math::Pose fingersSensorPose;
+      if (fingersId < numPoses)
+      {
+        fingersSensorPose = this->convertPolhemusToPose(poses[fingersId]);
+      }
+
+      if (thumbSensorPose != math::Pose::Zero &&
+          fingersSensorPose != math::Pose::Zero)
+      {
+        if (this->pauseTracking)
+        {
+          // calibration mode, update offset
+          this->sourceDistHandOffset = fingersSensorPose.pos - thumbSensorPose.pos;
+        }
+        else
+        {
+          this->targetHandDist = fingersSensorPose.pos - thumbSensorPose.pos;
+        }
+      }
     }
     else
     {
@@ -870,9 +898,11 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 void HaptixControlPlugin::UpdateBaseLink(double _dt)
 {
   math::Pose pose;
+  double dist;
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     pose = this->targetBaseLinkPose;
+    dist = this->targetHandDist.GetLength();
   }
 
   math::Pose baseLinkPose = this->baseLink->GetWorldPose();
@@ -894,6 +924,19 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   // std::cout << "target pose: " << pose << std::endl;
   // std::cout << "wrench pos: " << this->wrench.force
   //           << " rot: " << this->wrench.torque << std::endl;
+
+  // This is probably a horrible way and place to be doing this, especially
+  // since I had to turn off a mutex :)
+  if (dist)
+  {
+    haptix::comm::msgs::hxGrasp graspTmp;
+    haptix::comm::msgs::hxGrasp::hxGraspValue* gv = graspTmp.add_grasps();
+    gv->set_grasp_name("FinePinch(British)");
+    gv->set_grasp_value(1.4-dist*10);
+    haptix::comm::msgs::hxCommand resp;
+    bool result;
+    this->HaptixGraspCallback("", graspTmp, resp, result);
+  }
 }
 
 /////////////////////////////////////////////////
@@ -1389,7 +1432,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
-  boost::mutex::scoped_lock lock(this->updateMutex);
+  //boost::mutex::scoped_lock lock(this->updateMutex);
 
   if (this->graspPositions.size() != this->motorInfos.size())
     this->graspPositions.resize(this->motorInfos.size());
