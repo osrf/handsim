@@ -1,0 +1,30 @@
+<?xml version="1.0" ?>
+
+<%
+  layers = 3
+
+  # Cup attributes
+
+  h  = 0.13
+  # Base diameter
+  d1 = 0.055
+  b = d1/2.0
+  # Top diameter
+  d2 = 0.075
+  a = d2/2.0
+
+%>
+
+<sdf version="1.5">
+  <world name="default">
+  <include>
+    <uri>table</uri>
+  </include>
+
+  <%
+    for i in 0..layers
+      
+   %>
+
+  </world>
+</sdf>
