@@ -11,15 +11,15 @@
 
   # Constant parameters for each ring 
   radius_up0 = 0.11
-  radius_lo  = 0.06
+  radius_lo  = 0.065
   height_up  = 0.01
   height_lo  = 0.03
-  radius_hole = 0.02
+  radius_hole = 0.04
   radius_increment = 0.02
   radius_grasp = 0.02
 
-  disk_number = 2
-  points_hole = 10
+  disk_number = 4
+  points_hole = 15
   points_up   = 20
 
   color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
@@ -47,7 +47,7 @@
   end
   # Star axis of symmetry: Z
   disk_number.times do |j|
-       up_radius = radius_up0 + (radius_increment * (disk_number-j))
+       up_radius = radius_up0 + (radius_increment * (disk_number-j)) + 0.05
        lo_radius = radius_lo
        hole_radius = radius_hole
 
