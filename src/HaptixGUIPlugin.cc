@@ -1049,7 +1049,8 @@ void HaptixGUIPlugin::ResetModels()
 
   // Signal to WorldControl to reset the world
   gazebo::msgs::WorldControl msg;
-  msg.mutable_reset()->set_all(true);
+  msg.mutable_reset()->set_all(false);
+  msg.mutable_reset()->set_model_only(true);
   this->worldControlPub->Publish(msg);
 
   // Also reset wrist and finger posture
