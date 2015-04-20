@@ -562,5 +562,7 @@
       <grab>0.12 0 0</grab>
     </plugin>
 
+    <plugin name="tactors" filename="libTactorsPlugin.so"/>
+
   </world>
 </sdf>
