@@ -645,10 +645,7 @@
       <initial_arrangement>treasure</initial_arrangement>
 
       <arrangement name="hanoi">
-        <!--
-        <pose model="peg1">0 0 <%= 0.5+z_offset%> 0 0 0</pose>
-        <pose model="peg2">0.5 0 <%= 0.5+z_offset%> 0 0 0</pose>-->
-        <pose model="peg3">1.0 0 <%= 0.5+z_offset%> 0 0 0</pose>
+
       </arrangement>
 
       <arrangement name="treasure">

@@ -73,6 +73,8 @@ void TactorsPlugin::Load(physics::WorldPtr /*_parent*/, sdf::ElementPtr /*_sdf*/
     this->sensorMotorIndexMapping[i] = '5';
   }
 
+  this->motorInterval = common::Time(0.5);
+
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
@@ -101,15 +103,25 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
 
   for (unsigned int i = 0; i < this->robotInfo.contact_sensor_count; i++)
   {
+    char j = this->sensorMotorIndexMapping[i];
     if (sensor.contact[i] > minContactForce)
     {
-      char j = this->sensorMotorIndexMapping[i];
       if (j <= '5' && j >= '1')
       {
-        // Write to the corresponding motor to make it buzz
-        char key[1] = {j};
-        write(this->fd, key, 1);
+        if (this->motorTimes[j].GetElapsed() > this->motorInterval)
+        {
+          // Write to the corresponding motor to make it buzz
+          char key[1] = {j};
+          write(this->fd, key, 1);
+
+          this->motorTimes[j].Reset();
+          this->motorTimes[j].Start();
+        }
       }
+    }
+    else
+    {
+      this->motorTimes[j].Stop();
     }
   }
 }

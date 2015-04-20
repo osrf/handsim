@@ -36,5 +36,9 @@ namespace gazebo
     private: int fd;
     private: std::map<int, char> sensorMotorIndexMapping;
     private: float minContactForce;
+    // For each motor, keep track of the last buzz time
+    private: std::map<char, common::Timer> motorTimes;
+
+    private: common::Time motorInterval;
   };
 }
