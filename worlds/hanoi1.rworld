@@ -158,7 +158,7 @@
           </material>
         </visual>
       <visual name="visual2">
-          <pose>0 0 <%= -1.0*height_lo/2.0 %> 0 0 0 </pose>
+          <pose>0 0 <%= -1.0* height_lo/2.0 %> 0 0 0 </pose>
           <%= geometry_s_lo %>
           <material>
             <script>
