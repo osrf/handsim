@@ -244,8 +244,8 @@ namespace gazebo
     /// \brief: target position for the arm base link in world frame.
     private: math::Pose targetBaseLinkPose;
 
-    /// \brief: target position for the arm base link in world frame.
-    private: math::Vector3 targetHandDist;
+    /// \brief: target normalized grasp for the fingers (TODO: better name)
+    private: double targetHandDist;
 
     /// \brief: from spacenav target pose to the arm base link
     private: math::Pose baseLinktoSpacenavPose;
@@ -356,8 +356,8 @@ namespace gazebo
     /// \brief used to offset polhemus source for head sensor during calibration
     private: math::Pose sourceWorldPoseHeadOffset;
 
-    /// \brief used to offset polhemus source for head sensor during calibration
-    private: math::Vector3 sourceDistHandOffset;
+    /// \brief used to offset polhemus source for hand sensor during calibration
+    private: double sourceDistHandOffset;
 
     /// \brief Transform from polhemus sensor orientation to base link frame.
     private: math::Pose baseLinkToArmSensor;
