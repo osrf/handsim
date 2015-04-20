@@ -292,6 +292,8 @@ namespace haptix_gazebo_plugins
 
     /// \brief Pixmap for the SVG hand
     private: QGraphicsPixmapItem *handItem;
+
+    private: bool optitrackEnabled;
   };
 }
 #endif

@@ -358,6 +358,12 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       this->node->Advertise<gazebo::msgs::GzString>("~/timer_control");
   }
 
+  this->optitrackEnabled = true;
+  if (_elem->HasElement("optitrack"))
+  {
+    this->optitrackEnabled = _elem->Get<bool>("optitrack");
+  }
+
   this->pausePub =
     this->node->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_request");
 
@@ -609,14 +615,17 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->pollSensorsThread = boost::thread(
       std::bind(&HaptixGUIPlugin::PollSensors, this));
 
-  this->optitrackUpdateTime = gazebo::common::Time::GetWallTime();
+  if (this->optitrackEnabled)
+  {
+    this->optitrackUpdateTime = gazebo::common::Time::GetWallTime();
 
-  this->optitrackAliveSub = this->node->Subscribe("~/optitrack/" +
-      haptix::tracking::Optitrack::optitrackAliveTopic,
-      &HaptixGUIPlugin::OnOptitrackAlive, this);
+    this->optitrackAliveSub = this->node->Subscribe("~/optitrack/" +
+        haptix::tracking::Optitrack::optitrackAliveTopic,
+        &HaptixGUIPlugin::OnOptitrackAlive, this);
 
-  this->pollTrackingThread = boost::thread(
-      std::bind(&HaptixGUIPlugin::PollTracking, this));
+    this->pollTrackingThread = boost::thread(
+        std::bind(&HaptixGUIPlugin::PollTracking, this));
+  }
 
   // latched subscription, HaptixControlPlugin only publishes this once.
   this->initializeSub = this->node->Subscribe("~/haptix_load",
