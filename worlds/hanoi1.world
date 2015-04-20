@@ -8,8 +8,7 @@
 
     <model name="disk_0">
       <pose>0 0 1.03  0 0 0</pose>
-      <link name="upper_disk">
-          <pose>0 0 0.005  0 0 0</pose>
+      <link name="disk">
         <inertial>
           <mass>0.03471459882216721</mass>
           <inertia>
@@ -22,6 +21,7 @@
           </inertia>
         </inertial>
         <collision name="collision">
+          <pose>0 0 0.005  0 0 0</pose>
           <geometry>
 <polyline>
 <point>0.15 0.0</point>
@@ -170,7 +170,7 @@
           </surface>
         </collision>
         <collision name="collision2">
-            <pose>0 0 -0.02 0 0 0 </pose>
+            <pose>0 0 -0.015 0 0 0 </pose>
           <geometry>
 <polyline>
 <point>0.06 0.0</point>
@@ -220,6 +220,7 @@
           </surface>
         </collision>
         <visual name="visual">
+          <pose>0 0 0.005  0 0 0</pose>
           <geometry>
 <polyline>
 <point>0.15 0.0</point>
@@ -364,7 +365,7 @@
           </material>
         </visual>
       <visual name="visual2">
-          <pose>0 0 -0.02 0 0 0 </pose>
+          <pose>0 0 -0.015 0 0 0 </pose>
           <geometry>
 <polyline>
 <point>0.06 0.0</point>
@@ -413,9 +414,8 @@
     </model>
 
     <model name="disk_1">
-      <pose>0 0 1.09  0 0 0</pose>
-      <link name="upper_disk">
-          <pose>0 0 0.005  0 0 0</pose>
+      <pose>0 0 1.08  0 0 0</pose>
+      <link name="disk">
         <inertial>
           <mass>0.025918139392115794</mass>
           <inertia>
@@ -428,6 +428,7 @@
           </inertia>
         </inertial>
         <collision name="collision">
+          <pose>0 0 0.005  0 0 0</pose>
           <geometry>
 <polyline>
 <point>0.13 0.0</point>
@@ -571,7 +572,7 @@
           </surface>
         </collision>
         <collision name="collision2">
-            <pose>0 0 -0.02 0 0 0 </pose>
+            <pose>0 0 -0.015 0 0 0 </pose>
           <geometry>
 <polyline>
 <point>0.06 0.0</point>
@@ -617,6 +618,7 @@
           </surface>
         </collision>
         <visual name="visual">
+          <pose>0 0 0.005  0 0 0</pose>
           <geometry>
 <polyline>
 <point>0.13 0.0</point>
@@ -756,7 +758,7 @@
           </material>
         </visual>
       <visual name="visual2">
-          <pose>0 0 -0.02 0 0 0 </pose>
+          <pose>0 0 -0.015 0 0 0 </pose>
           <geometry>
 <polyline>
 <point>0.06 0.0</point>
