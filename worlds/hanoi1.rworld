@@ -22,7 +22,7 @@
   points_hole = 15
   points_up   = 20
 
-  color = ["Red", "Orange"a, "Yellow", "Green", "Blue", "Purple"]
+  color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
   z_offset = 0.9  
 %>
 
