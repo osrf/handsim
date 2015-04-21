@@ -844,15 +844,23 @@ void HaptixControlPlugin::UpdatePolhemus()
         // distance between fingers
         double dist = (fingersSensorPose.pos - thumbSensorPose.pos).GetLength();
         // subtract the distance in which hand considered completely closed
-        dist -= 0.04; 
+        dist -= 0.04;
+        if (dist < 0)
+        {
+          dist = 1e-3;
+        }
         if (this->pauseTracking)
         {
           // calibration mode, update offset which represents hand fully open
-          this->sourceDistHandOffset = dist / (1 - this->targetHandDist);
+          this->sourceDistHandOffset = dist / (1 - this->previousHandDist);
         }
         else
         {
           // Normalized distance: 0 fully open, 1 fully closed
+          if (dist > this->sourceDistHandOffset)
+          {
+            dist = this->sourceDistHandOffset;
+          }
           this->targetHandDist = 1 - dist / this->sourceDistHandOffset;
         }
       }
@@ -908,6 +916,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     pose = this->targetBaseLinkPose;
     dist = this->targetHandDist;
+    this->previousHandDist = dist;
   }
 
   math::Pose baseLinkPose = this->baseLink->GetWorldPose();
@@ -939,6 +948,10 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   haptix::comm::msgs::hxCommand resp;
   bool result;
   this->HaptixGraspCallback("", graspTmp, resp, result);
+  if (!result)
+  {
+    gzerr << "ERROR: HaptixGraspCallback could not call grasp service" << std::endl;
+  }
 }
 
 /////////////////////////////////////////////////

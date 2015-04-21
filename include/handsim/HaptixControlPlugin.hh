@@ -247,6 +247,9 @@ namespace gazebo
     /// \brief: target normalized grasp for the fingers (TODO: better name)
     private: double targetHandDist;
 
+    /// \brief: Previous distance which was actually used.
+    private: double previousHandDist;
+
     /// \brief: from spacenav target pose to the arm base link
     private: math::Pose baseLinktoSpacenavPose;
 

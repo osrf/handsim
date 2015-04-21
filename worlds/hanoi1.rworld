@@ -18,11 +18,11 @@
   radius_increment = 0.02
   radius_grasp = 0.02
 
-  disk_number = 4
+  disk_number = 3
   points_hole = 15
   points_up   = 20
 
-  color = ["Red", "Orange"a, "Yellow", "Green", "Blue", "Purple"]
+  color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
   z_offset = 0.9  
 %>
 
@@ -300,7 +300,7 @@
 
     <include>
       <uri>model://table</uri>
-      <pose>0.45 0.36 0 0 0 0</pose>
+      <pose>0.45 0.26 0 0 0 0</pose>
     </include>
 
     <gui>
