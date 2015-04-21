@@ -1,4 +1,7 @@
 set (files
+     hanoi.png
+     pyramid.png
+
      grasp_1.jpg
      grasp_3.jpg
      grasp_2.jpg
