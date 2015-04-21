@@ -4,344 +4,61 @@
   distance_offset = 100
 %>
 
-<!--begin stars -->
-<%
-  star_names = Array.new
-
-  # Inertial parameters
-  # Aluminum 2700 kg/m^3
-  density = 2700.0
-
-  # Constant parameters for each star 
-  radius_outer0 = 0.06
-  star_ratio = 0.55
-  height = 0.02
-  star_number = 6
-  star_point_number = 5
-  # the radius of the hole, shared by the disk and lowr separation part
-  radius_hole = 0.02
-  # the outer radius of lower separation part
-  # radius_lower = 0.04
-  points_hole = 10
-  height_hole = 0.025
-  color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
-
-  z_offset = 0.9  
-%>
-
 <sdf version="1.5">
   <world name="default">
 
-<%
-  star_number.times do |j|
-    #radius_outer = radius_outer0*(star_number - j)
-    radius_outer = radius_outer0*(1.2**(star_number-j))
-    radius_inner = star_ratio*radius_outer
-    # the outer radius of the lower sepeartion part
-    radius_lower = 0.85*(star_ratio * radius_outer0 * (1.2**(star_number-j+1)))
+    <!-- begin pyramid -->
+    <%
+      pyramid_layers = 3
 
-    # offset between each star
-    angle0 = (j+1)*Math::PI/12.0;
+      pyramid_h  = 0.13
+      # Top diameter
+      pyramid_d2 = 0.1
+      pyramid_r2 = pyramid_d2/2
+      pyramid_clearance = 0.005
+    %>
 
-    # approximate the inertia for star 
-    volume = Math::PI * (radius_outer**2 - radius_inner**2) * height
-    mass = density * volume
-    ixx = 1.0 / 12 * mass * (3*(radius_inner**2 + radius_outer**2) + height**2)
-    iyy = ixx
-    izz = 0.5 * mass * (radius_inner**2 + radius_outer**2)
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
 
-    # the inertia for the separation lower part
-    volume_low = Math::PI * (radius_lower**2 - radius_hole**2) * height_hole
-    mass_low = density * volume_low
-    ixx_low = 1.0 / 12 * mass_low * (3*(radius_hole**2 + radius_lower**2) + height_hole**2)
-    iyy_low = ixx_low
-    izz_low = 0.5 * mass_low * (radius_hole**2 + radius_lower**2)
-
-    def star_points_s(outer_radius, inner_radius, angle0, points=5)
-      polyline = []
-      points.times do |i|
-        inner_angle = 2*Math::PI * i / points.to_f + angle0;
-        # outer_angle(i) = (inner_angle(i) + inner_angle(i+1)) / 2.0
-        outer_angle = Math::PI * (2*i+1) / points.to_f + angle0;
-        polyline << [inner_radius*Math.cos(inner_angle), inner_radius*Math.sin(inner_angle)]
-        polyline << [outer_radius*Math.cos(outer_angle), outer_radius*Math.sin(outer_angle)]
-      end
-      polyline << [inner_radius*Math.cos(angle0), inner_radius*Math.sin(angle0)]
-      
-      points_s = ""
-      polyline.each do |p| 
-        points_s += "<point>" \
-                 + p[0].to_s + " " + p[1].to_s \
-                 + "</point>\n"
-      end
-      points_s 
-    end
-
-    def hole_points_s(hole_radius, hole_points=10)
-      polyline = []
-      hole_points.times do |i|
-        angle = 2*Math::PI * i / hole_points.to_f;
-        polyline << [hole_radius*Math.cos(angle), hole_radius*Math.sin(angle)]
-      end
-      
-      points_s = ""
-      polyline.each do |p| 
-        points_s += "<point>" \
-                 + p[0].to_s + " " + p[1].to_s \
-                 + "</point>\n"
-      end
-      points_s 
-    end
-
-    geometry_s = "<geometry>\n"  \
-               + "<polyline>\n"  \
-               + star_points_s(radius_outer, radius_inner, angle0, star_point_number) \
-               + "<height>" + height.to_s + "</height>\n"  \
-               + "</polyline>\n" \
-               + "<polyline>\n"  \
-               + hole_points_s(radius_hole, points_hole) \
-               + "<height>" + height.to_s + "</height>\n"  \
-               + "</polyline>\n" \
-               + "</geometry>\n"
-
-    geometry_s_l = "<geometry>\n"  \
-                 + "<polyline>\n"  \
-                 + hole_points_s(radius_lower, 20) \
-                 + "<height>" + height_hole.to_s + "</height>\n"  \
-                 + "</polyline>\n" \
-                 + "<polyline>\n"  \
-                 + hole_points_s(radius_hole, 10) \
-                 + "<height>" + height_hole.to_s + "</height>\n"  \
-                 + "</polyline>\n" \
-                 + "</geometry>\n"
-%>
-    <% star_names.push("star_" + radius_outer.to_s ) %>
-    <%= '<model name="star_' + radius_outer.to_s + '">' %>
-      <pose><%= distance_offset%> 0 <%= 0.1 + (height+height_hole + 0.02)*j + height_hole + z_offset%>  0 0 0</pose>
-      <link name="upper_disk">
-          <pose>0 0 <%= height/2.0 %>  0 0 0</pose>
-        <inertial>
-          <mass><%= mass %></mass>
-          <inertia>
-            <ixx><%= ixx %></ixx>
-            <iyy><%= iyy %></iyy>
-            <izz><%= izz %></izz>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyz>0.0</iyz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <%= geometry_s %>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-        <visual name="visual">
-          <%= geometry_s %>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%star_number].to_s + '</name>'%>
-            </script>
-          </material>
-        </visual>
-      </link>
-
-      <link name="lower_gap">
-          <pose>0 0 <%= -height_hole/2.0 %> </pose>
-        <inertial>
-          <mass><%= mass_low %></mass>
-          <inertia>
-            <ixx><%= ixx_low %></ixx>
-            <iyy><%= iyy_low %></iyy>
-            <izz><%= izz_low %></izz>
-            <ixy>0.0</ixy>
-            <ixz>0.0</ixz>
-            <iyz>0.0</iyz>
-          </inertia>
-        </inertial>
-        <collision name="collision">
-          <%= geometry_s_l %>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-        <visual name="visual">
-          <%= geometry_s_l %>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%star_number].to_s + '</name>'%>
-            </script>
-          </material>
-        </visual>
-      </link>
-      <joint name="hanoi_joint" type="revolute">
-          <pose> 0 0 0 </pose>
-          <child>lower_gap</child>
-          <parent>upper_disk</parent>
-          <axis>
-            <xyz>0 0 1</xyz>
-            <limit>
-              <upper>0</upper>
-              <lower>0</lower>
-            </limit>
-          </axis>
-      </joint>
-    </model>
-<%
-    end
-%>
-    <model name="peg1">
-      <pose> <%= distance_offset%> 1 <%= 0.4+z_offset %> 0 0 0</pose>
-      <!--<static>true</static>-->
-      <link name="link_peg">
-        <self_collide>0</self_collide>
-        <visual name="vis_peg">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.01</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.01</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
-
-    <model name="peg2">
-      <pose><%= 0.5+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
-      <static>true</static>
-      <link name="link">
-        <self_collide>0</self_collide>
-        <visual name="vis_peg2">
-          <pose>0.0 0.0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.01</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg2">
-          <pose>0.0 0.0 0.0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.01</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
-
-    <model name="peg3">
-      <pose><%= 1.0+distance_offset%> 0 <%= 0.4+z_offset %> 0 0 0</pose>
-      <static>true</static>
-      <link name="link">
-        <self_collide>0</self_collide>
-        <visual name="vis_peg3">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.01</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg3">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius>0.01</radius>
-              <length>0.6</length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
-    <!-- end stars-->
-
-    <!--<include>
-      <uri>model://table</uri>
-      <pose>0 0 0 0 0 0</pose>
-    </include>-->
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
 
     <include>
-      <uri>model://wood_block_stack</uri>
-      <pose><%=distance_offset %> 0 0 0 0 0</pose>
+      <uri>model://table</uri>
+    </include>
+
+      <%
+        for i in 0..pyramid_layers
+          for j in 0..(pyramid_layers-i)
+            x = -(pyramid_layers - i)*pyramid_r2 + j*2*pyramid_r2 + pyramid_clearance
+            y = 0
+            z = i*pyramid_h + pyramid_clearance
+       %>
+      <include>
+        <name> <%="tinybot_"+i.to_s + "_" + j.to_s %> </name>
+        <uri>model://tinybot</uri>
+        <pose><%= x + distance_offset%> <%= y%> 0 0 0 <%= Math::PI%></pose>
+      </include>
+     <%
+        end
+      end
+     %>
+
+    <include>
+      <uri>model://cricket_ball</uri>
+      <pose><%= 0.5 + distance_offset%> 0 0 0 0 0</pose>
+    </include>
+
+    <!-- end pyramid -->
+
+    <include>
+      <uri>model://table</uri>
+      <pose>0 0 0 0 0 0</pose>
     </include>
 
     <gui>
@@ -471,11 +188,11 @@
             </instructions>
           </task>
 
-          <task id="jenga" name="Jenga">
+          <task id="pyramid" name="Bowling Pyramid">
             <enabled>1</enabled>
             <icon>file://media/gui/arat/arat_icons/grasp_3.jpg</icon>
             <instructions>
-              Try stacking the Jenga blocks... or watch the tower topple!
+              Can you knock down an entire pyramid of robots?
             </instructions>
           </task>
         </task_group>
@@ -527,7 +244,7 @@
       <ode>
         <solver>
           <type>quick</type>
-          <iters>100</iters>
+          <iters>80</iters>
           <precon_iters>0</precon_iters>
           <sor>1.000000</sor>
         </solver>
@@ -636,24 +353,46 @@
       <model_name>peg2</model_name>
       <model_name>peg3</model_name>
 
+      <%
+          for i in 0..pyramid_layers
+            for j in 0..(pyramid_layers-i)
+       %>
+            <model_name><%='tinybot_'+i.to_s + '_' + j.to_s %></model_name>
+      <%
+            end
+          end
+       %>
+      <model_name>cricket_ball</model_name>
+
       <!-- Hidden treasure -->
       <model_name>tinybot</model_name>
 
       <!-- Jenga -->
       <model_name>wood_block_stack</model_name>
 
-      <initial_arrangement>treasure</initial_arrangement>
+      <initial_arrangement>pyramid</initial_arrangement>
 
       <arrangement name="hanoi">
-
       </arrangement>
 
       <arrangement name="treasure">
         <pose model="tinybot">0 0 0 0 0 0</pose>
       </arrangement>
 
-      <arrangement name="jenga">
-        <pose model="wood_block_stack">0 0 1.0 0 0 0</pose>
+      <arrangement name="pyramid">
+        <%
+          for i in 0..pyramid_layers
+            for j in 0..(pyramid_layers-i)
+              x = -(pyramid_layers - i)*pyramid_r2 + j*2*pyramid_r2 + pyramid_clearance
+              y = 0
+              z = i*pyramid_h + pyramid_clearance
+         %>
+           <pose model=<%='"tinybot_'+i.to_s + '_' + j.to_s + '"' %>><%=x%> <%=y%> <%=z + 1.0%> 0 0 <%= Math::PI%></pose>
+         <%
+            end
+          end
+         %>
+          <pose model="cricket_ball"><%= 0.5%> 0 1.0 0 0 0</pose>
       </arrangement>
     </plugin>
 

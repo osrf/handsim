@@ -3,49 +3,51 @@
 <%
   layers = 3
 
-  # Cup attributes
-
   h  = 0.13
   # Top diameter
-  d2 = 0.13
+  d2 = 0.1
   r2 = d2/2
-
-  clearance = 0.01
+  clearance = 0.005
 %>
 
 <sdf version="1.5">
   <world name="default">
 
-  <!-- A global light source -->
-  <include>
-    <uri>model://sun</uri>
-  </include>
-
-  <!-- A ground plane -->
-  <include>
-    <uri>model://ground_plane</uri>
-  </include>
-
-  <include>
-    <uri>model://table</uri>
-  </include>
-
-  <%
-    for i in 0..layers
-      for j in 0..(layers-i)
-        x = -(layers - i)*r2 + j*2*r2 + clearance
-        y = 0
-        z = i*h + clearance
-   %>
+    <!-- A global light source -->
     <include>
-      <name> <%="tinybot_"+i.to_s + "_" + j.to_s %> </name>
-      <uri>model://tinybot</uri>
-      <pose><%=x%> <%=y%> <%=z + 1.0%> 0 0 <%= Math::PI%></pose>
+      <uri>model://sun</uri>
     </include>
-   <%
+
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://table</uri>
+    </include>
+
+    <%
+      for i in 0..layers
+        for j in 0..(layers-i)
+          x = -(layers - i)*r2 + j*2*r2 + clearance
+          y = 0
+          z = i*h + clearance
+     %>
+      <include>
+        <name> <%="tinybot_"+i.to_s + "_" + j.to_s %> </name>
+        <uri>model://tinybot</uri>
+        <pose><%=x%> <%=y%> <%=z + 1.0%> 0 0 <%= Math::PI%></pose>
+      </include>
+     <%
+        end
       end
-    end
-   %>
+     %>
+
+    <include>
+      <uri>model://cricket_ball</uri>
+      <pose>0.5 0 1.0 0 0 0</pose>
+    </include>
 
   </world>
 </sdf>
