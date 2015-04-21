@@ -841,14 +841,19 @@ void HaptixControlPlugin::UpdatePolhemus()
       if (thumbSensorPose != math::Pose::Zero &&
           fingersSensorPose != math::Pose::Zero)
       {
+        // distance between fingers
+        double dist = (fingersSensorPose.pos - thumbSensorPose.pos).GetLength();
+        // subtract the distance in which hand considered completely closed
+        dist -= 0.04; 
         if (this->pauseTracking)
         {
-          // calibration mode, update offset
-          this->sourceDistHandOffset = fingersSensorPose.pos - thumbSensorPose.pos;
+          // calibration mode, update offset which represents hand fully open
+          this->sourceDistHandOffset = dist / (1 - this->targetHandDist);
         }
         else
         {
-          this->targetHandDist = fingersSensorPose.pos - thumbSensorPose.pos;
+          // Normalized distance: 0 fully open, 1 fully closed
+          this->targetHandDist = 1 - dist / this->sourceDistHandOffset;
         }
       }
     }
@@ -902,7 +907,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     pose = this->targetBaseLinkPose;
-    dist = this->targetHandDist.GetLength();
+    dist = this->targetHandDist;
   }
 
   math::Pose baseLinkPose = this->baseLink->GetWorldPose();
@@ -927,16 +932,13 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 
   // This is probably a horrible way and place to be doing this, especially
   // since I had to turn off a mutex :)
-  if (dist)
-  {
-    haptix::comm::msgs::hxGrasp graspTmp;
-    haptix::comm::msgs::hxGrasp::hxGraspValue* gv = graspTmp.add_grasps();
-    gv->set_grasp_name("FinePinch(British)");
-    gv->set_grasp_value(1.4-dist*10);
-    haptix::comm::msgs::hxCommand resp;
-    bool result;
-    this->HaptixGraspCallback("", graspTmp, resp, result);
-  }
+  haptix::comm::msgs::hxGrasp graspTmp;
+  haptix::comm::msgs::hxGrasp::hxGraspValue* gv = graspTmp.add_grasps();
+  gv->set_grasp_name("FinePinch(British)");
+  gv->set_grasp_value(dist);
+  haptix::comm::msgs::hxCommand resp;
+  bool result;
+  this->HaptixGraspCallback("", graspTmp, resp, result);
 }
 
 /////////////////////////////////////////////////
