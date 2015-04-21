@@ -145,7 +145,7 @@
                    + "</geometry>\n"
 %>
     <%= '<model name="disk_' + j.to_s + '">' %>
-      <pose><%= x_offset%> 0 <%= 0.1 + (height_up+height_lo + 0.01)*j + height_lo + z_offset%>  0 0 0</pose>
+      <pose><%= 2*distance_offset + j%> 0 0  0 0 0</pose>
       <link name="disk">
         <inertial>
           <mass><%= mass %></mass>
@@ -211,133 +211,11 @@
 <%
     end
 %>
-    <model name="peg1">
-      <static>true</static>
-      <link name="link">
-          <pose> 0 0 <%= peg_height/2.0 +  z_offset %> 0 0 0</pose>
-        <self_collide>0</self_collide>
-        <visual name="vis_peg">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-                <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
 
-    <model name="peg2">
-      <static>true</static>
-      <link name="link">
-          <pose>0.5 0 <%= peg_height/2.0+z_offset %> 0 0 0</pose>
-        <self_collide>0</self_collide>
-        <visual name="vis_peg2">
-          <pose>0.0 0.0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg2">
-          <pose>0.0 0.0 0.0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
-
-    <model name="peg3">
-      <static>true</static>
-      <link name="link">
-        <pose>1.0 0 <%= peg_height/2.0+z_offset %> 0 0 0</pose>
-        <self_collide>0</self_collide>
-        <visual name="vis_peg3">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg3">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
-
-
+    <include>
+      <uri>model://hanoi_peg_board</uri>
+      <pose><%= 2*distance_offset%> 0 0 0 0 0</pose>
+    </include>
 
     <!-- end hanoi -->
 
@@ -458,7 +336,6 @@
         <task_group name="DRC Demo Games">
           <task id="hanoi" name="Towers of Hanoi">
             <enabled>1</enabled>
-            <initial>1</initial>
             <icon>file://media/gui/arat/arat_icons/grasp_1.jpg</icon>
             <instructions>
               Solve the classic Towers of Hanoi puzzle.
@@ -476,6 +353,7 @@
 
           <task id="pyramid" name="Bowling Pyramid">
             <enabled>1</enabled>
+            <initial>1</initial>
             <icon>file://media/gui/arat/arat_icons/grasp_3.jpg</icon>
             <instructions>
               Can you knock down an entire pyramid of robots?
@@ -635,9 +513,12 @@
       <!-- TODO generate list of model names using ERB and print them out -->
       <!-- do the same with initial positions? -->
       <!-- Hanoi -->
-      <!--<model_name>peg1</model_name>
-      <model_name>peg2</model_name>
-      <model_name>peg3</model_name>-->
+      <% disk_number.times do |j| %>
+        <model_name><%= 'disk_' + j.to_s%></model_name>
+      <% end %>
+      <model_name>hanoi_peg_board</model_name>
+
+      <!-- Pyramid -->
 
       <%
           for i in 0..pyramid_layers
@@ -648,11 +529,16 @@
             end
           end
        %>
+
       <model_name>cricket_ball</model_name>
 
       <initial_arrangement>pyramid</initial_arrangement>
 
       <arrangement name="hanoi">
+        <% disk_number.times do |j| %>
+          <pose model=<%= '"disk_' + j.to_s + '"'%>> -0.5 0 <%= 0.1 + (height_up+height_lo + 0.01)*j + height_lo+z_offset%>  0 0 0</pose>
+        <% end %>
+        <pose model="hanoi_peg_board">0 0 0.9 0 0 0</pose>
       </arrangement>
 
       <!--<arrangement name="treasure">
