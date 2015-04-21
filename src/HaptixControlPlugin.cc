@@ -288,6 +288,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     }
   }
 
+  this->currentPolhemusGrasp = "FinePinch(British)";
+  this->arrangeSub = this->gazeboNode->Subscribe("~/arrange",
+      &HaptixControlPlugin::OnArrange, this);
+
   // spin up a separate thread to get polhemus sensor data
   // update target pose if using polhemus
   if (this->havePolhemus)
@@ -908,6 +912,20 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 }
 
 /////////////////////////////////////////////////
+void HaptixControlPlugin::OnArrange(ConstGzStringPtr &_arrangement)
+{
+  std::string arrangement = _arrangement->data();
+  if (arrangement == "pyramid")
+  {
+    this->currentPolhemusGrasp = "Spherical";
+  }
+  else if (arrangement == "hanoi")
+  {
+    this->currentPolhemusGrasp = "FinePinch(British)";
+  }
+}
+
+/////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateBaseLink(double _dt)
 {
   math::Pose pose;
@@ -943,7 +961,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   // since I had to turn off a mutex :)
   haptix::comm::msgs::hxGrasp graspTmp;
   haptix::comm::msgs::hxGrasp::hxGraspValue* gv = graspTmp.add_grasps();
-  gv->set_grasp_name("FinePinch(British)");
+  gv->set_grasp_name(currentPolhemusGrasp);
   gv->set_grasp_value(dist);
   haptix::comm::msgs::hxCommand resp;
   bool result;

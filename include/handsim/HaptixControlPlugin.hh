@@ -250,6 +250,10 @@ namespace gazebo
     /// \brief: Previous distance which was actually used.
     private: double previousHandDist;
 
+    private: std::string currentPolhemusGrasp;
+    private: transport::SubscriberPtr arrangeSub;
+    private: void OnArrange(ConstGzStringPtr &_arrangement);
+
     /// \brief: from spacenav target pose to the arm base link
     private: math::Pose baseLinktoSpacenavPose;
 

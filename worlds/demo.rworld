@@ -7,6 +7,10 @@
 <sdf version="1.5">
   <world name="default">
 
+    <scene>
+      <grid>false</grid>
+    </scene>
+
     <!-- begin pyramid -->
     <%
       pyramid_layers = 3
@@ -53,15 +57,16 @@
 
       # Constant parameters for each ring 
       radius_up0 = 0.11
-      radius_lo  = 0.065
+      radii = [0.15, 0.13, 0.11]
+      radius_lo  = 0.06
       height_up  = 0.01
       height_lo  = 0.03
-      radius_hole = 0.04
+      radius_hole = 0.02
       radius_increment = 0.02
       radius_grasp = 0.02
 
-      disk_number = 4
-      points_hole = 15
+      disk_number = 3
+      points_hole = 10
       points_up   = 20
 
       color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
@@ -86,7 +91,8 @@
   end
   # Star axis of symmetry: Z
   disk_number.times do |j|
-       up_radius = radius_up0 + (radius_increment * (disk_number-j)) + 0.05
+       # up_radius = radius_up0 + (radius_increment * (disk_number-j)) + 0.05
+       up_radius = radii[j]
        lo_radius = radius_lo
        hole_radius = radius_hole
 
@@ -221,7 +227,7 @@
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.6 1.3  0 0.4 1.57</pose>
+        <pose>0 -0.8 1.5  0 0.6 1.57</pose>
       </camera>
 
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
@@ -479,7 +485,7 @@
 
     <include>
       <uri>model://willowgarage</uri>
-      <pose>-28 -14.75 0 0 0 0</pose>
+      <pose>-28 -14.75 0.01 0 0 0</pose>
     </include>
 
     <!-- The apl_description model is not (yet) publicly available. -->
@@ -488,7 +494,7 @@
      <pose>0.4 -0.9 1.2 0 0 3.1416</pose>
     </include>
 
-    <model name="polhemus_source">
+    <!--<model name="polhemus_source">
       <pose>-.5 260 1.3 0 3.1416 1.57</pose>
       <link name="link">
         <visual name="visual">
@@ -506,14 +512,14 @@
         </visual>
       </link>
       <static>true</static>
-    </model>
+    </model>-->
 
     <include>
       <uri>model://tinybot</uri>
       <pose><%= distance_offset %> 2 0 0 0 0 </pose>
     </include>
 
-    <plugin name="arrange_polhemus" filename="libArrangePlugin.so">
+    <!--<plugin name="arrange_polhemus" filename="libArrangePlugin.so">
       <topic_name>~/arrange_polhemus</topic_name>
       <model_name>polhemus_source</model_name>
 
@@ -524,7 +530,7 @@
       <arrangement name="have_polhemus">
         <pose model="polhemus_source">-.5 0 1.3 0 3.1416 1.57</pose>
       </arrangement>
-    </plugin>
+    </plugin>-->
 
     <plugin name="hydra" filename="libHydraPlugin.so">
       <pivot>0.04 0 0</pivot>
@@ -560,9 +566,9 @@
 
       <arrangement name="hanoi">
         <% disk_number.times do |j| %>
-          <pose model=<%= '"disk_' + j.to_s + '"'%>> -0.5 -0.26 <%= 0.1 + (height_up+height_lo + 0.01)*j + height_lo+z_offset%>  0 0 0</pose>
+          <pose model=<%= '"disk_' + j.to_s + '"'%>> <%= -0.5 + j*0.5%> -0.15 <%= 0.1 + (height_up+height_lo + 0.01) + height_lo+z_offset + 0.03%>  0 0 0</pose>
         <% end %>
-        <pose model="hanoi_peg_board">0 -0.26 0.9 0 0 0</pose>
+        <pose model="hanoi_peg_board">0 -0.15 0.93 0 0 0</pose>
       </arrangement>
 
       <!--<arrangement name="treasure">
@@ -581,9 +587,10 @@
             end
           end
          %>
-          <pose model="cricket_ball"><%= 0.5%> 0 1.0 0 0 0</pose>
+          <pose model="cricket_ball"><%= 0.4%> -0.3 1.0 0 0 0</pose>
       </arrangement>
     </plugin>
 
+    <plugin name="tactors" filename="libTactorsPlugin.so"/>
   </world>
 </sdf>
