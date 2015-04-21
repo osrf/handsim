@@ -650,12 +650,6 @@
        %>
       <model_name>cricket_ball</model_name>
 
-      <!-- Hidden treasure -->
-      <model_name>tinybot</model_name>
-
-      <!-- Jenga -->
-      <model_name>wood_block_stack</model_name>
-
       <initial_arrangement>pyramid</initial_arrangement>
 
       <arrangement name="hanoi">
