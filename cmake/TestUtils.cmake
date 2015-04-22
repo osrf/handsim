@@ -15,21 +15,33 @@ macro (handsim_build_tests)
       server_fixture
       )
 
-    link_directories(
-      ${GAZEBO_LIBRARY_DIRS}
-      )
+    # will not work until https://bitbucket.org/osrf/gazebo/issue/1568/gazebo_libraries-out-of-order
+    # is fixed
+    # link_directories(
+    #   ${GAZEBO_LIBRARY_DIRS}
+    #   )
     target_link_libraries(${BINARY_NAME}
       libgtest.a
       libgtest_main.a
+      ${CMAKE_BINARY_DIR}/test/libserver_fixture.a
       pthread
       HaptixTracking
-      ${CMAKE_BINARY_DIR}/test/libserver_fixture.a
+      ${HAPTIX-COMM_LIBRARIES}
+
+      # need to specify gazebo dependencies explicitly until gazebo issue #1568 is fixed
+      # ${GAZEBO_LIBRARIES}
+      gazebo_common
+      gazebo_math
       gazebo_physics
       gazebo_sensors
+      gazebo_rendering
+      gazebo_msgs
+      gazebo_transport
+
       ${Boost_FILESYSTEM_LIBRARIES}
       ${Boost_SYSTEM_LIBRARIES}
-      ${GAZEBO_LIBRARIES}
-      ${HAPTIX-COMM_LIBRARIES}
+      ${Boost_THREAD_LIBRARIES}
+
       ${IGNITION-TRANSPORT_LIBRARIES}
       )
 
