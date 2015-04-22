@@ -170,7 +170,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Hand pixmap
   std::string handImgFilename =
     gazebo::common::SystemPaths::Instance()->FindFileURI(
-      "file://media/gui/arat/arat_icons/hand.svg");
+      "file://media/gui/arat/arat_icons/hand_right.svg");
   QPixmap handImg = QPixmap(QString(handImgFilename.c_str()));
   this->handItem = new QGraphicsPixmapItem(handImg);
   this->handItem->setPos(-20, -73);
@@ -203,7 +203,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
       "QTabWidget::pane {"
         "top: -1px;"
-        "background-color: #ff00ff;"
+        "background-color: #ffffff;"
         "border: 1px solid rgba(128, 128, 128, 255);"
       "}"
 
