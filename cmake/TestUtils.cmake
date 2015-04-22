@@ -24,6 +24,8 @@ macro (handsim_build_tests)
       pthread
       HaptixTracking
       ${CMAKE_BINARY_DIR}/test/libserver_fixture.a
+      gazebo_physics
+      gazebo_sensors
       ${Boost_FILESYSTEM_LIBRARIES}
       ${Boost_SYSTEM_LIBRARIES}
       ${GAZEBO_LIBRARIES}
