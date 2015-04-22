@@ -1,6 +1,9 @@
 include_directories (
   ${Boost_INCLUDE_DIRS}
   ${HAPTIX-COMM_INCLUDE_DIRS}
+  ${Boost_FILESYSTEM_INCLUDE_DIRS}
+  ${Boost_SYSTEM_INCLUDE_DIRS}
+  ${Boost_THREAD_INCLUDE_DIRS}
 )
 
 link_directories(
