@@ -321,6 +321,15 @@ namespace haptix_gazebo_plugins
 
     /// \brief Pixmap for the SVG hand
     private: QGraphicsPixmapItem *handItem;
+
+    /// \brief Pointer to the render widget.
+    private: QWidget *renderWidget;
+
+    /// \brief GUI maximum width.
+    private: int maxWidth;
+
+    /// \brief GUI maximum height.
+    private: int maxHeight;
   };
 }
 #endif

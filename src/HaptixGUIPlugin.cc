@@ -41,8 +41,21 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->localCoordMove = true;
   this->posScalingFactor = 0.25;
 
-  int thisWidth = 480;
-  int thisHeight = 880;
+  // Adjust GUI size to fit render widget
+  this->maxWidth = 480;
+  this->maxHeight = 880;
+
+  gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
+  if (mainWindow)
+  {
+    this->renderWidget = mainWindow->GetRenderWidget();
+    this->renderWidget->installEventFilter(this);
+  }
+  this->move(0, 0);
+  // TODO: Subtracting 90 to accomodate the time panel. Ideally we should
+  // expose Gazebo's render3DFrame or its height.
+  this->resize(this->maxWidth,
+      std::min(this->maxHeight, (this->renderWidget->height()-90)));
 
   // General settings
   QLabel *generalSettingsLabel = new QLabel(tr("<b>General Settings</b>"));
@@ -176,7 +189,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->handItem->setPos(-20, -73);
 
   // Hand scene
-  this->handScene = new QGraphicsScene(QRectF(0, 50, 400, 220));
+  this->handScene = new QGraphicsScene(QRectF(0, -75, 400, 470));
   QGraphicsView *handView = new QGraphicsView(this->handScene);
   handView->setStyleSheet("border: 0px");
   handView->setSizePolicy(QSizePolicy::Expanding,
@@ -188,10 +201,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   mainSeparator->setFrameShape(QFrame::HLine);
   mainSeparator->setFrameShadow(QFrame::Sunken);
   mainSeparator->setLineWidth(1);
-  mainSeparator->setMaximumWidth(thisWidth*0.75);
+  mainSeparator->setMaximumWidth(this->maxWidth*0.75);
 
   QHBoxLayout *mainSeparatorLayout = new QHBoxLayout();
-  mainSeparatorLayout->setContentsMargins(thisWidth*0.03, 0, 0, 0);
+  mainSeparatorLayout->setContentsMargins(this->maxWidth*0.03, 0, 0, 0);
   mainSeparatorLayout->addWidget(mainSeparator);
 
   // Tabs
@@ -316,15 +329,34 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   bottomLayout->addWidget(versionLabel);
 
   // Frame layout
-  QVBoxLayout *frameLayout = new QVBoxLayout;
+  QVBoxLayout *scrollableFrameLayout = new QVBoxLayout;
+  scrollableFrameLayout->setContentsMargins(0, 0, 0, 0);
+  scrollableFrameLayout->addWidget(this->topBarFrame);
+  scrollableFrameLayout->addWidget(handView, 1.0);
+  scrollableFrameLayout->addLayout(mainSeparatorLayout);
+  scrollableFrameLayout->addWidget(this->tabFrame);
+  scrollableFrameLayout->addWidget(this->instructionsView);
+  scrollableFrameLayout->addLayout(cycleButtonLayout);
+  scrollableFrameLayout->addLayout(bottomLayout);
+
+  // Scrollable frame
+  QFrame *scrollableFrame = new QFrame();
+  scrollableFrame->setLayout(scrollableFrameLayout);
+
+  // Scrollable area in case it doesn't fit the height
+  QScrollArea *scrollArea = new QScrollArea();
+  scrollArea->setWidget(scrollableFrame);
+  scrollArea->setStyleSheet("\
+      QScrollArea {\
+        margin: 0px;\
+        padding: 0px;\
+      }");
+  scrollArea->setWidgetResizable(true);
+
+  // Frame layout
+  QVBoxLayout *frameLayout = new QVBoxLayout();
   frameLayout->setContentsMargins(0, 0, 0, 0);
-  frameLayout->addWidget(this->topBarFrame);
-  frameLayout->addWidget(handView, 1.0);
-  frameLayout->addLayout(mainSeparatorLayout);
-  frameLayout->addWidget(this->tabFrame);
-  frameLayout->addWidget(this->instructionsView);
-  frameLayout->addLayout(cycleButtonLayout);
-  frameLayout->addLayout(bottomLayout);
+  frameLayout->addWidget(scrollArea);
 
   // Main frame
   QFrame *mainFrame = new QFrame();
@@ -343,8 +375,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       );
   this->setLayout(mainLayout);
   this->setPalette(QPalette(QColor(255, 255, 255, 0)));
-  this->move(10, 10);
-  this->resize(thisWidth, thisHeight);
 
   // Create a QueuedConnection to set contact visualization value.
   connect(this, SIGNAL(SetContactForce(QString, double)),
@@ -781,7 +811,9 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     this->instructionsView->hide();
     this->resetSceneButton->hide();
     this->nextButton->hide();
-    this->resize(480, 570);
+    this->maxHeight = 570;
+    this->resize(this->maxWidth,
+        std::min(this->maxHeight, (this->renderWidget->height()-90)));
     return;
   }
 
@@ -1513,6 +1545,7 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
 {
   QAbstractButton *button = qobject_cast<QAbstractButton *>(_obj);
   QMenu *menu = qobject_cast<QMenu *>(_obj);
+  QWidget *widget = qobject_cast<QWidget *>(_obj);
   if (button)
   {
     if (_event->type() == QEvent::Enter)
@@ -1529,6 +1562,12 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
     gazeboKeyEvent.text = qtKeyEvent->text().toStdString();
 
     this->OnKeyPress(gazeboKeyEvent);
+  }
+  if (widget && widget == this->renderWidget &&
+      _event->type() == QEvent::Resize)
+  {
+    this->resize(this->maxWidth,
+        std::min(this->maxHeight, (this->renderWidget->height()-90)));
   }
   return QObject::eventFilter(_obj, _event);
 }
