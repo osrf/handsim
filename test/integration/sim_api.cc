@@ -320,12 +320,6 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   physics::ModelPtr gzDoorModel = world->GetModel("door");
   ASSERT_TRUE(gzDoorModel != NULL);
 
-  // set joint damping to 0 for accuracy
-  physics::JointPtr joint = gzDoorModel->GetJoint("hinge");
-  ASSERT_TRUE(joint != NULL);
-  joint->SetDamping(0, 0);
-  EXPECT_TRUE(joint->SetParam("friction", 0, 0.0));
-
   world->Step(5);
 
   math::Pose gzLinkPose(0, 0, 2, 3.14159, 0, 0.58);
@@ -347,8 +341,6 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
 
   physics::LinkPtr doorLink = gzDoorModel->GetLink("door");
   ASSERT_TRUE(doorLink != NULL);
-
-  EXPECT_EQ(math::Vector3::Zero, doorLink->GetWorldLinearVel());
 
   ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &zero,
       &ang_vel), hxOK);
@@ -583,6 +575,59 @@ TEST_F(SimApiTest, HxsTorque)
   for (int i = 0; i < 10; i++)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
+    world->Step(100);
+  }
+}
+
+TEST_F(SimApiTest, HxsWrench)
+{
+  Load("worlds/arat_test.world", true);
+  physics::WorldPtr world = physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+
+  // disabling gravity_mode makes it easier to verify test
+  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  ASSERT_TRUE(model != NULL);
+  model->SetGravityMode(0);
+
+  hxWrench wrench;
+  wrench.force.x = -0.01;
+  wrench.force.y = -0.02;
+  wrench.force.z = 0.03;
+  wrench.torque.x = -0.004;
+  wrench.torque.y = -0.005;
+  wrench.torque.z = 0.006;
+
+  float duration = 1.0;
+  math::Vector3 gzForce(-0.01, -0.02, 0.03);
+  math::Vector3 gzTorque(-0.004, -0.005, 0.006);
+
+  physics::LinkPtr link = model->GetLink("link");
+  ASSERT_TRUE(link != NULL);
+
+  ASSERT_EQ(hxs_wrench("wood_cube_5cm", "link", &wrench, duration), hxOK);
+  world->Step(1);
+
+  // Every 0.1 seconds
+  gzdbg << "Start time: " << world->GetSimTime() << std::endl;
+  for (int i = 0; i < 10; i++)
+  {
+    EXPECT_NEAR(link->GetRelativeForce().x, gzForce.x, 5e-3);
+    EXPECT_NEAR(link->GetRelativeForce().y, gzForce.y, 5e-3);
+    EXPECT_NEAR(link->GetRelativeForce().z, gzForce.z, 5e-3);
+    EXPECT_EQ(link->GetRelativeTorque(), gzTorque);
+    world->Step(100);
+  }
+  gzdbg << "End time: " << world->GetSimTime() << std::endl;
+
+  math::Vector3 empty(0, 0, 0);
+  for (int i = 0; i < 10; i++)
+  {
+    EXPECT_EQ(link->GetWorldForce(), empty);
+    EXPECT_EQ(link->GetWorldTorque(), empty);
     world->Step(100);
   }
 }

@@ -136,6 +136,9 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_torque",
     &HaptixWorldPlugin::HaptixTorqueCallback, this);
 
+  this->ignNode.Advertise("/haptix/gazebo/hxs_wrench",
+    &HaptixWorldPlugin::HaptixWrenchCallback, this);
+
   this->ignNode.Advertise("/haptix/gazebo/hxs_reset",
     &HaptixWorldPlugin::HaptixResetCallback, this);
 
@@ -183,28 +186,22 @@ void HaptixWorldPlugin::Reset()
 void HaptixWorldPlugin::OnWorldUpdate()
 {
   common::Time elapsed = this->world->GetSimTime() - this->lastSimUpdateTime;
-  for (auto iter = this->effortDurations.begin();
-       iter != this->effortDurations.end();)
+  for (auto iter = this->wrenchDurations.begin();
+       iter != this->wrenchDurations.end();)
   {
     // Time elapsed since last update
     if (iter->timeRemaining < elapsed && !iter->persistent)
     {
-      this->effortDurations.erase(iter);
+      this->wrenchDurations.erase(iter);
     }
     else
     {
       iter->timeRemaining = iter->timeRemaining - elapsed;
 
-      GZ_ASSERT(iter->link, "Link of forceDuration object was NULL!");
+      GZ_ASSERT(iter->link, "Link of WrenchDuration object was NULL!");
 
-      if (iter->isForce)
-      {
-        iter->link->AddLinkForce(iter->effort);
-      }
-      else
-      {
-        iter->link->AddTorque(iter->effort);
-      }
+      iter->link->AddLinkForce(iter->force);
+      iter->link->AddTorque(iter->torque);
 
       ++iter;
     }
@@ -680,8 +677,8 @@ void HaptixWorldPlugin::HaptixForceCallback(
     return;
   }
 
-  this->effortDurations.push_back(EffortDuration(link, force,
-      common::Time(duration), true, duration < 0));
+  this->wrenchDurations.push_back(WrenchDuration(link, force,
+      math::Vector3::Zero, common::Time(duration), duration < 0));
 
   _result = true;
 }
@@ -722,8 +719,58 @@ void HaptixWorldPlugin::HaptixTorqueCallback(
     return;
   }
 
-  effortDurations.push_back(EffortDuration(link, torque,
-      common::Time(duration), false, duration < 0));
+  this->wrenchDurations.push_back(WrenchDuration(link, math::Vector3::Zero,
+      torque, common::Time(duration), duration < 0));
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixWrenchCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+
+  physics::LinkPtr link =
+      this->world->GetModel(_req.name())->GetLink(_req.string_value());
+  if (!link)
+  {
+    _result = false;
+    return;
+  }
+  float duration = _req.float_value();
+  math::Vector3 force;
+  math::Vector3 torque;
+
+  if (!ConvertVector(_req.wrench().force(), force))
+  {
+    _result = false;
+    return;
+  }
+
+  if (!ConvertVector(_req.wrench().torque(), torque))
+  {
+    _result = false;
+    return;
+  }
+
+  if (fabs(duration) < 1e-6)
+  {
+    // 0 is impulse
+    link->AddForce(force);
+    link->AddTorque(torque);
+    _result = true;
+    return;
+  }
+
+  this->wrenchDurations.push_back(WrenchDuration(link, force,
+      torque, common::Time(duration), duration < 0));
   _result = true;
 }
 

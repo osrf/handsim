@@ -52,20 +52,20 @@
 
 namespace gazebo
 {
-  class EffortDuration
+  class WrenchDuration
   {
     public:
       physics::LinkPtr link;
-      math::Vector3 effort;
+      math::Vector3 force;
+      math::Vector3 torque;
       common::Time timeRemaining;
-      bool isForce;
       bool persistent;
 
-      EffortDuration() : link(NULL), isForce(true), persistent(false) {}
-      EffortDuration(physics::LinkPtr _link, math::Vector3 _effort,
-          common::Time _duration, bool _isForce, bool _persistent)
-        : link(_link), effort(_effort), timeRemaining(_duration),
-          isForce(_isForce), persistent(_persistent) {}
+      WrenchDuration() : link(NULL), persistent(false) {}
+      WrenchDuration(physics::LinkPtr _link, math::Vector3 _force,
+          math::Vector3 _torque, common::Time _duration, bool _persistent)
+        : link(_link), force(_force), torque(_torque), timeRemaining(_duration),
+          persistent(_persistent) {}
   };
 
   class HaptixWorldPlugin : public WorldPlugin
@@ -203,6 +203,15 @@ namespace gazebo
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
     private: void HaptixTorqueCallback(const std::string &_service,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result);
+
+    /// \brief hxs_wrench callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixWrenchCallback(const std::string &_service,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -444,7 +453,7 @@ namespace gazebo
     private: transport::PublisherPtr pausePub;
 
     /// \brief For storing forces and torques applied over time.
-    private: std::vector<EffortDuration> effortDurations;
+    private: std::vector<WrenchDuration> wrenchDurations;
 
     /// \brief Last time the effort vectors were updates
     private: common::Time lastSimUpdateTime;
