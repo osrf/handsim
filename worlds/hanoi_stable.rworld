@@ -11,10 +11,10 @@
 
   # Constant parameters for each ring 
   radius_up0 = 0.11
-  radius_lo  = 0.065
+  radius_lo  = 0.06
   height_up  = 0.01
   height_lo  = 0.03
-  radius_hole = 0.04
+  radius_hole = 0.02
   radius_increment = 0.02
   radius_grasp = 0.02
 

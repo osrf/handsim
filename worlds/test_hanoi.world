@@ -1,0 +1,359 @@
+<?xml version="1.0" ?>
+
+
+
+<sdf version="1.5">
+  <world name="default">
+
+
+    <model name="disk_0">
+      <pose>0 0 1.1  0 0 0</pose>
+      <link name="disk">
+        <inertial>
+          <mass>0.03757344813693392</mass>
+          <inertia>
+            <ixx>0.00033283812807967297</ixx>
+            <iyy>0.00033283812807967297</iyy>
+            <izz>0.0006556566699894968</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+        <collision name="collision_disk">
+          <geometry>
+<polyline>
+<point>0.18 0.0</point>
+<point>0.17119017293312763 0.05562305898749053</point>
+<point>0.14562305898749053 0.10580134541264516</point>
+<point>0.10580134541264516 0.14562305898749053</point>
+<point>0.05562305898749054 0.17119017293312763</point>
+<point>1.1021821192326179e-17 0.18</point>
+<point>-0.055623058987490516 0.17119017293312766</point>
+<point>-0.10580134541264515 0.14562305898749053</point>
+<point>-0.1456230589874905 0.10580134541264519</point>
+<point>-0.17119017293312763 0.05562305898749055</point>
+<point>-0.18 2.2043642384652358e-17</point>
+<point>-0.17119017293312766 -0.05562305898749044</point>
+<point>-0.14562305898749056 -0.10580134541264515</point>
+<point>-0.10580134541264519 -0.1456230589874905</point>
+<point>-0.05562305898749056 -0.17119017293312763</point>
+<point>-3.306546357697853e-17 -0.18</point>
+<point>0.0556230589874905 -0.17119017293312766</point>
+<point>0.10580134541264512 -0.14562305898749056</point>
+<point>0.1456230589874905 -0.1058013454126452</point>
+<point>0.17119017293312763 -0.05562305898749057</point>
+<height>0.04</height>
+</polyline>
+<polyline>
+<point>0.05 0.0</point>
+<point>0.04755282581475768 0.01545084971874737</point>
+<point>0.04045084971874738 0.029389262614623657</point>
+<point>0.029389262614623657 0.04045084971874738</point>
+<point>0.015450849718747373 0.04755282581475768</point>
+<point>3.061616997868383e-18 0.05</point>
+<point>-0.015450849718747368 0.047552825814757685</point>
+<point>-0.029389262614623653 0.04045084971874738</point>
+<point>-0.04045084971874737 0.029389262614623664</point>
+<point>-0.04755282581475768 0.015450849718747377</point>
+<point>-0.05 6.123233995736766e-18</point>
+<point>-0.04755282581475769 -0.015450849718747346</point>
+<point>-0.04045084971874738 -0.029389262614623653</point>
+<point>-0.029389262614623664 -0.04045084971874737</point>
+<point>-0.015450849718747378 -0.04755282581475768</point>
+<point>-9.184850993605149e-18 -0.05</point>
+<point>0.015450849718747363 -0.047552825814757685</point>
+<point>0.029389262614623646 -0.04045084971874738</point>
+<point>0.04045084971874737 -0.02938926261462367</point>
+<point>0.04755282581475768 -0.015450849718747382</point>
+<height>0.04</height>
+</polyline>
+</geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <collision name="collision_handle">
+         <pose>0 0 0.01  0 0 0</pose>
+          <geometry>
+<polyline>
+<point>0.18 0.0</point>
+<point>0.17386664873203228 0.04658742811845373</point>
+<point>0.15588457268119896 0.08999999999999998</point>
+<point>0.22516660498395408 0.12999999999999998</point>
+<point>0.26 0.0</point>
+<point>0.18 0.0</point>
+<height>0.02</height>
+</polyline>
+<polyline>
+<point>0.21337835042307146 0.05181557282952465</point>
+<point>0.21164925957592348 0.05995030569104065</point>
+<point>0.20676096255024864 0.06667846933907254</point>
+<point>0.1995586903105704 0.07083670315542773</point>
+<point>0.1912877811577184 0.07170601073689012</point>
+<point>0.1833783504230715 0.06913608090521342</point>
+<point>0.17719801053557252 0.06357127787537412</point>
+<point>0.17381539840839536 0.05597380664587984</point>
+<point>0.17381539840839536 0.047657339013169465</point>
+<point>0.17719801053557252 0.040059867783675186</point>
+<point>0.18337835042307146 0.034495064753835875</point>
+<point>0.19128778115771838 0.031925134922159176</point>
+<point>0.1995586903105704 0.032794442503621575</point>
+<point>0.20676096255024864 0.03695267631997677</point>
+<point>0.21164925957592348 0.043680839968008645</point>
+<height>0.02</height>
+</polyline>
+</geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <visual name="visual_disk">
+          <geometry>
+<polyline>
+<point>0.18 0.0</point>
+<point>0.17119017293312763 0.05562305898749053</point>
+<point>0.14562305898749053 0.10580134541264516</point>
+<point>0.10580134541264516 0.14562305898749053</point>
+<point>0.05562305898749054 0.17119017293312763</point>
+<point>1.1021821192326179e-17 0.18</point>
+<point>-0.055623058987490516 0.17119017293312766</point>
+<point>-0.10580134541264515 0.14562305898749053</point>
+<point>-0.1456230589874905 0.10580134541264519</point>
+<point>-0.17119017293312763 0.05562305898749055</point>
+<point>-0.18 2.2043642384652358e-17</point>
+<point>-0.17119017293312766 -0.05562305898749044</point>
+<point>-0.14562305898749056 -0.10580134541264515</point>
+<point>-0.10580134541264519 -0.1456230589874905</point>
+<point>-0.05562305898749056 -0.17119017293312763</point>
+<point>-3.306546357697853e-17 -0.18</point>
+<point>0.0556230589874905 -0.17119017293312766</point>
+<point>0.10580134541264512 -0.14562305898749056</point>
+<point>0.1456230589874905 -0.1058013454126452</point>
+<point>0.17119017293312763 -0.05562305898749057</point>
+<height>0.04</height>
+</polyline>
+<polyline>
+<point>0.05 0.0</point>
+<point>0.04755282581475768 0.01545084971874737</point>
+<point>0.04045084971874738 0.029389262614623657</point>
+<point>0.029389262614623657 0.04045084971874738</point>
+<point>0.015450849718747373 0.04755282581475768</point>
+<point>3.061616997868383e-18 0.05</point>
+<point>-0.015450849718747368 0.047552825814757685</point>
+<point>-0.029389262614623653 0.04045084971874738</point>
+<point>-0.04045084971874737 0.029389262614623664</point>
+<point>-0.04755282581475768 0.015450849718747377</point>
+<point>-0.05 6.123233995736766e-18</point>
+<point>-0.04755282581475769 -0.015450849718747346</point>
+<point>-0.04045084971874738 -0.029389262614623653</point>
+<point>-0.029389262614623664 -0.04045084971874737</point>
+<point>-0.015450849718747378 -0.04755282581475768</point>
+<point>-9.184850993605149e-18 -0.05</point>
+<point>0.015450849718747363 -0.047552825814757685</point>
+<point>0.029389262614623646 -0.04045084971874738</point>
+<point>0.04045084971874737 -0.02938926261462367</point>
+<point>0.04755282581475768 -0.015450849718747382</point>
+<height>0.04</height>
+</polyline>
+</geometry>
+
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Red</name>
+            </script>
+          </material>
+        </visual>
+        <visual name="visual_handle">
+         <pose>0 0 0.01  0 0 0</pose>
+          <geometry>
+<polyline>
+<point>0.18 0.0</point>
+<point>0.17386664873203228 0.04658742811845373</point>
+<point>0.15588457268119896 0.08999999999999998</point>
+<point>0.22516660498395408 0.12999999999999998</point>
+<point>0.26 0.0</point>
+<point>0.18 0.0</point>
+<height>0.02</height>
+</polyline>
+<polyline>
+<point>0.21337835042307146 0.05181557282952465</point>
+<point>0.21164925957592348 0.05995030569104065</point>
+<point>0.20676096255024864 0.06667846933907254</point>
+<point>0.1995586903105704 0.07083670315542773</point>
+<point>0.1912877811577184 0.07170601073689012</point>
+<point>0.1833783504230715 0.06913608090521342</point>
+<point>0.17719801053557252 0.06357127787537412</point>
+<point>0.17381539840839536 0.05597380664587984</point>
+<point>0.17381539840839536 0.047657339013169465</point>
+<point>0.17719801053557252 0.040059867783675186</point>
+<point>0.18337835042307146 0.034495064753835875</point>
+<point>0.19128778115771838 0.031925134922159176</point>
+<point>0.1995586903105704 0.032794442503621575</point>
+<point>0.20676096255024864 0.03695267631997677</point>
+<point>0.21164925957592348 0.043680839968008645</point>
+<height>0.02</height>
+</polyline>
+</geometry>
+
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Red</name>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="peg1">
+      <static>true</static>
+      <link name="link">
+          <pose> 0 0 1.1 0 0 0</pose>
+        <self_collide>0</self_collide>
+        <visual name="vis_peg">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+                <radius>0.01</radius>
+              <length>0.4</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+           </script>
+          </material>
+        </visual>
+        <collision name="col_peg">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.4</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+    </model>
+
+    <model name="peg2">
+      <static>true</static>
+      <link name="link">
+          <pose>0.5 0 1.1 0 0 0</pose>
+        <self_collide>0</self_collide>
+        <visual name="vis_peg2">
+          <pose>0.0 0.0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.4</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+           </script>
+          </material>
+        </visual>
+        <collision name="col_peg2">
+          <pose>0.0 0.0 0.0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.4</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+    </model>
+
+    <model name="peg3">
+      <static>true</static>
+      <link name="link">
+        <pose>1.0 0 1.1 0 0 0</pose>
+        <self_collide>0</self_collide>
+        <visual name="vis_peg3">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.4</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Wood</name>
+           </script>
+          </material>
+        </visual>
+        <collision name="col_peg3">
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <cylinder>
+              <radius>0.01</radius>
+              <length>0.4</length>
+            </cylinder>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+      </link>
+    </model>
+    <include>
+      <uri>model://table</uri>
+      <pose>0.45 0.25 0 0 0 0</pose>
+    </include>
+    <include>
+      <uri>model://sun</uri>
+    </include>
+   </world>
+</sdf>

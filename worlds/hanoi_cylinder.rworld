@@ -4,23 +4,25 @@
   # Hanoi demo
   # Inertial parameters
   # Red wood density 510 kg/m^3
-  density = 50.0
+  density = 10.0
 
   peg_height = 0.4 
   peg_radius = 0.01
 
   # Constant parameters for each ring 
-  radius_up0 = 0.11
-  radius_lo  = 0.065
-  height_up  = 0.01
-  height_lo  = 0.03
-  radius_hole = 0.04
+  radii = [0.17, 0.15, 0.13, 0.11, 0.09, 0.07]
+  height_disk = 0.04
+  radius_hole = 0.05
   radius_increment = 0.02
+  # handle
   radius_grasp = 0.02
+  height_handle = 0.01
+  length_handle = 0.05
 
-  disk_number = 3
-  points_hole = 15
+  disk_number = 2
+  points_hole = 20
   points_up   = 20
+
 
   color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
   z_offset = 0.9  
@@ -30,7 +32,7 @@
   <world name="default">
 
 <%
-   def circle_points_s(radius, points=10, xcenter=0, ycenter=0)
+   def circle_points_s(radius, points=20, xcenter=0, ycenter=0)
       polyline = []
       points.times do |i|
         angle = 2*Math::PI * i / points.to_f;
@@ -45,68 +47,71 @@
       end
       points_s 
   end
+
+   def handle_points_s(radius, angle0, angle, h_length, xcenter=0, ycenter=0)
+        polyline = []
+      # 3 points for arc connected to disk
+        anglem = 0.5*(angle0 + angle)
+        polyline << [xcenter+radius*Math.cos(angle0), ycenter+radius*Math.sin(angle0)]
+        polyline << [xcenter+radius*Math.cos(anglem), ycenter+radius*Math.sin(anglem)]
+        polyline << [xcenter+radius*Math.cos(angle), ycenter+radius*Math.sin(angle)]
+     # handle 
+        polyline << [xcenter+(radius+h_length)*Math.cos(angle), ycenter+(radius+h_length)*Math.sin(angle)]
+        polyline << [xcenter+(radius+h_length)*Math.cos(angle0), ycenter+(radius+h_length)*Math.sin(angle0)]
+        polyline << [xcenter+radius*Math.cos(angle0), ycenter+radius*Math.sin(angle0)]
+      
+        points_s = ""
+        polyline.each do |p| 
+          points_s += "<point>" \
+                   + p[0].to_s + " " + p[1].to_s \
+                   + "</point>\n"
+        end
+      points_s 
+  end
+
   # Star axis of symmetry: Z
   disk_number.times do |j|
-       up_radius = radius_up0 + (radius_increment * (disk_number-j)) + 0.05
-       lo_radius = radius_lo
+       disk_radius = radii[j]
        hole_radius = radius_hole
 
-    # approximate the inertia for uper part to grasp 
-    volume = Math::PI * (up_radius**2 - hole_radius**2) * height_up 
+    # approximate the inertia 
+    volume = Math::PI * (disk_radius**2 - hole_radius**2) * height_disk 
     mass = density * volume
-    ixx = 1.0 / 12 * mass * (3*(hole_radius**2 + up_radius**2) + height_up**2)
+    ixx = 1.0 / 12 * mass * (3*(hole_radius**2 + disk_radius**2) + height_disk**2)
     iyy = ixx
-    izz = 0.5 * mass * (hole_radius**2 + up_radius**2)
+    izz = 0.5 * mass * (hole_radius**2 + disk_radius**2)
 
-    # the inertia for the separation lower part
-    volume_lo = Math::PI * (lo_radius**2 - hole_radius**2) * height_lo
-    mass_lo = density * volume_lo
-    ixx_lo = 1.0 / 12 * mass_lo* (3*(hole_radius**2 + lo_radius**2) + height_lo**2)
-    iyy_lo = ixx_lo
-    izz_lo = 0.5 * mass_lo * (hole_radius**2 + lo_radius**2)
+    angle_offset = Math::PI/disk_number*j
+    abs_angle = Math::PI/6.0
+    center_angle = (angle_offset + abs_angle)/2.0
+    extended_radius = disk_radius + length_handle/2.0
 
     # the 4 circles for easy grasp on the boundary
     
-    geometry_s_up  = "<geometry>\n"  \
+    geometry_s_disk= "<geometry>\n"  \
                    + "<polyline>\n"  \
-                   + circle_points_s(up_radius, 15+5*(disk_number-j), 0, 0 ) \
-                   + "<height>" + height_up.to_s + "</height>\n"  \
+                   + circle_points_s(disk_radius, 15+5*(disk_number-j), 0, 0 ) \
+                   + "<height>" + height_disk.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "<polyline>\n"  \
-                   + circle_points_s(hole_radius, 10, 0, 0 ) \
-                   + "<height>" + height_up.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "<polyline>\n"  \
-                   + circle_points_s(radius_grasp, 20, up_radius-0.01-radius_grasp, 0) \
-                   + "<height>" + height_up.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "<polyline>\n"  \
-                   + circle_points_s(radius_grasp, 20, 0, up_radius-0.01-radius_grasp) \
-                   + "<height>" + height_up.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "<polyline>\n"  \
-                   + circle_points_s(radius_grasp, 20, -1*(up_radius-0.01-radius_grasp), 0) \
-                   + "<height>" + height_up.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "<polyline>\n"  \
-                   + circle_points_s(radius_grasp, 20, 0, -1*(up_radius-0.01-radius_grasp) ) \
-                   + "<height>" + height_up.to_s + "</height>\n"  \
+                   + circle_points_s(hole_radius, points_hole, 0, 0 ) \
+                   + "<height>" + height_disk.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "</geometry>\n"
 
-    geometry_s_lo  = "<geometry>\n"  \
+  geometry_s_handle = "<geometry>\n"  \
                    + "<polyline>\n"  \
-                   + circle_points_s(lo_radius, 10+4*(disk_number-j), 0, 0 ) \
-                   + "<height>" + height_lo.to_s + "</height>\n"  \
+                   + handle_points_s(disk_radius, angle_offset, abs_angle, length_handle, 0, 0 ) \
+                   + "<height>" + height_handle.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "<polyline>\n"  \
-                   + circle_points_s(hole_radius, 10, 0, 0 ) \
-                   + "<height>" + height_lo.to_s + "</height>\n"  \
+                   + circle_points_s(radius_grasp, 15, extended_radius*Math.cos(center_angle), extended_radius*Math.sin(center_angle) ) \
+                   + "<height>" + height_handle.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "</geometry>\n"
 %>
     <%= '<model name="disk_' + j.to_s + '">' %>
-      <pose>0 0 <%= 0.1 + (height_up+height_lo + 0.01)*j + height_lo + z_offset%>  0 0 0</pose>
+      <pose>0 0 <%= 0.1 + (height_disk + 0.02)*j + z_offset%>  0 0 0</pose>
       <link name="disk">
         <inertial>
           <mass><%= mass %></mass>
@@ -119,9 +124,8 @@
             <iyz>0.0</iyz>
           </inertia>
         </inertial>
-        <collision name="collision">
-          <pose>0 0 <%= height_up/2.0 %>  0 0 0</pose>
-          <%= geometry_s_up %>
+        <collision name="collision_disk">
+          <%= geometry_s_disk%>
           <surface>
             <contact>
               <ode>
@@ -133,9 +137,9 @@
             </contact>
           </surface>
         </collision>
-        <collision name="collision2">
-            <pose>0 0 <%= -1.0*height_lo/2.0 %> 0 0 0 </pose>
-          <%= geometry_s_lo %>
+        <collision name="collision_handle">
+         <pose>0 0 <%= 0.5*(height_disk - height_handle) %>  0 0 0</pose>
+          <%= geometry_s_handle%>
           <surface>
             <contact>
               <ode>
@@ -147,9 +151,8 @@
             </contact>
           </surface>
         </collision>
-        <visual name="visual">
-          <pose>0 0 <%= height_up/2.0 %>  0 0 0</pose>
-          <%= geometry_s_up %>
+        <visual name="visual_disk">
+          <%= geometry_s_disk%>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
@@ -157,16 +160,16 @@
             </script>
           </material>
         </visual>
-      <visual name="visual2">
-          <pose>0 0 <%= -1.0* height_lo/2.0 %> 0 0 0 </pose>
-          <%= geometry_s_lo %>
+        <visual name="visual_handle">
+         <pose>0 0 <%= 0.5*(height_disk - height_handle) %>  0 0 0</pose>
+          <%= geometry_s_handle%>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%disk_number].to_s + '</name>'%>
+              <name>Gazebo/Yellow</name>
             </script>
           </material>
-      </visual>
+        </visual>
       </link>
     </model>
 <%
@@ -300,7 +303,7 @@
 
     <include>
       <uri>model://table</uri>
-      <pose>0.45 0.36 0 0 0 0</pose>
+      <pose>0.45 0.25 0 0 0 0</pose>
     </include>
 
     <gui>
