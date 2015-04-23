@@ -125,12 +125,21 @@ namespace gazebo
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
-    /// \brief hxs_set_state callback.
+    /// \brief hxs_set_model_joint_state callback.
     /// \param[in] _service The service this callback is advertised on.
     /// \param[in] _req The request.
     /// \param[out] _rep The response.
     /// \param[out[ _result True if no errors were encountered.
-    private: void HaptixStateCallback(const std::string &_service,
+    private: void HaptixModelJointStateCallback(const std::string &_service,
+      const haptix::comm::msgs::hxModel &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result);
+
+    /// \brief hxs_set_model_link_state callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixModelLinkStateCallback(const std::string &_service,
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -361,13 +370,13 @@ namespace gazebo
     /// \brief Convert from Gazebo Model to hxModel (message type)
     /// \param[in] _in
     /// \param[out] _out
-    public: static bool ConvertModel(const gazebo::physics::Model &_in,
+    public: static bool ConvertModel(gazebo::physics::Model &_in,
         haptix::comm::msgs::hxModel &_out);
 
     /// \brief Convert from Gazebo Model to hxModel
     /// \param[in] _in
     /// \param[out] _out
-    public: static bool ConvertModel(const gazebo::physics::Model &_in,
+    public: static bool ConvertModel(gazebo::physics::Model &_in,
         hxModel &_out);
 
     /// \brief Convert from Gazebo Link to hxLink (message type)
@@ -387,10 +396,23 @@ namespace gazebo
     public: static bool ConvertJoint(gazebo::physics::Joint &_in,
         haptix::comm::msgs::hxJoint &_out);
 
+    /// \brief Convert from Gazebo Joint to hxJoint
     /// \param[in] _in
     /// \param[out] _out
     public: static bool ConvertJoint(gazebo::physics::Joint &_in,
         hxJoint &_out);
+
+    /// \brief Convert from Gazebo Wrench to hxWrench
+    /// \param[in] _in
+    /// \param[out] _out
+    public: static bool ConvertWrench(const gazebo::physics::JointWrench &_in,
+        haptix::comm::msgs::hxWrench &_out);
+
+    /// \brief Convert from Gazebo Wrench to hxWrench (message type)
+    /// \param[in] _in
+    /// \param[out] _out
+    public: static bool ConvertWrench(const gazebo::physics::JointWrench &_in,
+        hxWrench &_out);
 
     ///////////// Member variables /////////////
 

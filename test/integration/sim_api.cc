@@ -72,7 +72,7 @@ TEST_F(SimApiTest, HxsSimInfo)
   EXPECT_FLOAT_EQ(cameraPose.rot.y, cameraOut.rot.y);
   EXPECT_FLOAT_EQ(cameraPose.rot.z, cameraOut.rot.z);
 
-  for (int i = 0; i < simInfo.modelCount; ++i)
+  for (int i = 0; i < simInfo.model_count; ++i)
   {
     physics::ModelPtr gzModel = world->GetModel(simInfo.models[i].name);
     ASSERT_TRUE(gzModel != NULL);
@@ -93,16 +93,16 @@ TEST_F(SimApiTest, HxsSimInfo)
       EXPECT_EQ(linkPose, gzLink->GetWorldPose());
 
       math::Vector3 tmp;
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].linvel, tmp);
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].lin_vel, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldLinearVel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].angvel, tmp);
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].ang_vel, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldAngularVel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].linacc, tmp);
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].lin_acc, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldLinearAccel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].angacc, tmp);
+      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].ang_acc, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldAngularAccel());
     }
 
@@ -115,12 +115,24 @@ TEST_F(SimApiTest, HxsSimInfo)
       EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].pos,
           gzJoint->GetAngle(0).Radian());
       EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].vel, gzJoint->GetVelocity(0));
-      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].torque_passive,
-          gzJoint->GetForceTorque(0).body1Torque.GetLength());
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].wrench_reactive.force.x,
+          gzJoint->GetForceTorque(0).body2Force.x);
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].wrench_reactive.force.y,
+          gzJoint->GetForceTorque(0).body2Force.y);
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].wrench_reactive.force.z,
+          gzJoint->GetForceTorque(0).body2Force.z);
+
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].wrench_reactive.torque.x,
+          gzJoint->GetForceTorque(0).body2Torque.x);
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].wrench_reactive.torque.y,
+          gzJoint->GetForceTorque(0).body2Torque.y);
+      EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].wrench_reactive.torque.z,
+          gzJoint->GetForceTorque(0).body2Torque.z);
+
       EXPECT_FLOAT_EQ(simInfo.models[i].joints[j].torque_motor,
-          gzJoint->GetLinkTorque(0).GetLength());
+          gzJoint->GetForce(0));
     }
-    // TODO gravity test?
+    // TODO gravity_mode test?
   }
 }
 
@@ -245,7 +257,7 @@ TEST_F(SimApiTest, HxsContacts)
 
         // Now find matching contact point as returned by hxs_contacts
         int j = 0;
-        for (; j < contactPoints.contactCount; j++)
+        for (; j < contactPoints.contact_count; j++)
         {
           bool link1NameMatch = std::string(contactPoints.contacts[i].link1) ==
               contact->collision1->GetLink()->GetName();
@@ -256,9 +268,9 @@ TEST_F(SimApiTest, HxsContacts)
               contactPos);
           HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].normal,
               contactNormal);
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].force,
+          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].wrench.force,
               contactForce);
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].torque,
+          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].wrench.torque,
               contactTorque);
           if (link1NameMatch && link2NameMatch &&
               contactPos == contact->positions[i] &&
@@ -270,48 +282,84 @@ TEST_F(SimApiTest, HxsContacts)
             break;
           }
         }
-        EXPECT_LT(j, contactPoints.contactCount);
+        EXPECT_LT(j, contactPoints.contact_count);
       }
     }
   }
 }
 
-TEST_F(SimApiTest, HxsSetState)
+TEST_F(SimApiTest, HxsSetModelJointState)
 {
   Load("worlds/arat_test.world", true);
   physics::WorldPtr world = physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
+  physics::ModelPtr gzDoorModel = world->GetModel("door");
+  ASSERT_TRUE(gzDoorModel != NULL);
+
   world->Step(5);
+
+  float pos = -1.58;
+  float vel = 0.01;
+
+  ASSERT_EQ(hxs_set_model_joint_state("door", "hinge", pos, vel), hxOK);
+
+  ASSERT_TRUE(gzDoorModel->GetJoint("hinge") != NULL);
+  EXPECT_FLOAT_EQ(pos, gzDoorModel->GetJoint("hinge")->GetAngle(0).Radian());
+
+  // TODO why does GetVelocity return 0?
+  EXPECT_FLOAT_EQ(vel, gzDoorModel->GetJoint("hinge")->GetVelocity(0));
+}
+
+TEST_F(SimApiTest, HxsSetModelLinkState)
+{
+  Load("worlds/arat_test.world", true);
+  physics::WorldPtr world = physics::get_world("default");
+  ASSERT_TRUE(world != NULL);
 
   physics::ModelPtr gzDoorModel = world->GetModel("door");
   ASSERT_TRUE(gzDoorModel != NULL);
-  hxModel doorModel;
-  HaptixWorldPlugin::ConvertModel(*gzDoorModel, doorModel);
-  // Find the door's hinge joint
-  // Maybe we should have a function for this?
-  int i = 0;
-  for (; i < doorModel.joint_count; i++)
-  {
-    if (strncmp(doorModel.joints[i].name, "hinge", 5) == 0)
-    {
-      break;
-    }
-  }
-  ASSERT_LT(i, doorModel.joint_count);
-  // Set the door's hinge joint to its lower limit
-  doorModel.joints[i].pos = -1.58;
-  doorModel.joints[i].vel = 0.01;
 
-  ASSERT_EQ(hxs_set_state(&doorModel), hxOK);
+  // set joint damping to 0 for accuracy
+  physics::JointPtr joint = gzDoorModel->GetJoint("hinge");
+  ASSERT_TRUE(joint != NULL);
+  joint->SetDamping(0, 0);
+  EXPECT_TRUE(joint->SetParam("friction", 0, 0.0));
 
-  ASSERT_TRUE(gzDoorModel->GetJoint("hinge") != NULL);
-  EXPECT_FLOAT_EQ(doorModel.joints[i].pos,
-      gzDoorModel->GetJoint("hinge")->GetAngle(0).Radian());
+  world->Step(5);
 
-  // TODO why does GetVelocity return 0?
-  /*EXPECT_FLOAT_EQ(doorModel.joints[i].vel,
-      gzDoorModel->GetJoint("hinge")->GetVelocity(0));*/
+  math::Pose gzLinkPose(0, 0, 2, 3.14159, 0, 0.58);
+  gzLinkPose += gzDoorModel->GetWorldPose();
+
+  hxTransform pose;
+  HaptixWorldPlugin::ConvertTransform(gzLinkPose, pose);
+
+  hxVector3 lin_vel;
+  lin_vel.x = -0.003;
+  lin_vel.y = -0.02;
+  lin_vel.z = 0;
+  hxVector3 ang_vel;
+  ang_vel.x = 0;
+  ang_vel.y = 0;
+  ang_vel.z = 0.03;
+
+  hxVector3 zero;
+
+  physics::LinkPtr doorLink = gzDoorModel->GetLink("door");
+  ASSERT_TRUE(doorLink != NULL);
+
+  EXPECT_EQ(math::Vector3::Zero, doorLink->GetWorldLinearVel());
+
+  ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &zero,
+      &ang_vel), hxOK);
+
+  EXPECT_EQ(gzLinkPose, doorLink->GetWorldPose());
+
+  EXPECT_EQ(math::Vector3(0, 0, 0.03), doorLink->GetWorldAngularVel());
+
+  ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &lin_vel,
+      &zero), hxOK);
+  EXPECT_EQ(math::Vector3(-0.003, -0.02, 0), doorLink->GetWorldLinearVel());
 }
 
 TEST_F(SimApiTest, HxsAddModel)
@@ -324,55 +372,55 @@ TEST_F(SimApiTest, HxsAddModel)
   world->Step(20);
 
   std::string modelSDF =
-    "<sdf version=\"1.5\">" +
-      "<model name=\"new_model\">" +
-        "<link name=\"link1\">" +
-          "<pose>0 0 0.0375 0 0 0</pose>" +
-          "<collision name=\"collision\">" +
-            "<geometry>" +
-              "<box>" +
-                "<size>0.075 0.075 0.075</size>" +
-              "</box>" +
-            "</geometry>" +
-          "</collision>" +
-          "<visual name=\"visual\">" +
-            "<geometry>" +
-              "<box>" +
-                "<size>0.075 0.075 0.075</size>" +
-              "</box>" +
-            "</geometry>" +
-          "</visual>" +
-        "</link>" +
-        "<link name=\"link2\">" +
-          "<pose>0.06 0 0.0375 0 0 0</pose>" +
-          "<collision name=\"collision\">" +
-            "<geometry>" +
-              "<box>" +
-                "<size>0.075 0.075 0.075</size>" +
-              "</box>" +
-            "</geometry>" +
-          "</collision>" +
-          "<visual name=\"visual\">" +
-            "<geometry>" +
-              "<box>" +
-                "<size>0.075 0.075 0.075</size>" +
-              "</box>" +
-            "</geometry>" +
-          "</visual>" +
-        "</link>" +
-        "<joint name=\"joint\" type=\"revolute\">" +
-          "<parent>link1</parent>" +
-          "<child>link2</child>" +
-          "<axis>" +
-            "<xyz>0 0 1</xyz>" +
-            "<limit>" +
-              "<lower>0</lower>" +
-              "<upper>0</upper>" +
-            "</limit>" +
-            "<use_parent_model_frame>true</use_parent_model_frame>" +
-          "</axis>" +
-        "</joint>" +
-      "</model>" +
+    "<sdf version=\"1.5\">"
+      "<model name=\"new_model\">"
+        "<link name=\"link1\">"
+          "<pose>0 0 0.0375 0 0 0</pose>"
+          "<collision name=\"collision\">"
+            "<geometry>"
+              "<box>"
+                "<size>0.075 0.075 0.075</size>"
+              "</box>"
+            "</geometry>"
+          "</collision>"
+          "<visual name=\"visual\">"
+            "<geometry>"
+              "<box>"
+                "<size>0.075 0.075 0.075</size>"
+              "</box>"
+            "</geometry>"
+          "</visual>"
+        "</link>"
+        "<link name=\"link2\">"
+          "<pose>0.06 0 0.0375 0 0 0</pose>"
+          "<collision name=\"collision\">"
+            "<geometry>"
+              "<box>"
+                "<size>0.075 0.075 0.075</size>"
+              "</box>"
+            "</geometry>"
+          "</collision>"
+          "<visual name=\"visual\">"
+            "<geometry>"
+              "<box>"
+                "<size>0.075 0.075 0.075</size>"
+              "</box>"
+            "</geometry>"
+          "</visual>"
+        "</link>"
+        "<joint name=\"joint\" type=\"revolute\">"
+          "<parent>link1</parent>"
+          "<child>link2</child>"
+          "<axis>"
+            "<xyz>0 0 1</xyz>"
+            "<limit>"
+              "<lower>0</lower>"
+              "<upper>0</upper>"
+            "</limit>"
+            "<use_parent_model_frame>true</use_parent_model_frame>"
+          "</axis>"
+        "</joint>"
+      "</model>"
     "</sdf>";
 
   std::string name = "new_model";
@@ -414,12 +462,12 @@ TEST_F(SimApiTest, HxsLinearVel)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  hxVector3 linvel;
-  linvel.x = -0.01;
-  linvel.y = -0.02;
-  linvel.z = -0.03;
+  hxVector3 lin_vel;
+  lin_vel.x = -0.01;
+  lin_vel.y = -0.02;
+  lin_vel.z = -0.03;
 
-  ASSERT_EQ(hxs_linear_velocity("wood_cube_5cm", &linvel), hxOK);
+  ASSERT_EQ(hxs_linear_velocity("wood_cube_5cm", &lin_vel), hxOK);
 
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
@@ -435,12 +483,12 @@ TEST_F(SimApiTest, HxsAngularVel)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  hxVector3 angvel;
-  angvel.x = -0.01;
-  angvel.y = -0.02;
-  angvel.z = -0.03;
+  hxVector3 ang_vel;
+  ang_vel.x = -0.01;
+  ang_vel.y = -0.02;
+  ang_vel.z = -0.03;
 
-  ASSERT_EQ(hxs_angular_velocity("wood_cube_5cm", &angvel), hxOK);
+  ASSERT_EQ(hxs_angular_velocity("wood_cube_5cm", &ang_vel), hxOK);
 
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
@@ -457,7 +505,7 @@ TEST_F(SimApiTest, HxsForce)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  // disabling gravity makes it easier to verify test
+  // disabling gravity_mode makes it easier to verify test
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
@@ -502,7 +550,7 @@ TEST_F(SimApiTest, HxsTorque)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  // disabling gravity makes it easier to verify test
+  // disabling gravity_mode makes it easier to verify test
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
@@ -641,17 +689,17 @@ TEST_F(SimApiTest, HxsModelGravity)
   Load("worlds/arat_test.world", true);
   physics::WorldPtr world = physics::get_world("default");
   ASSERT_TRUE(world != NULL);
-  int gravity;
-  ASSERT_EQ(hxs_model_gravity("wood_cube_5cm", &gravity), hxOK);
+  int gravity_mode;
+  ASSERT_EQ(hxs_model_gravity_mode("wood_cube_5cm", &gravity_mode), hxOK);
 
-  EXPECT_EQ(gravity, 1);
+  EXPECT_EQ(gravity_mode, 1);
 
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   model->SetGravityMode(0);
 
-  ASSERT_EQ(hxs_model_gravity("wood_cube_5cm", &gravity), hxOK);
+  ASSERT_EQ(hxs_model_gravity_mode("wood_cube_5cm", &gravity_mode), hxOK);
 
-  EXPECT_EQ(gravity, 0);
+  EXPECT_EQ(gravity_mode, 0);
 }
 
 TEST_F(SimApiTest, HxsSetModelGravity)
@@ -660,8 +708,8 @@ TEST_F(SimApiTest, HxsSetModelGravity)
   physics::WorldPtr world = physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
-  int gravity = 0;
-  ASSERT_EQ(hxs_set_model_gravity("wood_cube_5cm", gravity), hxOK);
+  int gravity_mode = 0;
+  ASSERT_EQ(hxs_set_model_gravity_mode("wood_cube_5cm", gravity_mode), hxOK);
 
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   for (auto link : model->GetLinks())
