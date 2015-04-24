@@ -1,28 +1,25 @@
 <?xml version="1.0" ?>
 
+ 
 <%
-  # Hanoi demo
-  # Inertial parameters
   # Red wood density 510 kg/m^3
   density = 10.0
+
+  disk_number = 4
+  radii = [0.18, 0.16, 0.14, 0.12, 0.10]
 
   peg_height = 0.4 
   peg_radius = 0.01
 
   # Constant parameters for each ring 
-  radii = [0.17, 0.15, 0.13, 0.11, 0.09, 0.07]
-  height_disk = 0.04
+  height_disk = 0.02
   radius_hole = 0.05
-  radius_increment = 0.02
-  # handle
-  radius_grasp = 0.02
-  height_handle = 0.01
-  length_handle = 0.05
-
-  disk_number = 2
   points_hole = 20
-  points_up   = 20
 
+  # handle
+  height_handle = 0.01
+  length_handle = 0.08
+  radius_grasp = 0.02
 
   color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
   z_offset = 0.9  
@@ -30,7 +27,6 @@
 
 <sdf version="1.5">
   <world name="default">
-
 <%
    def circle_points_s(radius, points=20, xcenter=0, ycenter=0)
       polyline = []
@@ -38,7 +34,6 @@
         angle = 2*Math::PI * i / points.to_f;
         polyline << [xcenter+radius*Math.cos(angle), ycenter+radius*Math.sin(angle)]
       end
-      
       points_s = ""
       polyline.each do |p| 
         points_s += "<point>" \
@@ -51,15 +46,13 @@
    def handle_points_s(radius, angle0, angle, h_length, xcenter=0, ycenter=0)
         polyline = []
       # 3 points for arc connected to disk
-        anglem = 0.5*(angle0 + angle)
+        anglem = 0.5*(angle0.to_f + angle.to_f)
         polyline << [xcenter+radius*Math.cos(angle0), ycenter+radius*Math.sin(angle0)]
         polyline << [xcenter+radius*Math.cos(anglem), ycenter+radius*Math.sin(anglem)]
         polyline << [xcenter+radius*Math.cos(angle), ycenter+radius*Math.sin(angle)]
      # handle 
         polyline << [xcenter+(radius+h_length)*Math.cos(angle), ycenter+(radius+h_length)*Math.sin(angle)]
         polyline << [xcenter+(radius+h_length)*Math.cos(angle0), ycenter+(radius+h_length)*Math.sin(angle0)]
-        polyline << [xcenter+radius*Math.cos(angle0), ycenter+radius*Math.sin(angle0)]
-      
         points_s = ""
         polyline.each do |p| 
           points_s += "<point>" \
@@ -71,9 +64,8 @@
 
   # Star axis of symmetry: Z
   disk_number.times do |j|
-       disk_radius = radii[j]
-       hole_radius = radius_hole
-
+    disk_radius = radii[j]
+    hole_radius = radius_hole
     # approximate the inertia 
     volume = Math::PI * (disk_radius**2 - hole_radius**2) * height_disk 
     mass = density * volume
@@ -81,13 +73,11 @@
     iyy = ixx
     izz = 0.5 * mass * (hole_radius**2 + disk_radius**2)
 
-    angle_offset = Math::PI/disk_number*j
+    angle_offset = -Math::PI/6.0*j.to_f
     abs_angle = Math::PI/6.0
-    center_angle = (angle_offset + abs_angle)/2.0
-    extended_radius = disk_radius + length_handle/2.0
+    center_angle = angle_offset + abs_angle/2.0
+    extended_radius = disk_radius + 1.03*radius_grasp  
 
-    # the 4 circles for easy grasp on the boundary
-    
     geometry_s_disk= "<geometry>\n"  \
                    + "<polyline>\n"  \
                    + circle_points_s(disk_radius, 15+5*(disk_number-j), 0, 0 ) \
@@ -98,10 +88,9 @@
                    + "<height>" + height_disk.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "</geometry>\n"
-
   geometry_s_handle = "<geometry>\n"  \
                    + "<polyline>\n"  \
-                   + handle_points_s(disk_radius, angle_offset, abs_angle, length_handle, 0, 0 ) \
+                   + handle_points_s(disk_radius, angle_offset, angle_offset+abs_angle, length_handle, 0, 0 ) \
                    + "<height>" + height_handle.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "<polyline>\n"  \
@@ -111,7 +100,7 @@
                    + "</geometry>\n"
 %>
     <%= '<model name="disk_' + j.to_s + '">' %>
-      <pose>0 0 <%= 0.1 + (height_disk + 0.02)*j + z_offset%>  0 0 0</pose>
+      <pose>0 0 <%= 0.2 + (height_disk + 0.02)*j + z_offset%>  0 0 0</pose>
       <link name="disk">
         <inertial>
           <mass><%= mass %></mass>
@@ -138,7 +127,7 @@
           </surface>
         </collision>
         <collision name="collision_handle">
-         <pose>0 0 <%= 0.5*(height_disk - height_handle) %>  0 0 0</pose>
+         <pose>0 0 <%= 0.5*height_disk-0.5*height_handle %>  0 0 0</pose>
           <%= geometry_s_handle%>
           <surface>
             <contact>
@@ -161,12 +150,12 @@
           </material>
         </visual>
         <visual name="visual_handle">
-         <pose>0 0 <%= 0.5*(height_disk - height_handle) %>  0 0 0</pose>
+         <pose>0 0 <%= 0.5*height_disk-0.5*height_handle %>  0 0 0</pose>
           <%= geometry_s_handle%>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Yellow</name>
+              <%= '<name>Gazebo/' + color[j%disk_number].to_s + '</name>'%>
             </script>
           </material>
         </visual>
