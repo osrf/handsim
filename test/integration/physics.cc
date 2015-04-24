@@ -29,10 +29,7 @@
 #include <gazebo/rendering/rendering.hh>
 #include <gazebo/msgs/msgs.hh>
 
-#include <gazebo/gazebo_config.h>
-#include <gazebo/Server.hh>
-
-#include "ServerFixture.hh"
+#include <gazebo/test/ServerFixture.hh>
 
 using namespace gazebo;
 

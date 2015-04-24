@@ -12,16 +12,15 @@ macro (handsim_build_tests)
     add_dependencies(${BINARY_NAME}
       lib${PROJECT_NAME_LOWER}
       gtest gtest_main
-      server_fixture
       )
 
     target_link_libraries(${BINARY_NAME}
       libgtest.a
       libgtest_main.a
-      ${CMAKE_BINARY_DIR}/test/libserver_fixture.a
       pthread
       HaptixTracking
-      haptix-comm
+      ${HAPTIX-COMM-LIBRARIES}
+      gazebo_test_fixture
       gazebo_common
       gazebo_math
       gazebo_physics
@@ -29,7 +28,10 @@ macro (handsim_build_tests)
       gazebo_rendering
       gazebo_msgs
       gazebo_transport
-      ${Boost_LIBRARIES}
+      ${Boost_FILESYSTEM_LIBRARIES}
+      ${Boost_SYSTEM_LIBRARIES}
+      ${Boost_THREAD_LIBRARIES}
+      ${IGNITION-TRANPOSRT_LIBRARIES}
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
