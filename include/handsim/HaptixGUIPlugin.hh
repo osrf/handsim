@@ -51,28 +51,28 @@ namespace haptix_gazebo_plugins
     // Documentation inherited
     public: void Load(sdf::ElementPtr _elem);
 
-    // Qt callback on mouse enter event.
-    // _param[in] Mouse enter event.
+    /// \brief Qt callback on mouse enter event.
+    /// \param[in] _event Mouse enter event.
     protected: virtual void enterEvent(QEvent *_event);
 
-    // Qt callback on mouse move event.
-    // _param[in] Mouse move event.
+    /// \brief Qt callback on mouse move event.
+    /// \param[in] _event Mouse move event.
     protected: virtual void mouseMoveEvent(QMouseEvent *_event);
 
-    // Qt callback on mouse press event.
-    // _param[in] Mouse press event.
+    /// \brief Qt callback on mouse press event.
+    /// \param[in] _event Mouse press event.
     protected: virtual void mousePressEvent(QMouseEvent *_event);
 
-    // Qt callback on mouse release event.
-    // _param[in] Mouse release event.
+    /// \brief Qt callback on mouse release event.
+    /// \param[in] _event Mouse release event.
     protected: virtual void mouseReleaseEvent(QMouseEvent *_event);
 
-    // Qt callback on mouse double click event.
-    // _param[in] Mouse double click event.
+    /// \brief Qt callback on mouse double click event.
+    /// \param[in] _event Mouse double click event.
     protected: virtual void mouseDoubleClickEvent(QMouseEvent *_event);
 
-    // Qt callback on mouse wheel event.
-    // _param[in] Mouse wheel event.
+    /// \brief Qt callback on mouse wheel event.
+    /// \param[in] _event Mouse wheel event.
     protected: virtual void wheelEvent(QWheelEvent *_event);
 
     /// \brief Signal to set a contact visualization value.
