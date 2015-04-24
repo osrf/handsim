@@ -43,7 +43,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
-  this->maxHeight = 880;
+  this->maxHeight = 850;
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -104,6 +104,20 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(posScalingSlider, SIGNAL(sliderMoved(int)),
           this, SLOT(OnScalingSlider(int)));
 
+  // Separator 2
+  QFrame *settingsSeparator2 = new QFrame(this);
+  settingsSeparator2->setFrameShape(QFrame::HLine);
+  settingsSeparator2->setFrameShadow(QFrame::Sunken);
+  settingsSeparator2->setLineWidth(1);
+
+  // Version title
+  QLabel *versionTitleLabel = new QLabel(tr("<b>Version</b>"));
+
+  // Version number
+  std::string versionStr = std::string("  v ") + HANDSIM_VERSION_FULL;
+  QLabel *versionLabel = new QLabel(tr(versionStr.c_str()));
+  versionLabel->setStyleSheet("QLabel {font: 10px}");
+
   // Settings layout
   QVBoxLayout *settingsLayout = new QVBoxLayout;
   settingsLayout->addWidget(generalSettingsLabel);
@@ -114,6 +128,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   settingsLayout->addWidget(localCoordMoveCheck);
   settingsLayout->addWidget(posScalingLabel);
   settingsLayout->addWidget(posScalingSlider);
+  settingsLayout->addWidget(settingsSeparator2);
+  settingsLayout->addWidget(versionTitleLabel);
+  settingsLayout->addWidget(versionLabel);
 
   // Settings widget
   QWidget *settingsWidget = new QWidget;
@@ -319,15 +336,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   cycleButtonLayout->addWidget(this->resetSceneButton);
   cycleButtonLayout->addWidget(this->nextButton);
 
-  // Version
-  std::string versionStr = std::string("  v ") + HANDSIM_VERSION_FULL;
-  QLabel *versionLabel = new QLabel(tr(versionStr.c_str()));
-  versionLabel->setStyleSheet("QLabel {font: 10px}");
-
-  // Bottom layout
-  QHBoxLayout *bottomLayout = new QHBoxLayout();
-  bottomLayout->addWidget(versionLabel);
-
   // Frame layout
   QVBoxLayout *scrollableFrameLayout = new QVBoxLayout;
   scrollableFrameLayout->setContentsMargins(0, 0, 0, 0);
@@ -337,7 +345,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   scrollableFrameLayout->addWidget(this->tabFrame);
   scrollableFrameLayout->addWidget(this->instructionsView);
   scrollableFrameLayout->addLayout(cycleButtonLayout);
-  scrollableFrameLayout->addLayout(bottomLayout);
 
   // Scrollable frame
   QFrame *scrollableFrame = new QFrame();
