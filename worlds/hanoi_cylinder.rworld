@@ -1,6 +1,4 @@
 <?xml version="1.0" ?>
-
- 
 <%
   # Red wood density 510 kg/m^3
   density = 10.0
@@ -8,10 +6,10 @@
   disk_number = 4
   radii = [0.18, 0.16, 0.14, 0.12, 0.10]
 
-  peg_height = 0.4 
+  peg_height = 0.4
   peg_radius = 0.01
 
-  # Constant parameters for each ring 
+  # Constant parameters for each ring
   height_disk = 0.02
   radius_hole = 0.05
   points_hole = 20
@@ -22,7 +20,7 @@
   radius_grasp = 0.02
 
   color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
-  z_offset = 0.9  
+  z_offset = 0.9
 %>
 
 <sdf version="1.5">
@@ -35,12 +33,12 @@
         polyline << [xcenter+radius*Math.cos(angle), ycenter+radius*Math.sin(angle)]
       end
       points_s = ""
-      polyline.each do |p| 
+      polyline.each do |p|
         points_s += "<point>" \
                  + p[0].to_s + " " + p[1].to_s \
                  + "</point>\n"
       end
-      points_s 
+      points_s
   end
 
    def handle_points_s(radius, angle0, angle, h_length, xcenter=0, ycenter=0)
@@ -50,24 +48,24 @@
         polyline << [xcenter+radius*Math.cos(angle0), ycenter+radius*Math.sin(angle0)]
         polyline << [xcenter+radius*Math.cos(anglem), ycenter+radius*Math.sin(anglem)]
         polyline << [xcenter+radius*Math.cos(angle), ycenter+radius*Math.sin(angle)]
-     # handle 
+     # handle
         polyline << [xcenter+(radius+h_length)*Math.cos(angle), ycenter+(radius+h_length)*Math.sin(angle)]
         polyline << [xcenter+(radius+h_length)*Math.cos(angle0), ycenter+(radius+h_length)*Math.sin(angle0)]
         points_s = ""
-        polyline.each do |p| 
+        polyline.each do |p|
           points_s += "<point>" \
                    + p[0].to_s + " " + p[1].to_s \
                    + "</point>\n"
         end
-      points_s 
+      points_s
   end
 
   # Star axis of symmetry: Z
   disk_number.times do |j|
     disk_radius = radii[j]
     hole_radius = radius_hole
-    # approximate the inertia 
-    volume = Math::PI * (disk_radius**2 - hole_radius**2) * height_disk 
+    # approximate the inertia
+    volume = Math::PI * (disk_radius**2 - hole_radius**2) * height_disk
     mass = density * volume
     ixx = 1.0 / 12 * mass * (3*(hole_radius**2 + disk_radius**2) + height_disk**2)
     iyy = ixx
@@ -76,7 +74,7 @@
     angle_offset = -Math::PI/6.0*j.to_f
     abs_angle = Math::PI/6.0
     center_angle = angle_offset + abs_angle/2.0
-    extended_radius = disk_radius + 1.03*radius_grasp  
+    extended_radius = disk_radius + 1.03*radius_grasp
 
     geometry_s_disk= "<geometry>\n"  \
                    + "<polyline>\n"  \
