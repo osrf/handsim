@@ -1103,6 +1103,11 @@ void HaptixGUIPlugin::ResetModels()
 {
   boost::mutex::scoped_lock lock(this->motorCommandMutex);
 
+  // Signal to WorldControl to reset the world
+  gazebo::msgs::WorldControl msg;
+  msg.mutable_reset()->set_model_only(true);
+  this->worldControlPub->Publish(msg);
+
   // Signal to HaptixControlPlugin to pause motion tracking
   this->trackingPaused = false;
   gazebo::msgs::Int pause;
@@ -1116,10 +1121,7 @@ void HaptixGUIPlugin::ResetModels()
     usleep(100000);
   }
 
-  // Signal to WorldControl to reset the world
-  gazebo::msgs::WorldControl msg;
-  msg.mutable_reset()->set_all(true);
-  this->worldControlPub->Publish(msg);
+  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 
   // Also reset wrist and finger posture
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
