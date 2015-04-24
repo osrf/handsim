@@ -17,7 +17,6 @@ macro (handsim_build_tests)
     target_link_libraries(${BINARY_NAME}
       libgtest.a
       libgtest_main.a
-      #${CMAKE_BINARY_DIR}/test/libserver_fixture.a
       pthread
       HaptixTracking
       ${HAPTIX-COMM-LIBRARIES}
