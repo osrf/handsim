@@ -6,23 +6,23 @@
   # Red wood density 510 kg/m^3
   density = 10.0
 
-  #disk_number = 4
-  #radii = [0.19, 0.18, 0.15, 0.13]
+  disk_number = 4
+  radii = [0.18, 0.16, 0.14, 0.12]
 
-  disk_number = 1
-  radii = [0.18]
+  #disk_number = 1
+  #radii = [0.18]
 
   peg_height = 0.4 
   peg_radius = 0.01
 
   # Constant parameters for each ring 
   #radii = [0.17, 0.15]
-  height_disk = 0.04
+  height_disk = 0.02
   radius_hole = 0.05
   points_hole = 20
 
   # handle
-  height_handle = 0.02
+  height_handle = 0.01
 
   length_handle = 0.08
   radius_grasp = 0.02
@@ -62,8 +62,7 @@
      # handle 
         polyline << [xcenter+(radius+h_length)*Math.cos(angle), ycenter+(radius+h_length)*Math.sin(angle)]
         polyline << [xcenter+(radius+h_length)*Math.cos(angle0), ycenter+(radius+h_length)*Math.sin(angle0)]
-        polyline << [xcenter+radius*Math.cos(angle0), ycenter+radius*Math.sin(angle0)]
-      
+
         points_s = ""
         polyline.each do |p| 
           points_s += "<point>" \
@@ -88,8 +87,8 @@
 
     angle_offset = angle_offsets[j]
     abs_angle = Math::PI/6.0
-    center_angle = (angle_offset + abs_angle)/2.0
-    extended_radius = disk_radius + 1.01*radius_grasp  
+    center_angle = angle_offset + abs_angle/2.0
+    extended_radius = disk_radius + 1.03*radius_grasp  
 
     geometry_s_disk= "<geometry>\n"  \
                    + "<polyline>\n"  \
@@ -103,7 +102,7 @@
                    + "</geometry>\n"
   geometry_s_handle = "<geometry>\n"  \
                    + "<polyline>\n"  \
-                   + handle_points_s(disk_radius, angle_offset, abs_angle, length_handle, 0, 0 ) \
+                   + handle_points_s(disk_radius, angle_offset, angle_offset+abs_angle, length_handle, 0, 0 ) \
                    + "<height>" + height_handle.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "<polyline>\n"  \
