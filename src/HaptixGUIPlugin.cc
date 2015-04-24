@@ -1548,6 +1548,36 @@ void HaptixGUIPlugin::enterEvent(QEvent */*_event*/)
 }
 
 /////////////////////////////////////////////////
+void HaptixGUIPlugin::mouseMoveEvent(QMouseEvent *_event)
+{
+  _event->accept();
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::mousePressEvent(QMouseEvent *_event)
+{
+  _event->accept();
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::mouseReleaseEvent(QMouseEvent *_event)
+{
+  _event->accept();
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::mouseDoubleClickEvent(QMouseEvent *_event)
+{
+  _event->accept();
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::wheelEvent(QWheelEvent *_event)
+{
+  _event->accept();
+}
+
+/////////////////////////////////////////////////
 bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
 {
   QAbstractButton *button = qobject_cast<QAbstractButton *>(_obj);
