@@ -26,6 +26,7 @@
 #include <gazebo/physics/Joint.hh>
 #include <gazebo/physics/Model.hh>
 #include <gazebo/physics/PhysicsEngine.hh>
+#include <gazebo/physics/SurfaceParams.hh>
 #include <gazebo/physics/World.hh>
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/util/LogRecord.hh>
@@ -87,11 +88,13 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   // TODO: different timer topics?
   this->timerPublisher =
       this->gzNode->Advertise<msgs::GzString>("~/timer_control");
-  this->worldControlPub = this->gzNode->Advertise<gazebo::msgs::WorldControl>
+  this->worldControlPub = this->gzNode->Advertise<msgs::WorldControl>
                               ("~/world_control");
 
-  this->pausePub = this->gzNode->Advertise<gazebo::msgs::Int>
+  this->pausePub = this->gzNode->Advertise<msgs::Int>
                       ("~/motion_tracking/pause_request");
+
+  this->visPub = this->gzNode->Advertise<msgs::Visual>("~/visual");
 
   this->worldUpdateConnection = event::Events::ConnectWorldUpdateBegin(
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
@@ -168,6 +171,18 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_gravity_mode",
     &HaptixWorldPlugin::HaptixSetModelGravityCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_model_color",
+    &HaptixWorldPlugin::HaptixModelColorCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_color",
+    &HaptixWorldPlugin::HaptixSetModelColorCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_model_collide_mode",
+    &HaptixWorldPlugin::HaptixModelModelCollideModeCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_collide_mode",
+    &HaptixWorldPlugin::HaptixSetModelCollideModeCallback, this);
 
   this->lastSimUpdateTime = this->world->GetSimTime();
 }
@@ -1018,7 +1033,223 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertTransform(
+void HaptixWorldPlugin::HaptixSetModelColorCallback(
+    const std::string &/*_service*/,
+    const haptix::comm::msgs::hxParam &_req,
+    haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+  physics::ModelPtr model = this->world->GetModel(_req.data());
+
+  if (!this->model)
+  {
+    _result = false;
+    return;
+  }
+
+  haptix::comm::msgs::hxColor inputColor = _req.color;
+
+  for (auto link : this->model->GetLinks())
+  {
+    // Get all the visuals
+    sdf::ElementPtr linkSDF = link->GetSDF();
+    if (linkSDF->HasElement("visual"))
+    {
+      for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
+           visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
+      {
+        GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
+        std::string visualName = visualSDF->Get<std::string>("name");
+        msgs::Visual visMsg = link->GetVisualMessage(visualName);
+        msgs::Color colorMsg;
+        colorMsg.set_r(inputColor.r);
+        colorMsg.set_g(inputColor.g);
+        colorMsg.set_b(inputColor.b);
+        colorMsg.set_a(inputColor.a);
+        msgs::Material *materialMsg;
+        if (!visMsg.has_material())
+        {
+          materialMsg = new msgs::Material;
+          visMsg.set_allocated_material(materialMsg);
+        }
+        else
+        {
+          materialMsg = visMsg.mutable_material();
+        }
+        materialMsg.set_allocated_ambient(&colorMsg);
+        materialMsg.set_allocated_diffuse(&colorMsg);
+        visPub->Publish(visMsg);
+      }
+    }
+  }
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/,
+    const haptix::comm::msgs::hxString &_req,
+    haptix::comm::msgs::hxColor &_rep, bool &_result)
+{
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+  physics::ModelPtr model = this->world->GetModel(_req.data());
+
+  if (!this->model)
+  {
+    _result = false;
+    return;
+  }
+
+  auto links = this->model->GetLinks();
+  if (links.size() == 0)
+  {
+    _result = false;
+    return;
+  }
+
+  // A model might have multiple links, a link might have multiple visuals
+  // with different colors
+  // whatever man, this is probably not a typical case for teams
+  int numVis = 0;
+  double r, g, b, a;
+  for (auto link : links)
+  {
+    // Get all the visuals
+    sdf::ElementPtr linkSDF = link->GetSDF();
+    if (linkSDF->HasElement("visual"))
+    {
+      for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
+           visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
+      {
+        GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
+        std::string visualName = visualSDF->Get<std::string>("name");
+        msgs::Visual visMsg = link->GetVisualMessage(visualName);
+        r += visMsg.material().ambient().r();
+        g += visMsg.material().ambient().g();
+        b += visMsg.material().ambient().b();
+        a += visMsg.material().ambient().a();
+        numVis+=2;
+      }
+    }
+  }
+
+  _rep.set_r(r / numVis);
+  _rep.set_g(g / numVis);
+  _rep.set_b(b / numVis);
+  _rep.set_a(a / numVis);
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
+    const std::string &/*_service*/,
+    const haptix::comm::msgs::hxParam &_req,
+    haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  haptix::comm::msgs::hxCollisionMode mode = _req.collision_mode().mode();
+
+  for (auto link : model->GetLinks())
+  {
+    for (auto collision : link->GetCollisions())
+    {
+      physics::SurfaceParamsPtr surface = collision->GetSurface();
+
+      if (mode == haptix::comm::msgs::hxCollisionMode::NO_COLLIDE)
+      {
+        surface->collideWithoutContact = false;
+        // Set collideBitmask in case it was unset
+        surface->collideBitmask == 0x0;
+      }
+      else if (mode == haptix::comm::msgs::hxCollisionMode::DETECTION_ONLY)
+      {
+        surface->collideWithoutContact = true;
+        // Set collideBitmask in case it was unset
+        if (surface->collideBitmask == 0x0)
+        {
+          surface->collideBitmask = 0x01;
+        }
+      }
+      else if (mode == haptix::comm::msgs::hxCollisionMode::COLLIDE)
+      {
+        surface->collideWithoutContact = false;
+        surface->collideBitmask = 0x01;
+      }
+      else
+      {
+        _result = false;
+        return;
+      }
+    }
+  }
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixModelCollideModeCallback(
+    const std::string &/*_service*/,
+    const haptix::comm::msgs::hxString &_req,
+    haptix::comm::msgs::hxCollisionMode &_rep, bool &_result)
+{
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+  physics::ModelPtr model = this->world->GetModel(_req.data());
+
+  if (!model)
+  {
+    _result = false;
+    return;
+  }
+  bool collideWithoutContact = true;
+  unsigned int totalCollideBitmask = 0x0;
+
+  for (auto link : model->GetLinks())
+  {
+    for (auto collision : link->GetCollisions())
+    {
+      physics::SurfaceParamsPtr surface = collision->GetSurface();
+      if (!surface)
+      {
+        _result = false;
+        return;
+      }
+      collideWithoutContact &= surface->collideWithoutContact;
+      totalCollideBitmask |= surface->collideBitmask;
+    }
+  }
+
+  if (totalCollideBitmask == 0x0)
+  {
+    // All of the collisions had a collide_bitmask of 0x0
+    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::NO_COLLIDE);
+  }
+  else if (collideWithoutContact)
+  {
+    // All of the collisions had collideWithoutContact = true
+    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::DETECTION_ONLY);
+  }
+  else
+  {
+    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::COLLIDE);
+  }
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+bool HaptixWorldPlugin::HaptixWorldPlugin::ConvertTransform(
     const haptix::comm::msgs::hxTransform &_in, gazebo::math::Pose &_out)
 {
   if (!_in.has_pos() || !_in.has_orient())
@@ -1029,6 +1260,7 @@ bool HaptixWorldPlugin::ConvertTransform(
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertTransform(
     const hxTransform &_in, gazebo::math::Pose &_out)
 {
@@ -1044,6 +1276,7 @@ bool HaptixWorldPlugin::ConvertTransform(
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertTransform(
     const gazebo::math::Pose &_in, hxTransform &_out)
 {
@@ -1057,6 +1290,7 @@ bool HaptixWorldPlugin::ConvertTransform(
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertTransform(const gazebo::math::Pose &_in,
     haptix::comm::msgs::hxTransform &_out)
 {
@@ -1074,6 +1308,7 @@ bool HaptixWorldPlugin::ConvertTransform(const gazebo::math::Pose &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertVector(const haptix::comm::msgs::hxVector3 &_in,
     math::Vector3 &_out)
 {
@@ -1083,6 +1318,7 @@ bool HaptixWorldPlugin::ConvertVector(const haptix::comm::msgs::hxVector3 &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
     haptix::comm::msgs::hxVector3 &_out)
 {
@@ -1092,6 +1328,7 @@ bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
     hxVector3 &_out)
 {
@@ -1102,6 +1339,7 @@ bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertVector(const hxVector3 &_in,
     math::Vector3 &_out)
 {
@@ -1112,6 +1350,7 @@ bool HaptixWorldPlugin::ConvertVector(const hxVector3 &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertQuaternion(
     const haptix::comm::msgs::hxQuaternion &_in, gazebo::math::Quaternion &_out)
 {
@@ -1121,6 +1360,7 @@ bool HaptixWorldPlugin::ConvertQuaternion(
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertQuaternion(const gazebo::math::Quaternion &_in,
     haptix::comm::msgs::hxQuaternion &_out)
 {
@@ -1131,6 +1371,7 @@ bool HaptixWorldPlugin::ConvertQuaternion(const gazebo::math::Quaternion &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
     haptix::comm::msgs::hxModel &_out)
 {
@@ -1166,6 +1407,7 @@ bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
     hxModel &_out)
 {
@@ -1201,6 +1443,7 @@ bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
     haptix::comm::msgs::hxLink &_out)
 {
@@ -1223,6 +1466,7 @@ bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
     hxLink &_out)
 {
@@ -1241,12 +1485,12 @@ bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
     haptix::comm::msgs::hxJoint &_out)
 {
   _out.set_name(_in.GetName());
 
-  // TODO: Index???
   _out.set_pos(_in.GetAngle(0).Radian());
   _out.set_vel(_in.GetVelocity(0));
 
@@ -1256,6 +1500,7 @@ bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in, hxJoint &_out)
 {
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
@@ -1268,6 +1513,7 @@ bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in, hxJoint &_out)
   return true;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertWrench(const gazebo::physics::JointWrench &_in,
     haptix::comm::msgs::hxWrench &_out)
 {
@@ -1277,6 +1523,7 @@ bool HaptixWorldPlugin::ConvertWrench(const gazebo::physics::JointWrench &_in,
   return result;
 }
 
+/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertWrench(const gazebo::physics::JointWrench &_in,
     hxWrench &_out)
 {

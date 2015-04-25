@@ -35,6 +35,8 @@
 #include <ignition/transport.hh>
 #include "haptix/comm/haptix_sim.h"
 #include "haptix/comm/haptix.h"
+#include "haptix/comm/msg/hxCollisionMode.pb.h"
+#include "haptix/comm/msg/hxColor.pb.h"
 #include "haptix/comm/msg/hxContactPoint.pb.h"
 #include "haptix/comm/msg/hxContactPoint_V.pb.h"
 #include "haptix/comm/msg/hxEmpty.pb.h"
@@ -305,6 +307,42 @@ namespace gazebo
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
+    /// \brief hxs_set_model_color callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixSetModelColorCallback(const std::string &_service,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result);
+
+    /// \brief hxs_model_color callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixModelColorCallback(const std::string &_service,
+      const haptix::comm::msgs::hxString &_req,
+      haptix::comm::msgs::hxColor &_rep, bool &_result);
+
+    /// \brief hxs_set_model_collide_mode callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixSetModelCollideModeCallback(const std::string &_service,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result);
+
+    /// \brief hxs_model_collide_mode callback.
+    /// \param[in] _service The service this callback is advertised on.
+    /// \param[in] _req The request.
+    /// \param[out] _rep The response.
+    /// \param[out[ _result True if no errors were encountered.
+    private: void HaptixModelCollideModeCallback(const std::string &_service,
+      const haptix::comm::msgs::hxString &_req,
+      haptix::comm::msgs::hxCollisionMode &_rep, bool &_result);
+
     /// \brief Callback on world update
     private: void OnWorldUpdate();
 
@@ -451,6 +489,9 @@ namespace gazebo
 
     /// \brief For publishing pause commands
     private: transport::PublisherPtr pausePub;
+
+    /// \brief For publishing visual messages to ~/visual
+    private: transport::PublisherPtr visPub;
 
     /// \brief For storing forces and torques applied over time.
     private: std::vector<WrenchDuration> wrenchDurations;
