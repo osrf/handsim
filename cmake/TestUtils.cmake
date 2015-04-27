@@ -19,7 +19,7 @@ macro (handsim_build_tests)
       libgtest_main.a
       pthread
       HaptixTracking
-      ${HAPTIX-COMM-LIBRARIES}
+      ${HAPTIX-COMM_LIBRARIES}
       gazebo_test_fixture
       gazebo_common
       gazebo_math
