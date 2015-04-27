@@ -1054,12 +1054,16 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     return;
   }
 
-  haptix::comm::msgs::hxColor inputColor = _req.color();
-
   for (auto link : model->GetLinks())
   {
     // Get all the visuals
     sdf::ElementPtr linkSDF = link->GetSDF();
+
+    if (!linkSDF)
+    {
+      _result = false;
+      return;
+    }
     if (linkSDF->HasElement("visual"))
     {
       for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
@@ -1068,23 +1072,53 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
         GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
         std::string visualName = visualSDF->Get<std::string>("name");
         msgs::Visual visMsg = link->GetVisualMessage(visualName);
-        msgs::Color colorMsg;
-        colorMsg.set_r(inputColor.r());
-        colorMsg.set_g(inputColor.g());
-        colorMsg.set_b(inputColor.b());
-        colorMsg.set_a(inputColor.alpha());
-        msgs::Material *materialMsg;
-        if (!visMsg.has_material())
+        if (visMsg.name() != visualName)
         {
-          materialMsg = new msgs::Material;
+          _result = false;
+          return;
+        }
+        msgs::Color *colorMsg = new msgs::Color;
+        colorMsg->set_r(_req.color().r());
+        colorMsg->set_g(_req.color().g());
+        colorMsg->set_b(_req.color().b());
+        colorMsg->set_a(_req.color().alpha());
+        msgs::Color *diffuseMsg = new msgs::Color(*colorMsg);
+        if ((!visMsg.has_material()) || visMsg.mutable_material() == NULL)
+        {
+          msgs::Material *materialMsg = new msgs::Material;
           visMsg.set_allocated_material(materialMsg);
         }
-        else
+        msgs::Material *materialMsg = visMsg.mutable_material();
+        if (materialMsg->has_ambient())
         {
-          materialMsg = visMsg.mutable_material();
+          materialMsg->clear_ambient();
         }
-        materialMsg->set_allocated_ambient(&colorMsg);
-        materialMsg->set_allocated_diffuse(&colorMsg);
+        materialMsg->set_allocated_ambient(colorMsg);
+        if (materialMsg->has_diffuse())
+        {
+          materialMsg->clear_diffuse();
+        }
+        if (visMsg.name().empty())
+        {
+          visMsg.set_name(visualName);
+        }
+        if (visMsg.parent_name().empty())
+        {
+          if (!linkSDF->HasAttribute("name"))
+          {
+            _result = false;
+            return;
+          }
+          visMsg.set_parent_name(link->GetScopedName());
+        }
+        materialMsg->set_allocated_diffuse(diffuseMsg);
+        gzdbg << "Color: [" << visMsg.material().ambient().r() << ", "
+              << visMsg.material().ambient().g() << ", "
+              << visMsg.material().ambient().b() << ", "
+              << visMsg.material().ambient().a() << "]" << std::endl;
+        gzdbg << "Message name: " << visMsg.name() << std::endl;
+        gzdbg << "Message parent name: " << visMsg.parent_name() << std::endl;
+
         visPub->Publish(visMsg);
       }
     }
@@ -1129,6 +1163,11 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
   {
     // Get all the visuals
     sdf::ElementPtr linkSDF = link->GetSDF();
+    if (!linkSDF)
+    {
+      _result = false;
+      return;
+    }
     if (linkSDF->HasElement("visual"))
     {
       for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
@@ -1141,6 +1180,10 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
         g += visMsg.material().ambient().g();
         b += visMsg.material().ambient().b();
         a += visMsg.material().ambient().a();
+        r += visMsg.material().diffuse().r();
+        g += visMsg.material().diffuse().g();
+        b += visMsg.material().diffuse().b();
+        a += visMsg.material().diffuse().a();
         numVis+=2;
       }
     }
