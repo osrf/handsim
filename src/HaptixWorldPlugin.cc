@@ -179,7 +179,7 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
     &HaptixWorldPlugin::HaptixSetModelColorCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_model_collide_mode",
-    &HaptixWorldPlugin::HaptixModelModelCollideModeCallback, this);
+    &HaptixWorldPlugin::HaptixModelCollideModeCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_collide_mode",
     &HaptixWorldPlugin::HaptixSetModelCollideModeCallback, this);
@@ -995,6 +995,7 @@ void HaptixWorldPlugin::HaptixModelGravityCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxInt &_rep, bool &_result)
 {
+  std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     _result = false;
@@ -1019,6 +1020,7 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     _result = false;
@@ -1038,22 +1040,23 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     _result = false;
     return;
   }
-  physics::ModelPtr model = this->world->GetModel(_req.data());
+  physics::ModelPtr model = this->world->GetModel(_req.name());
 
-  if (!this->model)
+  if (!model)
   {
     _result = false;
     return;
   }
 
-  haptix::comm::msgs::hxColor inputColor = _req.color;
+  haptix::comm::msgs::hxColor inputColor = _req.color();
 
-  for (auto link : this->model->GetLinks())
+  for (auto link : model->GetLinks())
   {
     // Get all the visuals
     sdf::ElementPtr linkSDF = link->GetSDF();
@@ -1066,10 +1069,10 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
         std::string visualName = visualSDF->Get<std::string>("name");
         msgs::Visual visMsg = link->GetVisualMessage(visualName);
         msgs::Color colorMsg;
-        colorMsg.set_r(inputColor.r);
-        colorMsg.set_g(inputColor.g);
-        colorMsg.set_b(inputColor.b);
-        colorMsg.set_a(inputColor.a);
+        colorMsg.set_r(inputColor.r());
+        colorMsg.set_g(inputColor.g());
+        colorMsg.set_b(inputColor.b());
+        colorMsg.set_a(inputColor.alpha());
         msgs::Material *materialMsg;
         if (!visMsg.has_material())
         {
@@ -1080,8 +1083,8 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
         {
           materialMsg = visMsg.mutable_material();
         }
-        materialMsg.set_allocated_ambient(&colorMsg);
-        materialMsg.set_allocated_diffuse(&colorMsg);
+        materialMsg->set_allocated_ambient(&colorMsg);
+        materialMsg->set_allocated_diffuse(&colorMsg);
         visPub->Publish(visMsg);
       }
     }
@@ -1095,6 +1098,7 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxColor &_rep, bool &_result)
 {
+  std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     _result = false;
@@ -1102,13 +1106,13 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
   }
   physics::ModelPtr model = this->world->GetModel(_req.data());
 
-  if (!this->model)
+  if (!model)
   {
     _result = false;
     return;
   }
 
-  auto links = this->model->GetLinks();
+  auto links = model->GetLinks();
   if (links.size() == 0)
   {
     _result = false;
@@ -1120,6 +1124,7 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
   // whatever man, this is probably not a typical case for teams
   int numVis = 0;
   double r, g, b, a;
+  r = g = b = a = 0;
   for (auto link : links)
   {
     // Get all the visuals
@@ -1144,7 +1149,7 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
   _rep.set_r(r / numVis);
   _rep.set_g(g / numVis);
   _rep.set_b(b / numVis);
-  _rep.set_a(a / numVis);
+  _rep.set_alpha(a / numVis);
 
   _result = true;
 }
@@ -1155,7 +1160,21 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  haptix::comm::msgs::hxCollisionMode mode = _req.collision_mode().mode();
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+  physics::ModelPtr model = this->world->GetModel(_req.name());
+
+  if (!model)
+  {
+    _result = false;
+    return;
+  }
+
+  haptix::comm::msgs::hxCollisionMode modeMsg = _req.collision_mode();
 
   for (auto link : model->GetLinks())
   {
@@ -1163,13 +1182,13 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     {
       physics::SurfaceParamsPtr surface = collision->GetSurface();
 
-      if (mode == haptix::comm::msgs::hxCollisionMode::NO_COLLIDE)
+      if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::NO_COLLIDE)
       {
         surface->collideWithoutContact = false;
         // Set collideBitmask in case it was unset
-        surface->collideBitmask == 0x0;
+        surface->collideBitmask = 0x0;
       }
-      else if (mode == haptix::comm::msgs::hxCollisionMode::DETECTION_ONLY)
+      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::DETECTION_ONLY)
       {
         surface->collideWithoutContact = true;
         // Set collideBitmask in case it was unset
@@ -1178,7 +1197,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
           surface->collideBitmask = 0x01;
         }
       }
-      else if (mode == haptix::comm::msgs::hxCollisionMode::COLLIDE)
+      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::COLLIDE)
       {
         surface->collideWithoutContact = false;
         surface->collideBitmask = 0x01;
@@ -1200,6 +1219,7 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxCollisionMode &_rep, bool &_result)
 {
+  std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     _result = false;
