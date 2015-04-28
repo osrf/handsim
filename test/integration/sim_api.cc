@@ -15,26 +15,38 @@
  *
 */
 
-#include <gazebo/rendering/UserCamera.hh>
+#include <boost/filesystem/path.hpp>
+#include <gazebo/common/SystemPaths.hh>
 #include <gazebo/gui/GuiIface.hh>
+#include <gazebo/rendering/UserCamera.hh>
+#include <gazebo/test/ServerFixture.hh>
 
-#include "ServerFixture.hh"
 #include "handsim/HaptixWorldPlugin.hh"
 
 #include "haptix/comm/haptix_sim.h"
+
+#include "test_config.h"
 
 using namespace gazebo;
 
 class SimApiTest : public ServerFixture
 {
+  public: physics::WorldPtr InitWorld(const std::string _worldFile);
 };
+
+physics::WorldPtr SimApiTest::InitWorld(const std::string _worldFile)
+{
+  boost::filesystem::path path = TEST_PATH;
+  common::SystemPaths::Instance()->AddGazeboPaths(path.string());
+  Load(_worldFile, true);
+  physics::WorldPtr world = physics::get_world("default");
+  return world;
+}
 
 TEST_F(SimApiTest, HxsSimInfo)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
-
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
   if (!scene)
   {
@@ -138,8 +150,7 @@ TEST_F(SimApiTest, HxsSimInfo)
 
 TEST_F(SimApiTest, HxsCameraTransform)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
@@ -178,8 +189,7 @@ TEST_F(SimApiTest, HxsCameraTransform)
 
 TEST_F(SimApiTest, HxsSetCameraTransform)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
@@ -290,8 +300,7 @@ TEST_F(SimApiTest, HxsContacts)
 
 TEST_F(SimApiTest, HxsSetModelJointState)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   physics::ModelPtr gzDoorModel = world->GetModel("door");
@@ -313,8 +322,7 @@ TEST_F(SimApiTest, HxsSetModelJointState)
 
 TEST_F(SimApiTest, HxsSetModelLinkState)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   physics::ModelPtr gzDoorModel = world->GetModel("door");
@@ -447,8 +455,7 @@ TEST_F(SimApiTest, HxsAddModel)
 
 TEST_F(SimApiTest, HxsLinearVel)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -468,8 +475,7 @@ TEST_F(SimApiTest, HxsLinearVel)
 
 TEST_F(SimApiTest, HxsAngularVel)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -535,8 +541,7 @@ TEST_F(SimApiTest, HxsForce)
 
 TEST_F(SimApiTest, HxsTorque)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -581,8 +586,7 @@ TEST_F(SimApiTest, HxsTorque)
 
 TEST_F(SimApiTest, HxsWrench)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -649,8 +653,7 @@ TEST_F(SimApiTest, HxsRemoveModel)
 
 TEST_F(SimApiTest, HxsReset)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -731,8 +734,7 @@ TEST_F(SimApiTest, HxsReset)
 
 TEST_F(SimApiTest, HxsModelGravity)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
   int gravity_mode;
   ASSERT_EQ(hxs_model_gravity_mode("wood_cube_5cm", &gravity_mode), hxOK);
@@ -749,8 +751,7 @@ TEST_F(SimApiTest, HxsModelGravity)
 
 TEST_F(SimApiTest, HxsSetModelGravity)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   int gravity_mode = 0;
@@ -765,8 +766,7 @@ TEST_F(SimApiTest, HxsSetModelGravity)
 
 TEST_F(SimApiTest, HxsModelColor)
 {
-  Load("worlds/arat_test.world");
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Spawn a camera facing the box
@@ -804,8 +804,7 @@ TEST_F(SimApiTest, HxsModelColor)
 
 TEST_F(SimApiTest, HxsSetModelColor)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
@@ -847,8 +846,7 @@ TEST_F(SimApiTest, HxsSetModelColor)
 
 TEST_F(SimApiTest, HxsModelCollideMode)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
@@ -884,8 +882,7 @@ TEST_F(SimApiTest, HxsModelCollideMode)
 
 TEST_F(SimApiTest, HxsSetModelCollideMode)
 {
-  Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
