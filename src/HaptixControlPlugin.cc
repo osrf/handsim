@@ -1609,7 +1609,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   std::unique_lock<std::mutex> lock(this->optitrackMonitorMutex,
       std::try_to_lock);
   std::vector<gazebo::math::Vector3> points;
-  for (int i = 0; i < _msg->points_size(); i++)
+  for (int i = 0; i < _msg->points_size(); ++i)
   {
     points.push_back(msgs::Convert(_msg->points(i)));
   }
@@ -1618,7 +1618,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   int originPointId = -1;
   int shortPointId, longPointId, i1, i2;
   // Find side with maximum length, choose the "origin" as the opposite point
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; ++i)
   {
     i1 = (i + 1) % 3;
     i2 = (i + 2) % 3;
