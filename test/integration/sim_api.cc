@@ -856,7 +856,7 @@ TEST_F(SimApiTest, HxsModelCollideMode)
 
   hxCollisionMode rep;
   ASSERT_EQ(hxs_model_collide_mode("wood_cube_5cm", &rep), hxOK);
-  EXPECT_EQ(rep, COLLIDE);
+  EXPECT_EQ(rep, hxsCOLLIDE);
 
   // Set an object to collide_without_contact using Gazebo
   for (auto link : model->GetLinks())
@@ -867,7 +867,7 @@ TEST_F(SimApiTest, HxsModelCollideMode)
     }
   }
   ASSERT_EQ(hxs_model_collide_mode("wood_cube_5cm", &rep), hxOK);
-  EXPECT_EQ(rep, DETECTION_ONLY);
+  EXPECT_EQ(rep, hxsDETECTIONONLY);
 
   // Set an object to no_collide using Gazebo
   for (auto link : model->GetLinks())
@@ -879,7 +879,7 @@ TEST_F(SimApiTest, HxsModelCollideMode)
     }
   }
   ASSERT_EQ(hxs_model_collide_mode("wood_cube_5cm", &rep), hxOK);
-  EXPECT_EQ(rep, NO_COLLIDE);
+  EXPECT_EQ(rep, hxsNOCOLLIDE);
 }
 
 TEST_F(SimApiTest, HxsSetModelCollideMode)
@@ -892,7 +892,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
   ASSERT_TRUE(model != NULL);
 
   // Set collide_without_contact
-  hxCollisionMode req = DETECTION_ONLY;
+  hxCollisionMode req = hxsDETECTIONONLY;
   ASSERT_EQ(hxs_set_model_collide_mode("wood_cube_5cm", &req), hxOK);
   for (auto link : model->GetLinks())
   {
@@ -904,7 +904,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
   }
 
   // Set collide
-  req = COLLIDE;
+  req = hxsCOLLIDE;
   ASSERT_EQ(hxs_set_model_collide_mode("wood_cube_5cm", &req), hxOK);
   for (auto link : model->GetLinks())
   {
@@ -916,7 +916,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
   }
 
   // Set no_collide
-  req = NO_COLLIDE;
+  req = hxsNOCOLLIDE;
   ASSERT_EQ(hxs_set_model_collide_mode("wood_cube_5cm", &req), hxOK);
   for (auto link : model->GetLinks())
   {

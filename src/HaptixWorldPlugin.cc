@@ -1288,13 +1288,13 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     {
       physics::SurfaceParamsPtr surface = collision->GetSurface();
 
-      if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::NO_COLLIDE)
+      if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE)
       {
         surface->collideWithoutContact = false;
         // Set collideBitmask in case it was unset
         surface->collideBitmask = 0x0;
       }
-      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::DETECTION_ONLY)
+      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsDETECTIONONLY)
       {
         surface->collideWithoutContact = true;
         // Set collideBitmask in case it was unset
@@ -1303,7 +1303,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
           surface->collideBitmask = 0x01;
         }
       }
-      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::COLLIDE)
+      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE)
       {
         surface->collideWithoutContact = false;
         surface->collideBitmask = 0x01;
@@ -1359,16 +1359,16 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
   if (totalCollideBitmask == 0x0)
   {
     // All of the collisions had a collide_bitmask of 0x0
-    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::NO_COLLIDE);
+    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE);
   }
   else if (collideWithoutContact)
   {
     // All of the collisions had collideWithoutContact = true
-    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::DETECTION_ONLY);
+    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsDETECTIONONLY);
   }
   else
   {
-    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::COLLIDE);
+    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE);
   }
 
   _result = true;
