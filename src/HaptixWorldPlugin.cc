@@ -233,7 +233,8 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result)
 {
-  //_rep.clear_models();
+  _rep.Clear();
+
   // Get models
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
@@ -262,14 +263,21 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
     return;
   }
   gazebo::math::Pose pose = camera->GetWorldPose();
-  //haptix::comm::msgs::hxTransform *cameraTransform = new haptix::comm::msgs::hxCameraTransform;
-  //_rep.set_allocated_camera_transform(cameraTransform);
+  haptix::comm::msgs::hxTransform *cameraTransform =
+      new haptix::comm::msgs::hxTransform;
+  _rep.set_allocated_camera_transform(cameraTransform);
   if (!HaptixWorldPlugin::ConvertTransform(pose,
           *_rep.mutable_camera_transform()))
   {
     _result = false;
     return;
   }
+
+  gzdbg << "Reply: "
+        << "\tCamera transform: " << _rep.camera_transform().pos().x() << ", "
+        << _rep.camera_transform().pos().y() << ", "
+        << _rep.camera_transform().pos().z() << std::endl;
+
 
   _result = true;
 }
