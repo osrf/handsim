@@ -61,14 +61,13 @@ TEST_F(SimApiTest, HxsSimInfo)
   // Spawn a camera
   rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
   camera->SetWorldPose(cameraPose);
+  camera->Update();
   gui::set_active_camera(camera);
   ASSERT_TRUE(gui::get_active_camera() != NULL);
 
-  // Wait a little while for the world to initialize
-  world->Step(20);
-
   hxSimInfo simInfo;
   ASSERT_EQ(hxs_siminfo(&simInfo), hxOK);
+  common::Time::Sleep(1);
 
   math::Pose cameraOut;
   HaptixWorldPlugin::ConvertTransform(simInfo.camera_transform, cameraOut);
@@ -166,11 +165,13 @@ TEST_F(SimApiTest, HxsCameraTransform)
       cameraPose.rot.GetAsEuler());*/
   rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
   camera->SetWorldPose(cameraPose);
+  camera->Update();
   gui::set_active_camera(camera);
   ASSERT_TRUE(gui::get_active_camera() != NULL);
 
   hxTransform transform;
   ASSERT_EQ(hxs_camera_transform(&transform), hxOK);
+  common::Time::Sleep(2);
 
   math::Pose cameraOut;
   HaptixWorldPlugin::ConvertTransform(transform, cameraOut);
@@ -216,6 +217,7 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
   transform.orient.z = q.z;
 
   ASSERT_EQ(hxs_set_camera_transform(&transform), hxOK);
+  common::Time::Sleep(2);
 
   math::Pose outputPose = gui::get_active_camera()->GetWorldPose();
   EXPECT_EQ(outputPose.pos, math::Vector3(1, 2, 3));
@@ -758,42 +760,6 @@ TEST_F(SimApiTest, HxsSetModelGravity)
   }
 }
 
-TEST_F(SimApiTest, HxsModelColor)
-{
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
-  ASSERT_TRUE(world != NULL);
-
-  // Spawn a camera facing the box
-  SpawnCamera("test_camera_model", "test_camera",
-      math::Vector3(0, 0, 0), math::Vector3(0, 0, 0));
-
-  gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene();
-  ASSERT_TRUE(scene != NULL);
-
-  int sleep = 0;
-  int maxSleep = 5;
-  rendering::VisualPtr visual;
-  while (!visual && sleep < maxSleep)
-  {
-    gzdbg << "Visual count: " << scene->GetVisualCount() << std::endl;
-    visual = scene->GetVisual("cricket_ball::link");
-    common::Time::MSleep(100);
-    sleep++;
-  }
-  ASSERT_TRUE(visual != NULL);
-
-  visual->SetAmbient(common::Color::Red);
-  visual->SetDiffuse(common::Color::Red);
-
-  hxColor rep;
-  ASSERT_EQ(hxs_model_color("cricket_ball", &rep), hxOK);
-
-  EXPECT_FLOAT_EQ(rep.r, common::Color::Red.r);
-  EXPECT_FLOAT_EQ(rep.g, common::Color::Red.g);
-  EXPECT_FLOAT_EQ(rep.b, common::Color::Red.b);
-  EXPECT_FLOAT_EQ(rep.alpha, common::Color::Red.a);
-}
-
 TEST_F(SimApiTest, HxsSetModelColor)
 {
   physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
@@ -837,6 +803,14 @@ TEST_F(SimApiTest, HxsSetModelColor)
   EXPECT_FLOAT_EQ(blue.g, visual->GetDiffuse().g);
   EXPECT_FLOAT_EQ(blue.b, visual->GetDiffuse().b);
   EXPECT_FLOAT_EQ(blue.alpha, visual->GetDiffuse().a);
+
+  hxColor rep;
+  ASSERT_EQ(hxs_model_color("cricket_ball", &rep), hxOK);
+
+  EXPECT_FLOAT_EQ(blue.r, rep.r);
+  EXPECT_FLOAT_EQ(blue.g, rep.g);
+  EXPECT_FLOAT_EQ(blue.b, rep.b);
+  EXPECT_FLOAT_EQ(blue.alpha, rep.alpha);
 }
 
 TEST_F(SimApiTest, HxsModelCollideMode)

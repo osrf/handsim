@@ -85,7 +85,62 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
     sdf::ElementPtr _sdf)
 {
   this->world = _world;
+  GZ_ASSERT(this->world != NULL, "Got NULL world pointer!");
   this->sdf = _sdf;
+  GZ_ASSERT(this->sdf != NULL, "Got NULL SDF element pointer!");
+
+  // Initialize color map.
+  for (auto model : this->world->GetModels())
+  {
+    // A model might have multiple links, a link might have multiple visuals
+    // with different colors
+    // whatever man, this is probably not a typical case for teams
+    int numVis = 0;
+    double r, g, b, a;
+    r = g = b = a = 0;
+
+    for (auto link : model->GetLinks())
+    {
+      // Get all the visuals
+      sdf::ElementPtr linkSDF = link->GetSDF();
+      GZ_ASSERT(linkSDF != NULL, "Got link with NULL SDF pointer in init");
+      if (linkSDF->HasElement("visual"))
+      {
+        for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
+             visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
+        {
+          GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
+          if (!visualSDF->HasElement("material"))
+            continue;
+          sdf::ElementPtr materialSDF = visualSDF->GetElement("material");
+          if (!materialSDF->HasElement("ambient") &&
+              !materialSDF->HasElement("diffuse"))
+          {
+            continue;
+          }
+          common::Color ambient =
+              materialSDF->GetElement("ambient")->Get<common::Color>();
+          common::Color diffuse =
+              materialSDF->GetElement("diffuse")->Get<common::Color>();
+
+          r += ambient.r;
+          g += ambient.g;
+          b += ambient.b;
+          a += ambient.a;
+
+          r += diffuse.r;
+          g += diffuse.g;
+          b += diffuse.b;
+          a += diffuse.a;
+          numVis+=2;
+        }
+      }
+    }
+    if (numVis == 0)
+      numVis = 1;
+    common::Color color(r / numVis, g / numVis, b / numVis, a / numVis);
+    this->lastKnownColors[model->GetId()] = color;
+  }
 
   this->gzNode = transport::NodePtr(new transport::Node());
   this->gzNode->Init(this->world->GetName());
@@ -936,7 +991,7 @@ void HaptixWorldPlugin::HaptixTimerCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTime &_rep, bool &_result)
 {
-  gui::MainWindow *mainWindow = gui::get_main_window();
+  /*gui::MainWindow *mainWindow = gui::get_main_window();
   if (!mainWindow)
   {
     _result = false;
@@ -967,7 +1022,7 @@ void HaptixWorldPlugin::HaptixTimerCallback(
 
   common::Time gzTime = timer->GetCurrentTime();
   _rep.set_sec(gzTime.sec);
-  _rep.set_nsec(gzTime.nsec);
+  _rep.set_nsec(gzTime.nsec);*/
 
   _result = true;
 }
@@ -1089,7 +1144,10 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     return;
   }
 
-  rendering::ScenePtr scene = gazebo::rendering::get_scene();
+  common::Color newColor(_req.color().r(), _req.color().g(), _req.color().b(),
+      _req.color().alpha());
+  msgs::Color *colorMsg = new msgs::Color(msgs::Convert(newColor));
+  msgs::Color *diffuseMsg = new msgs::Color(*colorMsg);
   for (auto link : model->GetLinks())
   {
     // Get all the visuals
@@ -1107,96 +1165,33 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
       {
         GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
         std::string visualName = visualSDF->Get<std::string>("name");
+        // TODO
         msgs::Visual visMsg;
-        if (scene)
+        visMsg = link->GetVisualMessage(visualName);
+        if ((!visMsg.has_material()) || visMsg.mutable_material() == NULL)
         {
-          rendering::VisualPtr visual = scene->GetVisual(link->GetScopedName()
-              + "::" + visualName);
-          if (!visual)
-          {
-            _result = false;
-            return;
-          }
-          common::Color requestedColor(_req.color().r(), _req.color().g(),
-              _req.color().b(), _req.color().alpha());
-          visual->SetAmbient(requestedColor);
-          visual->SetDiffuse(requestedColor);
-          // Set the change in SDF
-          sdf::ElementPtr materialSDF = visualSDF->GetElement("material");
-          // pretty sure these lines do nothing
-          if (!visualSDF->HasElement("material"))
-          {
-            visualSDF->AddElement("material");
-          }
-
-          if (!materialSDF->HasElement("ambient"))
-          {
-            materialSDF->AddElement("ambient");
-          }
-          materialSDF->GetElement("ambient")->Set<common::Color>(requestedColor);
-
-          if (!materialSDF->HasElement("diffuse"))
-          {
-            materialSDF->AddElement("diffuse");
-          }
-          if (materialSDF->HasElement("script"))
-          {
-            // Remove the script element
-            materialSDF->RemoveChild(materialSDF->GetElement("script"));
-          }
-          materialSDF->GetElement("diffuse")->Set<common::Color>(requestedColor);
-
-          // Get a message from SDF
-          // Publish the message.
-          visMsg = msgs::VisualFromSDF(visualSDF);
-          visMsg.set_name(link->GetScopedName());
-          visMsg.set_parent_name(model->GetScopedName());
+          msgs::Material *materialMsg = new msgs::Material;
+          visMsg.set_allocated_material(materialMsg);
         }
-        else
+        msgs::Material *materialMsg = visMsg.mutable_material();
+        if (materialMsg->has_ambient())
         {
-          // TODO test me?
-          visMsg = link->GetVisualMessage(visualName);
-          if (visMsg.name() != visualName)
-          {
-            gzerr << "Requested name " << visualName << " not equal to " << visMsg.name() << std::endl;
-            _result = false;
-            return;
-          }
-          msgs::Color *colorMsg = new msgs::Color;
-          colorMsg->set_r(_req.color().r());
-          colorMsg->set_g(_req.color().g());
-          colorMsg->set_b(_req.color().b());
-          colorMsg->set_a(_req.color().alpha());
-          msgs::Color *diffuseMsg = new msgs::Color(*colorMsg);
-          if ((!visMsg.has_material()) || visMsg.mutable_material() == NULL)
-          {
-            msgs::Material *materialMsg = new msgs::Material;
-            visMsg.set_allocated_material(materialMsg);
-          }
-          msgs::Material *materialMsg = visMsg.mutable_material();
-          if (materialMsg->has_ambient())
-          {
-            materialMsg->clear_ambient();
-          }
-          materialMsg->set_allocated_ambient(colorMsg);
-          if (materialMsg->has_diffuse())
-          {
-            materialMsg->clear_diffuse();
-          }
-          if (visMsg.name().empty())
-          {
-            visMsg.set_name(link->GetScopedName());
-          }
-          if (visMsg.parent_name().empty())
-          {
-            visMsg.set_parent_name(model->GetScopedName());
-          }
-          materialMsg->set_allocated_diffuse(diffuseMsg);
+          materialMsg->clear_ambient();
         }
+        materialMsg->set_allocated_ambient(colorMsg);
+        if (materialMsg->has_diffuse())
+        {
+          materialMsg->clear_diffuse();
+        }
+        visMsg.set_name(link->GetScopedName());
+        visMsg.set_parent_name(model->GetScopedName());
+        materialMsg->set_allocated_diffuse(diffuseMsg);
         visPub->Publish(visMsg);
       }
     }
   }
+
+  this->lastKnownColors[model->GetId()] = newColor;
 
   _result = true;
 }
@@ -1227,73 +1222,11 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
     return;
   }
 
-  // A model might have multiple links, a link might have multiple visuals
-  // with different colors
-  // whatever man, this is probably not a typical case for teams
-  int numVis = 0;
-  double r, g, b, a;
-  r = g = b = a = 0;
-
-  rendering::ScenePtr scene = gazebo::rendering::get_scene();
-  for (auto link : links)
-  {
-    // Get all the visuals
-    sdf::ElementPtr linkSDF = link->GetSDF();
-    if (!linkSDF)
-    {
-      _result = false;
-      return;
-    }
-    if (linkSDF->HasElement("visual"))
-    {
-      for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
-           visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
-      {
-        GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
-        std::string visualName = visualSDF->Get<std::string>("name");
-
-        if (scene)
-        {
-          rendering::VisualPtr visual = scene->GetVisual(link->GetScopedName()
-              + "::" + visualName);
-          if (!visual)
-          {
-            _result = false;
-            return;
-          }
-          r += visual->GetAmbient().r;
-          g += visual->GetAmbient().g;
-          b += visual->GetAmbient().b;
-          a += visual->GetAmbient().a;
-
-          r += visual->GetDiffuse().r;
-          g += visual->GetDiffuse().g;
-          b += visual->GetDiffuse().b;
-          a += visual->GetDiffuse().a;
-        }
-        else
-        {
-          msgs::Visual visMsg = link->GetVisualMessage(visualName);
-          r += visMsg.material().ambient().r();
-          g += visMsg.material().ambient().g();
-          b += visMsg.material().ambient().b();
-          a += visMsg.material().ambient().a();
-
-          r += visMsg.material().diffuse().r();
-          g += visMsg.material().diffuse().g();
-          b += visMsg.material().diffuse().b();
-          a += visMsg.material().diffuse().a();
-        }
-        numVis+=2;
-      }
-    }
-  }
-
-  _rep.set_r(r / numVis);
-  _rep.set_g(g / numVis);
-  _rep.set_b(b / numVis);
-  _rep.set_alpha(a / numVis);
-
+  common::Color modelColor = this->lastKnownColors[model->GetId()];
+  _rep.set_r(modelColor.r);
+  _rep.set_b(modelColor.b);
+  _rep.set_g(modelColor.g);
+  _rep.set_alpha(modelColor.a);
   _result = true;
 }
 

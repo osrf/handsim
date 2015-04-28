@@ -506,12 +506,16 @@ namespace gazebo
     /// \brief For storing forces and torques applied over time.
     private: std::vector<WrenchDuration> wrenchDurations;
 
+    /// \brief Maps model IDs to colors
+    private: std::map<int, common::Color> lastKnownColors;
+
     /// \brief Last time the effort vectors were updates
     private: common::Time lastSimUpdateTime;
 
     /// \brief Mutex to protect the World pointer
     private: std::mutex worldMutex;
 
+    /// \brief Last known viewpoint pose
     private: math::Pose userCameraPose;
 
     /// \brief True if a user camera pose message has been published.
