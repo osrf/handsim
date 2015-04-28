@@ -346,6 +346,10 @@ namespace gazebo
     /// \brief Callback on world update
     private: void OnWorldUpdate();
 
+    /// \brief Callback on camera updates
+    /// \param[in] _msg The viewpoint message that was received
+    private: void OnUserCameraPose(ConstPosePtr &_msg);
+
     ///////////// Utility functions /////////////
 
     /// \brief Convert from hxTransform (message type) to Gazebo Pose
@@ -493,6 +497,12 @@ namespace gazebo
     /// \brief For publishing visual messages to ~/visual
     private: transport::PublisherPtr visPub;
 
+    /// \brief For publishing viewpoint messages to ~/user_camera/pose
+    private: transport::PublisherPtr userCameraPub;
+
+    /// \brief For subscribing to viewpoint messages on ~/user_camera/pose
+    private: transport::SubscriberPtr userCameraSub;
+
     /// \brief For storing forces and torques applied over time.
     private: std::vector<WrenchDuration> wrenchDurations;
 
@@ -501,6 +511,11 @@ namespace gazebo
 
     /// \brief Mutex to protect the World pointer
     private: std::mutex worldMutex;
+
+    private: math::Pose userCameraPose;
+
+    /// \brief True if a user camera pose message has been published.
+    private: bool userCameraPoseValid;
   };
 }
 #endif

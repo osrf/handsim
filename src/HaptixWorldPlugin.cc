@@ -47,6 +47,7 @@ GZ_REGISTER_WORLD_PLUGIN(HaptixWorldPlugin)
 /////////////////////////////////////////////////
 HaptixWorldPlugin::HaptixWorldPlugin()
 {
+  this->userCameraPoseValid = false;
 }
 
 /////////////////////////////////////////////////
@@ -98,6 +99,22 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
                       ("~/motion_tracking/pause_request");
 
   this->visPub = this->gzNode->Advertise<msgs::Visual>("~/visual");
+
+  this->userCameraPoseValid = false;
+  if (this->sdf->HasElement("gui"))
+  {
+    sdf::ElementPtr camera = this->sdf->GetElement("gui")->GetElement("camera");
+    if (camera && camera->HasElement("pose"))
+    {
+      this->userCameraPose = camera->GetElement("pose")->Get<math::Pose>();
+    }
+  }
+
+  this->userCameraPub =
+      this->gzNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
+
+  this->userCameraSub = this->gzNode->Subscribe("~/user_camera/pose",
+      &HaptixWorldPlugin::OnUserCameraPose, this);
 
   this->worldUpdateConnection = event::Events::ConnectWorldUpdateBegin(
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
@@ -229,6 +246,13 @@ void HaptixWorldPlugin::OnWorldUpdate()
 }
 
 /////////////////////////////////////////////////
+void HaptixWorldPlugin::OnUserCameraPose(ConstPosePtr &_msg)
+{
+  this->userCameraPose = msgs::Convert(*_msg);
+  this->userCameraPoseValid = true;
+}
+
+/////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result)
@@ -256,13 +280,20 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
     }
   }
 
-  rendering::UserCameraPtr camera = gui::get_active_camera();
+  /*rendering::UserCameraPtr camera = gui::get_active_camera();
   if (!camera || !camera->GetScene())
   {
     _result = false;
     return;
   }
-  gazebo::math::Pose pose = camera->GetWorldPose();
+  gazebo::math::Pose pose = camera->GetWorldPose();*/
+  gazebo::math::Pose pose = this->userCameraPose;
+  if (!this->userCameraPoseValid)
+  {
+    gzwarn << "User camera pose has not yet been published. Returning default"
+           << " camera pose specified in SDF." << std::endl;
+  }
+
   haptix::comm::msgs::hxTransform *cameraTransform =
       new haptix::comm::msgs::hxTransform;
   _rep.set_allocated_camera_transform(cameraTransform);
@@ -273,12 +304,6 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
     return;
   }
 
-  gzdbg << "Reply: "
-        << "\tCamera transform: " << _rep.camera_transform().pos().x() << ", "
-        << _rep.camera_transform().pos().y() << ", "
-        << _rep.camera_transform().pos().z() << std::endl;
-
-
   _result = true;
 }
 
@@ -288,13 +313,13 @@ void HaptixWorldPlugin::HaptixCameraTransformCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTransform &_rep, bool &_result)
 {
-  rendering::UserCameraPtr camera = gui::get_active_camera();
-  if (!camera || !camera->GetScene())
+  gazebo::math::Pose pose = this->userCameraPose;
+  if (!this->userCameraPoseValid)
   {
-    _result = false;
-    return;
+    gzwarn << "User camera pose has not yet been published. Returning default"
+           << " camera pose specified in SDF." << std::endl;
   }
-  gazebo::math::Pose pose = camera->GetWorldPose();
+
   if (!HaptixWorldPlugin::ConvertTransform(pose, _rep))
   {
     _result = false;
@@ -310,19 +335,16 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
       const haptix::comm::msgs::hxTransform &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  rendering::UserCameraPtr camera = gui::get_active_camera();
-  if (!camera || !camera->GetScene())
-  {
-    _result = false;
-    return;
-  }
   gazebo::math::Pose pose;
+
   if (!HaptixWorldPlugin::ConvertTransform(_req, pose))
   {
     _result = false;
     return;
   }
-  camera->SetWorldPose(pose);
+  msgs::Pose poseMsg;
+  msgs::Set(&poseMsg, pose);
+  this->userCameraPub->Publish(poseMsg);
   _result = true;
 }
 
