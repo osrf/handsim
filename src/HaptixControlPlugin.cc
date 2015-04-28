@@ -1616,12 +1616,12 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 
   double maxLength = 0;
   int originPointId = -1;
-  int shortPointId, longPointId;
+  int shortPointId, longPointId, i1, i2;
   // Find side with maximum length, choose the "origin" as the opposite point
   for (int i = 0; i < 3; i++)
   {
-    int i1 = (i + 1) % 3;
-    int i2 = (i + 2) % 3;
+    i1 = (i + 1) % 3;
+    i2 = (i + 2) % 3;
     double length = (points[i1] - points[i2]).GetLength();
     if (length > maxLength)
     {
@@ -1635,8 +1635,9 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   if ((points[originPointId]-points[longPointId]).GetLength() <
       (points[originPointId]-points[shortPointId]).GetLength())
   {
-    shortPointId = i1;
-    longPointId = i2;
+    int tmp = longPointId;
+    longPointId = shortPointId;
+    shortPointId = tmp;
   }
 
   // X is the longer vector, z is the shorter one
