@@ -18,8 +18,8 @@
 #include <boost/filesystem/path.hpp>
 #include <gazebo/common/SystemPaths.hh>
 #include <gazebo/gui/GuiIface.hh>
-#include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/test/ServerFixture.hh>
+#include <gazebo/rendering/UserCamera.hh>
 
 #include "handsim/HaptixWorldPlugin.hh"
 
@@ -36,7 +36,7 @@ class SimApiTest : public ServerFixture
 
 physics::WorldPtr SimApiTest::InitWorld(const std::string _worldFile)
 {
-  boost::filesystem::path path = TEST_PATH;
+  boost::filesystem::path path = HANDSIM_TEST_PATH;
   common::SystemPaths::Instance()->AddGazeboPaths(path.string());
   Load(_worldFile, true);
   physics::WorldPtr world = physics::get_world("default");
@@ -57,15 +57,12 @@ TEST_F(SimApiTest, HxsSimInfo)
 
   ASSERT_TRUE(scene != NULL);
 
-  rendering::UserCameraPtr camera(new rendering::UserCamera("default", scene));
-  ASSERT_TRUE(camera != NULL);
-
-  gui::set_active_camera(camera);
-
-  camera->Load();
-  camera->Init();
   math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
+  // Spawn a camera
+  rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
   camera->SetWorldPose(cameraPose);
+  gui::set_active_camera(camera);
+  ASSERT_TRUE(gui::get_active_camera() != NULL);
 
   // Wait a little while for the world to initialize
   world->Step(20);
@@ -163,14 +160,14 @@ TEST_F(SimApiTest, HxsCameraTransform)
 
   ASSERT_TRUE(scene != NULL);
 
-  rendering::UserCameraPtr camera(new rendering::UserCamera("default", scene));
-  ASSERT_TRUE(camera != NULL);
-  gui::set_active_camera(camera);
-
-  camera->Load();
-  camera->Init();
   math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
+  // Spawn a camera
+  /*SpawnCamera("test_camera_model", "test_camera", cameraPose.pos,
+      cameraPose.rot.GetAsEuler());*/
+  rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
   camera->SetWorldPose(cameraPose);
+  gui::set_active_camera(camera);
+  ASSERT_TRUE(gui::get_active_camera() != NULL);
 
   hxTransform transform;
   ASSERT_EQ(hxs_camera_transform(&transform), hxOK);
@@ -202,12 +199,9 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
 
   ASSERT_TRUE(scene != NULL);
 
-  rendering::UserCameraPtr camera(new rendering::UserCamera("default", scene));
-  ASSERT_TRUE(camera != NULL);
+  // Spawn a camera
+  rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
   gui::set_active_camera(camera);
-
-  camera->Load();
-  camera->Init();
 
   hxTransform transform;
   transform.pos.x = 1;
@@ -794,8 +788,6 @@ TEST_F(SimApiTest, HxsModelColor)
   hxColor rep;
   ASSERT_EQ(hxs_model_color("cricket_ball", &rep), hxOK);
 
-  // TODO Wait a moment for visual message to publish
-
   EXPECT_FLOAT_EQ(rep.r, common::Color::Red.r);
   EXPECT_FLOAT_EQ(rep.g, common::Color::Red.g);
   EXPECT_FLOAT_EQ(rep.b, common::Color::Red.b);
@@ -832,6 +824,9 @@ TEST_F(SimApiTest, HxsSetModelColor)
   blue.b = 1.0;
   blue.alpha = 1.0;
   ASSERT_EQ(hxs_set_model_color("cricket_ball", &blue), hxOK);
+
+  // Wait a moment for visual message to publish
+  common::Time::Sleep(2);
 
   EXPECT_FLOAT_EQ(blue.r, visual->GetAmbient().r);
   EXPECT_FLOAT_EQ(blue.g, visual->GetAmbient().g);

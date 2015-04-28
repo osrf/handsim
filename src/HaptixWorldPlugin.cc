@@ -1095,12 +1095,13 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
             _result = false;
             return;
           }
-          common::Color requestedColor(_req.color().r(), _req.color().b(),
-              _req.color().g(), _req.color().alpha());
+          common::Color requestedColor(_req.color().r(), _req.color().g(),
+              _req.color().b(), _req.color().alpha());
           visual->SetAmbient(requestedColor);
           visual->SetDiffuse(requestedColor);
           // Set the change in SDF
           sdf::ElementPtr materialSDF = visualSDF->GetElement("material");
+          // pretty sure these lines do nothing
           if (!visualSDF->HasElement("material"))
           {
             visualSDF->AddElement("material");
@@ -1115,14 +1116,23 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
           if (!materialSDF->HasElement("diffuse"))
           {
             materialSDF->AddElement("diffuse");
-          materialSDF->GetElement("diffuse")->Set<common::Color>(requestedColor);
           }
+          if (materialSDF->HasElement("script"))
+          {
+            // Remove the script element
+            materialSDF->RemoveChild(materialSDF->GetElement("script"));
+          }
+          materialSDF->GetElement("diffuse")->Set<common::Color>(requestedColor);
+
           // Get a message from SDF
           // Publish the message.
           visMsg = msgs::VisualFromSDF(visualSDF);
+          visMsg.set_name(link->GetScopedName());
+          visMsg.set_parent_name(model->GetScopedName());
         }
         else
         {
+          // TODO test me?
           visMsg = link->GetVisualMessage(visualName);
           if (visMsg.name() != visualName)
           {
@@ -1153,16 +1163,11 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
           }
           if (visMsg.name().empty())
           {
-            visMsg.set_name(visualName);
+            visMsg.set_name(link->GetScopedName());
           }
           if (visMsg.parent_name().empty())
           {
-            if (!linkSDF->HasAttribute("name"))
-            {
-              _result = false;
-              return;
-            }
-            visMsg.set_parent_name(link->GetScopedName());
+            visMsg.set_parent_name(model->GetScopedName());
           }
           materialMsg->set_allocated_diffuse(diffuseMsg);
         }
@@ -1298,7 +1303,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     {
       physics::SurfaceParamsPtr surface = collision->GetSurface();
 
-      if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE)
+      if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsNOCOLLIDE)
       {
         surface->collideWithoutContact = false;
         // Set collideBitmask in case it was unset
@@ -1369,7 +1374,7 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
   if (totalCollideBitmask == 0x0)
   {
     // All of the collisions had a collide_bitmask of 0x0
-    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE);
+    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsNOCOLLIDE);
   }
   else if (collideWithoutContact)
   {
