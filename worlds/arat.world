@@ -19,7 +19,7 @@
         <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
         <hand_side>right</hand_side>
-        <timer_topic>~/timer_control</timer_topic> 
+        <timer_topic>~/timer_control</timer_topic>
 
         <contacts>
           <contact name="mpl::rPalm0">
@@ -155,7 +155,7 @@
 
           <task id="grasp_6"name="Stone">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/grasp_6.jpg</icon> 
+            <icon>file://media/gui/arat/arat_icons/grasp_6.jpg</icon>
             <instructions>
               Instructions: Pick up the stone and place it on top of the box.
             </instructions>
@@ -213,7 +213,7 @@
             </instructions>
           </task>
         </task_group>
-        
+
         <arm_keys>
 	  <!-- Indices 0-5 are: tx, ty, tz, rx, ry, rz -->
           <arm inc_key="w" dec_key="s" index="0" increment=0.025></arm>
@@ -255,8 +255,9 @@
       </plugin>
 
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
-        <size>155 30</size>
-        <topic>~/timer_control</topic> 
+        <size>155 80</size>
+        <start_stop_button>1</start_stop_button>
+        <topic>~/timer_control</topic>
       </plugin>
 
     </gui>
@@ -404,28 +405,28 @@
       <name>cup_2</name>
       <uri>model://plastic_cup</uri>
       <pose>-1.0 250 1.015 0 0 0</pose>
-    </include> 
- 
+    </include>
+
     <include>
       <uri>model://wooden_peg_board</uri>
       <pose>-1.2 250 1.015 0 0 0</pose>
-    </include> 
+    </include>
 
     <include>
       <uri>model://metal_peg_board</uri>
       <pose>-1.4 250 1.015 0 0 0</pose>
-    </include> 
+    </include>
 
     <include>
       <uri>model://tube_2_25cm</uri>
       <pose>-1.6 250 1.015 0 0 0</pose>
-    </include> 
+    </include>
 
     <include>
       <uri>model://tube_9_5mm</uri>
       <pose>-1.8 250 1.015 0 0 0</pose>
-    </include> 
- 
+    </include>
+
     <include>
       <uri>model://washer</uri>
       <pose>-2.0 250 1.015 0 0 0</pose>
@@ -518,7 +519,7 @@
       <arrangement name="grasp_4">
         <pose model="wood_cube_7_5cm"> 0.217 -0.268 1.034 0 0 0</pose>
       </arrangement>
-      <arrangement name="grasp_5"> 
+      <arrangement name="grasp_5">
         <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
         <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
         <pose model="cricket_ball"> 0.217 -0.274 1.038 0 0 0</pose>
