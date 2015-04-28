@@ -54,10 +54,6 @@ namespace haptix
                         const bool _verbose = false,
                         const std::string &_world="");
 
-      /// \brief Copy constructor. Currently unimplemented
-      /// \param[in] Optitrack object to copy
-      public: Optitrack(const Optitrack &_optitrack);
-
       /// \brief Default destructor.
       public: ~Optitrack() = default;
 
