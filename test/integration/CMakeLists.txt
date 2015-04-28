@@ -1,14 +1,8 @@
 include_directories (
-  ${Boost_FILESYSTEM_INCLUDE_DIRS}
-  ${Boost_SYSTEM_INCLUDE_DIRS}
-  ${Boost_THREAD_INCLUDE_DIRS}
   ${HAPTIX-COMM_INCLUDE_DIRS}
 )
 
 link_directories(
-  ${Boost_FILESYSTEM_LIBRARY_DIRS}
-  ${Boost_SYSTEM_LIBRARY_DIRS}
-  ${Boost_THREAD_LIBRARY_DIRS}
   ${HAPTIX-COMM_LIBRARY_DIRS}
 )
 
