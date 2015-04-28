@@ -1,8 +1,6 @@
 link_directories(
   ${CCD_LIBRARY_DIRS}
-  ${Boost_FILESYSTEM_LIBRARY_DIRS}
-  ${Boost_SYSTEM_LIBRARY_DIRS}
-  ${Boost_THREAD_LIBRARY_DIRS}
+  ${Boost_LIBRARY_DIR}
   ${SDFormat_LIBRARY_DIRS}
   ${GAZEBO_LIBRARY_DIRS}
 )
@@ -11,9 +9,6 @@ include_directories (
   ${SDFormat_INCLUDE_DIRS}
   ${Boost_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
-  ${Boost_FILESYSTEM_INCLUDE_DIRS}
-  ${Boost_SYSTEM_INCLUDE_DIRS}
-  ${Boost_THREAD_INCLUDE_DIRS}
 
   ${PROJECT_SOURCE_DIR}/test/gtest/include
   ${PROJECT_SOURCE_DIR}/test/gtest
