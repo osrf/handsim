@@ -59,11 +59,6 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
 }
 
 /////////////////////////////////////////////////
-Optitrack::Optitrack(const Optitrack &/*_optitrack*/)
-{
-}
-
-/////////////////////////////////////////////////
 void Optitrack::StartReception()
 {
   // Create a socket for receiving tracking updates.
@@ -163,7 +158,7 @@ void Optitrack::RunReceptionTask()
     struct pollfd ufds[1];
     memset(ufds, 0, sizeof(ufds));
     ufds[0].fd = this->dataSocket;
-    ufds[0].events = POLLIN; // ???
+    ufds[0].events = POLLIN;
 
     // Poll every 500 milliseconds
     int pollReturnCode = poll(ufds, 1, 500);

@@ -3,6 +3,7 @@ include (CheckCXXSourceCompiles)
 
 include (${project_cmake_dir}/FindOS.cmake)
 include (FindPkgConfig)
+include (FindBoost)
 
 find_package(gazebo REQUIRED)
 find_package(haptix-comm REQUIRED)

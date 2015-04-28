@@ -17,22 +17,8 @@
 
 #include <gtest/gtest.h>
 
-#include <haptix/comm/haptix.h>
-#include <haptix/comm/msg/hxCommand.pb.h>
-#include <haptix/comm/msg/hxRobot.pb.h>
-#include <haptix/comm/msg/hxSensor.pb.h>
-#include <haptix/comm/msg/hxGrasp.pb.h>
-#include <ignition/transport.hh>
-#include <gazebo/common/common.hh>
 #include <gazebo/physics/physics.hh>
-#include <gazebo/sensors/sensors.hh>
-#include <gazebo/rendering/rendering.hh>
-#include <gazebo/msgs/msgs.hh>
-
-#include <gazebo/gazebo_config.h>
-#include <gazebo/Server.hh>
-
-#include "ServerFixture.hh"
+#include <gazebo/test/ServerFixture.hh>
 
 using namespace gazebo;
 
