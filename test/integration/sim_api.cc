@@ -769,13 +769,13 @@ TEST_F(SimApiTest, HxsModelColor)
   physics::WorldPtr world = physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
+  // Spawn a camera facing the box
+  SpawnCamera("test_camera_model", "test_camera",
+      math::Vector3(0, 0, 0), math::Vector3(0, 0, 0));
+
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene();
   ASSERT_TRUE(scene != NULL);
 
-  physics::ModelPtr model = world->GetModel("cricket_ball");
-  ASSERT_TRUE(model != NULL);
-
-  // Wait until the cricket ball visual has spawned before proceeding
   int sleep = 0;
   int maxSleep = 5;
   rendering::VisualPtr visual;
@@ -788,41 +788,18 @@ TEST_F(SimApiTest, HxsModelColor)
   }
   ASSERT_TRUE(visual != NULL);
 
+  visual->SetAmbient(common::Color::Red);
+  visual->SetDiffuse(common::Color::Red);
 
   hxColor rep;
   ASSERT_EQ(hxs_model_color("cricket_ball", &rep), hxOK);
 
   // TODO Wait a moment for visual message to publish
-  // TODO: Parse script as material
 
-  // TODO: Get changed color from Visual object, not SDF
-  for (auto link : model->GetLinks())
-  {
-    sdf::ElementPtr linkSDF = link->GetSDF();
-    ASSERT_TRUE(linkSDF != NULL);
-    EXPECT_TRUE(linkSDF->HasElement("visual"));
-    for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
-         visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
-    {
-      gzdbg << visualSDF->ToString("Visual SDF string: ") << std::endl;
-      GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
-      std::string visualName = visualSDF->Get<std::string>("name");
-      msgs::Visual visMsg = link->GetVisualMessage(visualName);
-
-      EXPECT_FLOAT_EQ(rep.r, visMsg.material().ambient().r());
-      EXPECT_FLOAT_EQ(rep.g, visMsg.material().ambient().g());
-      EXPECT_FLOAT_EQ(rep.b, visMsg.material().ambient().b());
-      EXPECT_FLOAT_EQ(rep.alpha, visMsg.material().ambient().a());
-
-      EXPECT_FLOAT_EQ(rep.r, visMsg.material().diffuse().r());
-      EXPECT_FLOAT_EQ(rep.g, visMsg.material().diffuse().g());
-      EXPECT_FLOAT_EQ(rep.b, visMsg.material().diffuse().b());
-      EXPECT_FLOAT_EQ(rep.alpha, visMsg.material().diffuse().a());
-    }
-  }
-  // TODO: wrong reply color?
-  gzdbg << "Reply color : [" << rep.r << ", " << rep.g << ", " << rep.b << ", "
-        << rep.alpha << "]" << std::endl;
+  EXPECT_FLOAT_EQ(rep.r, common::Color::Red.r);
+  EXPECT_FLOAT_EQ(rep.g, common::Color::Red.g);
+  EXPECT_FLOAT_EQ(rep.b, common::Color::Red.b);
+  EXPECT_FLOAT_EQ(rep.alpha, common::Color::Red.a);
 }
 
 TEST_F(SimApiTest, HxsSetModelColor)
@@ -832,20 +809,23 @@ TEST_F(SimApiTest, HxsSetModelColor)
   ASSERT_TRUE(world != NULL);
 
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
-  if (!scene)
-  {
-    scene = gazebo::rendering::create_scene("default", true);
-    scene->Load();
-    scene->Init();
-  }
-
-  world->Step(100);
-  gzdbg << "Visuals: " << scene->GetVisualCount() << std::endl;
-
   ASSERT_TRUE(scene != NULL);
 
-  physics::ModelPtr model = world->GetModel("cricket_ball");
-  ASSERT_TRUE(model != NULL);
+  // Spawn a camera facing the box
+  SpawnCamera("test_camera_model", "test_camera",
+      math::Vector3(0, 0, 0), math::Vector3(0, 0, 0));
+
+  int sleep = 0;
+  int maxSleep = 5;
+  rendering::VisualPtr visual;
+  while (!visual && sleep < maxSleep)
+  {
+    gzdbg << "Visual count: " << scene->GetVisualCount() << std::endl;
+    visual = scene->GetVisual("cricket_ball::link");
+    common::Time::MSleep(100);
+    sleep++;
+  }
+  ASSERT_TRUE(visual != NULL);
 
   hxColor blue;
   blue.r = 0;
@@ -854,29 +834,15 @@ TEST_F(SimApiTest, HxsSetModelColor)
   blue.alpha = 1.0;
   ASSERT_EQ(hxs_set_model_color("cricket_ball", &blue), hxOK);
 
-  // TODO Wait a moment for visual message to publish
+  EXPECT_FLOAT_EQ(blue.r, visual->GetAmbient().r);
+  EXPECT_FLOAT_EQ(blue.g, visual->GetAmbient().g);
+  EXPECT_FLOAT_EQ(blue.b, visual->GetAmbient().b);
+  EXPECT_FLOAT_EQ(blue.alpha, visual->GetAmbient().a);
 
-  for (auto link : model->GetLinks())
-  {
-    sdf::ElementPtr linkSDF = link->GetSDF();
-    ASSERT_TRUE(linkSDF != NULL);
-    if (linkSDF->HasElement("visual"))
-    {
-      for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
-           visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
-      {
-
-        GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
-        std::string visualName = visualSDF->Get<std::string>("name");
-        msgs::Visual visMsg = link->GetVisualMessage(visualName);
-
-        EXPECT_FLOAT_EQ(blue.r, visMsg.material().ambient().r());
-        EXPECT_FLOAT_EQ(blue.g, visMsg.material().ambient().g());
-        EXPECT_FLOAT_EQ(blue.b, visMsg.material().ambient().b());
-        EXPECT_FLOAT_EQ(blue.alpha, visMsg.material().ambient().a());
-      }
-    }
-  }
+  EXPECT_FLOAT_EQ(blue.r, visual->GetDiffuse().r);
+  EXPECT_FLOAT_EQ(blue.g, visual->GetDiffuse().g);
+  EXPECT_FLOAT_EQ(blue.b, visual->GetDiffuse().b);
+  EXPECT_FLOAT_EQ(blue.alpha, visual->GetDiffuse().a);
 }
 
 TEST_F(SimApiTest, HxsModelCollideMode)

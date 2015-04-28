@@ -28,7 +28,10 @@
 #include <gazebo/physics/PhysicsEngine.hh>
 #include <gazebo/physics/SurfaceParams.hh>
 #include <gazebo/physics/World.hh>
+#include <gazebo/rendering/RenderingIface.hh>
+#include <gazebo/rendering/Scene.hh>
 #include <gazebo/rendering/UserCamera.hh>
+#include <gazebo/rendering/Visual.hh>
 #include <gazebo/util/LogRecord.hh>
 #include <gazebo/plugins/TimerGUIPlugin.hh>
 
@@ -1054,6 +1057,7 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     return;
   }
 
+  rendering::ScenePtr scene = gazebo::rendering::get_scene();
   for (auto link : model->GetLinks())
   {
     // Get all the visuals
@@ -1071,54 +1075,87 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
       {
         GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
         std::string visualName = visualSDF->Get<std::string>("name");
-        msgs::Visual visMsg = link->GetVisualMessage(visualName);
-        if (visMsg.name() != visualName)
+        msgs::Visual visMsg;
+        if (scene)
         {
-          _result = false;
-          return;
-        }
-        msgs::Color *colorMsg = new msgs::Color;
-        colorMsg->set_r(_req.color().r());
-        colorMsg->set_g(_req.color().g());
-        colorMsg->set_b(_req.color().b());
-        colorMsg->set_a(_req.color().alpha());
-        msgs::Color *diffuseMsg = new msgs::Color(*colorMsg);
-        if ((!visMsg.has_material()) || visMsg.mutable_material() == NULL)
-        {
-          msgs::Material *materialMsg = new msgs::Material;
-          visMsg.set_allocated_material(materialMsg);
-        }
-        msgs::Material *materialMsg = visMsg.mutable_material();
-        if (materialMsg->has_ambient())
-        {
-          materialMsg->clear_ambient();
-        }
-        materialMsg->set_allocated_ambient(colorMsg);
-        if (materialMsg->has_diffuse())
-        {
-          materialMsg->clear_diffuse();
-        }
-        if (visMsg.name().empty())
-        {
-          visMsg.set_name(visualName);
-        }
-        if (visMsg.parent_name().empty())
-        {
-          if (!linkSDF->HasAttribute("name"))
+          rendering::VisualPtr visual = scene->GetVisual(link->GetScopedName()
+              + "::" + visualName);
+          if (!visual)
           {
             _result = false;
             return;
           }
-          visMsg.set_parent_name(link->GetScopedName());
-        }
-        materialMsg->set_allocated_diffuse(diffuseMsg);
-        gzdbg << "Color: [" << visMsg.material().ambient().r() << ", "
-              << visMsg.material().ambient().g() << ", "
-              << visMsg.material().ambient().b() << ", "
-              << visMsg.material().ambient().a() << "]" << std::endl;
-        gzdbg << "Message name: " << visMsg.name() << std::endl;
-        gzdbg << "Message parent name: " << visMsg.parent_name() << std::endl;
+          common::Color requestedColor(_req.color().r(), _req.color().b(),
+              _req.color().g(), _req.color().alpha());
+          visual->SetAmbient(requestedColor);
+          visual->SetDiffuse(requestedColor);
+          // Set the change in SDF
+          sdf::ElementPtr materialSDF = visualSDF->GetElement("material");
+          if (!visualSDF->HasElement("material"))
+          {
+            visualSDF->AddElement("material");
+          }
 
+          if (!materialSDF->HasElement("ambient"))
+          {
+            materialSDF->AddElement("ambient");
+          }
+          materialSDF->GetElement("ambient")->Set<common::Color>(requestedColor);
+
+          if (!materialSDF->HasElement("diffuse"))
+          {
+            materialSDF->AddElement("diffuse");
+          materialSDF->GetElement("diffuse")->Set<common::Color>(requestedColor);
+          }
+          // Get a message from SDF
+          // Publish the message.
+          visMsg = msgs::VisualFromSDF(visualSDF);
+        }
+        else
+        {
+          visMsg = link->GetVisualMessage(visualName);
+          if (visMsg.name() != visualName)
+          {
+            gzerr << "Requested name " << visualName << " not equal to " << visMsg.name() << std::endl;
+            _result = false;
+            return;
+          }
+          msgs::Color *colorMsg = new msgs::Color;
+          colorMsg->set_r(_req.color().r());
+          colorMsg->set_g(_req.color().g());
+          colorMsg->set_b(_req.color().b());
+          colorMsg->set_a(_req.color().alpha());
+          msgs::Color *diffuseMsg = new msgs::Color(*colorMsg);
+          if ((!visMsg.has_material()) || visMsg.mutable_material() == NULL)
+          {
+            msgs::Material *materialMsg = new msgs::Material;
+            visMsg.set_allocated_material(materialMsg);
+          }
+          msgs::Material *materialMsg = visMsg.mutable_material();
+          if (materialMsg->has_ambient())
+          {
+            materialMsg->clear_ambient();
+          }
+          materialMsg->set_allocated_ambient(colorMsg);
+          if (materialMsg->has_diffuse())
+          {
+            materialMsg->clear_diffuse();
+          }
+          if (visMsg.name().empty())
+          {
+            visMsg.set_name(visualName);
+          }
+          if (visMsg.parent_name().empty())
+          {
+            if (!linkSDF->HasAttribute("name"))
+            {
+              _result = false;
+              return;
+            }
+            visMsg.set_parent_name(link->GetScopedName());
+          }
+          materialMsg->set_allocated_diffuse(diffuseMsg);
+        }
         visPub->Publish(visMsg);
       }
     }
@@ -1159,6 +1196,8 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
   int numVis = 0;
   double r, g, b, a;
   r = g = b = a = 0;
+
+  rendering::ScenePtr scene = gazebo::rendering::get_scene();
   for (auto link : links)
   {
     // Get all the visuals
@@ -1175,15 +1214,39 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
       {
         GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
         std::string visualName = visualSDF->Get<std::string>("name");
-        msgs::Visual visMsg = link->GetVisualMessage(visualName);
-        r += visMsg.material().ambient().r();
-        g += visMsg.material().ambient().g();
-        b += visMsg.material().ambient().b();
-        a += visMsg.material().ambient().a();
-        r += visMsg.material().diffuse().r();
-        g += visMsg.material().diffuse().g();
-        b += visMsg.material().diffuse().b();
-        a += visMsg.material().diffuse().a();
+
+        if (scene)
+        {
+          rendering::VisualPtr visual = scene->GetVisual(link->GetScopedName()
+              + "::" + visualName);
+          if (!visual)
+          {
+            _result = false;
+            return;
+          }
+          r += visual->GetAmbient().r;
+          g += visual->GetAmbient().g;
+          b += visual->GetAmbient().b;
+          a += visual->GetAmbient().a;
+
+          r += visual->GetDiffuse().r;
+          g += visual->GetDiffuse().g;
+          b += visual->GetDiffuse().b;
+          a += visual->GetDiffuse().a;
+        }
+        else
+        {
+          msgs::Visual visMsg = link->GetVisualMessage(visualName);
+          r += visMsg.material().ambient().r();
+          g += visMsg.material().ambient().g();
+          b += visMsg.material().ambient().b();
+          a += visMsg.material().ambient().a();
+
+          r += visMsg.material().diffuse().r();
+          g += visMsg.material().diffuse().g();
+          b += visMsg.material().diffuse().b();
+          a += visMsg.material().diffuse().a();
+        }
         numVis+=2;
       }
     }
