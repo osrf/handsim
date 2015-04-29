@@ -51,10 +51,38 @@ namespace haptix_gazebo_plugins
     // Documentation inherited
     public: void Load(sdf::ElementPtr _elem);
 
+    /// \brief Qt callback on mouse enter event.
+    /// \param[in] _event Mouse enter event.
+    protected: virtual void enterEvent(QEvent *_event);
+
+    /// \brief Qt callback on mouse move event.
+    /// \param[in] _event Mouse move event.
+    protected: virtual void mouseMoveEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse press event.
+    /// \param[in] _event Mouse press event.
+    protected: virtual void mousePressEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse release event.
+    /// \param[in] _event Mouse release event.
+    protected: virtual void mouseReleaseEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse double click event.
+    /// \param[in] _event Mouse double click event.
+    protected: virtual void mouseDoubleClickEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse wheel event.
+    /// \param[in] _event Mouse wheel event.
+    protected: virtual void wheelEvent(QWheelEvent *_event);
+
     /// \brief Signal to set a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
     /// \param[in] _value Force value.
     signals: void SetContactForce(QString _contactName, double _value);
+
+    /// \brief Signal that motion capture status has changed.
+    /// \param[in] _status 0: No data; 1: On; 2: Paused.
+    signals: void MocapStatusChanged(int _status);
 
     /// \brief Handles setting a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
@@ -76,10 +104,6 @@ namespace haptix_gazebo_plugins
     /// \param[in] _msg Message to publish
     private: void PublishTimerMessage(const std::string &_msg) const;
 
-    /// \brief Callback when the start/stop button is pressed.
-    /// \param[in] _checked True if the button was checked.
-    private slots: void OnStartStop(bool _checked);
-
     /// \brief Callback triggered when the next button is clicked
     private slots: void OnNextClicked();
 
@@ -93,9 +117,17 @@ namespace haptix_gazebo_plugins
     /// \param[in] _state State of the check box.
     private slots: void OnLocalCoordMove(int _state);
 
+    /// \brief Callback triggered when viewpoint rotations check box is clicked.
+    /// \param[in] _state State of the check box.
+    private slots: void OnViewpointRotationsCheck(int _state);
+
     /// \brief Callback triggered when stereo check box is clicked.
     /// \param[in] _state State of the check box.
     private slots: void OnStereoCheck(int _state);
+
+    /// \brief Callback motion capture status has changed.
+    /// \param[in] _status 0: No data; 1: On; 2: Paused.
+    private slots: void OnMocapStatusChanged(int _status);
 
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
@@ -124,6 +156,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief callback for subscriber to the hydra publisher
     private: void OnHydra(ConstHydraPtr &_msg);
+
+    /// \brief Qt event filter used to filter child widget events.
+    /// \param[in] _obj Object that is watched by the event filter.
+    /// \param[in] _event Qt event.
+    /// \return True if the event is handled.
+    private: bool eventFilter(QObject *_obj, QEvent *_event);
 
     /// \brief Handle position scaling slider movement
     /// \param[in] _state State of the slider
@@ -185,7 +223,11 @@ namespace haptix_gazebo_plugins
     // \brief Set of Gazebo signal connections.
     private: std::vector<gazebo::event::ConnectionPtr> connections;
 
+    // \brief Tab for tasks.
     private: QTabWidget *taskTab;
+
+    // \brief Frame for taskTab.
+    private: QFrame *tabFrame;
 
     /// \brief Text box that hold instructions to the user.
     private: QTextEdit *instructionsView;
@@ -200,17 +242,18 @@ namespace haptix_gazebo_plugins
     /// scene.
     private: gazebo::transport::PublisherPtr taskPub;
 
+    /// \brief Publisher that talks with the control plugin to enable viewpoint
+    /// rotations.
+    private: gazebo::transport::PublisherPtr viewpointRotationsPub;
+
     /// \brief Publisher that controls the clock
     private: gazebo::transport::PublisherPtr timerPub;
 
-    /// \brief Task start/stop button
-    private: QPushButton *startStopButton;
+    /// \brief Next task button
+    private: QPushButton *nextButton;
 
-    /// \brief QT style for the start setting of the start/stop button
-    private: std::string startStyle;
-
-    /// \brief QT style for the start setting of the start/stop button
-    private: std::string stopStyle;
+    /// \brief Reset scene button
+    private: QPushButton *resetSceneButton;
 
     /// \brief A place to store key-to-motor mappings
     private: std::map<char, std::pair<unsigned int, float> > motorKeys;
@@ -272,8 +315,14 @@ namespace haptix_gazebo_plugins
     /// \brief start a thread to poll contact sensor data
     private: boost::thread pollSensorsThread;
 
-    /// \brief graphical mocap status indicator
-    private: QLabel* mocapStatusIndicator;
+    /// \brief Motion capture status indicator.
+    private: QLabel *mocapStatusIndicator;
+
+    /// \brief Top bar widget.
+    private: QFrame *topBarFrame;
+
+    /// \brief Settings button.
+    private: QToolButton *settingsButton;
 
     /// \brief start a thread to poll optitrackbridge
     private: boost::thread pollTrackingThread;
@@ -292,6 +341,15 @@ namespace haptix_gazebo_plugins
 
     /// \brief Pixmap for the SVG hand
     private: QGraphicsPixmapItem *handItem;
+
+    /// \brief Pointer to the render widget.
+    private: QWidget *renderWidget;
+
+    /// \brief GUI maximum width.
+    private: int maxWidth;
+
+    /// \brief GUI maximum height.
+    private: int maxHeight;
   };
 }
 #endif
