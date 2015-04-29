@@ -1604,8 +1604,18 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 {
-  if (!this->pauseTracking ||  _msg == NULL || _msg->points_size() != 3)
+  if (!this->pauseTracking)
     return;
+  if (_msg == NULL)
+  {
+    gzerr << "Message was NULL!" << std::endl;
+    return;
+  }
+  if (_msg->points_size() != 3)
+  {
+    gzerr << "Message had the wrong number of points!" << std::endl;
+    return;
+  }
 
   std::unique_lock<std::mutex> lock(this->optitrackMonitorMutex,
       std::try_to_lock);
