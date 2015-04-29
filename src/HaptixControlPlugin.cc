@@ -15,7 +15,7 @@
  *
 */
 
-#include <cassert>
+#include <gazebo/common/Assert.hh>
 #include <gazebo/gui/KeyEventHandler.hh>
 
 #include "handsim/HaptixControlPlugin.hh"
@@ -84,7 +84,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->viewpointJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
-  this->pausePub = this->gazeboNode->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_response");
+  this->pausePub = this->gazeboNode->Advertise<gazebo::msgs::Int>
+        ("~/motion_tracking/pause_response");
 
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
@@ -247,7 +248,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
                                       gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
   if (this->sdf->HasElement("base_link_sensor_offset"))
   {
-    sdf::ElementPtr elbowArmSdf = this->sdf->GetElement("base_link_sensor_offset");
+    sdf::ElementPtr elbowArmSdf =
+        this->sdf->GetElement("base_link_sensor_offset");
     this->elbowArm = elbowArmSdf->Get<math::Pose>();
   }
   this->elbowArmCorrected = this->elbowArm;
@@ -1521,8 +1523,7 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
-  std::unique_lock<std::mutex> monitorLock(this->optitrackMonitorMutex,
-      std::try_to_lock);
+  std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
 
   gazebo::math::Pose cameraHead = gazebo::msgs::Convert(*_msg);
 
@@ -1580,7 +1581,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 
     // goal: arm sensor orientation should be the same as the screen rotation
     // worldScreen.rot is the screen orientation in the world frame
-    // worldArm.rot is the arm orientation in the world frame, just set them to be the same
+    // worldArm.rot is the arm orientation in the world frame, set them equal
     worldArm.rot = (this->elbowArm + this->targetBaseLinkPose).rot;
     // solve for elbowArmCorrected.rot based on new worldArm
     this->elbowArmCorrected.rot = (worldArm - this->targetBaseLinkPose).rot;
@@ -1609,19 +1610,19 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   std::unique_lock<std::mutex> lock(this->optitrackMonitorMutex,
       std::try_to_lock);
   std::vector<gazebo::math::Vector3> points;
-  for (int i = 0; i < _msg->points_size(); i++)
+  for (int i = 0; i < _msg->points_size(); ++i)
   {
     points.push_back(msgs::Convert(_msg->points(i)));
   }
 
   double maxLength = 0;
   int originPointId = -1;
-  int shortPointId, longPointId, i1, i2;
+  int shortPointId, longPointId;
   // Find side with maximum length, choose the "origin" as the opposite point
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 3; ++i)
   {
-    i1 = (i + 1) % 3;
-    i2 = (i + 2) % 3;
+    int i1 = (i + 1) % 3;
+    int i2 = (i + 2) % 3;
     double length = (points[i1] - points[i2]).GetLength();
     if (length > maxLength)
     {
