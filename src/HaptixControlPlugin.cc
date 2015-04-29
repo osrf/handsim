@@ -162,7 +162,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
-  // transformation from camera to marker in camera frame
+  // transformation from camera to marker in camera frame (optitrack)
   this->headMarker = math::Pose(0.1, -0.07, 0.11, M_PI/2, 0, 0);
   this->headMarkerCorrected = this->headMarker;
 
