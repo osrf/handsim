@@ -1,5 +1,4 @@
 link_directories(
-  ${CCD_LIBRARY_DIRS}
   ${Boost_LIBRARY_DIR}
   ${SDFormat_LIBRARY_DIRS}
   ${GAZEBO_LIBRARY_DIRS}
@@ -14,7 +13,8 @@ include_directories (
   ${PROJECT_SOURCE_DIR}/test/gtest
   ${PROJECT_SOURCE_DIR}/test
 
-  ${PROJECT_BINARY_DIR}/test # need this for test_config.h
+  # need this for test_config.h
+  ${PROJECT_BINARY_DIR}/test
 )
 
 configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test/test_config.h)
