@@ -1530,6 +1530,9 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
        && this->userCameraPoseValid)
   {
     math::Pose cameraHeadNoRotation = cameraHead;
+    // fix the rotation of the sensor reading, ignore, but store difference
+    // in headMarkerRotationFix2 at the end to be applied in
+    // non-calibration phase
     cameraHeadNoRotation.rot = this->headMarkerRotationFix.rot;
 
     // use the no rotation cameraHead sensor data to compute offset,
@@ -1559,7 +1562,8 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     */
 
     // store the difference between sensor reading and stored cameraHeadNoRotation
-    this->headMarkerRotationFix2.rot = cameraHead.rot * this->headMarkerRotationFix.rot.GetInverse();
+    this->headMarkerRotationFix2 = cameraHead
+      - math::Pose(cameraHead.pos, this->headMarkerRotationFix.rot);
 
     this->headOffsetInitialized = true;
   }
@@ -1570,7 +1574,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 
     // unrotate cameraHead sensor data so it matches exit of calibration
     math::Pose cameraHeadUnrotated = cameraHead;
-    cameraHeadUnrotated.rot = cameraHead.rot * this->headMarkerRotationFix2.rot;
+    cameraHeadUnrotated = this->headMarkerRotationFix2 + cameraHead;
 
     // T_WH = T_HMarker + T_C'Marker + T_CC' -T_CM -T_MS + T_WS
     gazebo::math::Pose targetCamera = this->headMarker.GetInverse() + 
