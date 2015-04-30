@@ -168,6 +168,7 @@ TEST_F(SimApiTest, HxsCameraTransform)
   camera->Update();
   gui::set_active_camera(camera);
   ASSERT_TRUE(gui::get_active_camera() != NULL);
+  common::Time::Sleep(1);
 
   hxsTransform transform;
   ASSERT_EQ(hxs_camera_transform(&transform), hxOK);
@@ -342,6 +343,7 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   ang_vel.z = 0.03;
 
   hxsVector3 zero;
+  memset(&zero, 0, sizeof(hxsVector3));
 
   physics::LinkPtr doorLink = gzDoorModel->GetLink("door");
   ASSERT_TRUE(doorLink != NULL);
@@ -352,6 +354,9 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   EXPECT_EQ(gzLinkPose, doorLink->GetWorldPose());
 
   EXPECT_EQ(math::Vector3(0, 0, 0.03), doorLink->GetWorldAngularVel());
+
+  gzDoorModel->ResetPhysicsStates();
+  world->Step(1000);
 
   ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &lin_vel,
       &zero), hxOK);
@@ -777,7 +782,6 @@ TEST_F(SimApiTest, HxsSetModelColor)
   rendering::VisualPtr visual;
   while (!visual && sleep < maxSleep)
   {
-    gzdbg << "Visual count: " << scene->GetVisualCount() << std::endl;
     visual = scene->GetVisual("cricket_ball::link");
     common::Time::MSleep(100);
     sleep++;

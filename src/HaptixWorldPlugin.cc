@@ -58,7 +58,7 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
 
   event::Events::DisconnectWorldUpdateBegin(this->worldUpdateConnection);
 
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_siminfo");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_sim_info");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
@@ -171,11 +171,13 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
   this->userCameraSub = this->gzNode->Subscribe("~/user_camera/pose",
       &HaptixWorldPlugin::OnUserCameraPose, this);
 
+  this->lastSimUpdateTime = this->world->GetSimTime();
+
   this->worldUpdateConnection = event::Events::ConnectWorldUpdateBegin(
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
 
   // Advertise haptix sim services.
-  this->ignNode.Advertise("/haptix/gazebo/hxs_siminfo",
+  this->ignNode.Advertise("/haptix/gazebo/hxs_sim_info",
     &HaptixWorldPlugin::HaptixSimInfoCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_camera_transform",
@@ -258,8 +260,6 @@ void HaptixWorldPlugin::Load(physics::WorldPtr _world,
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_collide_mode",
     &HaptixWorldPlugin::HaptixSetModelCollideModeCallback, this);
-
-  this->lastSimUpdateTime = this->world->GetSimTime();
 }
 
 /////////////////////////////////////////////////
@@ -330,6 +330,7 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
     haptix::comm::msgs::hxModel* modelMsg = _rep.add_models();
     if (!ConvertModel(*model, *modelMsg))
     {
+      gzerr << "Couldn't convert Gazebo model to model message" << std::endl;
       _result = false;
       return;
     }
@@ -355,6 +356,7 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
   if (!HaptixWorldPlugin::ConvertTransform(pose,
           *_rep.mutable_camera_transform()))
   {
+    gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
     _result = false;
     return;
   }
@@ -377,6 +379,7 @@ void HaptixWorldPlugin::HaptixCameraTransformCallback(
 
   if (!HaptixWorldPlugin::ConvertTransform(pose, _rep))
   {
+    gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
     _result = false;
     return;
   }
@@ -394,6 +397,7 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
 
   if (!HaptixWorldPlugin::ConvertTransform(_req, pose))
   {
+    gzerr << "Couldn't convert transform message to Gazebo pose" << std::endl;
     _result = false;
     return;
   }
@@ -414,6 +418,7 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
 
   if (!this->world)
   {
+    gzerr << "NULL world in ContactPoints callback" << std::endl;
     _result = false;
     return;
   }
@@ -549,6 +554,8 @@ void HaptixWorldPlugin::HaptixModelLinkStateCallback(
   ConvertVector(_req.links(0).ang_vel(), ang_vel);
 
   link->SetWorldPose(pose);
+  gzdbg << "Setting linear vel: " << lin_vel << std::endl;
+  gzdbg << "Setting angular vel: " << ang_vel << std::endl;
   link->SetLinearVel(lin_vel);
   link->SetAngularVel(ang_vel);
 
@@ -635,6 +642,7 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World pointer NULL" << std::endl;
     _result = false;
     return;
   }
@@ -642,6 +650,7 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
   physics::ModelPtr model = this->world->GetModel(_req.data());
   if (!model)
   {
+    gzerr << "Model pointer NULL" << std::endl;
     _result = true;
     return;
   }
@@ -654,7 +663,10 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
     _result = false;
     tries++;
     if (tries > 100)
+    {
+      gzerr << "hxs_remove_model timed out, model still exists" << std::endl;
       return;
+    }
   }
   _result = true;
 }
@@ -668,6 +680,7 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World pointer NULL" << std::endl;
     _result = false;
     return;
   }
@@ -675,12 +688,14 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
   physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!model)
   {
+    gzerr << "Model pointer NULL" << std::endl;
     _result = false;
     return;
   }
   math::Pose pose;
   if (!ConvertTransform(_req.transform(), pose))
   {
+    gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
     _result = false;
     return;
   }
@@ -694,9 +709,11 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  // TODO
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World pointer NULL" << std::endl;
     _result = false;
     return;
   }
@@ -704,12 +721,14 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
   physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!model)
   {
+    gzerr << "Model pointer NULL" << std::endl;
     _result = false;
     return;
   }
   math::Vector3 lin_vel;
   if (!ConvertVector(_req.vector3(), lin_vel))
   {
+    gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
     _result = false;
     return;
   }
@@ -723,6 +742,7 @@ void HaptixWorldPlugin::HaptixAngularVelocityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  // TODO
   std::lock_guard<std::mutex> lock(this->worldMutex);
   physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!this->world)
@@ -755,14 +775,22 @@ void HaptixWorldPlugin::HaptixForceCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World pointer NULL" << std::endl;
+    _result = false;
+    return;
+  }
+  physics::ModelPtr model = this->world->GetModel(_req.name());
+  if (!model)
+  {
+    gzerr << "Model pointer NULL" << std::endl;
     _result = false;
     return;
   }
 
-  physics::LinkPtr link =
-      this->world->GetModel(_req.name())->GetLink(_req.string_value());
+  physics::LinkPtr link = model->GetLink(_req.string_value());
   if (!link)
   {
+    gzerr << "Link pointer NULL" << std::endl;
     _result = false;
     return;
   }
@@ -770,6 +798,7 @@ void HaptixWorldPlugin::HaptixForceCallback(
   math::Vector3 force;
   if (!ConvertVector(_req.vector3(), force))
   {
+    gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
     _result = false;
     return;
   }
@@ -797,14 +826,22 @@ void HaptixWorldPlugin::HaptixTorqueCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World pointer NULL" << std::endl;
+    _result = false;
+    return;
+  }
+  physics::ModelPtr model = this->world->GetModel(_req.name());
+  if (!model)
+  {
+    gzerr << "Model pointer NULL" << std::endl;
     _result = false;
     return;
   }
 
-  physics::LinkPtr link =
-      this->world->GetModel(_req.name())->GetLink(_req.string_value());
+  physics::LinkPtr link = model->GetLink(_req.string_value());
   if (!link)
   {
+    gzerr << "Link pointer NULL" << std::endl;
     _result = false;
     return;
   }
@@ -812,6 +849,7 @@ void HaptixWorldPlugin::HaptixTorqueCallback(
   math::Vector3 torque;
   if (!ConvertVector(_req.vector3(), torque))
   {
+    gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
     _result = false;
     return;
   }
@@ -838,29 +876,41 @@ void HaptixWorldPlugin::HaptixWrenchCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World pointer NULL" << std::endl;
     _result = false;
     return;
   }
 
-  physics::LinkPtr link =
-      this->world->GetModel(_req.name())->GetLink(_req.string_value());
-  if (!link)
+  physics::ModelPtr model = this->world->GetModel(_req.name());
+  if (!model)
   {
+    gzerr << "Model pointer NULL" << std::endl;
     _result = false;
     return;
   }
+
+  physics::LinkPtr link = model->GetLink(_req.string_value());
+  if (!link)
+  {
+    gzerr << "Link pointer NULL" << std::endl;
+    _result = false;
+    return;
+  }
+
   float duration = _req.float_value();
   math::Vector3 force;
   math::Vector3 torque;
 
   if (!ConvertVector(_req.wrench().force(), force))
   {
+    gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
     _result = false;
     return;
   }
 
   if (!ConvertVector(_req.wrench().torque(), torque))
   {
+    gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
     _result = false;
     return;
   }
@@ -942,6 +992,7 @@ void HaptixWorldPlugin::HaptixResetTimerCallback(
   // TODO mutex for timerPublisher
   if (!this->timerPublisher)
   {
+    gzerr << "Timer publisher was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -959,6 +1010,7 @@ void HaptixWorldPlugin::HaptixStartTimerCallback(
 {
   if (!this->timerPublisher)
   {
+    gzerr << "Timer publisher was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -976,6 +1028,7 @@ void HaptixWorldPlugin::HaptixStopTimerCallback(
 {
   if (!this->timerPublisher)
   {
+    gzerr << "Timer publisher was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1023,6 +1076,7 @@ void HaptixWorldPlugin::HaptixTimerCallback(
   common::Time gzTime = timer->GetCurrentTime();
   _rep.set_sec(gzTime.sec);
   _rep.set_nsec(gzTime.nsec);*/
+  // TODO!!!
 
   _result = true;
 }
@@ -1088,11 +1142,18 @@ void HaptixWorldPlugin::HaptixModelGravityCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World was NULL" << std::endl;
     _result = false;
     return;
   }
 
   physics::ModelPtr model = this->world->GetModel(_req.data());
+  if (!model)
+  {
+    gzerr << "Model was NULL" << std::endl;
+    _result = false;
+    return;
+  }
   bool gravity_mode = false;
   for (auto links : model->GetLinks())
   {
@@ -1113,11 +1174,18 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World was NULL" << std::endl;
     _result = false;
     return;
   }
 
   physics::ModelPtr model = this->world->GetModel(_req.name());
+  if (!model)
+  {
+    gzerr << "Model was NULL" << std::endl;
+    _result = false;
+    return;
+  }
 
   model->SetGravityMode(_req.gravity_mode());
 
@@ -1133,6 +1201,7 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1140,6 +1209,7 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
 
   if (!model)
   {
+    gzerr << "Model was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1155,6 +1225,7 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
 
     if (!linkSDF)
     {
+      gzerr << "Link had NULL SDF" << std::endl;
       _result = false;
       return;
     }
@@ -1204,6 +1275,7 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1211,6 +1283,7 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
 
   if (!model)
   {
+    gzerr << "Model was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1218,6 +1291,8 @@ void HaptixWorldPlugin::HaptixModelColorCallback(const std::string &/*_service*/
   auto links = model->GetLinks();
   if (links.size() == 0)
   {
+    // TODO, maybe this model is invisible?
+    gzerr << "Model has no links, can't set color!" << std::endl;
     _result = false;
     return;
   }
@@ -1239,6 +1314,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1246,6 +1322,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
 
   if (!model)
   {
+    gzerr << "Model was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1280,6 +1357,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
       }
       else
       {
+        gzerr << "Unknown hxsCollideMode, cannot set" << std::endl;
         _result = false;
         return;
       }
@@ -1298,6 +1376,7 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
+    gzerr << "World was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1305,6 +1384,7 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
 
   if (!model)
   {
+    gzerr << "Model was NULL" << std::endl;
     _result = false;
     return;
   }
@@ -1318,6 +1398,7 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
       physics::SurfaceParamsPtr surface = collision->GetSurface();
       if (!surface)
       {
+        gzerr << "Surface was NULL" << std::endl;
         _result = false;
         return;
       }

@@ -10,10 +10,7 @@ set(TEST_TYPE "INTEGRATION")
 
 set(tests
   sim_api.cc
-)
-
-set(qt_tests
-  sim_api_gui.cc
+  sim_api_client.cc
 )
 
 link_directories(${PROJECT_BINARY_DIR}/test)
