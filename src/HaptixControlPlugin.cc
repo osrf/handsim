@@ -165,7 +165,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   // transformation from camera to marker in camera frame (optitrack)
   this->headMarker = math::Pose(0.1, -0.07, 0.11, M_PI/2, 0, 0);
-  this->headMarkerCorrected = this->headMarker;
 
   this->viewpointRotationsSub = this->gazeboNode->Subscribe(
       "~/motion_tracking/viewpoint_rotations",
@@ -1530,36 +1529,59 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   if ((this->pauseTracking || !this->headOffsetInitialized)
        && this->userCameraPoseValid)
   {
-    math::Pose worldHead = this->headMarkerCorrected + this->userCameraPose;
+    math::Pose cameraHeadNoRotation = cameraHead;
+    cameraHeadNoRotation.rot = this->headMarkerRotationFix.rot;
 
-    // goal: head sensor orientation should be the same as the screen rotation
-    // worldScreen.rot is the screen orientation in the world frame
-    // worldHead.rot is the head orientation in the world frame, just set them
-    // to be the same
-    worldHead.rot = (this->headMarker + this->userCameraPose).rot;
-
-    // solve for headMarkerCorrected.rot based on new worldHead
-    this->headMarkerCorrected.rot = (worldHead - this->userCameraPose).rot;
+    // use the no rotation cameraHead sensor data to compute offset,
+    // offset should have no rotation
 
     // T_CC' = (-T_CH - T_MS + T_WS) - (-T_C'Marker - T_HMarker + T_WH)
-    this->optitrackHeadOffset = cameraHead.GetInverse() +
-      this->headMarkerCorrected + this->userCameraPose +
+    this->optitrackHeadOffset = cameraHeadNoRotation.GetInverse()
+       + this->headMarker + this->userCameraPose +
         this->worldScreen.GetInverse() + this->monitorScreen
           + this->cameraMonitor;
+
+    /*
+    // as it is, optitrackHeadOffset has rotation, bad for alignment, we want to:
+    // modify cameraHead sensor reading rotation so optitrackHeadOffset has no rotation
+    // i.e. current cameraHead.pos is specified in a rotated C' frame, but
+    // we want to get the same cameraHead.pos in an unrotated C' frame
+    this->headMarkerRotationFix.rot = this->optitrackHeadOffset.rot;
+    cameraHead = cameraHead + this->headMarkerRotationFix;
+
+    // now recompute optitrackHeadOffset, it should have no rotation
+    this->optitrackHeadOffset = cameraHead.GetInverse() + this->headMarker + this->userCameraPose +
+        this->worldScreen.GetInverse() + this->monitorScreen
+          + this->cameraMonitor;
+    gzerr << this->optitrackHeadOffset << "\n";
+
+    this->optitrackHeadOffset.pos = this->optitrackHeadOffset.rot.RotateVectorReverse(this->optitrackHeadOffset.pos);
+    */
+
+    // store the difference between sensor reading and stored cameraHeadNoRotation
+    this->headMarkerRotationFix2.rot = cameraHead.rot * this->headMarkerRotationFix.rot.GetInverse();
+
     this->headOffsetInitialized = true;
   }
   else if (this->headOffsetInitialized)
   {
+    // save the roatation for calibration
+    this->headMarkerRotationFix.rot = cameraHead.rot;
+
+    // unrotate cameraHead sensor data so it matches exit of calibration
+    math::Pose cameraHeadUnrotated = cameraHead;
+    cameraHeadUnrotated.rot = cameraHead.rot * this->headMarkerRotationFix2.rot;
+
     // T_WH = T_HMarker + T_C'Marker + T_CC' -T_CM -T_MS + T_WS
-    gazebo::math::Pose targetCamera = this->headMarkerCorrected.GetInverse() +
-      cameraHead + this->optitrackHeadOffset + this->cameraMonitor.GetInverse()
+    gazebo::math::Pose targetCamera = this->headMarker.GetInverse() + 
+      cameraHeadUnrotated + this->optitrackHeadOffset + this->cameraMonitor.GetInverse()
         + this->monitorScreen.GetInverse() + this->worldScreen;
     if (!this->viewpointRotationsEnabled)
     {
       targetCamera.rot = this->userCameraPose.rot;
     }
-      gazebo::msgs::Set(&this->joyMsg, targetCamera);
-      this->viewpointJoyPub->Publish(this->joyMsg);
+    gazebo::msgs::Set(&this->joyMsg, targetCamera);
+    this->viewpointJoyPub->Publish(this->joyMsg);
   }
 }
 
