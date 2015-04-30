@@ -1250,7 +1250,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     return;
   }
 
-  haptix::comm::msgs::hxCollisionMode modeMsg = _req.collision_mode();
+  haptix::comm::msgs::hxCollideMode modeMsg = _req.collide_mode();
 
   for (auto link : model->GetLinks())
   {
@@ -1258,13 +1258,13 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     {
       physics::SurfaceParamsPtr surface = collision->GetSurface();
 
-      if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsNOCOLLIDE)
+      if (modeMsg.mode() == haptix::comm::msgs::hxCollideMode::hxsNOCOLLIDE)
       {
         surface->collideWithoutContact = false;
         // Set collideBitmask in case it was unset
         surface->collideBitmask = 0x0;
       }
-      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsDETECTIONONLY)
+      else if (modeMsg.mode() == haptix::comm::msgs::hxCollideMode::hxsDETECTIONONLY)
       {
         surface->collideWithoutContact = true;
         // Set collideBitmask in case it was unset
@@ -1273,7 +1273,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
           surface->collideBitmask = 0x01;
         }
       }
-      else if (modeMsg.mode() == haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE)
+      else if (modeMsg.mode() == haptix::comm::msgs::hxCollideMode::hxsCOLLIDE)
       {
         surface->collideWithoutContact = false;
         surface->collideBitmask = 0x01;
@@ -1293,7 +1293,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
 void HaptixWorldPlugin::HaptixModelCollideModeCallback(
     const std::string &/*_service*/,
     const haptix::comm::msgs::hxString &_req,
-    haptix::comm::msgs::hxCollisionMode &_rep, bool &_result)
+    haptix::comm::msgs::hxCollideMode &_rep, bool &_result)
 {
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
@@ -1329,16 +1329,16 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
   if (totalCollideBitmask == 0x0)
   {
     // All of the collisions had a collide_bitmask of 0x0
-    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsNOCOLLIDE);
+    _rep.set_mode(haptix::comm::msgs::hxCollideMode::hxsNOCOLLIDE);
   }
   else if (collideWithoutContact)
   {
     // All of the collisions had collideWithoutContact = true
-    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsDETECTIONONLY);
+    _rep.set_mode(haptix::comm::msgs::hxCollideMode::hxsDETECTIONONLY);
   }
   else
   {
-    _rep.set_mode(haptix::comm::msgs::hxCollisionMode::hxsCOLLIDE);
+    _rep.set_mode(haptix::comm::msgs::hxCollideMode::hxsCOLLIDE);
   }
 
   _result = true;
@@ -1358,7 +1358,7 @@ bool HaptixWorldPlugin::HaptixWorldPlugin::ConvertTransform(
 
 /////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertTransform(
-    const hxTransform &_in, gazebo::math::Pose &_out)
+    const hxsTransform &_in, gazebo::math::Pose &_out)
 {
   _out.pos.x = _in.pos.x;
   _out.pos.y = _in.pos.y;
@@ -1374,7 +1374,7 @@ bool HaptixWorldPlugin::ConvertTransform(
 
 /////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertTransform(
-    const gazebo::math::Pose &_in, hxTransform &_out)
+    const gazebo::math::Pose &_in, hxsTransform &_out)
 {
   ConvertVector(_in.pos, _out.pos);
 
@@ -1426,7 +1426,7 @@ bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
 
 /////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
-    hxVector3 &_out)
+    hxsVector3 &_out)
 {
   _out.x = _in.x;
   _out.y = _in.y;
@@ -1436,7 +1436,7 @@ bool HaptixWorldPlugin::ConvertVector(const math::Vector3 &_in,
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertVector(const hxVector3 &_in,
+bool HaptixWorldPlugin::ConvertVector(const hxsVector3 &_in,
     math::Vector3 &_out)
 {
   _out.x = _in.x;
@@ -1505,7 +1505,7 @@ bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
 
 /////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
-    hxModel &_out)
+    hxsModel &_out)
 {
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
@@ -1564,7 +1564,7 @@ bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
 
 /////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
-    hxLink &_out)
+    hxsLink &_out)
 {
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
@@ -1597,7 +1597,7 @@ bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in, hxJoint &_out)
+bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in, hxsJoint &_out)
 {
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
@@ -1621,7 +1621,7 @@ bool HaptixWorldPlugin::ConvertWrench(const gazebo::physics::JointWrench &_in,
 
 /////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertWrench(const gazebo::physics::JointWrench &_in,
-    hxWrench &_out)
+    hxsWrench &_out)
 {
   bool result = true;
   result &= ConvertVector(_in.body2Force, _out.force);
