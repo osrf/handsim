@@ -65,8 +65,8 @@ TEST_F(SimApiTest, HxsSimInfo)
   gui::set_active_camera(camera);
   ASSERT_TRUE(gui::get_active_camera() != NULL);
 
-  hxSimInfo simInfo;
-  ASSERT_EQ(hxs_siminfo(&simInfo), hxOK);
+  hxsSimInfo simInfo;
+  ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
   common::Time::Sleep(1);
 
   math::Pose cameraOut;
@@ -169,7 +169,7 @@ TEST_F(SimApiTest, HxsCameraTransform)
   gui::set_active_camera(camera);
   ASSERT_TRUE(gui::get_active_camera() != NULL);
 
-  hxTransform transform;
+  hxsTransform transform;
   ASSERT_EQ(hxs_camera_transform(&transform), hxOK);
   common::Time::Sleep(2);
 
@@ -204,7 +204,7 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
   rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
   gui::set_active_camera(camera);
 
-  hxTransform transform;
+  hxsTransform transform;
   transform.pos.x = 1;
   transform.pos.y = 2;
   transform.pos.z = 3;
@@ -237,7 +237,7 @@ TEST_F(SimApiTest, HxsContacts)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  hxContactPoints contactPoints;
+  hxsContactPoints contactPoints;
 
   physics::ContactManager *contactManager =
       world->GetPhysicsEngine()->GetContactManager();
@@ -329,19 +329,19 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   math::Pose gzLinkPose(0, 0, 2, 3.14159, 0, 0.58);
   gzLinkPose += gzDoorModel->GetWorldPose();
 
-  hxTransform pose;
+  hxsTransform pose;
   HaptixWorldPlugin::ConvertTransform(gzLinkPose, pose);
 
-  hxVector3 lin_vel;
+  hxsVector3 lin_vel;
   lin_vel.x = -0.003;
   lin_vel.y = -0.02;
   lin_vel.z = 0;
-  hxVector3 ang_vel;
+  hxsVector3 ang_vel;
   ang_vel.x = 0;
   ang_vel.y = 0;
   ang_vel.z = 0.03;
 
-  hxVector3 zero;
+  hxsVector3 zero;
 
   physics::LinkPtr doorLink = gzDoorModel->GetLink("door");
   ASSERT_TRUE(doorLink != NULL);
@@ -420,7 +420,7 @@ TEST_F(SimApiTest, HxsAddModel)
     "</sdf>";
 
   std::string name = "new_model";
-  hxModel model;
+  hxsModel model;
 
   float x = 0;
   float y = 0.1;
@@ -457,7 +457,7 @@ TEST_F(SimApiTest, HxsLinearVel)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  hxVector3 lin_vel;
+  hxsVector3 lin_vel;
   lin_vel.x = -0.01;
   lin_vel.y = -0.02;
   lin_vel.z = -0.03;
@@ -477,7 +477,7 @@ TEST_F(SimApiTest, HxsAngularVel)
   // Wait a little while for the world to initialize
   world->Step(20);
 
-  hxVector3 ang_vel;
+  hxsVector3 ang_vel;
   ang_vel.x = -0.01;
   ang_vel.y = -0.02;
   ang_vel.z = -0.03;
@@ -504,7 +504,7 @@ TEST_F(SimApiTest, HxsForce)
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
 
-  hxVector3 force;
+  hxsVector3 force;
   force.x = -0.01;
   force.y = -0.02;
   force.z = 0.03;
@@ -548,7 +548,7 @@ TEST_F(SimApiTest, HxsTorque)
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
 
-  hxVector3 torque;
+  hxsVector3 torque;
   torque.x = -0.01;
   torque.y = -0.02;
   torque.z = -0.03;
@@ -593,7 +593,7 @@ TEST_F(SimApiTest, HxsWrench)
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
 
-  hxWrench wrench;
+  hxsWrench wrench;
   wrench.force.x = -0.01;
   wrench.force.y = -0.02;
   wrench.force.z = 0.03;
@@ -784,7 +784,7 @@ TEST_F(SimApiTest, HxsSetModelColor)
   }
   ASSERT_TRUE(visual != NULL);
 
-  hxColor blue;
+  hxsColor blue;
   blue.r = 0;
   blue.g = 0;
   blue.b = 1.0;
@@ -804,7 +804,7 @@ TEST_F(SimApiTest, HxsSetModelColor)
   EXPECT_FLOAT_EQ(blue.b, visual->GetDiffuse().b);
   EXPECT_FLOAT_EQ(blue.alpha, visual->GetDiffuse().a);
 
-  hxColor rep;
+  hxsColor rep;
   ASSERT_EQ(hxs_model_color("cricket_ball", &rep), hxOK);
 
   EXPECT_FLOAT_EQ(blue.r, rep.r);
@@ -821,7 +821,7 @@ TEST_F(SimApiTest, HxsModelCollideMode)
   physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
 
-  hxCollisionMode rep;
+  hxsCollideMode rep;
   ASSERT_EQ(hxs_model_collide_mode("wood_cube_5cm", &rep), hxOK);
   EXPECT_EQ(rep, hxsCOLLIDE);
 
@@ -858,7 +858,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
   ASSERT_TRUE(model != NULL);
 
   // Set collide_without_contact
-  hxCollisionMode req = hxsDETECTIONONLY;
+  hxsCollideMode req = hxsDETECTIONONLY;
   ASSERT_EQ(hxs_set_model_collide_mode("wood_cube_5cm", &req), hxOK);
   for (auto link : model->GetLinks())
   {
