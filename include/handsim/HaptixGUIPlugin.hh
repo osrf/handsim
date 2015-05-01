@@ -51,9 +51,29 @@ namespace haptix_gazebo_plugins
     // Documentation inherited
     public: void Load(sdf::ElementPtr _elem);
 
-    // Qt callback on mouse enter event.
-    // _param[in] Mouse enter event.
+    /// \brief Qt callback on mouse enter event.
+    /// \param[in] _event Mouse enter event.
     protected: virtual void enterEvent(QEvent *_event);
+
+    /// \brief Qt callback on mouse move event.
+    /// \param[in] _event Mouse move event.
+    protected: virtual void mouseMoveEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse press event.
+    /// \param[in] _event Mouse press event.
+    protected: virtual void mousePressEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse release event.
+    /// \param[in] _event Mouse release event.
+    protected: virtual void mouseReleaseEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse double click event.
+    /// \param[in] _event Mouse double click event.
+    protected: virtual void mouseDoubleClickEvent(QMouseEvent *_event);
+
+    /// \brief Qt callback on mouse wheel event.
+    /// \param[in] _event Mouse wheel event.
+    protected: virtual void wheelEvent(QWheelEvent *_event);
 
     /// \brief Signal to set a contact visualization value.
     /// \param[in] _contactName Name of the contact sensor.
@@ -321,6 +341,15 @@ namespace haptix_gazebo_plugins
 
     /// \brief Pixmap for the SVG hand
     private: QGraphicsPixmapItem *handItem;
+
+    /// \brief Pointer to the render widget.
+    private: QWidget *renderWidget;
+
+    /// \brief GUI maximum width.
+    private: int maxWidth;
+
+    /// \brief GUI maximum height.
+    private: int maxHeight;
   };
 }
 #endif
