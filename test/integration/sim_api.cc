@@ -27,25 +27,24 @@
 
 #include "test_config.h"
 
-using namespace gazebo;
 
-class SimApiTest : public ServerFixture
+class SimApiTest : public gazebo::ServerFixture
 {
-  public: physics::WorldPtr InitWorld(const std::string _worldFile);
+  public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
 };
 
-physics::WorldPtr SimApiTest::InitWorld(const std::string _worldFile)
+gazebo::physics::WorldPtr SimApiTest::InitWorld(const std::string &_worldFile)
 {
   boost::filesystem::path path = HANDSIM_TEST_PATH;
-  common::SystemPaths::Instance()->AddGazeboPaths(path.string());
+  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(path.string());
   Load(_worldFile, true);
-  physics::WorldPtr world = physics::get_world("default");
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   return world;
 }
 
 TEST_F(SimApiTest, HxsSimInfo)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
   if (!scene)
@@ -57,19 +56,20 @@ TEST_F(SimApiTest, HxsSimInfo)
 
   ASSERT_TRUE(scene != NULL);
 
-  math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
+  gazebo::math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
   // Spawn a camera
-  rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
+  gazebo::rendering::UserCameraPtr camera =
+      scene->CreateUserCamera("test_camera");
   camera->SetWorldPose(cameraPose);
   camera->Update();
-  gui::set_active_camera(camera);
-  ASSERT_TRUE(gui::get_active_camera() != NULL);
+  gazebo::gui::set_active_camera(camera);
+  ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
 
   hxsSimInfo simInfo;
   ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
-  common::Time::Sleep(1);
+  gazebo::common::Time::Sleep(1);
 
-  math::Pose cameraOut;
+  gazebo::math::Pose cameraOut;
   HaptixWorldPlugin::ConvertTransform(simInfo.camera_transform, cameraOut);
 
   // Verify object locations, camera pose, etc.
@@ -82,25 +82,25 @@ TEST_F(SimApiTest, HxsSimInfo)
 
   for (int i = 0; i < simInfo.model_count; ++i)
   {
-    physics::ModelPtr gzModel = world->GetModel(simInfo.models[i].name);
+    gazebo::physics::ModelPtr gzModel = world->GetModel(simInfo.models[i].name);
     ASSERT_TRUE(gzModel != NULL);
 
-    math::Pose modelPose;
+    gazebo::math::Pose modelPose;
     HaptixWorldPlugin::ConvertTransform(simInfo.models[i].transform, modelPose);
     EXPECT_EQ(modelPose, gzModel->GetWorldPose());
 
     for (int j = 0; j < simInfo.models[i].link_count; ++j)
     {
-      physics::LinkPtr gzLink =
+      gazebo::physics::LinkPtr gzLink =
           gzModel->GetLink(simInfo.models[i].links[j].name);
       ASSERT_TRUE(gzLink != NULL);
 
-      math::Pose linkPose;
+      gazebo::math::Pose linkPose;
       HaptixWorldPlugin::ConvertTransform(simInfo.models[i].links[j].transform,
           linkPose);
       EXPECT_EQ(linkPose, gzLink->GetWorldPose());
 
-      math::Vector3 tmp;
+      gazebo::math::Vector3 tmp;
       HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].lin_vel, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldLinearVel());
 
@@ -116,7 +116,7 @@ TEST_F(SimApiTest, HxsSimInfo)
 
     for (int j = 0; j < simInfo.models[i].joint_count; ++j)
     {
-      physics::JointPtr gzJoint =
+      gazebo::physics::JointPtr gzJoint =
           gzModel->GetJoint(simInfo.models[i].joints[j].name);
       ASSERT_TRUE(gzJoint != NULL);
 
@@ -146,7 +146,7 @@ TEST_F(SimApiTest, HxsSimInfo)
 
 TEST_F(SimApiTest, HxsCameraTransform)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
@@ -159,22 +159,21 @@ TEST_F(SimApiTest, HxsCameraTransform)
 
   ASSERT_TRUE(scene != NULL);
 
-  math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
+  gazebo::math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
   // Spawn a camera
-  /*SpawnCamera("test_camera_model", "test_camera", cameraPose.pos,
-      cameraPose.rot.GetAsEuler());*/
-  rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
+  gazebo::rendering::UserCameraPtr camera =
+      scene->CreateUserCamera("test_camera");
   camera->SetWorldPose(cameraPose);
   camera->Update();
-  gui::set_active_camera(camera);
-  ASSERT_TRUE(gui::get_active_camera() != NULL);
-  common::Time::Sleep(1);
+  gazebo::gui::set_active_camera(camera);
+  ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
+  gazebo::common::Time::Sleep(1);
 
   hxsTransform transform;
   ASSERT_EQ(hxs_camera_transform(&transform), hxOK);
-  common::Time::Sleep(2);
+  gazebo::common::Time::Sleep(2);
 
-  math::Pose cameraOut;
+  gazebo::math::Pose cameraOut;
   HaptixWorldPlugin::ConvertTransform(transform, cameraOut);
 
   // Verify camera pose
@@ -188,7 +187,7 @@ TEST_F(SimApiTest, HxsCameraTransform)
 
 TEST_F(SimApiTest, HxsSetCameraTransform)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
@@ -202,15 +201,16 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
   ASSERT_TRUE(scene != NULL);
 
   // Spawn a camera
-  rendering::UserCameraPtr camera = scene->CreateUserCamera("test_camera");
-  gui::set_active_camera(camera);
+  gazebo::rendering::UserCameraPtr camera =
+      scene->CreateUserCamera("test_camera");
+  gazebo::gui::set_active_camera(camera);
 
   hxsTransform transform;
   transform.pos.x = 1;
   transform.pos.y = 2;
   transform.pos.z = 3;
 
-  math::Quaternion q(3.14159, 1.570796, 0);
+  gazebo::math::Quaternion q(3.14159, 1.570796, 0);
 
   transform.orient.w = q.w;
   transform.orient.x = q.x;
@@ -218,10 +218,11 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
   transform.orient.z = q.z;
 
   ASSERT_EQ(hxs_set_camera_transform(&transform), hxOK);
-  common::Time::Sleep(2);
+  gazebo::common::Time::Sleep(2);
 
-  math::Pose outputPose = gui::get_active_camera()->GetWorldPose();
-  EXPECT_EQ(outputPose.pos, math::Vector3(1, 2, 3));
+  gazebo::math::Pose outputPose =
+      gazebo::gui::get_active_camera()->GetWorldPose();
+  EXPECT_EQ(outputPose.pos, gazebo::math::Vector3(1, 2, 3));
 
   EXPECT_FLOAT_EQ(outputPose.rot.w, q.w);
   EXPECT_FLOAT_EQ(outputPose.rot.x, q.x);
@@ -232,7 +233,7 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
 TEST_F(SimApiTest, HxsContacts)
 {
   Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -240,11 +241,11 @@ TEST_F(SimApiTest, HxsContacts)
 
   hxsContactPoints contactPoints;
 
-  physics::ContactManager *contactManager =
+  gazebo::physics::ContactManager *contactManager =
       world->GetPhysicsEngine()->GetContactManager();
   ASSERT_TRUE(contactManager != NULL);
 
-  physics::ModelPtr tableModel = world->GetModel("table");
+  gazebo::physics::ModelPtr tableModel = world->GetModel("table");
 
   ASSERT_EQ(hxs_contacts("table", &contactPoints), hxOK);
 
@@ -257,7 +258,7 @@ TEST_F(SimApiTest, HxsContacts)
     {
       for (int i = 0; i < contact->count; i++)
       {
-        math::Vector3 linkPos =
+        gazebo::math::Vector3 linkPos =
             contact->collision1->GetLink()->GetWorldPose().pos;
         contact->positions[i] -= linkPos;
         contact->normals[i] -= linkPos;
@@ -270,15 +271,16 @@ TEST_F(SimApiTest, HxsContacts)
               contact->collision1->GetLink()->GetName();
           bool link2NameMatch = std::string(contactPoints.contacts[i].link2) ==
               contact->collision2->GetLink()->GetName();
-          math::Vector3 contactPos, contactNormal, contactForce, contactTorque;
+          gazebo::math::Vector3 contactPos, contactNormal, contactForce,
+              contactTorque;
           HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].point,
               contactPos);
           HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].normal,
               contactNormal);
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].wrench.force,
-              contactForce);
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].wrench.torque,
-              contactTorque);
+          HaptixWorldPlugin::ConvertVector(
+              contactPoints.contacts[i].wrench.force, contactForce);
+          HaptixWorldPlugin::ConvertVector(
+              contactPoints.contacts[i].wrench.torque, contactTorque);
           if (link1NameMatch && link2NameMatch &&
               contactPos == contact->positions[i] &&
               contactNormal == contact->normals[i] &&
@@ -297,10 +299,10 @@ TEST_F(SimApiTest, HxsContacts)
 
 TEST_F(SimApiTest, HxsSetModelJointState)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
-  physics::ModelPtr gzDoorModel = world->GetModel("door");
+  gazebo::physics::ModelPtr gzDoorModel = world->GetModel("door");
   ASSERT_TRUE(gzDoorModel != NULL);
 
   world->Step(5);
@@ -319,15 +321,15 @@ TEST_F(SimApiTest, HxsSetModelJointState)
 
 TEST_F(SimApiTest, HxsSetModelLinkState)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
-  physics::ModelPtr gzDoorModel = world->GetModel("door");
+  gazebo::physics::ModelPtr gzDoorModel = world->GetModel("door");
   ASSERT_TRUE(gzDoorModel != NULL);
 
   world->Step(5);
 
-  math::Pose gzLinkPose(0, 0, 2, 3.14159, 0, 0.58);
+  gazebo::math::Pose gzLinkPose(0, 0, 2, 3.14159, 0, 0.58);
   gzLinkPose += gzDoorModel->GetWorldPose();
 
   hxsTransform pose;
@@ -345,7 +347,7 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   hxsVector3 zero;
   memset(&zero, 0, sizeof(hxsVector3));
 
-  physics::LinkPtr doorLink = gzDoorModel->GetLink("door");
+  gazebo::physics::LinkPtr doorLink = gzDoorModel->GetLink("door");
   ASSERT_TRUE(doorLink != NULL);
 
   ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &zero,
@@ -353,20 +355,21 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
 
   EXPECT_EQ(gzLinkPose, doorLink->GetWorldPose());
 
-  EXPECT_EQ(math::Vector3(0, 0, 0.03), doorLink->GetWorldAngularVel());
+  EXPECT_EQ(gazebo::math::Vector3(0, 0, 0.03), doorLink->GetWorldAngularVel());
 
   gzDoorModel->ResetPhysicsStates();
   world->Step(1000);
 
   ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &lin_vel,
       &zero), hxOK);
-  EXPECT_EQ(math::Vector3(-0.003, -0.02, 0), doorLink->GetWorldLinearVel());
+  EXPECT_EQ(gazebo::math::Vector3(-0.003, -0.02, 0),
+      doorLink->GetWorldLinearVel());
 }
 
 TEST_F(SimApiTest, HxsAddModel)
 {
   Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -434,7 +437,7 @@ TEST_F(SimApiTest, HxsAddModel)
   float pitch = 1.570796;
   float yaw = -1.570796;
 
-  math::Quaternion q(roll, pitch, yaw);
+  gazebo::math::Quaternion q(roll, pitch, yaw);
 
   // Create a new model.
   ASSERT_EQ(hxs_add_model(modelSDF.c_str(), name.c_str(), x, y, z, roll,
@@ -456,7 +459,7 @@ TEST_F(SimApiTest, HxsAddModel)
 
 TEST_F(SimApiTest, HxsLinearVel)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -469,14 +472,15 @@ TEST_F(SimApiTest, HxsLinearVel)
 
   ASSERT_EQ(hxs_linear_velocity("wood_cube_5cm", &lin_vel), hxOK);
 
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
-  EXPECT_EQ(model->GetWorldLinearVel(), math::Vector3(-0.01, -0.02, -0.03));
+  EXPECT_EQ(model->GetWorldLinearVel(),
+      gazebo::math::Vector3(-0.01, -0.02, -0.03));
 }
 
 TEST_F(SimApiTest, HxsAngularVel)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -489,23 +493,24 @@ TEST_F(SimApiTest, HxsAngularVel)
 
   ASSERT_EQ(hxs_angular_velocity("wood_cube_5cm", &ang_vel), hxOK);
 
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
 
-  EXPECT_EQ(model->GetWorldAngularVel(), math::Vector3(-0.01, -0.02, -0.03));
+  EXPECT_EQ(model->GetWorldAngularVel(),
+      gazebo::math::Vector3(-0.01, -0.02, -0.03));
 }
 
 TEST_F(SimApiTest, HxsForce)
 {
   Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
   world->Step(20);
 
   // disabling gravity_mode makes it easier to verify test
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
 
@@ -515,9 +520,9 @@ TEST_F(SimApiTest, HxsForce)
   force.z = 0.03;
 
   float duration = 1.0;
-  math::Vector3 gzForce(-0.01, -0.02, 0.03);
+  gazebo::math::Vector3 gzForce(-0.01, -0.02, 0.03);
 
-  physics::LinkPtr link = model->GetLink("link");
+  gazebo::physics::LinkPtr link = model->GetLink("link");
   ASSERT_TRUE(link != NULL);
 
   ASSERT_EQ(hxs_force("wood_cube_5cm", "link", &force, duration), hxOK);
@@ -532,7 +537,7 @@ TEST_F(SimApiTest, HxsForce)
   }
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
-  math::Vector3 empty(0, 0, 0);
+  gazebo::math::Vector3 empty(0, 0, 0);
   for (int i = 0; i < 10; i++)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
@@ -542,14 +547,14 @@ TEST_F(SimApiTest, HxsForce)
 
 TEST_F(SimApiTest, HxsTorque)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
   world->Step(20);
 
   // disabling gravity_mode makes it easier to verify test
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
 
@@ -559,9 +564,9 @@ TEST_F(SimApiTest, HxsTorque)
   torque.z = -0.03;
 
   float duration = 1.0;
-  math::Vector3 gzTorque(-0.01, -0.02, -0.03);
+  gazebo::math::Vector3 gzTorque(-0.01, -0.02, -0.03);
 
-  physics::LinkPtr link = model->GetLink("link");
+  gazebo::physics::LinkPtr link = model->GetLink("link");
   ASSERT_TRUE(link != NULL);
 
   ASSERT_EQ(hxs_torque("wood_cube_5cm", "link", &torque, duration), hxOK);
@@ -577,7 +582,7 @@ TEST_F(SimApiTest, HxsTorque)
   }
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
-  math::Vector3 empty(0, 0, 0);
+  gazebo::math::Vector3 empty(0, 0, 0);
   for (int i = 0; i < 10; i++)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
@@ -587,14 +592,14 @@ TEST_F(SimApiTest, HxsTorque)
 
 TEST_F(SimApiTest, HxsWrench)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
   world->Step(20);
 
   // disabling gravity_mode makes it easier to verify test
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
 
@@ -607,10 +612,10 @@ TEST_F(SimApiTest, HxsWrench)
   wrench.torque.z = 0.006;
 
   float duration = 1.0;
-  math::Vector3 gzForce(-0.01, -0.02, 0.03);
-  math::Vector3 gzTorque(-0.004, -0.005, 0.006);
+  gazebo::math::Vector3 gzForce(-0.01, -0.02, 0.03);
+  gazebo::math::Vector3 gzTorque(-0.004, -0.005, 0.006);
 
-  physics::LinkPtr link = model->GetLink("link");
+  gazebo::physics::LinkPtr link = model->GetLink("link");
   ASSERT_TRUE(link != NULL);
 
   ASSERT_EQ(hxs_wrench("wood_cube_5cm", "link", &wrench, duration), hxOK);
@@ -628,7 +633,7 @@ TEST_F(SimApiTest, HxsWrench)
   }
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
-  math::Vector3 empty(0, 0, 0);
+  gazebo::math::Vector3 empty(0, 0, 0);
   for (int i = 0; i < 10; i++)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
@@ -640,7 +645,7 @@ TEST_F(SimApiTest, HxsWrench)
 TEST_F(SimApiTest, HxsRemoveModel)
 {
   Load("worlds/arat_test.world", true);
-  physics::WorldPtr world = physics::get_world("default");
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -648,19 +653,19 @@ TEST_F(SimApiTest, HxsRemoveModel)
 
   ASSERT_EQ(hxs_remove_model("wood_cube_5cm"), hxOK);
 
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   EXPECT_FALSE(model);
 }
 
 TEST_F(SimApiTest, HxsReset)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
   world->Step(20);
   // Get everything's initial pose
-  std::map<std::string, math::Pose> initialPoses;
+  std::map<std::string, gazebo::math::Pose> initialPoses;
   for (auto model : world->GetModels())
   {
     initialPoses[model->GetName()] = model->GetWorldPose();
@@ -668,8 +673,8 @@ TEST_F(SimApiTest, HxsReset)
   // Move everything
   for (auto model : world->GetModels())
   {
-    math::Pose targetPose = initialPoses[model->GetName()];
-    targetPose.pos += math::Vector3(1, 2, 3);
+    gazebo::math::Pose targetPose = initialPoses[model->GetName()];
+    targetPose.pos += gazebo::math::Vector3(1, 2, 3);
     model->SetWorldPose(targetPose);
   }
 
@@ -679,7 +684,7 @@ TEST_F(SimApiTest, HxsReset)
   world->Step(1);
   for (auto model : world->GetModels())
   {
-    math::Pose modelPose = model->GetWorldPose();
+    gazebo::math::Pose modelPose = model->GetWorldPose();
     EXPECT_NEAR(modelPose.pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
     EXPECT_NEAR(modelPose.pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
     EXPECT_NEAR(modelPose.pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
@@ -693,8 +698,8 @@ TEST_F(SimApiTest, HxsReset)
   // Move everything again
   for (auto model : world->GetModels())
   {
-    math::Pose targetPose = initialPoses[model->GetName()];
-    targetPose.pos += math::Vector3(1, 2, 3);
+    gazebo::math::Pose targetPose = initialPoses[model->GetName()];
+    targetPose.pos += gazebo::math::Vector3(1, 2, 3);
     model->SetWorldPose(targetPose);
   }
   world->Step(1);
@@ -706,7 +711,7 @@ TEST_F(SimApiTest, HxsReset)
   {
     if (model->GetName() != "mpl_haptix_right_forearm")
     {
-      math::Pose modelPose = model->GetWorldPose();
+      gazebo::math::Pose modelPose = model->GetWorldPose();
       EXPECT_NEAR(modelPose.pos.x, initialPoses[model->GetName()].pos.x, 5e-2);
       EXPECT_NEAR(modelPose.pos.y, initialPoses[model->GetName()].pos.y, 5e-2);
       EXPECT_NEAR(modelPose.pos.z, initialPoses[model->GetName()].pos.z, 5e-2);
@@ -718,8 +723,8 @@ TEST_F(SimApiTest, HxsReset)
     }
     else
     {
-      math::Pose targetPose = initialPoses[model->GetName()];
-      targetPose.pos += math::Vector3(1, 2, 3);
+      gazebo::math::Pose targetPose = initialPoses[model->GetName()];
+      targetPose.pos += gazebo::math::Vector3(1, 2, 3);
 
       EXPECT_NEAR(model->GetWorldPose().pos.x, targetPose.pos.x, 5e-2);
       EXPECT_NEAR(model->GetWorldPose().pos.y, targetPose.pos.y, 5e-2);
@@ -735,14 +740,14 @@ TEST_F(SimApiTest, HxsReset)
 
 TEST_F(SimApiTest, HxsModelGravity)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
   int gravity_mode;
   ASSERT_EQ(hxs_model_gravity_mode("wood_cube_5cm", &gravity_mode), hxOK);
 
   EXPECT_EQ(gravity_mode, 1);
 
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   model->SetGravityMode(0);
 
   ASSERT_EQ(hxs_model_gravity_mode("wood_cube_5cm", &gravity_mode), hxOK);
@@ -752,13 +757,13 @@ TEST_F(SimApiTest, HxsModelGravity)
 
 TEST_F(SimApiTest, HxsSetModelGravity)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   int gravity_mode = 0;
   ASSERT_EQ(hxs_set_model_gravity_mode("wood_cube_5cm", gravity_mode), hxOK);
 
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   for (auto link : model->GetLinks())
   {
     EXPECT_FALSE(link->GetGravityMode());
@@ -767,7 +772,7 @@ TEST_F(SimApiTest, HxsSetModelGravity)
 
 TEST_F(SimApiTest, HxsSetModelColor)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
@@ -775,15 +780,15 @@ TEST_F(SimApiTest, HxsSetModelColor)
 
   // Spawn a camera facing the box
   SpawnCamera("test_camera_model", "test_camera",
-      math::Vector3(0, 0, 0), math::Vector3(0, 0, 0));
+      gazebo::math::Vector3(0, 0, 0), gazebo::math::Vector3(0, 0, 0));
 
   int sleep = 0;
   int maxSleep = 5;
-  rendering::VisualPtr visual;
+  gazebo::rendering::VisualPtr visual;
   while (!visual && sleep < maxSleep)
   {
     visual = scene->GetVisual("cricket_ball::link");
-    common::Time::MSleep(100);
+    gazebo::common::Time::MSleep(100);
     sleep++;
   }
   ASSERT_TRUE(visual != NULL);
@@ -796,7 +801,7 @@ TEST_F(SimApiTest, HxsSetModelColor)
   ASSERT_EQ(hxs_set_model_color("cricket_ball", &blue), hxOK);
 
   // Wait a moment for visual message to publish
-  common::Time::Sleep(2);
+  gazebo::common::Time::Sleep(2);
 
   EXPECT_FLOAT_EQ(blue.r, visual->GetAmbient().r);
   EXPECT_FLOAT_EQ(blue.g, visual->GetAmbient().g);
@@ -819,10 +824,10 @@ TEST_F(SimApiTest, HxsSetModelColor)
 
 TEST_F(SimApiTest, HxsModelCollideMode)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
 
   hxsCollideMode rep;
@@ -855,10 +860,10 @@ TEST_F(SimApiTest, HxsModelCollideMode)
 
 TEST_F(SimApiTest, HxsSetModelCollideMode)
 {
-  physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
-  physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
 
   // Set collide_without_contact
@@ -896,7 +901,6 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
       EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x0);
     }
   }
-
 }
 
 // TODO Implement stubbed out tests.
