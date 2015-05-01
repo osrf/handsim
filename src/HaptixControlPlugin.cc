@@ -288,6 +288,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     }
   }
 
+  this->currentPolhemusGrasp = "FinePinch(British)";
+  this->arrangeSub = this->gazeboNode->Subscribe("~/arrange",
+      &HaptixControlPlugin::OnArrange, this);
+
   // spin up a separate thread to get polhemus sensor data
   // update target pose if using polhemus
   if (this->havePolhemus)
@@ -823,6 +827,47 @@ void HaptixControlPlugin::UpdatePolhemus()
           this->viewpointJoyPub->Publish(this->joyMsg);
         }
       }
+
+      int thumbId = 2;
+      math::Pose thumbSensorPose;
+      if (thumbId < numPoses)
+      {
+        thumbSensorPose = this->convertPolhemusToPose(poses[thumbId]);
+      }
+
+      int fingersId = 3;
+      math::Pose fingersSensorPose;
+      if (fingersId < numPoses)
+      {
+        fingersSensorPose = this->convertPolhemusToPose(poses[fingersId]);
+      }
+
+      if (thumbSensorPose != math::Pose::Zero &&
+          fingersSensorPose != math::Pose::Zero)
+      {
+        // distance between fingers
+        double dist = (fingersSensorPose.pos - thumbSensorPose.pos).GetLength();
+        // subtract the distance in which hand considered completely closed
+        dist -= 0.04;
+        if (dist < 0)
+        {
+          dist = 1e-3;
+        }
+        if (this->pauseTracking)
+        {
+          // calibration mode, update offset which represents hand fully open
+          this->sourceDistHandOffset = dist / (1 - this->previousHandDist);
+        }
+        else
+        {
+          // Normalized distance: 0 fully open, 1 fully closed
+          if (dist > this->sourceDistHandOffset)
+          {
+            dist = this->sourceDistHandOffset;
+          }
+          this->targetHandDist = 1 - dist / this->sourceDistHandOffset;
+        }
+      }
     }
     else
     {
@@ -867,12 +912,29 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 }
 
 /////////////////////////////////////////////////
+void HaptixControlPlugin::OnArrange(ConstGzStringPtr &_arrangement)
+{
+  std::string arrangement = _arrangement->data();
+  if (arrangement == "pyramid")
+  {
+    this->currentPolhemusGrasp = "Spherical";
+  }
+  else if (arrangement == "hanoi")
+  {
+    this->currentPolhemusGrasp = "FinePinch(British)";
+  }
+}
+
+/////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateBaseLink(double _dt)
 {
   math::Pose pose;
+  double dist;
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     pose = this->targetBaseLinkPose;
+    dist = this->targetHandDist;
+    this->previousHandDist = dist;
   }
 
   math::Pose baseLinkPose = this->baseLink->GetWorldPose();
@@ -894,6 +956,20 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   // std::cout << "target pose: " << pose << std::endl;
   // std::cout << "wrench pos: " << this->wrench.force
   //           << " rot: " << this->wrench.torque << std::endl;
+
+  // This is probably a horrible way and place to be doing this, especially
+  // since I had to turn off a mutex :)
+  haptix::comm::msgs::hxGrasp graspTmp;
+  haptix::comm::msgs::hxGrasp::hxGraspValue* gv = graspTmp.add_grasps();
+  gv->set_grasp_name(currentPolhemusGrasp);
+  gv->set_grasp_value(dist);
+  haptix::comm::msgs::hxCommand resp;
+  bool result;
+  this->HaptixGraspCallback("", graspTmp, resp, result);
+  if (!result)
+  {
+    gzerr << "ERROR: HaptixGraspCallback could not call grasp service" << std::endl;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -1389,7 +1465,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
-  boost::mutex::scoped_lock lock(this->updateMutex);
+  //boost::mutex::scoped_lock lock(this->updateMutex);
 
   if (this->graspPositions.size() != this->motorInfos.size())
     this->graspPositions.resize(this->motorInfos.size());

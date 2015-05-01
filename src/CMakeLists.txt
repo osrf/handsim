@@ -49,6 +49,10 @@ add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxRobot.pb.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc)
 
+add_library(TactorsPlugin SHARED TactorsPlugin.cc)
+target_link_libraries(TactorsPlugin ${HAPTIX-COMM_LIBRARIES}
+    ${IGNITION-TRANSPORT_LIBRARIES} ${PROTOBUF_LIBRARY})
+
 # additional library dependencies
 add_dependencies(HaptixControlPlugin
   gazebo_msgs
@@ -68,7 +72,7 @@ target_link_libraries(HaptixGUIPlugin ${GAZEBO_LIBRARIES}
 set_target_properties(HaptixControlPlugin HaptixGUIPlugin PROPERTIES
   COMPILE_FLAGS ${IGNITION-TRANSPORT_CXX_FLAGS})
 
-install (TARGETS HaptixControlPlugin HaptixGUIPlugin DESTINATION
+install (TARGETS HaptixControlPlugin HaptixGUIPlugin TactorsPlugin DESTINATION
   ${GAZEBO_PLUGIN_PATH}/)
 
 handsim_build_tests(${gtest_sources})

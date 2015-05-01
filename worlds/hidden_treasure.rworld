@@ -214,9 +214,6 @@
 
     <!-- treasure!!! -->
 
-    <include>
-      <uri>model://sandbox</uri>
-    </include>
 
     <% box_x = 1.0
        box_y = 0.75
@@ -225,7 +222,12 @@
        radius = 0.0375
        clearance = 0.001
        mass = 0.05
+       z_offset = 0.18
      %>
+    <include>
+      <uri>model://sandbox</uri>
+      <pose>0 0 <%= z_offset%> 0 0 0 </pose>
+    </include>
     <!-- cover the bottom of the sandbox with spheres
          there are x*y spheres total
          starting at -box_x/2, -box_y/2 -> box_x/2, box_y/2
@@ -239,7 +241,7 @@
         for j in 0..y
      %>
         <model name=<%='"sphere_'+i.to_s+'_'+j.to_s+'"' %>>
-          <pose> <%=-box_x/2+(2*radius+clearance)*i %> <%=-box_y/2+(2*radius+clearance)*j %> <%= wall_dim + radius%> 0 0 0</pose>
+          <pose> <%=-box_x/2+(2*radius+clearance)*i %> <%=-box_y/2+(2*radius+clearance)*j %> <%= wall_dim + radius + z_offset%> 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass><%= mass %></mass>
@@ -284,25 +286,25 @@
     <include>
       <name>robot1</name>
       <uri>model://tinybot</uri>
-      <pose>-0.277173 0.000407 <%= radius + 0.069058 %> 1.571721 0 -2.356195</pose>
+      <pose>-0.277173 0.000407 <%= radius + 0.069058 + z_offset %> 1.571721 0 -2.356195</pose>
     </include>
 
     <include>
       <name>robot2</name>
       <uri>model://tinybot</uri>
-      <pose>-0.052049 -0.224721 <%= radius + 0.069058 %> 1.571721 0 2.649844</pose>
+      <pose>-0.052049 -0.224721 <%= radius + 0.069058 + z_offset %> 1.571721 0 2.649844</pose>
     </include>
 
     <include>
       <name>robot3</name>
       <uri>model://tinybot</uri>
-      <pose>0.241868 0.124 <%= radius + 0.069058 %> 1.571721 0 -2.84795</pose>
+      <pose>0.241868 0.124 <%= radius + 0.069058 + z_offset %> 1.571721 0 -2.84795</pose>
     </include>
 
     <include>
       <name>robot4</name>
       <uri>model://tinybot</uri>
-      <pose>-0.34451 0.162583 <%= radius + 0.069058 %> 1.571721 0 0</pose>
+      <pose>-0.34451 0.162583 <%= radius + 0.069058 + z_offset %> 1.571721 0 0</pose>
     </include>
 
     <model name="polhemus_source">

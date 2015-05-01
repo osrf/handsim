@@ -214,17 +214,18 @@
 
     <!-- treasure!!! -->
 
+
     <include>
       <uri>model://sandbox</uri>
+      <pose>0 0 0.18 0 0 0 </pose>
     </include>
-
     <!-- cover the bottom of the sandbox with spheres
          there are x*y spheres total
          starting at -box_x/2, -box_y/2 -> box_x/2, box_y/2
          place them at intervals of radius*2 + clearance
       -->
         <model name="sphere_0_0">
-          <pose> -0.5 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -263,7 +264,7 @@
           </link>
         </model>
         <model name="sphere_0_1">
-          <pose> -0.5 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -302,7 +303,7 @@
           </link>
         </model>
         <model name="sphere_0_2">
-          <pose> -0.5 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -341,7 +342,7 @@
           </link>
         </model>
         <model name="sphere_0_3">
-          <pose> -0.5 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -380,7 +381,7 @@
           </link>
         </model>
         <model name="sphere_0_4">
-          <pose> -0.5 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -419,7 +420,7 @@
           </link>
         </model>
         <model name="sphere_0_5">
-          <pose> -0.5 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -458,7 +459,7 @@
           </link>
         </model>
         <model name="sphere_0_6">
-          <pose> -0.5 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -497,7 +498,7 @@
           </link>
         </model>
         <model name="sphere_0_7">
-          <pose> -0.5 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -536,7 +537,7 @@
           </link>
         </model>
         <model name="sphere_0_8">
-          <pose> -0.5 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -575,7 +576,7 @@
           </link>
         </model>
         <model name="sphere_0_9">
-          <pose> -0.5 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> -0.5 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -614,7 +615,7 @@
           </link>
         </model>
         <model name="sphere_1_0">
-          <pose> -0.424 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -653,7 +654,7 @@
           </link>
         </model>
         <model name="sphere_1_1">
-          <pose> -0.424 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -692,7 +693,7 @@
           </link>
         </model>
         <model name="sphere_1_2">
-          <pose> -0.424 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -731,7 +732,7 @@
           </link>
         </model>
         <model name="sphere_1_3">
-          <pose> -0.424 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -770,7 +771,7 @@
           </link>
         </model>
         <model name="sphere_1_4">
-          <pose> -0.424 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -809,7 +810,7 @@
           </link>
         </model>
         <model name="sphere_1_5">
-          <pose> -0.424 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -848,7 +849,7 @@
           </link>
         </model>
         <model name="sphere_1_6">
-          <pose> -0.424 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -887,7 +888,7 @@
           </link>
         </model>
         <model name="sphere_1_7">
-          <pose> -0.424 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -926,7 +927,7 @@
           </link>
         </model>
         <model name="sphere_1_8">
-          <pose> -0.424 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -965,7 +966,7 @@
           </link>
         </model>
         <model name="sphere_1_9">
-          <pose> -0.424 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> -0.424 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1004,7 +1005,7 @@
           </link>
         </model>
         <model name="sphere_2_0">
-          <pose> -0.348 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1043,7 +1044,7 @@
           </link>
         </model>
         <model name="sphere_2_1">
-          <pose> -0.348 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1082,7 +1083,7 @@
           </link>
         </model>
         <model name="sphere_2_2">
-          <pose> -0.348 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1121,7 +1122,7 @@
           </link>
         </model>
         <model name="sphere_2_3">
-          <pose> -0.348 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1160,7 +1161,7 @@
           </link>
         </model>
         <model name="sphere_2_4">
-          <pose> -0.348 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1199,7 +1200,7 @@
           </link>
         </model>
         <model name="sphere_2_5">
-          <pose> -0.348 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1238,7 +1239,7 @@
           </link>
         </model>
         <model name="sphere_2_6">
-          <pose> -0.348 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1277,7 +1278,7 @@
           </link>
         </model>
         <model name="sphere_2_7">
-          <pose> -0.348 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1316,7 +1317,7 @@
           </link>
         </model>
         <model name="sphere_2_8">
-          <pose> -0.348 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1355,7 +1356,7 @@
           </link>
         </model>
         <model name="sphere_2_9">
-          <pose> -0.348 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> -0.348 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1394,7 +1395,7 @@
           </link>
         </model>
         <model name="sphere_3_0">
-          <pose> -0.272 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1433,7 +1434,7 @@
           </link>
         </model>
         <model name="sphere_3_1">
-          <pose> -0.272 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1472,7 +1473,7 @@
           </link>
         </model>
         <model name="sphere_3_2">
-          <pose> -0.272 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1511,7 +1512,7 @@
           </link>
         </model>
         <model name="sphere_3_3">
-          <pose> -0.272 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1550,7 +1551,7 @@
           </link>
         </model>
         <model name="sphere_3_4">
-          <pose> -0.272 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1589,7 +1590,7 @@
           </link>
         </model>
         <model name="sphere_3_5">
-          <pose> -0.272 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1628,7 +1629,7 @@
           </link>
         </model>
         <model name="sphere_3_6">
-          <pose> -0.272 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1667,7 +1668,7 @@
           </link>
         </model>
         <model name="sphere_3_7">
-          <pose> -0.272 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1706,7 +1707,7 @@
           </link>
         </model>
         <model name="sphere_3_8">
-          <pose> -0.272 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1745,7 +1746,7 @@
           </link>
         </model>
         <model name="sphere_3_9">
-          <pose> -0.272 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> -0.272 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1784,7 +1785,7 @@
           </link>
         </model>
         <model name="sphere_4_0">
-          <pose> -0.196 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1823,7 +1824,7 @@
           </link>
         </model>
         <model name="sphere_4_1">
-          <pose> -0.196 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1862,7 +1863,7 @@
           </link>
         </model>
         <model name="sphere_4_2">
-          <pose> -0.196 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1901,7 +1902,7 @@
           </link>
         </model>
         <model name="sphere_4_3">
-          <pose> -0.196 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1940,7 +1941,7 @@
           </link>
         </model>
         <model name="sphere_4_4">
-          <pose> -0.196 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -1979,7 +1980,7 @@
           </link>
         </model>
         <model name="sphere_4_5">
-          <pose> -0.196 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2018,7 +2019,7 @@
           </link>
         </model>
         <model name="sphere_4_6">
-          <pose> -0.196 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2057,7 +2058,7 @@
           </link>
         </model>
         <model name="sphere_4_7">
-          <pose> -0.196 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2096,7 +2097,7 @@
           </link>
         </model>
         <model name="sphere_4_8">
-          <pose> -0.196 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2135,7 +2136,7 @@
           </link>
         </model>
         <model name="sphere_4_9">
-          <pose> -0.196 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> -0.196 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2174,7 +2175,7 @@
           </link>
         </model>
         <model name="sphere_5_0">
-          <pose> -0.12 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2213,7 +2214,7 @@
           </link>
         </model>
         <model name="sphere_5_1">
-          <pose> -0.12 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2252,7 +2253,7 @@
           </link>
         </model>
         <model name="sphere_5_2">
-          <pose> -0.12 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2291,7 +2292,7 @@
           </link>
         </model>
         <model name="sphere_5_3">
-          <pose> -0.12 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2330,7 +2331,7 @@
           </link>
         </model>
         <model name="sphere_5_4">
-          <pose> -0.12 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2369,7 +2370,7 @@
           </link>
         </model>
         <model name="sphere_5_5">
-          <pose> -0.12 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2408,7 +2409,7 @@
           </link>
         </model>
         <model name="sphere_5_6">
-          <pose> -0.12 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2447,7 +2448,7 @@
           </link>
         </model>
         <model name="sphere_5_7">
-          <pose> -0.12 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2486,7 +2487,7 @@
           </link>
         </model>
         <model name="sphere_5_8">
-          <pose> -0.12 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2525,7 +2526,7 @@
           </link>
         </model>
         <model name="sphere_5_9">
-          <pose> -0.12 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> -0.12 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2564,7 +2565,7 @@
           </link>
         </model>
         <model name="sphere_6_0">
-          <pose> -0.04400000000000004 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2603,7 +2604,7 @@
           </link>
         </model>
         <model name="sphere_6_1">
-          <pose> -0.04400000000000004 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2642,7 +2643,7 @@
           </link>
         </model>
         <model name="sphere_6_2">
-          <pose> -0.04400000000000004 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2681,7 +2682,7 @@
           </link>
         </model>
         <model name="sphere_6_3">
-          <pose> -0.04400000000000004 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2720,7 +2721,7 @@
           </link>
         </model>
         <model name="sphere_6_4">
-          <pose> -0.04400000000000004 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2759,7 +2760,7 @@
           </link>
         </model>
         <model name="sphere_6_5">
-          <pose> -0.04400000000000004 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2798,7 +2799,7 @@
           </link>
         </model>
         <model name="sphere_6_6">
-          <pose> -0.04400000000000004 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2837,7 +2838,7 @@
           </link>
         </model>
         <model name="sphere_6_7">
-          <pose> -0.04400000000000004 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2876,7 +2877,7 @@
           </link>
         </model>
         <model name="sphere_6_8">
-          <pose> -0.04400000000000004 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2915,7 +2916,7 @@
           </link>
         </model>
         <model name="sphere_6_9">
-          <pose> -0.04400000000000004 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> -0.04400000000000004 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2954,7 +2955,7 @@
           </link>
         </model>
         <model name="sphere_7_0">
-          <pose> 0.03200000000000003 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -2993,7 +2994,7 @@
           </link>
         </model>
         <model name="sphere_7_1">
-          <pose> 0.03200000000000003 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3032,7 +3033,7 @@
           </link>
         </model>
         <model name="sphere_7_2">
-          <pose> 0.03200000000000003 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3071,7 +3072,7 @@
           </link>
         </model>
         <model name="sphere_7_3">
-          <pose> 0.03200000000000003 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3110,7 +3111,7 @@
           </link>
         </model>
         <model name="sphere_7_4">
-          <pose> 0.03200000000000003 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3149,7 +3150,7 @@
           </link>
         </model>
         <model name="sphere_7_5">
-          <pose> 0.03200000000000003 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3188,7 +3189,7 @@
           </link>
         </model>
         <model name="sphere_7_6">
-          <pose> 0.03200000000000003 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3227,7 +3228,7 @@
           </link>
         </model>
         <model name="sphere_7_7">
-          <pose> 0.03200000000000003 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3266,7 +3267,7 @@
           </link>
         </model>
         <model name="sphere_7_8">
-          <pose> 0.03200000000000003 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3305,7 +3306,7 @@
           </link>
         </model>
         <model name="sphere_7_9">
-          <pose> 0.03200000000000003 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> 0.03200000000000003 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3344,7 +3345,7 @@
           </link>
         </model>
         <model name="sphere_8_0">
-          <pose> 0.10799999999999998 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3383,7 +3384,7 @@
           </link>
         </model>
         <model name="sphere_8_1">
-          <pose> 0.10799999999999998 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3422,7 +3423,7 @@
           </link>
         </model>
         <model name="sphere_8_2">
-          <pose> 0.10799999999999998 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3461,7 +3462,7 @@
           </link>
         </model>
         <model name="sphere_8_3">
-          <pose> 0.10799999999999998 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3500,7 +3501,7 @@
           </link>
         </model>
         <model name="sphere_8_4">
-          <pose> 0.10799999999999998 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3539,7 +3540,7 @@
           </link>
         </model>
         <model name="sphere_8_5">
-          <pose> 0.10799999999999998 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3578,7 +3579,7 @@
           </link>
         </model>
         <model name="sphere_8_6">
-          <pose> 0.10799999999999998 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3617,7 +3618,7 @@
           </link>
         </model>
         <model name="sphere_8_7">
-          <pose> 0.10799999999999998 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3656,7 +3657,7 @@
           </link>
         </model>
         <model name="sphere_8_8">
-          <pose> 0.10799999999999998 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3695,7 +3696,7 @@
           </link>
         </model>
         <model name="sphere_8_9">
-          <pose> 0.10799999999999998 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> 0.10799999999999998 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3734,7 +3735,7 @@
           </link>
         </model>
         <model name="sphere_9_0">
-          <pose> 0.18399999999999994 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3773,7 +3774,7 @@
           </link>
         </model>
         <model name="sphere_9_1">
-          <pose> 0.18399999999999994 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3812,7 +3813,7 @@
           </link>
         </model>
         <model name="sphere_9_2">
-          <pose> 0.18399999999999994 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3851,7 +3852,7 @@
           </link>
         </model>
         <model name="sphere_9_3">
-          <pose> 0.18399999999999994 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3890,7 +3891,7 @@
           </link>
         </model>
         <model name="sphere_9_4">
-          <pose> 0.18399999999999994 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3929,7 +3930,7 @@
           </link>
         </model>
         <model name="sphere_9_5">
-          <pose> 0.18399999999999994 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -3968,7 +3969,7 @@
           </link>
         </model>
         <model name="sphere_9_6">
-          <pose> 0.18399999999999994 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4007,7 +4008,7 @@
           </link>
         </model>
         <model name="sphere_9_7">
-          <pose> 0.18399999999999994 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4046,7 +4047,7 @@
           </link>
         </model>
         <model name="sphere_9_8">
-          <pose> 0.18399999999999994 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4085,7 +4086,7 @@
           </link>
         </model>
         <model name="sphere_9_9">
-          <pose> 0.18399999999999994 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> 0.18399999999999994 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4124,7 +4125,7 @@
           </link>
         </model>
         <model name="sphere_10_0">
-          <pose> 0.26 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4163,7 +4164,7 @@
           </link>
         </model>
         <model name="sphere_10_1">
-          <pose> 0.26 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4202,7 +4203,7 @@
           </link>
         </model>
         <model name="sphere_10_2">
-          <pose> 0.26 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4241,7 +4242,7 @@
           </link>
         </model>
         <model name="sphere_10_3">
-          <pose> 0.26 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4280,7 +4281,7 @@
           </link>
         </model>
         <model name="sphere_10_4">
-          <pose> 0.26 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4319,7 +4320,7 @@
           </link>
         </model>
         <model name="sphere_10_5">
-          <pose> 0.26 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4358,7 +4359,7 @@
           </link>
         </model>
         <model name="sphere_10_6">
-          <pose> 0.26 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4397,7 +4398,7 @@
           </link>
         </model>
         <model name="sphere_10_7">
-          <pose> 0.26 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4436,7 +4437,7 @@
           </link>
         </model>
         <model name="sphere_10_8">
-          <pose> 0.26 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4475,7 +4476,7 @@
           </link>
         </model>
         <model name="sphere_10_9">
-          <pose> 0.26 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> 0.26 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4514,7 +4515,7 @@
           </link>
         </model>
         <model name="sphere_11_0">
-          <pose> 0.33599999999999997 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4553,7 +4554,7 @@
           </link>
         </model>
         <model name="sphere_11_1">
-          <pose> 0.33599999999999997 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4592,7 +4593,7 @@
           </link>
         </model>
         <model name="sphere_11_2">
-          <pose> 0.33599999999999997 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4631,7 +4632,7 @@
           </link>
         </model>
         <model name="sphere_11_3">
-          <pose> 0.33599999999999997 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4670,7 +4671,7 @@
           </link>
         </model>
         <model name="sphere_11_4">
-          <pose> 0.33599999999999997 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4709,7 +4710,7 @@
           </link>
         </model>
         <model name="sphere_11_5">
-          <pose> 0.33599999999999997 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4748,7 +4749,7 @@
           </link>
         </model>
         <model name="sphere_11_6">
-          <pose> 0.33599999999999997 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4787,7 +4788,7 @@
           </link>
         </model>
         <model name="sphere_11_7">
-          <pose> 0.33599999999999997 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4826,7 +4827,7 @@
           </link>
         </model>
         <model name="sphere_11_8">
-          <pose> 0.33599999999999997 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4865,7 +4866,7 @@
           </link>
         </model>
         <model name="sphere_11_9">
-          <pose> 0.33599999999999997 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> 0.33599999999999997 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4904,7 +4905,7 @@
           </link>
         </model>
         <model name="sphere_12_0">
-          <pose> 0.4119999999999999 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4943,7 +4944,7 @@
           </link>
         </model>
         <model name="sphere_12_1">
-          <pose> 0.4119999999999999 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -4982,7 +4983,7 @@
           </link>
         </model>
         <model name="sphere_12_2">
-          <pose> 0.4119999999999999 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5021,7 +5022,7 @@
           </link>
         </model>
         <model name="sphere_12_3">
-          <pose> 0.4119999999999999 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5060,7 +5061,7 @@
           </link>
         </model>
         <model name="sphere_12_4">
-          <pose> 0.4119999999999999 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5099,7 +5100,7 @@
           </link>
         </model>
         <model name="sphere_12_5">
-          <pose> 0.4119999999999999 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5138,7 +5139,7 @@
           </link>
         </model>
         <model name="sphere_12_6">
-          <pose> 0.4119999999999999 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5177,7 +5178,7 @@
           </link>
         </model>
         <model name="sphere_12_7">
-          <pose> 0.4119999999999999 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5216,7 +5217,7 @@
           </link>
         </model>
         <model name="sphere_12_8">
-          <pose> 0.4119999999999999 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5255,7 +5256,7 @@
           </link>
         </model>
         <model name="sphere_12_9">
-          <pose> 0.4119999999999999 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> 0.4119999999999999 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5294,7 +5295,7 @@
           </link>
         </model>
         <model name="sphere_13_0">
-          <pose> 0.488 -0.375 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 -0.375 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5333,7 +5334,7 @@
           </link>
         </model>
         <model name="sphere_13_1">
-          <pose> 0.488 -0.299 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 -0.299 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5372,7 +5373,7 @@
           </link>
         </model>
         <model name="sphere_13_2">
-          <pose> 0.488 -0.223 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 -0.223 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5411,7 +5412,7 @@
           </link>
         </model>
         <model name="sphere_13_3">
-          <pose> 0.488 -0.14700000000000002 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 -0.14700000000000002 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5450,7 +5451,7 @@
           </link>
         </model>
         <model name="sphere_13_4">
-          <pose> 0.488 -0.07100000000000001 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 -0.07100000000000001 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5489,7 +5490,7 @@
           </link>
         </model>
         <model name="sphere_13_5">
-          <pose> 0.488 0.0050000000000000044 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 0.0050000000000000044 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5528,7 +5529,7 @@
           </link>
         </model>
         <model name="sphere_13_6">
-          <pose> 0.488 0.08099999999999996 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 0.08099999999999996 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5567,7 +5568,7 @@
           </link>
         </model>
         <model name="sphere_13_7">
-          <pose> 0.488 0.15700000000000003 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 0.15700000000000003 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5606,7 +5607,7 @@
           </link>
         </model>
         <model name="sphere_13_8">
-          <pose> 0.488 0.23299999999999998 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 0.23299999999999998 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5645,7 +5646,7 @@
           </link>
         </model>
         <model name="sphere_13_9">
-          <pose> 0.488 0.30899999999999994 0.11249999999999999 0 0 0</pose>
+          <pose> 0.488 0.30899999999999994 0.2925 0 0 0</pose>
           <link name="link">
             <inertial>
               <mass>0.05</mass>
@@ -5687,25 +5688,25 @@
     <include>
       <name>robot1</name>
       <uri>model://tinybot</uri>
-      <pose>-0.277173 0.000407 0.10655799999999999 1.571721 0 -2.356195</pose>
+      <pose>-0.277173 0.000407 0.286558 1.571721 0 -2.356195</pose>
     </include>
 
     <include>
       <name>robot2</name>
       <uri>model://tinybot</uri>
-      <pose>-0.052049 -0.224721 0.10655799999999999 1.571721 0 2.649844</pose>
+      <pose>-0.052049 -0.224721 0.286558 1.571721 0 2.649844</pose>
     </include>
 
     <include>
       <name>robot3</name>
       <uri>model://tinybot</uri>
-      <pose>0.241868 0.124 0.10655799999999999 1.571721 0 -2.84795</pose>
+      <pose>0.241868 0.124 0.286558 1.571721 0 -2.84795</pose>
     </include>
 
     <include>
       <name>robot4</name>
       <uri>model://tinybot</uri>
-      <pose>-0.34451 0.162583 0.10655799999999999 1.571721 0 0</pose>
+      <pose>-0.34451 0.162583 0.286558 1.571721 0 0</pose>
     </include>
 
     <model name="polhemus_source">

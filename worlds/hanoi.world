@@ -1,19 +1,21 @@
 <?xml version="1.0" ?>
 
 
+
 <sdf version="1.5">
   <world name="default">
+
 
     <model name="star_0.17915903999999996">
       <pose>0 0 1.025  0 0 0</pose>
       <link name="upper_disk">
           <pose>0 0 0.01  0 0 0</pose>
         <inertial>
-          <mass>3.798090403898954</mass>
+          <mass>0.22507202393475284</mass>
           <inertia>
-            <ixx>0.03982385936013962</ixx>
-            <iyy>0.03982385936013962</iyy>
-            <izz>0.07939451269335265</izz>
+            <ixx>0.0023599324065267926</ixx>
+            <iyy>0.0023599324065267926</iyy>
+            <izz>0.004704860011457935</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -104,11 +106,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.0125 </pose>
         <inertial>
-          <mass>2.0573612456747297</mass>
+          <mass>0.12191770344739139</mass>
           <inertia>
-            <ixx>0.005508706073504899</ixx>
-            <iyy>0.005508706073504899</iyy>
-            <izz>0.01080310368391868</izz>
+            <ixx>0.0003264418413928829</ixx>
+            <iyy>0.0003264418413928829</iyy>
+            <izz>0.0006401839220099959</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -226,16 +228,17 @@
           </axis>
       </joint>
     </model>
+
     <model name="star_0.14929919999999997">
       <pose>0 0 1.09  0 0 0</pose>
       <link name="upper_disk">
           <pose>0 0 0.01  0 0 0</pose>
         <inertial>
-          <mass>2.6375627804853843</mass>
+          <mass>0.15630001662135612</mass>
           <inertia>
-            <ixx>0.0192320431549303</ixx>
-            <iyy>0.0192320431549303</iyy>
-            <izz>0.03828824879116157</izz>
+            <ixx>0.001139676631403277</ixx>
+            <iyy>0.001139676631403277</iyy>
+            <izz>0.0022689332616984636</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -326,11 +329,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.0125 </pose>
         <inertial>
-          <mass>1.4028049478820017</mass>
+          <mass>0.08312918209671122</mass>
           <inertia>
-            <ixx>0.00267358612021305</ixx>
-            <iyy>0.00267358612021305</iyy>
-            <izz>0.005201046725021725</izz>
+            <ixx>0.00015843473304966223</ixx>
+            <iyy>0.00015843473304966223</iyy>
+            <izz>0.0003082101762975837</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -448,16 +451,17 @@
           </axis>
       </joint>
     </model>
+
     <model name="star_0.12441599999999998">
       <pose>0 0 1.155  0 0 0</pose>
       <link name="upper_disk">
           <pose>0 0 0.01  0 0 0</pose>
         <inertial>
-          <mass>1.8316408197815175</mass>
+          <mass>0.10854167820927511</mass>
           <inertia>
-            <ixx>0.009293367770565246</ixx>
-            <iyy>0.009293367770565246</iyy>
-            <izz>0.01846462615314506</izz>
+            <ixx>0.0005507180901075701</ixx>
+            <iyy>0.0005507180901075701</iyy>
+            <izz>0.001094200068334522</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -548,11 +552,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.0125 </pose>
         <inertial>
-          <mass>0.948251963303719</mass>
+          <mass>0.056192708936516685</mass>
           <inertia>
-            <ixx>0.0012991068562359432</ixx>
-            <iyy>0.0012991068562359432</iyy>
-            <izz>0.0024994374662944156</izz>
+            <ixx>7.698410999916701e-05</ixx>
+            <iyy>7.698410999916701e-05</iyy>
+            <izz>0.00014811481281744687</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -670,16 +674,17 @@
           </axis>
       </joint>
     </model>
+
     <model name="star_0.10367999999999998">
       <pose>0 0 1.2200000000000002  0 0 0</pose>
       <link name="upper_disk">
           <pose>0 0 0.01  0 0 0</pose>
         <inertial>
-          <mass>1.2719727915149421</mass>
+          <mass>0.07537616542310768</mass>
           <inertia>
-            <ixx>0.004494710569021044</ixx>
-            <iyy>0.004494710569021044</iyy>
-            <izz>0.008904622951941093</izz>
+            <ixx>0.00026635321890495074</ixx>
+            <iyy>0.00026635321890495074</iyy>
+            <izz>0.0005276813601150276</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -770,11 +775,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.0125 </pose>
         <inertial>
-          <mass>0.6325901684576891</mass>
+          <mass>0.037486824797492685</mass>
           <inertia>
-            <ixx>0.0006312364360936654</ixx>
-            <iyy>0.0006312364360936654</iyy>
-            <izz>0.0011965780629729882</izz>
+            <ixx>3.7406603620365355e-05</ixx>
+            <iyy>3.7406603620365355e-05</iyy>
+            <izz>7.090832965765856e-05</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -892,16 +897,17 @@
           </axis>
       </joint>
     </model>
+
     <model name="star_0.08639999999999999">
       <pose>0 0 1.2850000000000001  0 0 0</pose>
       <link name="upper_disk">
           <pose>0 0 0.01  0 0 0</pose>
         <inertial>
-          <mass>0.8833144385520435</mass>
+          <mass>0.05234455932160258</mass>
           <inertia>
-            <ixx>0.0021765847656072847</ixx>
-            <iyy>0.0021765847656072847</iyy>
-            <izz>0.004294281901977767</izz>
+            <ixx>0.00012898280092487612</ixx>
+            <iyy>0.00012898280092487612</iyy>
+            <izz>0.00025447596456164545</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -992,11 +998,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.0125 </pose>
         <inertial>
-          <mass>0.41338058870350153</mass>
+          <mass>0.024496627478726017</mass>
           <inertia>
-            <ixx>0.00030566528627008977</ixx>
-            <iyy>0.00030566528627008977</iyy>
-            <izz>0.0005682700945502314</izz>
+            <ixx>1.811349844563495e-05</ixx>
+            <iyy>1.811349844563495e-05</iyy>
+            <izz>3.3675264862235936e-05</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -1114,16 +1120,17 @@
           </axis>
       </joint>
     </model>
+
     <model name="star_0.072">
       <pose>0 0 1.35  0 0 0</pose>
       <link name="upper_disk">
           <pose>0 0 0.01  0 0 0</pose>
         <inertial>
-          <mass>0.6134128045500301</mass>
+          <mass>0.036350388417779565</mass>
           <inertia>
-            <ixx>0.0010559124440776338</ixx>
-            <iyy>0.0010559124440776338</iyy>
-            <izz>0.0020709307011852656</izz>
+            <ixx>6.25725892786746e-05</ixx>
+            <iyy>6.25725892786746e-05</iyy>
+            <izz>0.00012272181932949724</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -1214,11 +1221,11 @@
       <link name="lower_gap">
           <pose>0 0 -0.0125 </pose>
         <inertial>
-          <mass>0.26115171387420477</mass>
+          <mass>0.015475657118471393</mass>
           <inertia>
-            <ixx>0.00014623497054239786</ixx>
-            <iyy>0.00014623497054239786</iyy>
-            <izz>0.0002652666375562327</izz>
+            <ixx>8.665776032142094e-06</ixx>
+            <iyy>8.665776032142094e-06</iyy>
+            <izz>1.571950444777675e-05</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -1336,6 +1343,7 @@
           </axis>
       </joint>
     </model>
+
     <model name="peg1">
       <static>true</static>
       <link name="link">

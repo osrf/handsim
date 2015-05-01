@@ -1355,7 +1355,7 @@
 
     <include>
       <uri>model://table</uri>
-      <pose>0.45 0.36 0 0 0 0</pose>
+      <pose>0.45 0.26 0 0 0 0</pose>
     </include>
 
     <gui>

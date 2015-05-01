@@ -1,33 +1,77 @@
 <?xml version="1.0" ?>
 
 <%
-  # Hanoi demo
-  # Inertial parameters
-  # Red wood density 510 kg/m^3
-  density = 50.0
-
-  peg_height = 0.4 
-  peg_radius = 0.01
-
-  # Constant parameters for each ring 
-  radius_up0 = 0.11
-  radius_lo  = 0.065
-  height_up  = 0.01
-  height_lo  = 0.03
-  radius_hole = 0.04
-  radius_increment = 0.02
-  radius_grasp = 0.02
-
-  disk_number = 3
-  points_hole = 15
-  points_up   = 20
-
-  color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
-  z_offset = 0.9  
+  distance_offset = 100
 %>
 
 <sdf version="1.5">
   <world name="default">
+
+    <scene>
+      <grid>false</grid>
+    </scene>
+
+    <!-- begin pyramid -->
+    <%
+      pyramid_layers = 3
+
+      pyramid_h  = 0.13
+      # Top diameter
+      pyramid_d2 = 0.1
+      pyramid_r2 = pyramid_d2/2
+      pyramid_clearance = 0.005
+    %>
+    <%
+      for i in 0..pyramid_layers
+        for j in 0..(pyramid_layers-i)
+          x = -(pyramid_layers - i)*pyramid_r2 + j*2*pyramid_r2 + pyramid_clearance
+          y = 0
+          z = i*pyramid_h + pyramid_clearance
+     %>
+    <include>
+      <name> <%="tinybot_"+i.to_s + "_" + j.to_s %> </name>
+      <uri>model://tinybot</uri>
+      <pose><%= x + distance_offset%> <%= y%> 0 0 0 <%= Math::PI%></pose>
+    </include>
+   <%
+      end
+    end
+   %>
+
+    <include>
+      <uri>model://cricket_ball</uri>
+      <pose><%= 0.5 + distance_offset%> 0 0 0 0 0</pose>
+    </include>
+
+    <!-- end pyramid -->
+
+    <!-- begin hanoi -->
+    <%
+      # Hanoi demo
+      # Inertial parameters
+      # Red wood density 510 kg/m^3
+      density = 50.0
+
+      peg_height = 0.4 
+      peg_radius = 0.01
+
+      # Constant parameters for each ring 
+      radius_up0 = 0.11
+      radii = [0.15, 0.13, 0.11]
+      radius_lo  = 0.06
+      height_up  = 0.01
+      height_lo  = 0.03
+      radius_hole = 0.02
+      radius_increment = 0.02
+      radius_grasp = 0.02
+
+      disk_number = 3
+      points_hole = 10
+      points_up   = 20
+
+      color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
+      z_offset = 0.9  
+    %>
 
 <%
    def circle_points_s(radius, points=10, xcenter=0, ycenter=0)
@@ -47,7 +91,8 @@
   end
   # Star axis of symmetry: Z
   disk_number.times do |j|
-       up_radius = radius_up0 + (radius_increment * (disk_number-j)) + 0.05
+       # up_radius = radius_up0 + (radius_increment * (disk_number-j)) + 0.05
+       up_radius = radii[j]
        lo_radius = radius_lo
        hole_radius = radius_hole
 
@@ -106,7 +151,7 @@
                    + "</geometry>\n"
 %>
     <%= '<model name="disk_' + j.to_s + '">' %>
-      <pose>0 0 <%= 0.1 + (height_up+height_lo + 0.01)*j + height_lo + z_offset%>  0 0 0</pose>
+      <pose><%= 2*distance_offset + j%> 0 0  0 0 0</pose>
       <link name="disk">
         <inertial>
           <mass><%= mass %></mass>
@@ -172,141 +217,24 @@
 <%
     end
 %>
-    <model name="peg1">
-      <static>true</static>
-      <link name="link">
-          <pose> 0 0 <%= peg_height/2.0 +  z_offset %> 0 0 0</pose>
-        <self_collide>0</self_collide>
-        <visual name="vis_peg">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-                <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
-
-    <model name="peg2">
-      <static>true</static>
-      <link name="link">
-          <pose>0.5 0 <%= peg_height/2.0+z_offset %> 0 0 0</pose>
-        <self_collide>0</self_collide>
-        <visual name="vis_peg2">
-          <pose>0.0 0.0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg2">
-          <pose>0.0 0.0 0.0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
-
-    <model name="peg3">
-      <static>true</static>
-      <link name="link">
-        <pose>1.0 0 <%= peg_height/2.0+z_offset %> 0 0 0</pose>
-        <self_collide>0</self_collide>
-        <visual name="vis_peg3">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Wood</name>
-           </script>
-          </material>
-        </visual>
-        <collision name="col_peg3">
-          <pose>0 0 0 0 0 0</pose>
-          <geometry>
-            <cylinder>
-              <radius><%= peg_radius%></radius>
-              <length><%= peg_height%></length>
-            </cylinder>
-          </geometry>
-          <surface>
-            <contact>
-              <ode>
-                <min_depth>0.001</min_depth>
-                <max_vel>0.1</max_vel>
-                <kp>1e8</kp>
-                <kd>1</kd>
-              </ode>
-            </contact>
-          </surface>
-        </collision>
-      </link>
-    </model>
 
     <include>
-      <uri>model://table</uri>
-      <pose>0.45 0.26 0 0 0 0</pose>
+      <uri>model://hanoi_peg_board</uri>
+      <pose><%= 2*distance_offset%> 0 0 0 0 0</pose>
     </include>
+
+    <!-- end hanoi -->
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.6 1.3  0 0.4 1.57</pose>
+        <pose>0 -0.8 1.5  0 0.6 1.57</pose>
       </camera>
+
+      <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
+        <size>155 80</size>
+        <start_stop_button>1</start_stop_button>
+        <topic>~/timer_control</topic>
+      </plugin>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <default_size>25 25</default_size>
@@ -404,8 +332,35 @@
             <pos>-7 54</pos>
             <index>18</index>
           </contact>
-
         </contacts>
+
+        <task_group name="DRC Demo Games">
+          <task id="hanoi" name="Towers of Hanoi">
+            <enabled>1</enabled>
+            <icon>file://media/gui/arat/arat_icons/hanoi.png</icon>
+            <instructions>
+              Solve the classic Towers of Hanoi puzzle.
+            </instructions>
+          </task>
+
+          <!--<task id="treasure" name="Hidden Treasure">
+            <enabled>1</enabled>
+            <initial>1</initial>
+            <icon>file://media/gui/arat/arat_icons/grasp_2.jpg</icon>
+            <instructions>
+              Dig for treasure hidden in a sandbox of junk.
+            </instructions>
+          </task>-->
+
+          <task id="pyramid" name="Bowling Pyramid">
+            <enabled>1</enabled>
+            <initial>1</initial>
+            <icon>file://media/gui/arat/arat_icons/pyramid.png</icon>
+            <instructions>
+              Can you knock down an entire pyramid of robots?
+            </instructions>
+          </task>
+        </task_group>
 
         <arm_keys>
 	  <!-- Indices 0-5 are: tx, ty, tz, rx, ry, rz -->
@@ -454,7 +409,7 @@
       <ode>
         <solver>
           <type>quick</type>
-          <iters>100</iters>
+          <iters>80</iters>
           <precon_iters>0</precon_iters>
           <sor>1.000000</sor>
         </solver>
@@ -499,9 +454,38 @@
       <uri>model://sun</uri>
     </include>
 
+
+    <light name='user_point_light_0' type='point'>
+      <pose>0 -10 1 0 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+      <direction>0 0 -1</direction>
+    </light>
+
+    <include>
+      <uri>model://</uri>
+    </include>
+
     <!-- A ground plane -->
     <include>
       <uri>model://ground_plane</uri>
+    </include>
+
+    <include>
+      <uri>model://table</uri>
+      <pose>0 0 0 0 0 0</pose>
+    </include>
+
+    <include>
+      <uri>model://willowgarage</uri>
+      <pose>-28 -14.75 0.01 0 0 0</pose>
     </include>
 
     <!-- The apl_description model is not (yet) publicly available. -->
@@ -510,21 +494,9 @@
      <pose>0.4 -0.9 1.2 0 0 3.1416</pose>
     </include>
 
-    <model name="polhemus_source">
+    <!--<model name="polhemus_source">
       <pose>-.5 260 1.3 0 3.1416 1.57</pose>
       <link name="link">
-        <inertial>
-          <mass>0.25</mass>
-          <inertia>
-            <ixx>0.000104167</ixx>
-            <ixy>0</ixy>
-            <ixz>0</ixz>
-            <iyy>0.000104167</iyy>
-            <iyz>0</iyz>
-            <izz>0.000104167</izz>
-          </inertia>
-        </inertial>
-
         <visual name="visual">
           <geometry>
             <box>
@@ -540,9 +512,14 @@
         </visual>
       </link>
       <static>true</static>
-    </model>
+    </model>-->
 
-    <plugin name="arrange_polhemus" filename="libArrangePlugin.so">
+    <include>
+      <uri>model://tinybot</uri>
+      <pose><%= distance_offset %> 2 0 0 0 0 </pose>
+    </include>
+
+    <!--<plugin name="arrange_polhemus" filename="libArrangePlugin.so">
       <topic_name>~/arrange_polhemus</topic_name>
       <model_name>polhemus_source</model_name>
 
@@ -553,12 +530,67 @@
       <arrangement name="have_polhemus">
         <pose model="polhemus_source">-.5 0 1.3 0 3.1416 1.57</pose>
       </arrangement>
-    </plugin>
+    </plugin>-->
 
     <plugin name="hydra" filename="libHydraPlugin.so">
       <pivot>0.04 0 0</pivot>
       <grab>0.12 0 0</grab>
     </plugin>
 
+    <plugin name="arrange_plugin" filename="libArrangePlugin.so">
+      <topic_name>~/arrange</topic_name>
+
+      <!-- TODO generate list of model names using ERB and print them out -->
+      <!-- do the same with initial positions? -->
+      <!-- Hanoi -->
+      <% disk_number.times do |j| %>
+        <model_name><%= 'disk_' + j.to_s%></model_name>
+      <% end %>
+      <model_name>hanoi_peg_board</model_name>
+
+      <!-- Pyramid -->
+
+      <%
+          for i in 0..pyramid_layers
+            for j in 0..(pyramid_layers-i)
+       %>
+            <model_name><%='tinybot_'+i.to_s + '_' + j.to_s %></model_name>
+      <%
+            end
+          end
+       %>
+
+      <model_name>cricket_ball</model_name>
+
+      <initial_arrangement>pyramid</initial_arrangement>
+
+      <arrangement name="hanoi">
+        <% disk_number.times do |j| %>
+          <pose model=<%= '"disk_' + j.to_s + '"'%>> <%= -0.5 + j*0.5%> -0.15 <%= 0.1 + (height_up+height_lo + 0.01) + height_lo+z_offset + 0.03%>  0 0 0</pose>
+        <% end %>
+        <pose model="hanoi_peg_board">0 -0.15 0.93 0 0 0</pose>
+      </arrangement>
+
+      <!--<arrangement name="treasure">
+      </arrangement>-->
+
+      <arrangement name="pyramid">
+        <%
+          for i in 0..pyramid_layers
+            for j in 0..(pyramid_layers-i)
+              x = -(pyramid_layers - i)*pyramid_r2 + j*2*pyramid_r2 + pyramid_clearance
+              y = 0
+              z = i*pyramid_h + pyramid_clearance
+         %>
+           <pose model=<%='"tinybot_'+i.to_s + '_' + j.to_s + '"' %>><%=x%> <%=y%> <%=z + 1.0%> 0 0 <%= Math::PI%></pose>
+         <%
+            end
+          end
+         %>
+          <pose model="cricket_ball"><%= 0.4%> -0.3 1.0 0 0 0</pose>
+      </arrangement>
+    </plugin>
+
+    <plugin name="tactors" filename="libTactorsPlugin.so"/>
   </world>
 </sdf>
