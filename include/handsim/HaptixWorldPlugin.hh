@@ -170,9 +170,18 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[in] _req The request.
   /// \param[out] _rep The response.
   /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixModelTransformCallback(const std::string &_service,
+  private: void HaptixSetModelTransformCallback(const std::string &_service,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
+
+  /// \brief hxs_model_transform callback.
+  /// \param[in] _service The service this callback is advertised on.
+  /// \param[in] _req The request.
+  /// \param[out] _rep The response.
+  /// \param[out[ _result True if no errors were encountered.
+  private: void HaptixModelTransformCallback(const std::string &_service,
+    const haptix::comm::msgs::hxString &_req,
+    haptix::comm::msgs::hxTransform &_rep, bool &_result);
 
   /// \brief hxs_linear_velocity callback.
   /// \param[in] _service The service this callback is advertised on.
@@ -180,6 +189,15 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[out] _rep The response.
   /// \param[out[ _result True if no errors were encountered.
   private: void HaptixLinearVelocityCallback(const std::string &_service,
+    const haptix::comm::msgs::hxString &_req,
+    haptix::comm::msgs::hxVector3 &_rep, bool &_result);
+
+  /// \brief hxs_set_linear_velocity callback.
+  /// \param[in] _service The service this callback is advertised on.
+  /// \param[in] _req The request.
+  /// \param[out] _rep The response.
+  /// \param[out[ _result True if no errors were encountered.
+  private: void HaptixSetLinearVelocityCallback(const std::string &_service,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -189,6 +207,15 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[out] _rep The response.
   /// \param[out[ _result True if no errors were encountered.
   private: void HaptixAngularVelocityCallback(const std::string &_service,
+    const haptix::comm::msgs::hxString &_req,
+    haptix::comm::msgs::hxVector3 &_rep, bool &_result);
+
+  /// \brief hxs_set_angular_velocity callback.
+  /// \param[in] _service The service this callback is advertised on.
+  /// \param[in] _req The request.
+  /// \param[out] _rep The response.
+  /// \param[out[ _result True if no errors were encountered.
+  private: void HaptixSetAngularVelocityCallback(const std::string &_service,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -197,7 +224,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[in] _req The request.
   /// \param[out] _rep The response.
   /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixForceCallback(const std::string &_service,
+  private: void HaptixApplyForceCallback(const std::string &_service,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -206,7 +233,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[in] _req The request.
   /// \param[out] _rep The response.
   /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixTorqueCallback(const std::string &_service,
+  private: void HaptixApplyTorqueCallback(const std::string &_service,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -215,7 +242,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[in] _req The request.
   /// \param[out] _rep The response.
   /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixWrenchCallback(const std::string &_service,
+  private: void HaptixApplyWrenchCallback(const std::string &_service,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
@@ -227,42 +254,6 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   private: void HaptixResetCallback(const std::string &_service,
     const haptix::comm::msgs::hxInt &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
-  /// \brief hxs_reset_timer callback.
-  /// \param[in] _service The service this callback is advertised on.
-  /// \param[in] _req The request.
-  /// \param[out] _rep The response.
-  /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixResetTimerCallback(const std::string &_service,
-    const haptix::comm::msgs::hxEmpty &_req,
-    haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
-  /// \brief hxs_start_timer callback.
-  /// \param[in] _service The service this callback is advertised on.
-  /// \param[in] _req The request.
-  /// \param[out] _rep The response.
-  /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixStartTimerCallback(const std::string &_service,
-    const haptix::comm::msgs::hxEmpty &_req,
-    haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
-  /// \brief hxs_stop_timer callback.
-  /// \param[in] _service The service this callback is advertised on.
-  /// \param[in] _req The request.
-  /// \param[out] _rep The response.
-  /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixStopTimerCallback(const std::string &_service,
-    const haptix::comm::msgs::hxEmpty &_req,
-    haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
-  /// \brief hxs_timer callback.
-  /// \param[in] _service The service this callback is advertised on.
-  /// \param[in] _req The request.
-  /// \param[out] _rep The response.
-  /// \param[out[ _result True if no errors were encountered.
-  private: void HaptixTimerCallback(const std::string &_service,
-    const haptix::comm::msgs::hxEmpty &_req,
-    haptix::comm::msgs::hxTime &_rep, bool &_result);
 
   /// \brief hxs_start_logging callback.
   /// \param[in] _service The service this callback is advertised on.

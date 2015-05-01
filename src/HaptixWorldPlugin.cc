@@ -61,22 +61,28 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_state");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_joint_state");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_link_state");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_add_model");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_remove_model");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_transform");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_linear_velocity");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_linear_velocity");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_angular_velocity");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_angular_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_force");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_torque");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_force");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_torque");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_wrench");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_reset");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_reset_timer");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_start_timer");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_stop_timer");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_timer");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_is_logging");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_start_logging");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_stop_logging");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_gravity_mode");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_gravity_mode");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_color");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_color");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_collide_mode");
 }
 
 /////////////////////////////////////////////////
@@ -202,38 +208,35 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_remove_model",
     &HaptixWorldPlugin::HaptixRemoveModelCallback, this);
 
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_transform",
+    &HaptixWorldPlugin::HaptixSetModelTransformCallback, this);
+
   this->ignNode.Advertise("/haptix/gazebo/hxs_model_transform",
     &HaptixWorldPlugin::HaptixModelTransformCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_linear_velocity",
+    &HaptixWorldPlugin::HaptixSetLinearVelocityCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_linear_velocity",
     &HaptixWorldPlugin::HaptixLinearVelocityCallback, this);
 
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_angular_velocity",
+    &HaptixWorldPlugin::HaptixSetAngularVelocityCallback, this);
+
   this->ignNode.Advertise("/haptix/gazebo/hxs_angular_velocity",
     &HaptixWorldPlugin::HaptixAngularVelocityCallback, this);
 
-  this->ignNode.Advertise("/haptix/gazebo/hxs_force",
-    &HaptixWorldPlugin::HaptixForceCallback, this);
+  this->ignNode.Advertise("/haptix/gazebo/hxs_apply_force",
+    &HaptixWorldPlugin::HaptixApplyForceCallback, this);
 
-  this->ignNode.Advertise("/haptix/gazebo/hxs_torque",
-    &HaptixWorldPlugin::HaptixTorqueCallback, this);
+  this->ignNode.Advertise("/haptix/gazebo/hxs_apply_torque",
+    &HaptixWorldPlugin::HaptixApplyTorqueCallback, this);
 
-  this->ignNode.Advertise("/haptix/gazebo/hxs_wrench",
-    &HaptixWorldPlugin::HaptixWrenchCallback, this);
+  this->ignNode.Advertise("/haptix/gazebo/hxs_apply_wrench",
+    &HaptixWorldPlugin::HaptixApplyWrenchCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_reset",
     &HaptixWorldPlugin::HaptixResetCallback, this);
-
-  this->ignNode.Advertise("/haptix/gazebo/hxs_reset_timer",
-    &HaptixWorldPlugin::HaptixResetTimerCallback, this);
-
-  this->ignNode.Advertise("/haptix/gazebo/hxs_start_timer",
-    &HaptixWorldPlugin::HaptixStartTimerCallback, this);
-
-  this->ignNode.Advertise("/haptix/gazebo/hxs_stop_timer",
-    &HaptixWorldPlugin::HaptixStopTimerCallback, this);
-
-  this->ignNode.Advertise("/haptix/gazebo/hxs_timer",
-    &HaptixWorldPlugin::HaptixTimerCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_is_logging",
     &HaptixWorldPlugin::HaptixIsLoggingCallback, this);
@@ -667,6 +670,37 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixModelTransformCallback(
       const std::string &/*_service*/,
+      const haptix::comm::msgs::hxString &_req,
+      haptix::comm::msgs::hxTransform &_rep, bool &_result)
+{
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    gzerr << "World pointer NULL" << std::endl;
+    _result = false;
+    return;
+  }
+
+  gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
+  if (!model)
+  {
+    gzerr << "Model pointer NULL" << std::endl;
+    _result = false;
+    return;
+  }
+  gazebo::math::Pose pose = model->GetWorldPose();
+  if (!ConvertTransform(pose, _rep))
+  {
+    gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
+    _result = false;
+    return;
+  }
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixSetModelTransformCallback(
+      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -688,7 +722,7 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
   gazebo::math::Pose pose;
   if (!ConvertTransform(_req.transform(), pose))
   {
-    gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
+    gzerr << "Couldn't convert transform message to Gazebo pose" << std::endl;
     _result = false;
     return;
   }
@@ -696,13 +730,43 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
   _result = true;
 }
 
+
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixLinearVelocityCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxString &_req,
+      haptix::comm::msgs::hxVector3 &_rep, bool &_result)
+{
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    gzerr << "World pointer NULL" << std::endl;
+    _result = false;
+    return;
+  }
+
+  gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
+  if (!model)
+  {
+    gzerr << "Model pointer NULL" << std::endl;
+    _result = false;
+    return;
+  }
+  gazebo::math::Vector3 lin_vel = model->GetWorldLinearVel();
+  if (!ConvertVector(lin_vel, _rep))
+  {
+    gzerr << "Couldn't convert Gazebo Vector3 to message" << std::endl;
+    _result = false;
+    return;
+  }
+  _result = true;
+}
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // TODO
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -721,7 +785,7 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
   gazebo::math::Vector3 lin_vel;
   if (!ConvertVector(_req.vector3(), lin_vel))
   {
-    gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
+    gzerr << "Couldn't convert message to Gazebo Vector3" << std::endl;
     _result = false;
     return;
   }
@@ -732,10 +796,37 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixAngularVelocityCallback(
       const std::string &/*_service*/,
+      const haptix::comm::msgs::hxString &_req,
+      haptix::comm::msgs::hxVector3 &_rep, bool &_result)
+{
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
+  if (!this->world)
+  {
+    _result = false;
+    return;
+  }
+
+  if (!model)
+  {
+    _result = false;
+    return;
+  }
+  gazebo::math::Vector3 ang_vel = model->GetWorldAngularVel();
+  if (!ConvertVector(ang_vel, _rep))
+  {
+    _result = false;
+    return;
+  }
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixSetAngularVelocityCallback(
+      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // TODO
   std::lock_guard<std::mutex> lock(this->worldMutex);
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!this->world)
@@ -760,7 +851,7 @@ void HaptixWorldPlugin::HaptixAngularVelocityCallback(
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixForceCallback(
+void HaptixWorldPlugin::HaptixApplyForceCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
@@ -812,7 +903,7 @@ void HaptixWorldPlugin::HaptixForceCallback(
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixTorqueCallback(
+void HaptixWorldPlugin::HaptixApplyTorqueCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
@@ -863,7 +954,7 @@ void HaptixWorldPlugin::HaptixTorqueCallback(
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixWrenchCallback(
+void HaptixWorldPlugin::HaptixApplyWrenchCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
@@ -978,13 +1069,13 @@ void HaptixWorldPlugin::HaptixResetCallback(
   _result = true;
 }
 
+/*
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixResetTimerCallback(
-      const std::string &/*_service*/,
-      const haptix::comm::msgs::hxEmpty &/*_req*/,
-      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+      const std::string &_service,
+      const haptix::comm::msgs::hxEmpty &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result)
 {
-  // TODO mutex for timerPublisher
   if (!this->timerPublisher)
   {
     gzerr << "Timer publisher was NULL" << std::endl;
@@ -999,9 +1090,9 @@ void HaptixWorldPlugin::HaptixResetTimerCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixStartTimerCallback(
-      const std::string &/*_service*/,
-      const haptix::comm::msgs::hxEmpty &/*_req*/,
-      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+      const std::string &_service,
+      const haptix::comm::msgs::hxEmpty &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result)
 {
   if (!this->timerPublisher)
   {
@@ -1017,9 +1108,9 @@ void HaptixWorldPlugin::HaptixStartTimerCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixStopTimerCallback(
-      const std::string &/*_service*/,
-      const haptix::comm::msgs::hxEmpty &/*_req*/,
-      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+      const std::string &_service,
+      const haptix::comm::msgs::hxEmpty &_req,
+      haptix::comm::msgs::hxEmpty &_rep, bool &_result)
 {
   if (!this->timerPublisher)
   {
@@ -1035,11 +1126,11 @@ void HaptixWorldPlugin::HaptixStopTimerCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixTimerCallback(
-      const std::string &/*_service*/,
-      const haptix::comm::msgs::hxEmpty &/*_req*/,
+      const std::string &_service,
+      const haptix::comm::msgs::hxEmpty &_req,
       haptix::comm::msgs::hxTime &_rep, bool &_result)
 {
-  /*gui::MainWindow *mainWindow = gui::get_main_window();
+  gui::MainWindow *mainWindow = gui::get_main_window();
   if (!mainWindow)
   {
     _result = false;
@@ -1070,11 +1161,11 @@ void HaptixWorldPlugin::HaptixTimerCallback(
 
   gazebo::common::Time gzTime = timer->GetCurrentTime();
   _rep.set_sec(gzTime.sec);
-  _rep.set_nsec(gzTime.nsec);*/
-  // TODO
+  _rep.set_nsec(gzTime.nsec);
 
   _result = true;
 }
+*/
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixStartLoggingCallback(

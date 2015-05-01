@@ -36,6 +36,7 @@ class SimApiTest : public gazebo::ServerFixture
 gazebo::physics::WorldPtr SimApiTest::InitWorld(const std::string &_worldFile)
 {
   boost::filesystem::path path = HANDSIM_TEST_PATH;
+  // TODO first check if path is on GazeboPaths
   gazebo::common::SystemPaths::Instance()->AddGazeboPaths(path.string());
   Load(_worldFile, true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
@@ -232,8 +233,7 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
 
 TEST_F(SimApiTest, HxsContacts)
 {
-  Load("worlds/arat_test.world", true);
-  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -368,8 +368,7 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
 
 TEST_F(SimApiTest, HxsAddModel)
 {
-  Load("worlds/arat_test.world", true);
-  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -457,7 +456,70 @@ TEST_F(SimApiTest, HxsAddModel)
   EXPECT_EQ(model.link_count, 2);
 }
 
+TEST_F(SimApiTest, HxsTransform)
+{
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  ASSERT_TRUE(model != NULL);
+  gazebo::math::Pose pose(-0.01, -0.02, -0.03, 3.14, 1.57, 1.57);
+  model->SetWorldPose(pose);
+
+  hxsTransform transform;
+
+  ASSERT_EQ(hxs_model_transform("wood_cube_5cm", &transform), hxOK);
+
+  EXPECT_EQ(model->GetWorldPose(), pose);
+}
+
+TEST_F(SimApiTest, HxsSetTransform)
+{
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+
+  gazebo::math::Pose pose(-0.01, -0.02, -0.03, 3.14, 1.57, 1.57);
+  hxsTransform transform;
+  transform.pos.x = pose.pos.x;
+  transform.pos.y = pose.pos.y;
+  transform.pos.z = pose.pos.z;
+  transform.orient.w = pose.rot.w;
+  transform.orient.x = pose.rot.x;
+  transform.orient.y = pose.rot.y;
+  transform.orient.z = pose.rot.z;
+
+  ASSERT_EQ(hxs_set_model_transform("wood_cube_5cm", &transform), hxOK);
+
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  ASSERT_TRUE(model != NULL);
+  EXPECT_EQ(model->GetWorldPose(), pose);
+}
+
 TEST_F(SimApiTest, HxsLinearVel)
+{
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  ASSERT_TRUE(model != NULL);
+  gazebo::math::Vector3 gzLinVel(-0.01, -0.02, -0.03);
+  model->SetLinearVel(gzLinVel);
+
+  hxsVector3 lin_vel;
+
+  ASSERT_EQ(hxs_linear_velocity("wood_cube_5cm", &lin_vel), hxOK);
+
+  EXPECT_EQ(model->GetWorldLinearVel(), gzLinVel);
+}
+
+TEST_F(SimApiTest, HxsSetLinearVel)
 {
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
@@ -470,7 +532,7 @@ TEST_F(SimApiTest, HxsLinearVel)
   lin_vel.y = -0.02;
   lin_vel.z = -0.03;
 
-  ASSERT_EQ(hxs_linear_velocity("wood_cube_5cm", &lin_vel), hxOK);
+  ASSERT_EQ(hxs_set_linear_velocity("wood_cube_5cm", &lin_vel), hxOK);
 
   gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
@@ -485,13 +547,32 @@ TEST_F(SimApiTest, HxsAngularVel)
 
   // Wait a little while for the world to initialize
   world->Step(20);
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  ASSERT_TRUE(model != NULL);
+  gazebo::math::Vector3 gzAngVel(-0.01, -0.02, -0.03);
+  model->SetAngularVel(gzAngVel);
+
+  hxsVector3 ang_vel;
+
+  ASSERT_EQ(hxs_linear_velocity("wood_cube_5cm", &ang_vel), hxOK);
+
+  EXPECT_EQ(model->GetWorldAngularVel(), gzAngVel);
+}
+
+TEST_F(SimApiTest, HxsSetAngularVel)
+{
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
 
   hxsVector3 ang_vel;
   ang_vel.x = -0.01;
   ang_vel.y = -0.02;
   ang_vel.z = -0.03;
 
-  ASSERT_EQ(hxs_angular_velocity("wood_cube_5cm", &ang_vel), hxOK);
+  ASSERT_EQ(hxs_set_angular_velocity("wood_cube_5cm", &ang_vel), hxOK);
 
   gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   ASSERT_TRUE(model != NULL);
@@ -502,8 +583,7 @@ TEST_F(SimApiTest, HxsAngularVel)
 
 TEST_F(SimApiTest, HxsForce)
 {
-  Load("worlds/arat_test.world", true);
-  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
@@ -525,7 +605,7 @@ TEST_F(SimApiTest, HxsForce)
   gazebo::physics::LinkPtr link = model->GetLink("link");
   ASSERT_TRUE(link != NULL);
 
-  ASSERT_EQ(hxs_force("wood_cube_5cm", "link", &force, duration), hxOK);
+  ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, duration), hxOK);
   world->Step(1);
 
   // Every 0.1 seconds
@@ -569,7 +649,7 @@ TEST_F(SimApiTest, HxsTorque)
   gazebo::physics::LinkPtr link = model->GetLink("link");
   ASSERT_TRUE(link != NULL);
 
-  ASSERT_EQ(hxs_torque("wood_cube_5cm", "link", &torque, duration), hxOK);
+  ASSERT_EQ(hxs_apply_torque("wood_cube_5cm", "link", &torque, duration), hxOK);
 
   world->Step(1);
 
@@ -618,7 +698,7 @@ TEST_F(SimApiTest, HxsWrench)
   gazebo::physics::LinkPtr link = model->GetLink("link");
   ASSERT_TRUE(link != NULL);
 
-  ASSERT_EQ(hxs_wrench("wood_cube_5cm", "link", &wrench, duration), hxOK);
+  ASSERT_EQ(hxs_apply_wrench("wood_cube_5cm", "link", &wrench, duration), hxOK);
   world->Step(1);
 
   // Every 0.1 seconds
@@ -644,8 +724,7 @@ TEST_F(SimApiTest, HxsWrench)
 
 TEST_F(SimApiTest, HxsRemoveModel)
 {
-  Load("worlds/arat_test.world", true);
-  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize

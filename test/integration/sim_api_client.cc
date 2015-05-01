@@ -65,22 +65,28 @@ TEST(SimApiClientTest, TwoProcesses)
       hxsTransform transform;
       hxsVector3 lin_vel;
       hxsVector3 ang_vel;
+      hxsWrench wrench;
       hxsModel model;
       hxsVector3 force;
       hxsVector3 torque;
-      hxTime time;
       hxsColor color;
       int gravity_mode;
 
       EXPECT_EQ(hxs_sim_info(&simInfo), hxOK);
+      std::cout << "hxs_sim_info successful." << std::endl;
 
       EXPECT_EQ(hxs_camera_transform(&cameraTransform), hxOK);
+      std::cout << "hxs_camera_transform successful." << std::endl;
 
       EXPECT_EQ(hxs_set_camera_transform(&cameraTransform), hxOK);
+      std::cout << "hxs_set_camera_transform successful." << std::endl;
 
       EXPECT_EQ(hxs_contacts("cricket_ball", &contactPoints), hxOK);
+      std::cout << "hxs_contacts successful." << std::endl;
 
-      EXPECT_EQ(hxs_set_model_joint_state("wooden_case", "lid_hinge", -1.58, 0.01), hxOK);
+      EXPECT_EQ(hxs_set_model_joint_state("wooden_case", "lid_hinge", -1.58,
+          0.01), hxOK);
+      std::cout << "hxs_set_model_joint_state successful." << std::endl;
 
       transform.pos.x = 1;
       transform.pos.y = 2;
@@ -98,6 +104,7 @@ TEST(SimApiClientTest, TwoProcesses)
 
       EXPECT_EQ(hxs_set_model_link_state("cricket_ball", "link", &transform,
           &lin_vel, &ang_vel), hxOK);
+      std::cout << "hxs_set_model_link_state successful." << std::endl;
 
       std::string modelSDF =
           "<sdf version=\"1.5\">"
@@ -124,60 +131,81 @@ TEST(SimApiClientTest, TwoProcesses)
 
       EXPECT_EQ(hxs_add_model(modelSDF.c_str(), "new_model", 0, 0.1, 0.2, 3.14,
         1.57, -1.57, false, &model), hxOK);
+      std::cout << "hxs_add_model successful." << std::endl;
 
       EXPECT_EQ(hxs_remove_model("new_model"), hxOK);
+      std::cout << "hxs_remove_model successful." << std::endl;
 
       EXPECT_EQ(hxs_model_gravity_mode("cricket_ball", &gravity_mode), hxOK);
+      std::cout << "hxs_model_gravity_mode successful." << std::endl;
       gravity_mode = 0;
       EXPECT_EQ(hxs_set_model_gravity_mode("cricket_ball", gravity_mode), hxOK);
+      std::cout << "hxs_set_model_gravity_mode successful." << std::endl;
+
       lin_vel.x = 0;
       lin_vel.y = 0;
       lin_vel.z = 0;
+      EXPECT_EQ(hxs_set_linear_velocity("cricket_ball", &lin_vel), hxOK);
+      std::cout << "hxs_set_linear_velocity successful." << std::endl;
       EXPECT_EQ(hxs_linear_velocity("cricket_ball", &lin_vel), hxOK);
+      std::cout << "hxs_linear_velocity successful." << std::endl;
       ang_vel.x = 0;
       ang_vel.y = 0;
       ang_vel.z = 0;
+      EXPECT_EQ(hxs_set_angular_velocity("cricket_ball", &ang_vel), hxOK);
+      std::cout << "hxs_set_angular_velocity successful." << std::endl;
       EXPECT_EQ(hxs_angular_velocity("cricket_ball", &ang_vel), hxOK);
+      std::cout << "hxs_angular_velocity successful." << std::endl;
       force.x = 10;
       force.y = 12;
       force.z = 13;
-      EXPECT_EQ(hxs_force("cricket_ball", "link", &force, 1.0), hxOK);
+      EXPECT_EQ(hxs_apply_force("cricket_ball", "link", &force, 1.0), hxOK);
+      std::cout << "hxs_apply_force successful." << std::endl;
 
       torque.x = 14;
       torque.y = 15;
       torque.z = 16;
-      EXPECT_EQ(hxs_torque("cricket_ball", "link", &torque, 1.0), hxOK);
+      EXPECT_EQ(hxs_apply_torque("cricket_ball", "link", &torque, 1.0), hxOK);
+      std::cout << "hxs_apply_torque successful." << std::endl;
+      wrench.force = force;
+      wrench.torque = torque;
+      EXPECT_EQ(hxs_apply_wrench("cricket_ball", "link", &wrench, 1.0), hxOK);
+      std::cout << "hxs_apply_wrench successful." << std::endl;
+
+      EXPECT_EQ(hxs_model_transform("cricket_ball", &transform), hxOK);
+      std::cout << "hxs_model_transform successful." << std::endl;
+      EXPECT_EQ(hxs_set_model_transform("cricket_ball", &transform), hxOK);
+      std::cout << "hxs_set_model_transform successful." << std::endl;
 
       EXPECT_EQ(hxs_reset(0), hxOK);
 
       EXPECT_EQ(hxs_reset(1), hxOK);
-
-      EXPECT_EQ(hxs_reset_timer(), hxOK);
-
-      EXPECT_EQ(hxs_start_timer(), hxOK);
-
-      EXPECT_EQ(hxs_stop_timer(), hxOK);
-
-      EXPECT_EQ(hxs_timer(&time), hxOK);
+      std::cout << "hxs_reset successful.";
 
       EXPECT_EQ(hxs_start_logging("logfile"), hxOK);
+      std::cout << "hxs_start_logging successful.";
       // TODO delete the logfile?
 
       int is_logging;
       EXPECT_EQ(hxs_is_logging(&is_logging), hxOK);
+      std::cout << "hxs_is_logging successful.";
 
       EXPECT_EQ(hxs_stop_logging(), hxOK);
+      std::cout << "hxs_stop_logging successful.";
 
       EXPECT_EQ(hxs_model_color("cricket_ball", &color), hxOK);
+      std::cout << "hxs_model_color successful.";
 
       EXPECT_EQ(hxs_set_model_color("cricket_ball", &color), hxOK);
+      std::cout << "hxs_set_model_color successful.";
 
       hxsCollideMode collide_mode;
       EXPECT_EQ(hxs_model_collide_mode("cricket_ball", &collide_mode), hxOK);
+      std::cout << "hxs_model_collide_mode successful.";
       collide_mode = hxsNOCOLLIDE;
       EXPECT_EQ(hxs_set_model_collide_mode("cricket_ball", &collide_mode), hxOK);
+      std::cout << "hxs_set_model_collide_mode successful.";
 
-      //
       kill(PID_child, SIGKILL);
     }
   }
