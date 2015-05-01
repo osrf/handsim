@@ -535,9 +535,6 @@ namespace gazebo
     /// \brief Transform from camera frame to Optitrack head marker.
     private: math::Pose headMarker;
 
-    private: math::Pose headMarkerRotationFix;
-    private: math::Pose headMarkerRotationFix2;
-
     /// \brief Optitrack calibration offset for the head
     private: gazebo::math::Pose optitrackHeadOffset;
 
