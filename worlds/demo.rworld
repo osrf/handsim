@@ -9,6 +9,7 @@
 
     <scene>
       <grid>false</grid>
+      <sky/>
     </scene>
 
     <!-- begin pyramid -->
@@ -30,7 +31,7 @@
      %>
     <include>
       <name> <%="tinybot_"+i.to_s + "_" + j.to_s %> </name>
-      <uri>model://tinybot</uri>
+      <uri>model://tinybot_no_arms</uri>
       <pose><%= x + distance_offset%> <%= y%> 0 0 0 <%= Math::PI%></pose>
     </include>
    <%
@@ -469,24 +470,50 @@
       <direction>0 0 -1</direction>
     </light>
 
-    <include>
-      <uri>model://</uri>
-    </include>
 
     <!-- A ground plane -->
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
+  <model name="ground_plane">
+    <static>true</static>
+    <pose>0 0 0.26 0 0 0</pose>
+    <link name="link">
+      <collision name="collision">
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>50 50</size>
+          </plane>
+        </geometry>
+      </collision>
+      <visual name="visual">
+        <cast_shadows>false</cast_shadows>
+        <geometry>
+          <plane>
+            <normal>0 0 1</normal>
+            <size>50 50</size>
+          </plane>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/kitchen.material</uri>
+            <name>Kitchen/Grass</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+  </model>
 
     <include>
       <uri>model://table</uri>
       <pose>0 0 0 0 0 0</pose>
     </include>
 
+    <!-- awesome asset, destroys frame rate -->
+    <!--
     <include>
-      <uri>model://willowgarage</uri>
-      <pose>-28 -14.75 0.01 0 0 0</pose>
+      <uri>model://kitchen_dining</uri>
+      <pose>0.525 -5.103 0.268 0 0 0</pose>
     </include>
+    -->
 
     <!-- The apl_description model is not (yet) publicly available. -->
     <include>
@@ -513,11 +540,6 @@
       </link>
       <static>true</static>
     </model>-->
-
-    <include>
-      <uri>model://tinybot</uri>
-      <pose><%= distance_offset %> 2 0 0 0 0 </pose>
-    </include>
 
     <!--<plugin name="arrange_polhemus" filename="libArrangePlugin.so">
       <topic_name>~/arrange_polhemus</topic_name>
@@ -568,7 +590,6 @@
         <% disk_number.times do |j| %>
           <pose model=<%= '"disk_' + j.to_s + '"'%>> <%= -0.5 + j*0.5%> -0.15 <%= 0.1 + (height_up+height_lo + 0.01) + height_lo+z_offset + 0.03%>  0 0 0</pose>
         <% end %>
-        <pose model="hanoi_peg_board">0 -0.15 0.93 0 0 0</pose>
       </arrangement>
 
       <!--<arrangement name="treasure">
