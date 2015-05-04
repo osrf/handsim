@@ -70,7 +70,7 @@ namespace haptix
       private: void Unpack(char *_data);
 
       /// \brief Return the status of the Optitrack client initialization.
-      /// \return True if Optitrack data reception is active..
+      /// \return True if Optitrack data reception is active.
       public: bool IsActive();
 
       /// \brief Stop activity.
@@ -83,7 +83,7 @@ namespace haptix
       public: void SetVerbose(const bool _verbose);
 
       /// \brief True if Optitrack data reception is active
-      private: bool active;
+      private: std::atomic<bool> active;
 
       /// \brief Optitrack multicast address.
       private: const std::string multicastAddress = "239.255.42.99";
@@ -150,9 +150,6 @@ namespace haptix
 
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
-
-      /// \brief Mutex to protect "active" boolean
-      private: std::mutex activeMutex;
     };
   }
 }

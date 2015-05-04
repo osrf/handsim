@@ -54,7 +54,7 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   const std::string &_world)
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
-  this->active = false;
+  this->active.store(false);
   this->myNetworkInterfaces = ignition::transport::determineInterfaces();
 }
 
@@ -127,15 +127,13 @@ void Optitrack::StartReception()
 /////////////////////////////////////////////////
 bool Optitrack::IsActive()
 {
-  std::lock_guard<std::mutex> lock(this->activeMutex);
-  return this->active;
+  return this->active.load();
 }
 
 /////////////////////////////////////////////////
 void Optitrack::Stop()
 {
-  std::lock_guard<std::mutex> lock(this->activeMutex);
-  this->active = false;
+  this->active.store(false);
 }
 
 /////////////////////////////////////////////////
@@ -146,10 +144,7 @@ void Optitrack::RunReceptionTask()
   sockaddr_in theirAddress;
   int iterations = 0;
 
-  {
-    std::lock_guard<std::mutex> lock(this->activeMutex);
-    this->active = true;
-  }
+  this->active.store(true);
 
   while (this->IsActive())
   {
