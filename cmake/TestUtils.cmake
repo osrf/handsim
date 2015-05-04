@@ -21,13 +21,7 @@ macro (handsim_build_tests)
       HaptixTracking
       ${HAPTIX-COMM_LIBRARIES}
       gazebo_test_fixture
-      gazebo_common
-      gazebo_math
-      gazebo_physics
-      gazebo_sensors
-      gazebo_rendering
-      gazebo_msgs
-      gazebo_transport
+      ${GAZEBO_LIBRARIES}
       ${Boost_LIBRARIES}
       ${IGNITION-TRANSPORT_LIBRARIES}
       HaptixWorldPlugin
