@@ -18,6 +18,7 @@
 #ifndef _HANDSIM_GUI_TASK_BUTTON_HH_
 #define _HANDSIM_GUI_TASK_BUTTON_HH_
 
+#include <string>
 #include <QToolButton>
 #include <QTextDocument>
 

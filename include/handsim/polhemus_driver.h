@@ -43,7 +43,8 @@ typedef void(*polhemus_pose_cb)(double x, double y, double z,
 polhemus_conn_t* polhemus_connect_usb(int vendor_id, int product_id,
                                       int write_endpoint, int read_endpoint);
 void polhemus_disconnect_usb(polhemus_conn_t* conn);
-int polhemus_write_usb(polhemus_conn_t* conn, unsigned char* data, int data_len);
+int polhemus_write_usb(polhemus_conn_t* conn, unsigned char* data,
+                       int data_len);
 int polhemus_read_usb(polhemus_conn_t* conn, unsigned char* data, int data_len);
 int polhemus_init_comm(polhemus_conn_t* conn, int max_retries);
 int polhemus_get_pose(polhemus_conn_t* conn,

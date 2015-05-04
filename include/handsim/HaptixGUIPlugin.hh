@@ -17,6 +17,10 @@
 #ifndef _HANDSIM_GUI_ARAT_PLUGIN_HH_
 #define _HANDSIM_GUI_ARAT_PLUGIN_HH_
 
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 #include <boost/thread/mutex.hpp>
 
 #include <gazebo/common/Events.hh>

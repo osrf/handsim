@@ -393,10 +393,10 @@ void Optitrack::Unpack(char *pData)
         bool bTrackingValid = params & 0x01;
         output << "Tracking valid?: " << bTrackingValid << std::endl;
       }
-    } // next rigid body
+    }  // next rigid body
 
     // skeletons (version 2.1 and later)
-    if (((major == 2) && (minor>0)) || (major>2))
+    if (((major == 2) && (minor > 0)) || (major > 2))
     {
       int nSkeletons = 0;
       memcpy(&nSkeletons, ptr, 4); ptr += 4;
@@ -459,14 +459,14 @@ void Optitrack::Unpack(char *pData)
           output << "Mean marker error: " << fError << std::endl;
 
           // release resources
-          if(markerIDs)
+          if (markerIDs)
             free(markerIDs);
-          if(markerSizes)
+          if (markerSizes)
             free(markerSizes);
-          if(markerData)
+          if (markerData)
             free(markerData);
-        } // next rigid body
-      } // next skeleton
+        }  // next rigid body
+      }  // next skeleton
     }
 
     // labeled markers (version 2.3 and later)
@@ -513,7 +513,7 @@ void Optitrack::Unpack(char *pData)
     // timestamp
     double timestamp = 0.0f;
     // 2.7 and later - increased from single to double precision
-    if (((major == 2) && (minor>=7)) || (major>2))
+    if (((major == 2) && (minor >= 7)) || (major > 2))
     {
       memcpy(&timestamp, ptr, 8); ptr += 8;
     }
@@ -537,7 +537,7 @@ void Optitrack::Unpack(char *pData)
     int eod = 0; memcpy(&eod, ptr, 4); ptr += 4;
     output << "End Packet\n-------------" << std::endl;
   }
-  else if (MessageID == 5) // Data Descriptions
+  else if (MessageID == 5)  // Data Descriptions
   {
     // number of datasets
     int nDatasets = 0; memcpy(&nDatasets, ptr, 4); ptr += 4;

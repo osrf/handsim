@@ -15,17 +15,16 @@
  *
 */
 
-#include <sstream>
 #include <limits>
-#include <gazebo/gui/GuiIface.hh>
-#include <gazebo/rendering/UserCamera.hh>
+#include <sstream>
 #include <gazebo/gui/GuiEvents.hh>
 #include <gazebo/gui/GuiIface.hh>
+#include <gazebo/rendering/UserCamera.hh>
 
 #include "handsim/config.hh"
-#include "handsim/TaskButton.hh"
-#include "handsim/Optitrack.hh"
 #include "handsim/HaptixGUIPlugin.hh"
+#include "handsim/Optitrack.hh"
+#include "handsim/TaskButton.hh"
 
 using namespace haptix_gazebo_plugins;
 
@@ -192,7 +191,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->topBarFrame->setLayout(topBarLayout);
   this->topBarFrame->setMaximumHeight(35);
   this->topBarFrame->setStyleSheet("\
-      QFrame{\
+      QFrame {\
         background-color: #fc8b03;\
         color: #eeeeee;\
       }");
@@ -255,8 +254,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
         "background-color: rgba(255, 255, 255, 255);"
         "border: 1px solid rgba(128, 128, 128, 255);"
         "border-bottom: 1px solid rgba(255, 255, 255, 255);"
-      "}"
-      );
+      "}");
 
   // Tab layout
   QVBoxLayout *tabFrameLayout = new QVBoxLayout();
@@ -277,24 +275,23 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       "margin-bottom: 0px;"
       "margin-left: 20px;"
       "margin-right: 20px;"
-      "background-color: #ffffff"
-      );
+      "background-color: #ffffff");
 
   // Reset/Next buttons style
   QString buttonsStyle(
       "QPushButton {\
-         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4, \
          radius: 1.35, stop: 0 #ddd, stop: 1 #666);\
          border: 2px solid #ccc;\
          border-radius: 4px;\
          color: #fff\
       }\
       QPushButton:hover {\
-         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\
+         background: qradialgradient(cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4, \
          radius: 1.35, stop: 0 #ddd, stop: 1 #777);\
       }\
       QPushButton:pressed {\
-         background: qradialgradient(cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\
+         background: qradialgradient(cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1, \
          radius: 1.35, stop: 0 #ddd, stop: 1 #999);\
       }");
 
@@ -378,8 +375,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->setStyleSheet(
       "QFrame {background-color: rgba(255, 255, 255, 255);"
       "color: rgba(100, 100, 100, 255);"
-      "}"
-      );
+      "}");
   this->setLayout(mainLayout);
   this->setPalette(QPalette(QColor(255, 255, 255, 0)));
 
@@ -731,8 +727,8 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     this->lastMotorCommand.ref_pos_enabled = 1;
-    //::hxSensor sensor;
-    if(::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
+    // ::hxSensor sensor;
+    if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return;
@@ -786,7 +782,8 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   //   gzerr << _value << " :(" << colorArray[0] << ", " << colorArray[1]
   //         << ", " << colorArray[2] << ")\n";
 
-  QBrush color(QColor(colorArray[0], colorArray[1], colorArray[2], colorArray[3]));
+  QBrush color(QColor(colorArray[0], colorArray[1],
+      colorArray[2], colorArray[3]));
 
   this->contactGraphicsItems[_contactName.toStdString()]->setBrush(color);
 }
@@ -1000,7 +997,7 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::PollSensors()
 {
-  while(!quit)
+  while (!quit)
   {
     if (this->hxInitialized)
     {
@@ -1067,10 +1064,12 @@ void HaptixGUIPlugin::PollTracking()
       ret = system("net rpc service -S HAPTIX-WIN-VM stop optitrackbridge -U"
             "\"Haptix Team\"%haptix > /dev/null 2>&1 &");
       gzdbg << "Stopping optitrackbridge service" << std::endl;
-      usleep(2000000); // wait 2 seconds for service call to take effect
+      // wait 2 seconds for service call to take effect
+      usleep(2000000);
     }
 
-    usleep(500000); // 2 hz
+    // 2 hz
+    usleep(500000);
   }
 }
 
@@ -1126,7 +1125,7 @@ void HaptixGUIPlugin::ResetModels()
   // Also reset wrist and finger posture
   memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
   this->lastMotorCommand.ref_pos_enabled = 1;
-  //::hxSensor sensor;
+  //  ::hxSensor sensor;
   if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     gzerr << "hx_update(): Request error.\n" << std::endl;
 
@@ -1136,11 +1135,11 @@ void HaptixGUIPlugin::ResetModels()
     this->lastGraspRequest.mutable_grasps(0)->set_grasp_value(0.0);
     haptix::comm::msgs::hxCommand resp;
     bool result;
-    if(!this->ignNode.Request("haptix/gazebo/Grasp",
-                              this->lastGraspRequest,
-                              1000,
-                              resp,
-                              result) || !result)
+    if (!this->ignNode.Request("haptix/gazebo/Grasp",
+                               this->lastGraspRequest,
+                               1000,
+                               resp,
+                               result) || !result)
     {
       gzerr << "Failed to call gazebo/Grasp service" << std::endl;
     }
@@ -1181,7 +1180,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
   if (key == '~')
   {
     // Send a motor command to hold current pose
-    //::hxSensor sensor;
+    //  ::hxSensor sensor;
     if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error." << std::endl;
@@ -1193,8 +1192,8 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       haptix::comm::msgs::hxGrasp req;
       haptix::comm::msgs::hxCommand rep;
       bool result;
-      if(!this->ignNode.Request("haptix/gazebo/Grasp",
-                                req, 1000, rep, result) || !result)
+      if (!this->ignNode.Request("haptix/gazebo/Grasp",
+                                 req, 1000, rep, result) || !result)
       {
         gzerr << "Failed to call gazebo/Grasp service" << std::endl;
       }
@@ -1281,7 +1280,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     bool result;
     // std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
     haptix::comm::msgs::hxCommand resp;
-    if(!this->ignNode.Request("haptix/gazebo/Grasp",
+    if (!this->ignNode.Request("haptix/gazebo/Grasp",
                               graspTmp,
                               1000,
                               resp,
@@ -1291,7 +1290,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       return false;
     }
 
-    //gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
+    // gzdbg << "Received grasp response: " << resp.DebugString() << std::endl;
 
     this->lastGraspRequest = graspTmp;
     // Assign to lastMotorCommand, because now we're tracking the target based
@@ -1324,7 +1323,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     {
       // Start with the last direct motor command.
       ::hxCommand cmd;
-      for (int i=0; i < this->robotInfo.motor_count; ++i)
+      for (int i = 0; i < this->robotInfo.motor_count; ++i)
         cmd.ref_pos[i] = this->lastMotorCommand.ref_pos[i];
 
       // Now add in the new diff
@@ -1339,7 +1338,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       //  for(int i = 0; i < this->robotInfo.motor_count; ++i)
       //    std::cout << cmd.ref_pos[i] << " ";
       // std::cout << std::endl;
-      //::hxSensor sensor;
+      //  ::hxSensor sensor;
       if (::hx_update(&cmd, &this->lastSensor) != ::hxOK)
       {
         gzerr << "hx_update(): Request error." << std::endl;
@@ -1357,7 +1356,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       */
 
       // And record it for next time
-      for (int i=0; i<this->robotInfo.motor_count; ++i)
+      for (int i = 0; i < this->robotInfo.motor_count; ++i)
       {
         if (cmd.ref_pos[i] < this->robotInfo.motor_limit[i][0])
         {
@@ -1450,11 +1449,11 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
   bool result;
   // std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
   haptix::comm::msgs::hxCommand resp;
-  if(!this->ignNode.Request("haptix/gazebo/Grasp",
-                            grasp,
-                            1000,
-                            resp,
-                            result) || !result)
+  if (!this->ignNode.Request("haptix/gazebo/Grasp",
+                             grasp,
+                             1000,
+                             resp,
+                             result) || !result)
   {
     gzerr << "Failed to call gazebo/Grasp service" << std::endl;
   }
@@ -1482,7 +1481,7 @@ void HaptixGUIPlugin::OnOptitrackAlive(ConstTimePtr& /*_time*/)
 //////////////////////////////////////////////////
 void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
 {
-  switch(_status)
+  switch (_status)
   {
     case 0:
     {
@@ -1544,8 +1543,9 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
 }
 
 /////////////////////////////////////////////////
-void HaptixGUIPlugin::enterEvent(QEvent */*_event*/)
+void HaptixGUIPlugin::enterEvent(QEvent *_event)
 {
+  (void)_event;
   QApplication::setOverrideCursor(Qt::ArrowCursor);
 }
 
@@ -1594,7 +1594,7 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
   }
   else if (menu && _event->type() == QEvent::KeyPress)
   {
-    QKeyEvent *qtKeyEvent = (QKeyEvent *)_event;
+    QKeyEvent *qtKeyEvent = static_cast<QKeyEvent *>(_event);
 
     gazebo::common::KeyEvent gazeboKeyEvent;
     gazeboKeyEvent.key = qtKeyEvent->key();

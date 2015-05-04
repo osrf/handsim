@@ -83,7 +83,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
   this->pausePub =
-    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_response");
+    this->gazeboNode->Advertise<gazebo::msgs::Int>(
+      "~/motion_tracking/pause_response");
 
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
@@ -263,7 +264,9 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrack.SetWorld(this->world->GetName());
 
   // Start receiving Optitrack tracking updates.
-  this->optitrackThread = std::make_shared<std::thread>(std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack));
+  this->optitrackThread = std::make_shared<std::thread>(
+    std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack));
+
   // initialize polhemus
   this->havePolhemus = false;
   if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,
@@ -582,7 +585,7 @@ void HaptixControlPlugin::LoadHandControl()
 
   // Get predefined grasp poses
   sdf::ElementPtr grasp = this->sdf->GetElement("grasp");
-  while(grasp)
+  while (grasp)
   {
     std::string name;
     grasp->GetAttribute("name")->Get(name);
@@ -591,7 +594,7 @@ void HaptixControlPlugin::LoadHandControl()
     std::istringstream iss(graspBuffer);
     std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
                                     std::istream_iterator<std::string>{}};
-    for(unsigned int i = 0; i < tokens.size(); i++)
+    for (unsigned int i = 0; i < tokens.size(); ++i)
       this->grasps[name].push_back(stof(tokens[i]));
     grasp = grasp->GetNextElement("grasp");
   }
@@ -852,8 +855,9 @@ void HaptixControlPlugin::UpdatePolhemus()
 }
 
 /////////////////////////////////////////////////
-void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
+void HaptixControlPlugin::UpdateKeyboard(double _dt)
 {
+  (void) _dt;
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   if (!this->staleKeyboardPose)
   {
@@ -1001,7 +1005,7 @@ void HaptixControlPlugin::GetHandControlFromClient()
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
   // command all joints
-  for(unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
     // get joint positions and velocities
     double position = this->haptixJoints[i]->GetAngle(0).Radian();
@@ -1408,14 +1412,14 @@ void HaptixControlPlugin::HaptixGraspCallback(
   _rep.set_gain_pos_enabled(this->robotCommand.gain_pos_enabled());
   _rep.set_gain_vel_enabled(this->robotCommand.gain_vel_enabled());
 
-  for (int i=0; i < _req.grasps_size(); ++i)
+  for (int i = 0; i < _req.grasps_size(); ++i)
   {
     std::string name = _req.grasps(i).grasp_name();
     std::map<std::string, std::vector<float> >::const_iterator g =
       this->grasps.find(name);
     if (g != this->grasps.end())
     {
-      for (unsigned int j=0;
+      for (unsigned int j = 0;
           j < g->second.size() && j < this->graspPositions.size(); ++j)
       {
         float value = _req.grasps(i).grasp_value();

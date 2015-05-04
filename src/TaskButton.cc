@@ -21,14 +21,12 @@ using namespace haptix_gazebo_plugins;
 
 /////////////////////////////////////////////////
 TaskButton::TaskButton(const std::string &_name, const std::string &_id,
-    int _taskIndex, const int _groupIndex)
+    int _taskIndex, const int _groupIndex) :
+  instructions(NULL)
+  index(_taskIndex),
+  group(_groupIndex),
+  id(_id)
 {
-  this->id = _id;
-  this->index = _taskIndex;
-  this->group = _groupIndex;
-
-  this->instructions = NULL;
-
   this->setCheckable(true);
   this->setText(QString::fromStdString(_name));
   this->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
@@ -53,9 +51,7 @@ TaskButton::TaskButton(const std::string &_name, const std::string &_id,
         "border: 0px;"
         "border-radius: 4px;"
         "color: #ffffff;"
-      "}"
-
-      );
+      "}");
 
   this->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
   connect(this, SIGNAL(clicked()), this, SLOT(OnButton()));
