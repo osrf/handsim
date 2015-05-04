@@ -53,10 +53,7 @@ TEST(SimApiClientTest, TwoProcesses)
     {
       ASSERT_GT(PID_grandchild, 0);
       //  TODO Better way to know when gzclient and gzserver are ready
-      {
-        // gazebo::transport::Node gzNode;
-        // Subscribe to a gazebo topic (HaptixControlPlugin emits one after the GUI plugin has loaded)
-      }
+
       sleep(5);
 
       hxsSimInfo simInfo;
