@@ -32,7 +32,7 @@ TEST(SimApiClientTest, TwoProcesses)
     // Try to kill this process when parent dies
     prctl(PR_SET_PDEATHSIG, SIGKILL);
     // Exec gzserver
-    char *args[] = {"--verbose", "worlds/arat.world"};
+    char *args[] = {(char *) "--verbose", (char *) "worlds/arat.world"};
     std::cout << "Launching gzserver." << std::endl;
     execvp("gzserver", args);
   }
@@ -45,7 +45,7 @@ TEST(SimApiClientTest, TwoProcesses)
       // Try to kill this process when parent dies
       prctl(PR_SET_PDEATHSIG, SIGKILL);
       // Exec gzclient
-      char *args[] = {"--verbose"};
+      char *args[] = {(char *) "--verbose"};
       std::cout << "Launching gzclient." << std::endl;
       execvp("gzclient", args);
     }
