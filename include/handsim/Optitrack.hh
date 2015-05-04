@@ -50,6 +50,7 @@ namespace haptix
       /// server IP is not needed for receiving tracking messages. These
       /// messages are received via multicast.
       /// \param[in] _verbose Whether or not to print incoming packets.
+      /// \param[in] _world Name of the Gazebo world for this receiver.
       public: Optitrack(const std::string &_serverIP = "",
                         const bool _verbose = false,
                         const std::string &_world="");
