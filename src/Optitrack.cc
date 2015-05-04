@@ -28,6 +28,8 @@
 // For sockaddr_in
 #include <netinet/in.h>
 
+#include <poll.h>
+
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -52,7 +54,7 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   const std::string &_world)
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
-  this->active = false;
+  this->active.store(false);
   this->myNetworkInterfaces = ignition::transport::determineInterfaces();
 }
 
@@ -119,14 +121,19 @@ void Optitrack::StartReception()
   this->optitrackAlivePub = this->gzNode->Advertise<gazebo::msgs::Time>
                     ("~/optitrack/"+optitrackAliveTopic);
 
-  this->active = true;
   this->RunReceptionTask();
 }
 
 /////////////////////////////////////////////////
 bool Optitrack::IsActive()
 {
-  return this->active;
+  return this->active.load();
+}
+
+/////////////////////////////////////////////////
+void Optitrack::Stop()
+{
+  this->active.store(false);
 }
 
 /////////////////////////////////////////////////
@@ -136,10 +143,36 @@ void Optitrack::RunReceptionTask()
   socklen_t addr_len = sizeof(struct sockaddr);
   sockaddr_in theirAddress;
   int iterations = 0;
-  while (1)
+
+  this->active.store(true);
+
+  while (this->IsActive())
   {
     // Block until we receive a datagram from the network (from anyone
     // including ourselves)
+    struct pollfd ufds[1];
+    memset(ufds, 0, sizeof(ufds));
+    ufds[0].fd = this->dataSocket;
+    ufds[0].events = POLLIN;
+
+    // Poll every 500 milliseconds
+    int pollReturnCode = poll(ufds, 1, 500);
+    if (pollReturnCode == -1)
+    {
+      gzerr << "Polling error!" << std::endl;
+      continue;
+    }
+    else if (pollReturnCode == 0)
+    {
+      // Timeout occurred, optitrack is probably not connected
+      continue;
+    }
+    else if (!(ufds[0].revents && POLLIN))
+    {
+      gzwarn << "Received out of band message in poll" << std::endl;
+      continue;
+    }
+
     if (recvfrom(this->dataSocket, buffer, sizeof(buffer), 0,
          (sockaddr *)&theirAddress, &addr_len) < 0)
     {
@@ -181,7 +214,6 @@ void Optitrack::RunReceptionTask()
     this->lastModelMap.clear();
     iterations++;
   }
-  this->active = false;
 }
 
 /////////////////////////////////////////////////
