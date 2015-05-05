@@ -1,10 +1,23 @@
+link_directories(
+  ${Boost_LIBRARY_DIR}
+  ${SDFormat_LIBRARY_DIRS}
+  ${GAZEBO_LIBRARY_DIRS}
+)
+
 include_directories (
+  ${SDFormat_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
+  ${GAZEBO_INCLUDE_DIRS}
+
   ${PROJECT_SOURCE_DIR}/test/gtest/include
   ${PROJECT_SOURCE_DIR}/test/gtest
   ${PROJECT_SOURCE_DIR}/test
+
+  # need this for test_config.h
+  ${PROJECT_BINARY_DIR}/test
 )
 
-configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test_config.h)
+configure_file (test_config.h.in ${PROJECT_BINARY_DIR}/test/test_config.h)
 
 # Build gtest
 add_library(gtest STATIC gtest/src/gtest-all.cc)

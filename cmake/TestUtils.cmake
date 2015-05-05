@@ -19,6 +19,12 @@ macro (handsim_build_tests)
       libgtest_main.a
       pthread
       HaptixTracking
+      ${HAPTIX-COMM_LIBRARIES}
+      gazebo_test_fixture
+      gazebo_sensors
+      ${GAZEBO_LIBRARIES}
+      ${Boost_LIBRARIES}
+      ${IGNITION-TRANSPORT_LIBRARIES}
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
