@@ -36,7 +36,6 @@ class SimApiTest : public gazebo::ServerFixture
 gazebo::physics::WorldPtr SimApiTest::InitWorld(const std::string &_worldFile)
 {
   boost::filesystem::path path = HANDSIM_TEST_PATH;
-  // TODO first check if path is on GazeboPaths
   gazebo::common::SystemPaths::Instance()->AddGazeboPaths(path.string());
   Load(_worldFile, true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
