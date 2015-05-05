@@ -16,9 +16,9 @@
 */
 
 #include <sys/prctl.h>
+#include "haptix/comm/haptix_sim.h"
 #include "gtest/gtest.h"
 #include <gazebo/transport/Node.hh>
-#include "haptix/comm/haptix_sim.h"
 
 #include "test_config.h"
 
@@ -27,12 +27,13 @@ TEST(SimApiClientTest, TwoProcesses)
   // Need to source setup.sh before running test
 
   pid_t PID_child = fork();
-  if (PID_child == 0) // child
+  if (PID_child == 0)
   {
     // Try to kill this process when parent dies
     prctl(PR_SET_PDEATHSIG, SIGKILL);
     // Exec gzserver
-    char *args[] = {(char *) "--verbose", (char *) "worlds/arat.world"};
+    char *args[] = {const_cast<char *>("--verbose"),
+        const_cast<char *>("worlds/arat.world")};
     std::cout << "Launching gzserver." << std::endl;
     execvp("gzserver", args);
   }
@@ -52,7 +53,7 @@ TEST(SimApiClientTest, TwoProcesses)
     else
     {
       ASSERT_GT(PID_grandchild, 0);
-      //  TODO Better way to know when gzclient and gzserver are ready
+      // TODO Better way to know when gzclient and gzserver are ready
 
       sleep(5);
 
@@ -200,7 +201,8 @@ TEST(SimApiClientTest, TwoProcesses)
       EXPECT_EQ(hxs_model_collide_mode("cricket_ball", &collide_mode), hxOK);
       std::cout << "hxs_model_collide_mode successful.";
       collide_mode = hxsNOCOLLIDE;
-      EXPECT_EQ(hxs_set_model_collide_mode("cricket_ball", &collide_mode), hxOK);
+      EXPECT_EQ(hxs_set_model_collide_mode("cricket_ball", &collide_mode),
+          hxOK);
       std::cout << "hxs_set_model_collide_mode successful.";
 
       kill(PID_child, SIGKILL);
