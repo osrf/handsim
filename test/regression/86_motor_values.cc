@@ -24,16 +24,32 @@
 
 class Issue86Test : public gazebo::ServerFixture
 {
+  public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
 };
+
+gazebo::physics::WorldPtr Issue86Test::InitWorld(const std::string &_worldFile)
+{
+  boost::filesystem::path path = HANDSIM_TEST_PATH;
+  gazebo::common::SystemPaths::Instance()->AddGazeboPaths(path.string());
+  Load(_worldFile, true);
+  gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  return world;
+}
+
 
 /////////////////////////////////////////////////
 TEST_F(Issue86Test, MotorLimits)
 {
-
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+  hx_robot_info();
 }
 
 /////////////////////////////////////////////////
 TEST_F(Issue86Test, MotorPositions)
 {
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
 
 }
