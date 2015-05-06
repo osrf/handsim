@@ -99,23 +99,35 @@ TEST_F(Issue86Test, MotorPositions)
     EXPECT_DOUBLE_EQ(sensor.motor_pos[i], 0);
   }
 
-  // Command the hand to some position
-  command.ref_pos_enabled = 1;
-  for (int i = 0; i < robot_info.motor_count; i++)
+  for (int j = 0; j < 3; j++)
   {
-    command.ref_pos[i] = i*0.1;
+    // Create a new command based on a sinusoidal wave.
+    for (int i = 0; i < robot_info.motor_count; ++i)
+    {
+      // Set the desired position of this motor
+      command.ref_pos[i] = 0.5 * sin(0.05 * 2.0 * M_PI * j * 0.01);
+    }
+    command.ref_pos_enabled = 1;
+    command.ref_vel_max_enabled = 0;
+    command.gain_pos_enabled = 0;
+    command.gain_vel_enabled = 0;
+
+    // Send the new joint command and receive the state update.
+    if (hx_update(&command, &sensor) != hxOK)
+    {
+      printf("hx_update(): Request error.\n");
+      continue;
+    }
+
+    unsigned int sleeptime_us = 10000;
+    usleep(sleeptime_us);
+    hx_update(&command, &sensor);
+
+    for (int i = 0; i < robot_info.motor_count; ++i)
+    {
+      EXPECT_DOUBLE_EQ(command.ref_pos[i], sensor.motor_pos[i]);
+    }
   }
-  hx_update(&command, &sensor);
 
-  // wait a moment
-  gazebo::common::Time::Sleep(1);
 
-  hx_update(&command, &sensor);
-
-  // Expect that update will have the correct command
-  for (int i = 0; i < robot_info.motor_count; i++)
-  {
-    // TODO: near and give some room?
-    EXPECT_DOUBLE_EQ(command.ref_pos[i], sensor.motor_pos[i]);
-  }
 }
