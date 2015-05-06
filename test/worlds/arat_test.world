@@ -20,7 +20,7 @@
         <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
         <hand_side>right</hand_side>
-        <timer_topic>~/timer_control</timer_topic> 
+        <timer_topic>~/timer_control</timer_topic>
 
         <contacts>
           <contact name="mpl::rPalm0">

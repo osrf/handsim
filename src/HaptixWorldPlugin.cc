@@ -51,7 +51,6 @@ HaptixWorldPlugin::HaptixWorldPlugin()
 /////////////////////////////////////////////////
 HaptixWorldPlugin::~HaptixWorldPlugin()
 {
-  this->timerPublisher->Fini();
   this->worldControlPub->Fini();
 
   gazebo::event::Events::DisconnectWorldUpdateBegin(
@@ -150,9 +149,7 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
   this->gzNode->Init(this->world->GetName());
-  // TODO: different timer topics?
-  this->timerPublisher =
-      this->gzNode->Advertise<gazebo::msgs::GzString>("~/timer_control");
+
   this->worldControlPub = this->gzNode->Advertise<gazebo::msgs::WorldControl>
                               ("~/world_control");
 
@@ -162,15 +159,6 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
   this->visPub = this->gzNode->Advertise<gazebo::msgs::Visual>("~/visual");
 
   this->userCameraPoseValid = false;
-  if (this->sdf->HasElement("gui"))
-  {
-    sdf::ElementPtr camera = this->sdf->GetElement("gui")->GetElement("camera");
-    if (camera && camera->HasElement("pose"))
-    {
-      this->userCameraPose =
-          camera->GetElement("pose")->Get<gazebo::math::Pose>();
-    }
-  }
 
   this->userCameraPub =
       this->gzNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
@@ -309,6 +297,10 @@ void HaptixWorldPlugin::OnWorldUpdate()
 void HaptixWorldPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 {
   this->userCameraPose = gazebo::msgs::Convert(*_msg);
+  if (!this->userCameraPoseValid)
+  {
+    this->initialCameraPose = this->userCameraPose;
+  }
   this->userCameraPoseValid = true;
 }
 
@@ -1021,7 +1013,11 @@ void HaptixWorldPlugin::HaptixResetCallback(
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // TODO initial camera pos
+  GZ_ASSERT(this->userCameraPub != NULL, "Camera publisher was NULL!");
+  gazebo::msgs::Pose poseMsg;
+  gazebo::msgs::Set(&poseMsg, this->initialCameraPose);
+  this->userCameraPub->Publish(poseMsg);
+
   if (_req.data() == 0)
   {
     // Signal to WorldControl to reset the world

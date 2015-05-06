@@ -739,6 +739,18 @@ TEST_F(SimApiTest, HxsReset)
 {
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
+  gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
+  ASSERT_TRUE(scene != NULL);
+  gazebo::math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
+  // Spawn a camera
+  gazebo::rendering::UserCameraPtr camera =
+      scene->CreateUserCamera("test_camera");
+  camera->SetWorldPose(cameraPose);
+  camera->Update();
+  gazebo::gui::set_active_camera(camera);
+  ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
+  gazebo::common::Time::Sleep(1);
+  camera->SetWorldPose(gazebo::math::Pose::Zero);
 
   // Wait a little while for the world to initialize
   world->Step(20);
@@ -772,6 +784,14 @@ TEST_F(SimApiTest, HxsReset)
     EXPECT_NEAR(modelPose.rot.y, initialPoses[model->GetName()].rot.y, 5e-2);
     EXPECT_NEAR(modelPose.rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
   }
+  // Expect that the camera pose was set back to its initial value
+  gazebo::math::Pose currentCameraPose = camera->GetWorldPose();
+  EXPECT_NEAR(currentCameraPose.pos.x, 1, 1e-6);
+  EXPECT_NEAR(currentCameraPose.pos.y, 2, 1e-6);
+  EXPECT_NEAR(currentCameraPose.pos.z, 3, 1e-6);
+  EXPECT_NEAR(currentCameraPose.rot.GetAsEuler().x, 3.14159, 1e-6);
+  EXPECT_NEAR(currentCameraPose.rot.GetAsEuler().y, 0.707, 1e-6);
+  EXPECT_NEAR(currentCameraPose.rot.GetAsEuler().z, -0.707, 1e-6);
 
   // Move everything again
   for (auto model : world->GetModels())

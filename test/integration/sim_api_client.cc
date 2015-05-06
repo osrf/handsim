@@ -24,8 +24,6 @@
 
 TEST(SimApiClientTest, TwoProcesses)
 {
-  // Need to source setup.sh before running test
-
   pid_t PID_child = fork();
   if (PID_child == 0)
   {
@@ -53,8 +51,8 @@ TEST(SimApiClientTest, TwoProcesses)
     else
     {
       ASSERT_GT(PID_grandchild, 0);
-      // TODO Better way to know when gzclient and gzserver are ready
 
+      // TODO Better way to know when gzclient and gzserver are ready
       sleep(5);
 
       hxsSimInfo simInfo;
@@ -78,6 +76,7 @@ TEST(SimApiClientTest, TwoProcesses)
 
       EXPECT_EQ(hxs_set_camera_transform(&cameraTransform), hxOK);
       std::cout << "hxs_set_camera_transform successful." << std::endl;
+      sleep(5);
 
       EXPECT_EQ(hxs_contacts("cricket_ball", &contactPoints), hxOK);
       std::cout << "hxs_contacts successful." << std::endl;
@@ -176,34 +175,36 @@ TEST(SimApiClientTest, TwoProcesses)
       std::cout << "hxs_set_model_transform successful." << std::endl;
 
       EXPECT_EQ(hxs_reset(0), hxOK);
+      // sleep to check manually that it did the right thing
+      sleep(5);
 
       EXPECT_EQ(hxs_reset(1), hxOK);
-      std::cout << "hxs_reset successful.";
+      std::cout << "hxs_reset successful." << std::endl;
 
       EXPECT_EQ(hxs_start_logging("logfile"), hxOK);
-      std::cout << "hxs_start_logging successful.";
+      std::cout << "hxs_start_logging successful." << std::endl;
       // TODO delete the logfile?
 
       int is_logging;
       EXPECT_EQ(hxs_is_logging(&is_logging), hxOK);
-      std::cout << "hxs_is_logging successful.";
+      std::cout << "hxs_is_logging successful." << std::endl;
 
       EXPECT_EQ(hxs_stop_logging(), hxOK);
-      std::cout << "hxs_stop_logging successful.";
+      std::cout << "hxs_stop_logging successful." << std::endl;
 
       EXPECT_EQ(hxs_model_color("cricket_ball", &color), hxOK);
-      std::cout << "hxs_model_color successful.";
+      std::cout << "hxs_model_color successful." << std::endl;
 
       EXPECT_EQ(hxs_set_model_color("cricket_ball", &color), hxOK);
-      std::cout << "hxs_set_model_color successful.";
+      std::cout << "hxs_set_model_color successful." << std::endl;
 
       hxsCollideMode collide_mode;
       EXPECT_EQ(hxs_model_collide_mode("cricket_ball", &collide_mode), hxOK);
-      std::cout << "hxs_model_collide_mode successful.";
+      std::cout << "hxs_model_collide_mode successful." << std::endl;
       collide_mode = hxsNOCOLLIDE;
       EXPECT_EQ(hxs_set_model_collide_mode("cricket_ball", &collide_mode),
           hxOK);
-      std::cout << "hxs_set_model_collide_mode successful.";
+      std::cout << "hxs_set_model_collide_mode successful." << std::endl;
 
       kill(PID_child, SIGKILL);
     }

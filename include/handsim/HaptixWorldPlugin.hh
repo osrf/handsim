@@ -508,6 +508,9 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \brief Mutex to protect the World pointer
   private: std::mutex worldMutex;
 
+  /// \brief The initial camera pose, from SDF.
+  private: gazebo::math::Pose initialCameraPose;
+
   /// \brief Last known viewpoint pose
   private: gazebo::math::Pose userCameraPose;
 
