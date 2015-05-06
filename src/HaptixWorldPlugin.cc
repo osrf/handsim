@@ -85,21 +85,19 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
-    sdf::ElementPtr _sdf)
+void HaptixWorldPlugin::InitializeColorMap()
 {
-  this->world = _world;
-  GZ_ASSERT(this->world != NULL, "Got NULL world pointer!");
-  this->sdf = _sdf;
-  GZ_ASSERT(this->sdf != NULL, "Got NULL SDF element pointer!");
-
   // Initialize color map.
   for (auto model : this->world->GetModels())
   {
     // A model might have multiple links, a link might have multiple visuals
     // with different colors
     // whatever man, this is probably not a typical case for teams
-    int numVis = 0;
+
+    // numVecs: the number of vectors we average over.
+    // For a model with m visuals, numVecs will be 2*m
+    // because each visual has two color vectors, ambient and diffuse
+    int numVecs = 0;
     double r, g, b, a;
     r = g = b = a = 0;
 
@@ -137,15 +135,27 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
           g += diffuse.g;
           b += diffuse.b;
           a += diffuse.a;
-          numVis+=2;
+          numVecs+=2;
         }
       }
     }
-    if (numVis == 0)
-      numVis = 1;
-    gazebo::common::Color color(r / numVis, g / numVis, b / numVis, a / numVis);
+    if (numVecs == 0)
+      numVecs = 1;
+    gazebo::common::Color color(r / numVecs, g / numVecs, b / numVecs, a / numVecs);
     this->lastKnownColors[model->GetId()] = color;
   }
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
+    sdf::ElementPtr _sdf)
+{
+  this->world = _world;
+  GZ_ASSERT(this->world != NULL, "Got NULL world pointer!");
+  this->sdf = _sdf;
+  GZ_ASSERT(this->sdf != NULL, "Got NULL SDF element pointer!");
+
+  this->InitializeColorMap();
 
   this->gzNode = gazebo::transport::NodePtr(new gazebo::transport::Node());
   this->gzNode->Init(this->world->GetName());
@@ -255,13 +265,10 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::Init()
-{
-}
-
-/////////////////////////////////////////////////
 void HaptixWorldPlugin::Reset()
 {
+  this->wrenchDurations.clear();
+  this->InitializeColorMap();
 }
 
 /////////////////////////////////////////////////
@@ -403,6 +410,12 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result)
 {
+  if (!_req.has_data())
+  {
+    gzerr << "String request did not have data field!" << std::endl;
+    _result = false;
+    return;
+  }
   std::string modelName = _req.data();
   std::lock_guard<std::mutex> lock(this->worldMutex);
 
@@ -556,6 +569,41 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxModel &_rep, bool &_result)
 {
+  if (!_req.has_string_value())
+  {
+    gzerr << "Missing string field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
+  if (!_req.has_vector3())
+  {
+    gzerr << "Missing vector3 field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
+  if (!_req.has_orientation())
+  {
+    gzerr << "Missing orientation field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
+  if (!_req.has_gravity_mode())
+  {
+    gzerr << "Missing gravity_mode field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
   std::string xml = _req.string_value();
   sdf::SDF modelSDF;
   modelSDF.SetFromString(xml);
@@ -602,7 +650,7 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
       return;
     }
     tries++;
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     model = this->world->GetModel(_req.name());
   }
 
@@ -711,6 +759,14 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
     _result = false;
     return;
   }
+
+  if (!_req.has_transform())
+  {
+    gzerr << "Missing transform field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
   gazebo::math::Pose pose;
   if (!ConvertTransform(_req.transform(), pose))
   {
@@ -759,6 +815,15 @@ void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_vector3())
+  {
+    gzerr << "Missing vector3 field in hxParam" << std::endl;
+  }
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+  }
+
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -819,6 +884,14 @@ void HaptixWorldPlugin::HaptixSetAngularVelocityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_vector3())
+  {
+    gzerr << "Missing vector3 field in hxParam" << std::endl;
+  }
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+  }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!this->world)
@@ -848,6 +921,25 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_vector3())
+  {
+    gzerr << "Missing vector3 field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_float_value())
+  {
+    gzerr << "Missing float field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -900,6 +992,24 @@ void HaptixWorldPlugin::HaptixApplyTorqueCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_vector3())
+  {
+    gzerr << "Missing vector3 field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_float_value())
+  {
+    gzerr << "Missing float field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -951,6 +1061,24 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_wrench())
+  {
+    gzerr << "Missing wrench field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_float_value())
+  {
+    gzerr << "Missing float field in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -1161,6 +1289,19 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_name())
+  {
+    gzerr << "Missing required field name in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_gravity_mode())
+  {
+    gzerr << "Missing required field gravity_mode in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -1188,6 +1329,18 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_name())
+  {
+    gzerr << "Missing required field name in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_color())
+  {
+    gzerr << "Missing required field color in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -1301,6 +1454,18 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  if (!_req.has_name())
+  {
+    gzerr << "Missing required field name in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
+  if (!_req.has_collide_mode())
+  {
+    gzerr << "Missing required field collide_mode in hxParam" << std::endl;
+    _result = false;
+    return;
+  }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
