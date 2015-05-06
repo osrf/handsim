@@ -88,7 +88,6 @@ TEST_F(Issue86Test, MotorPositions)
   ASSERT_TRUE(world != NULL);
 
   hxRobotInfo robot_info;
-  hxCommand command;
   hxSensor sensor;
   ASSERT_EQ(hx_robot_info(&robot_info), hxOK);
 
@@ -101,6 +100,7 @@ TEST_F(Issue86Test, MotorPositions)
 
   for (int j = 0; j < 3; j++)
   {
+    hxCommand command;
     // Create a new command based on a sinusoidal wave.
     for (int i = 0; i < robot_info.motor_count; ++i)
     {
@@ -125,6 +125,7 @@ TEST_F(Issue86Test, MotorPositions)
 
     for (int i = 0; i < robot_info.motor_count; ++i)
     {
+      gzdbg << "Verifying motor index: " << i << std::endl;
       EXPECT_DOUBLE_EQ(command.ref_pos[i], sensor.motor_pos[i]);
     }
   }
