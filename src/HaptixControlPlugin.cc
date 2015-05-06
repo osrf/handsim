@@ -1660,7 +1660,25 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-/*  testing offset frame between cameraMarker and elbowMarker
+    math::Pose worldArm = this->elbowMarkerCorrected
+      + this->targetBaseLinkPose;
+
+    // goal: arm sensor orientation should be the same as the screen rotation
+    // worldScreen.rot is the screen orientation in the world frame
+    // worldArm.rot is the arm orientation in the world frame, set them equal
+    worldArm.rot = (this->elbowMarker + this->targetBaseLinkPose).rot;
+    // solve for elbowMarkerCorrected.rot based on new worldArm
+    this->elbowMarkerCorrected.rot =
+      (worldArm - this->targetBaseLinkPose).rot;
+
+    // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
+    this->optitrackArmOffset =  cameraMarker.GetInverse()
+      + this->elbowMarkerCorrected
+      + this->targetBaseLinkPose + this->worldScreen.GetInverse() +
+        this->monitorScreen + this->cameraMonitor;
+
+/*
+    // testing offset frame between cameraMarker and elbowMarker
     this->optitrackArmOffset =
                                 this->elbowMarker
                               + this->targetBaseLinkPose
@@ -1670,16 +1688,9 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
                               + cameraMarker.GetInverse()
                               ;
 */
+/*
+    // testing something similar to head tracking without rotation
     // offset frame between worldScreen and monitorScreen
-    this->optitrackArmOffset =
-                                this->monitorScreen
-                              + this->cameraMonitor
-                              + cameraMarker.GetInverse()
-                              + this->elbowMarker
-                              + this->targetBaseLinkPose
-                              + this->worldScreen.GetInverse()
-                              ;
-/* testing something similar to head tracking without rotation
     this->optitrackArmOffset =
                                 this->monitorScreen
                               + this->cameraMonitor
@@ -1737,7 +1748,15 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
     //   marker          elbowMarker.Inv        elbow
     //   world           targetBaseLink         elbow
     //
-/*  testing offset frame between cameraMarker and elbowMarker
+
+    // T_WE = T_AE + T_C'A + T_CC' -T_CM -T_MS + T_WS
+    this->targetBaseLinkPose = this->elbowMarkerCorrected.GetInverse()
+        + cameraMarker
+        + this->optitrackArmOffset + this->cameraMonitor.GetInverse() +
+            this->monitorScreen.GetInverse() + this->worldScreen;
+
+/*
+    // testing offset frame between cameraMarker and elbowMarker
     this->targetBaseLinkPose =
                   this->elbowMarker.GetInverse()
                 + this->optitrackArmOffset
@@ -1747,6 +1766,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
                 + this->worldScreen
                 ;
 */
+/*
     // offset frame between worldScreen and monitorScreen
     this->targetBaseLinkPose =
                   this->elbowMarker.GetInverse()
@@ -1756,37 +1776,8 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
                 + this->optitrackArmOffset
                 + this->worldScreen
                 ;
-  }
-
-/*
-  if (this->pauseTracking || !this->armOffsetInitialized)
-  {
-    math::Pose worldArm = this->elbowMarkerCorrected
-      + this->targetBaseLinkPose;
-
-    // goal: arm sensor orientation should be the same as the screen rotation
-    // worldScreen.rot is the screen orientation in the world frame
-    // worldArm.rot is the arm orientation in the world frame, set them equal
-    worldArm.rot = (this->elbowMarker + this->targetBaseLinkPose).rot;
-    // solve for elbowMarkerCorrected.rot based on new worldArm
-    this->elbowMarkerCorrected.rot = (worldArm - this->targetBaseLinkPose).rot;
-
-    // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
-    this->optitrackArmOffset =  cameraArm.GetInverse()
-      + this->elbowMarkerCorrected
-      + this->targetBaseLinkPose + this->worldScreen.GetInverse()
-      + this->monitorScreen + this->cameraMonitor;
-    this->armOffsetInitialized = true;
-  }
-  else if (this->armOffsetInitialized)
-  {
-    // T_WE = T_AE + T_C'A + T_CC' -T_CM -T_MS + T_WS
-    this->targetBaseLinkPose =
-          this->elbowMarkerCorrected.GetInverse() + cameraArm
-        + this->optitrackArmOffset + this->cameraMonitor.GetInverse()
-        + this->monitorScreen.GetInverse() + this->worldScreen;
-  }
 */
+  }
 }
 
 //////////////////////////////////////////////////
