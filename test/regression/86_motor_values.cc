@@ -41,7 +41,7 @@ gazebo::physics::WorldPtr Issue86Test::InitWorld(const std::string &_worldFile)
 /////////////////////////////////////////////////
 TEST_F(Issue86Test, MotorLimits)
 {
-  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat.world");
   ASSERT_TRUE(world != NULL);
 
   // Get joint limits indexed on the numerical motor index
@@ -84,8 +84,38 @@ TEST_F(Issue86Test, MotorLimits)
 /////////////////////////////////////////////////
 TEST_F(Issue86Test, MotorPositions)
 {
-  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat.world");
   ASSERT_TRUE(world != NULL);
 
+  hxRobotInfo robot_info;
+  hxCommand command;
+  hxSensor sensor;
+  ASSERT_EQ(hx_robot_info(&robot_info), hxOK);
 
+  // Expect that the hand starts at 0
+  hx_read_sensors(&sensor);
+  for (int i = 0; i < robot_info.motor_count; i++)
+  {
+    EXPECT_DOUBLE_EQ(sensor.motor_pos[i], 0);
+  }
+
+  // Command the hand to some position
+  command.ref_pos_enabled = 1;
+  for (int i = 0; i < robot_info.motor_count; i++)
+  {
+    command.ref_pos[i] = i*0.1;
+  }
+  hx_update(&command, &sensor);
+
+  // wait a moment
+  gazebo::common::Time::Sleep(1);
+
+  hx_update(&command, &sensor);
+
+  // Expect that update will have the correct command
+  for (int i = 0; i < robot_info.motor_count; i++)
+  {
+    // TODO: near and give some room?
+    EXPECT_DOUBLE_EQ(command.ref_pos[i], sensor.motor_pos[i]);
+  }
 }
