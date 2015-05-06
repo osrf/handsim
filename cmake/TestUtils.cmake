@@ -21,6 +21,10 @@ macro (handsim_build_tests)
       HaptixTracking
       ${HAPTIX-COMM_LIBRARIES}
       gazebo_test_fixture
+      # TODO remove gazebo issue #1568 is resolved:
+      # https://bitbucket.org/osrf/gazebo/issue/1568
+      # see also handsim issue 87:
+      # https://bitbucket.org/osrf/handsim/issue/87
       gazebo_sensors
       ${GAZEBO_LIBRARIES}
       ${Boost_LIBRARIES}
