@@ -1536,17 +1536,39 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
        && this->userCameraPoseValid)
   {
     // T_CC' = (-T_CH - T_MS + T_WS) - (-T_C'Marker - T_HMarker + T_WH)
-    // comptue optitrackHeadOffset as a transform from screen
-    // to "calibrated screen"
+    //
+    // comptue optitrackHeadOffset
     //
     this->optitrackHeadOffset =
-                                this->headMarker
-                              + this->userCameraPose
-                              + this->worldScreen.GetInverse()
-                              + this->monitorScreen
+                                this->monitorScreen
                               + this->cameraMonitor
                               + cameraMarker.GetInverse()
+                              + this->headMarker
+                              + this->userCameraPose
+                              + this->worldScreen.GetInverse()
                               ;
+
+
+
+    // force a no-rotation offset
+    this->optitrackHeadOffset.rot = math::Quaternion();
+
+    // compute the erroroneous user camera result from above
+    gazebo::math::Pose targetCameraWrong =
+                                this->headMarker.GetInverse()
+                              + cameraMarker
+                              + this->cameraMonitor.GetInverse()
+                              + this->monitorScreen.GetInverse()
+                              + this->optitrackHeadOffset
+                              + this->worldScreen
+                              ;
+
+    // correct error from forcing rotation to zero by
+    // adding user camera frame error from previous step
+    // (userCameraPose.pos - targetCameraWrong.pos) to create a final
+    // optitrackHeadOffset.pos that will not introduce user camera frame offset
+    this->optitrackHeadOffset.pos = this->optitrackHeadOffset.pos
+      + (this->userCameraPose.pos - targetCameraWrong.pos);
 
     this->headOffsetInitialized = true;
   }
@@ -1571,28 +1593,23 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     //   screen          monitorScreen.Inv      monitor
     //   monitor         cameraMonitor.Inv      camera
     //   camera          cameraMarker           marker
-    //   head            optitrackHeadOffset    marker
+    //   screen          optitrackHeadOffset    screen offset
     //   marker          headMarker.Inv         head
     //   world           targetCamera           head (user camera)
     //
     // T_WH = T_HMarker + T_C'Marker + T_CC' -T_CM -T_MS + T_WS
     gazebo::math::Pose targetCamera =
                                 this->headMarker.GetInverse()
-                              + this->optitrackHeadOffset
                               + cameraMarker
                               + this->cameraMonitor.GetInverse()
                               + this->monitorScreen.GetInverse()
+                              + this->optitrackHeadOffset
                               + this->worldScreen
                               ;
     if (!this->viewpointRotationsEnabled)
     {
       targetCamera.rot = this->userCameraPose.rot;
     }
-    gzerr << "monitorScreen ["
-          << monitorScreen
-          << "] cameraMarker ["
-          << cameraMarker
-          << "]\n";
     gazebo::msgs::Set(&this->joyMsg, targetCamera);
     this->viewpointJoyPub->Publish(this->joyMsg);
   }
