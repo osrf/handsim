@@ -309,7 +309,6 @@
          model in simulation frame,
          used for debugging pose transforms
          to check alignment of movement.
-    -->
     <model name="screen">
       <pose>0 -0.65 1.5 0 0 0</pose>
       <link name="link">
@@ -324,6 +323,7 @@
       </link>
       <static>true</static>
     </model>
+    -->
 
     <!-- A global light source -->
     <include>
