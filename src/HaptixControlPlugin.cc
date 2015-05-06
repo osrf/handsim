@@ -20,7 +20,6 @@
 
 #include "handsim/HaptixControlPlugin.hh"
 
-
 namespace gazebo
 {
 /////////////////////////////////////////////////
@@ -60,7 +59,13 @@ HaptixControlPlugin::HaptixControlPlugin()
 // Destructor
 HaptixControlPlugin::~HaptixControlPlugin()
 {
-  this->polhemusThread.join();
+  if (this->polhemusThread.joinable())
+    this->polhemusThread.join();
+
+  this->optitrack.Stop();
+  if (this->optitrackThread)
+    this->optitrackThread->join();
+
   event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
   event::Events::DisconnectWorldUpdateEnd(this->updateConnectionEnd);
 }
@@ -279,7 +284,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrack.SetWorld(this->world->GetName());
 
   // Start receiving Optitrack tracking updates.
-  this->optitrackThread = std::make_shared<std::thread>(std::thread(&haptix::tracking::Optitrack::StartReception, this->optitrack));
+  this->optitrackThread = std::make_shared<std::thread>(std::thread(
+      &haptix::tracking::Optitrack::StartReception, std::ref(this->optitrack)));
   // initialize polhemus
   this->havePolhemus = false;
   if (!(this->polhemusConn = polhemus_connect_usb(LIBERTY_HS_VENDOR_ID,

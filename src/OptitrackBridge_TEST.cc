@@ -73,13 +73,13 @@ TEST(OptitrackBridgeTest, IO)
   EXPECT_EQ(comms.MsgLength(tracking1), expectedSize);
 
   // Allocate and serialize.
-  int msgLength = comms.Pack(tracking1, buffer);
+  size_t msgLength = comms.Pack(tracking1, buffer);
   ASSERT_EQ(msgLength, expectedSize);
 
   // Unpack data.
   TrackingInfo_t tracking2;
   EXPECT_TRUE(comms.Unpack(&buffer[0], tracking2));
-  ASSERT_EQ(tracking2.bodies.size(), 3);
+  ASSERT_EQ(tracking2.bodies.size(), 3u);
 
   // Check data.
   EXPECT_DOUBLE_EQ(tracking2.timestamp, tracking1.timestamp);
@@ -89,9 +89,9 @@ TEST(OptitrackBridgeTest, IO)
 
   // Head rigid body.
   auto pose = tracking2.bodies[head].body;
-  ASSERT_EQ(pose.size(), 7);
+  ASSERT_EQ(pose.size(), 7u);
   auto markers = tracking2.bodies[head].markers;
-  ASSERT_EQ(markers.size(), 3);
+  ASSERT_EQ(markers.size(), 3u);
 
   float value = 1.0;
   for (size_t i = 0; i < pose.size(); ++i)
@@ -111,9 +111,9 @@ TEST(OptitrackBridgeTest, IO)
 
   // Monitor rigid body.
   pose = tracking2.bodies[monitor].body;
-  ASSERT_EQ(pose.size(), 7);
+  ASSERT_EQ(pose.size(), 7u);
   markers = tracking2.bodies[monitor].markers;
-  ASSERT_EQ(markers.size(), 3);
+  ASSERT_EQ(markers.size(), 3u);
 
   value = 11.0;
   for (size_t i = 0; i < pose.size(); ++i)
@@ -133,9 +133,9 @@ TEST(OptitrackBridgeTest, IO)
 
   // Hand rigid body.
   pose = tracking2.bodies[hand].body;
-  ASSERT_EQ(pose.size(), 7);
+  ASSERT_EQ(pose.size(), 7u);
   markers = tracking2.bodies[hand].markers;
-  ASSERT_EQ(markers.size(), 3);
+  ASSERT_EQ(markers.size(), 3u);
 
   value = 21.0;
   for (size_t i = 0; i < pose.size(); ++i)
