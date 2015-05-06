@@ -1530,31 +1530,56 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
   std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
 
-  gazebo::math::Pose cameraHead = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose cameraMarker = gazebo::msgs::Convert(*_msg);
 
   if ((this->pauseTracking || !this->headOffsetInitialized)
        && this->userCameraPoseValid)
   {
     // T_CC' = (-T_CH - T_MS + T_WS) - (-T_C'Marker - T_HMarker + T_WH)
-    // comptue optitrackHeadOffset as a transform from screen to "calibrated screen"
+    // comptue optitrackHeadOffset as a transform from screen
+    // to "calibrated screen"
+    //
     this->optitrackHeadOffset =
                                 this->headMarker
                               + this->userCameraPose
                               + this->worldScreen.GetInverse()
                               + this->monitorScreen
                               + this->cameraMonitor
-                              + cameraHead.GetInverse()
+                              + cameraMarker.GetInverse()
                               ;
 
     this->headOffsetInitialized = true;
   }
   else if (this->headOffsetInitialized)
   {
+    //
+    // List of frames
+    //
+    //   Frame           Description
+    // --------------------------------------------------------
+    //   world           world or inertial frame in simulation.
+    //   screen          upper right corner of physical screen
+    //                   z-up, x-forward, z-left.
+    //   monitor         frame fored by its 3 optitrack markers.
+    //   camera          frame of the camera.
+    //
+    // The chain of transforms (from world to user camera):
+    //
+    //   Frame           Transform              Frame
+    // --------------------------------------------------------
+    //   world           worldScreen            screen
+    //   screen          monitorScreen.Inv      monitor
+    //   monitor         cameraMonitor.Inv      camera
+    //   camera          cameraMarker           marker
+    //   head            optitrackHeadOffset    marker
+    //   marker          headMarker.Inv         head
+    //   world           targetCamera           head (user camera)
+    //
     // T_WH = T_HMarker + T_C'Marker + T_CC' -T_CM -T_MS + T_WS
     gazebo::math::Pose targetCamera =
                                 this->headMarker.GetInverse()
                               + this->optitrackHeadOffset
-                              + cameraHead
+                              + cameraMarker
                               + this->cameraMonitor.GetInverse()
                               + this->monitorScreen.GetInverse()
                               + this->worldScreen
@@ -1563,6 +1588,11 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     {
       targetCamera.rot = this->userCameraPose.rot;
     }
+    gzerr << "monitorScreen ["
+          << monitorScreen
+          << "] cameraMarker ["
+          << cameraMarker
+          << "]\n";
     gazebo::msgs::Set(&this->joyMsg, targetCamera);
     this->viewpointJoyPub->Publish(this->joyMsg);
   }
