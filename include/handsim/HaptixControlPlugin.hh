@@ -526,11 +526,8 @@ namespace gazebo
 
     /// \brief hardcoded offset between controlled position of the link and
     /// arm sensor
-    private: gazebo::math::Pose elbowArm;
-
-    /// \brief same as elbowArm but with orientation corrected by screen
-    /// orientation
-    private: gazebo::math::Pose elbowArmCorrected;
+    private: gazebo::math::Pose elbowMarker;
+    private: gazebo::math::Pose elbowMarkerCorrected;
 
     /// \brief Transform from camera frame to Optitrack head marker.
     private: math::Pose headMarker;

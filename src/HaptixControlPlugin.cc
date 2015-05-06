@@ -254,15 +254,15 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   // Transform from elbow of simulated arm to marker
-  this->elbowArm = gazebo::math::Pose(gazebo::math::Vector3(0.0, -0.20, 0.07),
-                                      gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
+  this->elbowMarker = math::Pose(gazebo::math::Vector3(0.0, -0.20, 0.07),
+                                 gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
   if (this->sdf->HasElement("base_link_sensor_offset"))
   {
-    sdf::ElementPtr elbowArmSdf =
+    sdf::ElementPtr elbowMarkerSdf =
         this->sdf->GetElement("base_link_sensor_offset");
-    this->elbowArm = elbowArmSdf->Get<math::Pose>();
+    this->elbowMarker = elbowMarkerSdf->Get<math::Pose>();
   }
-  this->elbowArmCorrected = this->elbowArm;
+  this->elbowMarkerCorrected = elbowMarker;
 
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
@@ -1545,36 +1545,49 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     //
     // comptue optitrackHeadOffset
     //
-    this->optitrackHeadOffset =
-                                this->monitorScreen
-                              + this->cameraMonitor
-                              + cameraMarker.GetInverse()
-                              + this->headMarker
-                              + this->userCameraPose
-                              + this->worldScreen.GetInverse()
-                              ;
+    if (this->viewpointRotationsEnabled)
+    {
+      this->optitrackHeadOffset =
+                                  this->headMarker
+                                + this->userCameraPose
+                                + this->worldScreen.GetInverse()
+                                + this->monitorScreen
+                                + this->cameraMonitor
+                                + cameraMarker.GetInverse()
+                                ;
+    }
+    else
+    {
+      this->optitrackHeadOffset =
+                                  this->monitorScreen
+                                + this->cameraMonitor
+                                + cameraMarker.GetInverse()
+                                + this->headMarker
+                                + this->userCameraPose
+                                + this->worldScreen.GetInverse()
+                                ;
 
+      // force a no-rotation offset
+      this->optitrackHeadOffset.rot = math::Quaternion();
 
+      // compute the erroroneous target pose from above
+      gazebo::math::Pose targetCameraWrong =
+                                  this->headMarker.GetInverse()
+                                + cameraMarker
+                                + this->cameraMonitor.GetInverse()
+                                + this->monitorScreen.GetInverse()
+                                + this->optitrackHeadOffset
+                                + this->worldScreen
+                                ;
 
-    // force a no-rotation offset
-    this->optitrackHeadOffset.rot = math::Quaternion();
-
-    // compute the erroroneous user camera result from above
-    gazebo::math::Pose targetCameraWrong =
-                                this->headMarker.GetInverse()
-                              + cameraMarker
-                              + this->cameraMonitor.GetInverse()
-                              + this->monitorScreen.GetInverse()
-                              + this->optitrackHeadOffset
-                              + this->worldScreen
-                              ;
-
-    // correct error from forcing rotation to zero by
-    // adding user camera frame error from previous step
-    // (userCameraPose.pos - targetCameraWrong.pos) to create a final
-    // optitrackHeadOffset.pos that will not introduce user camera frame offset
-    this->optitrackHeadOffset.pos = this->optitrackHeadOffset.pos
-      + (this->userCameraPose.pos - targetCameraWrong.pos);
+      // correct error from forcing rotation to zero by
+      // adding user camera frame error from previous step
+      // (userCameraPose.pos - targetCameraWrong.pos) to create a final
+      // target pose.pos that will not introduce user
+      // camera frame offset
+      this->optitrackHeadOffset.pos = this->optitrackHeadOffset.pos
+        + (this->userCameraPose.pos - targetCameraWrong.pos);
+    }
 
     this->headOffsetInitialized = true;
   }
@@ -1604,16 +1617,28 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     //   world           targetCamera           head (user camera)
     //
     // T_WH = T_HMarker + T_C'Marker + T_CC' -T_CM -T_MS + T_WS
-    gazebo::math::Pose targetCamera =
-                                this->headMarker.GetInverse()
-                              + cameraMarker
-                              + this->cameraMonitor.GetInverse()
-                              + this->monitorScreen.GetInverse()
-                              + this->optitrackHeadOffset
-                              + this->worldScreen
-                              ;
-    if (!this->viewpointRotationsEnabled)
+    gazebo::math::Pose targetCamera;
+    if (this->viewpointRotationsEnabled)
     {
+      targetCamera =
+                  this->headMarker.GetInverse()
+                + this->optitrackHeadOffset
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->worldScreen
+                ;
+    }
+    else
+    {
+      targetCamera =
+                  this->headMarker.GetInverse()
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->optitrackHeadOffset
+                + this->worldScreen
+                ;
       targetCamera.rot = this->userCameraPose.rot;
     }
     gazebo::msgs::Set(&this->joyMsg, targetCamera);
@@ -1631,32 +1656,113 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   std::unique_lock<std::mutex> monitorLock(this->optitrackMonitorMutex,
       std::try_to_lock);
 
-  gazebo::math::Pose cameraArm = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose cameraMarker = gazebo::msgs::Convert(*_msg);
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    math::Pose worldArm = this->elbowArmCorrected + this->targetBaseLinkPose;
+/*  testing offset frame between cameraMarker and elbowMarker
+    this->optitrackArmOffset =
+                                this->elbowMarker
+                              + this->targetBaseLinkPose
+                              + this->worldScreen.GetInverse()
+                              + this->monitorScreen
+                              + this->cameraMonitor
+                              + cameraMarker.GetInverse()
+                              ;
+*/
+    // offset frame between worldScreen and monitorScreen
+    this->optitrackArmOffset =
+                                this->monitorScreen
+                              + this->cameraMonitor
+                              + cameraMarker.GetInverse()
+                              + this->elbowMarker
+                              + this->targetBaseLinkPose
+                              + this->worldScreen.GetInverse()
+                              ;
+/* testing something similar to head tracking without rotation
+    this->optitrackArmOffset =
+                                this->monitorScreen
+                              + this->cameraMonitor
+                              + cameraMarker.GetInverse()
+                              + this->elbowMarker
+                              + this->targetBaseLinkPose
+                              + this->worldScreen.GetInverse()
+                              ;
+    // force a no-rotation offset
+    this->optitrackArmOffset.rot = math::Quaternion();
+
+    // compute the erroroneous target pose from above
+    gazebo::math::Pose targetPoseWrong =
+                                this->elbowMarker.GetInverse()
+                              + cameraMarker
+                              + this->cameraMonitor.GetInverse()
+                              + this->monitorScreen.GetInverse()
+                              + this->optitrackArmOffset
+                              + this->worldScreen
+                              ;
+
+    // correct error from forcing rotation to zero by
+    // adding target pose error from previous step
+    // (current target.pos - targetPoseWrong.pos) to create a final
+    // target pose.pos that will not introduce frame offset
+    this->optitrackArmOffset.pos = this->optitrackArmOffset.pos
+      + (this->targetBaseLinkPose.pos - targetPoseWrong.pos);
+*/
+
+    this->armOffsetInitialized = true;
+  }
+  else if (this->armOffsetInitialized)
+  {
+/*  testing offset frame between cameraMarker and elbowMarker
+    this->targetBaseLinkPose =
+                  this->elbowMarker.GetInverse()
+                + this->optitrackArmOffset
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->worldScreen
+                ;
+*/
+    // offset frame between worldScreen and monitorScreen
+    this->targetBaseLinkPose =
+                  this->elbowMarker.GetInverse()
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->optitrackArmOffset
+                + this->worldScreen
+                ;
+  }
+
+/*
+  if (this->pauseTracking || !this->armOffsetInitialized)
+  {
+    math::Pose worldArm = this->elbowMarkerCorrected
+      + this->targetBaseLinkPose;
 
     // goal: arm sensor orientation should be the same as the screen rotation
     // worldScreen.rot is the screen orientation in the world frame
     // worldArm.rot is the arm orientation in the world frame, set them equal
-    worldArm.rot = (this->elbowArm + this->targetBaseLinkPose).rot;
-    // solve for elbowArmCorrected.rot based on new worldArm
-    this->elbowArmCorrected.rot = (worldArm - this->targetBaseLinkPose).rot;
+    worldArm.rot = (this->elbowMarker + this->targetBaseLinkPose).rot;
+    // solve for elbowMarkerCorrected.rot based on new worldArm
+    this->elbowMarkerCorrected.rot = (worldArm - this->targetBaseLinkPose).rot;
 
     // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
-    this->optitrackArmOffset =  cameraArm.GetInverse() + this->elbowArmCorrected
-      + this->targetBaseLinkPose + this->worldScreen.GetInverse() +
-        this->monitorScreen + this->cameraMonitor;
+    this->optitrackArmOffset =  cameraArm.GetInverse()
+      + this->elbowMarkerCorrected
+      + this->targetBaseLinkPose + this->worldScreen.GetInverse()
+      + this->monitorScreen + this->cameraMonitor;
     this->armOffsetInitialized = true;
   }
   else if (this->armOffsetInitialized)
   {
     // T_WE = T_AE + T_C'A + T_CC' -T_CM -T_MS + T_WS
-    this->targetBaseLinkPose = this->elbowArmCorrected.GetInverse() + cameraArm
-        + this->optitrackArmOffset + this->cameraMonitor.GetInverse() +
-            this->monitorScreen.GetInverse() + this->worldScreen;
+    this->targetBaseLinkPose =
+          this->elbowMarkerCorrected.GetInverse() + cameraArm
+        + this->optitrackArmOffset + this->cameraMonitor.GetInverse()
+        + this->monitorScreen.GetInverse() + this->worldScreen;
   }
+*/
 }
 
 //////////////////////////////////////////////////
