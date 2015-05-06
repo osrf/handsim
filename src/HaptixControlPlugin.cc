@@ -1713,6 +1713,30 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   }
   else if (this->armOffsetInitialized)
   {
+    //
+    // List of frames
+    //
+    //   Frame           Description
+    // --------------------------------------------------------
+    //   world           world or inertial frame in simulation.
+    //   screen          upper right corner of physical screen
+    //                   z-up, x-forward, z-left.
+    //   monitor         frame fored by its 3 optitrack markers.
+    //   camera          frame of the camera.
+    //   elbow           targetBaseLink's frame
+    //
+    // The chain of transforms (from world to user camera):
+    //
+    //   Frame           Transform              Frame
+    // --------------------------------------------------------
+    //   world           worldScreen            screen
+    //   screen          monitorScreen.Inv      monitor
+    //   monitor         cameraMonitor.Inv      camera
+    //   camera          cameraMarker           marker
+    //   screen          optitrackHeadOffset    screen offset
+    //   marker          elbowMarker.Inv        elbow
+    //   world           targetBaseLink         elbow
+    //
 /*  testing offset frame between cameraMarker and elbowMarker
     this->targetBaseLinkPose =
                   this->elbowMarker.GetInverse()
