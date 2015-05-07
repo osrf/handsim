@@ -248,8 +248,12 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->monitorScreen = gazebo::math::Pose::Zero;
 
-  // Screen is actually "window"
+  // Position of the screen in the world frame
   this->worldScreen = gazebo::math::Pose(0, -0.65, 1.5, 0, 0, 0);
+  if (this->sdf->HasElement("world_screen_location"))
+  {
+    this->worldScreen = sdf->Get<math::Pose>("world_screen_location");
+  }
 
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackHeadOffsetRotationEnabled = gazebo::math::Pose::Zero;
@@ -1650,8 +1654,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   // If A = T_OP and B = T_PQ, B+A = T_OQ
 
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  std::unique_lock<std::mutex> monitorLock(this->optitrackMonitorMutex,
-      std::try_to_lock);
+  std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
 
   gazebo::math::Pose cameraMarker = gazebo::msgs::Convert(*_msg);
 
@@ -1791,8 +1794,8 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
     return;
   }
 
-  std::unique_lock<std::mutex> lock(this->optitrackMonitorMutex,
-      std::try_to_lock);
+  std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
+
   std::vector<gazebo::math::Vector3> points;
   for (int i = 0; i < _msg->points_size(); ++i)
   {
