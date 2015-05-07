@@ -278,12 +278,13 @@ void HaptixWorldPlugin::OnWorldUpdate()
   gazebo::common::Time elapsed =
       this->world->GetSimTime() - this->lastSimUpdateTime;
   for (auto iter = this->wrenchDurations.begin();
-       iter != this->wrenchDurations.end();)
+       iter != this->wrenchDurations.end(); ++iter)
   {
     // Time elapsed since last update
     if (iter->timeRemaining < elapsed && !iter->persistent)
     {
-      this->wrenchDurations.erase(iter);
+      // Decrement by 1 because the loop will increment for us.
+      iter = this->wrenchDurations.erase(iter) - 1;
     }
     else
     {
@@ -293,8 +294,6 @@ void HaptixWorldPlugin::OnWorldUpdate()
 
       iter->link->AddLinkForce(iter->force);
       iter->link->AddTorque(iter->torque);
-
-      ++iter;
     }
   }
 
@@ -657,43 +656,48 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   // Set name
   modelElement->GetAttribute("name")->Set<std::string>(_req.name());
 
-  std::lock_guard<std::mutex> lock(this->worldMutex);
-  if (!this->world)
+  // Set pose
+  gazebo::math::Pose pose(_req.vector3().x(), _req.vector3().y(),
+      _req.vector3().z(), _req.orientation().roll(), _req.orientation().pitch(),
+      _req.orientation().yaw());
+  if (!modelElement->HasElement("pose"))
   {
-    gzerr << "World pointer NULL" << std::endl;
+    modelElement->AddElement("pose");
+  }
+  if (!modelElement->GetElement("pose")->Set(pose))
+  {
+    gzerr << "Failed to set model pose" << std::endl;
     _result = false;
     return;
+  }
+  // Set gravity
+  bool gravity_mode = _req.gravity_mode();
+  for (sdf::ElementPtr linkElement = modelElement->GetElement("link");
+      linkElement; linkElement = modelElement->GetNextElement("link"))
+  {
+    if (!linkElement->GetElement("gravity"))
+    {
+      linkElement->AddElement("gravity");
+    }
+    linkElement->GetElement("gravity")->Set(gravity_mode);
   }
 
   xml = modelSDF.ToString();
 
   // load an SDF element from XML
-  this->world->InsertModelString(xml);
-
-  gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
-
-  gazebo::math::Pose pose(_req.vector3().x(), _req.vector3().y(),
-      _req.vector3().z(), _req.orientation().roll(), _req.orientation().pitch(),
-      _req.orientation().yaw());
-
-  bool gravity_mode = _req.gravity_mode();
-
-  model->SetWorldPose(pose);
-  model->SetGravityMode(gravity_mode);
-
-  if (!ConvertModel(*model, _rep))
-  {
-    gzerr << "Conversion to Gazebo model to message failed" << std::endl;
-    _result = false;
-    return;
-  }
-
-  auto setModelTransformLambda = [model, &pose]()
+  auto addModelLambda = [&xml, this]()
       {
-        model->SetWorldPose(pose);
+        this->world->InsertModelString(xml);
       };
-  this->updateFunctions.push_back(setModelTransformLambda);
+  this->updateFunctions.push_back(addModelLambda);
 
+  _rep.Clear();
+  _rep.set_name(_req.name());
+  ConvertTransform(pose, *_rep.mutable_transform());
+  _rep.set_gravity_mode(gravity_mode);
+  // TODO id can't be filled before runtime!
+  // TODO: links, joints have to be filled by parsing static SDF...
+  _rep.set_id(0);
   _result = true;
 }
 
@@ -703,7 +707,6 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // RemoveModel blocks, consider own thread?
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -719,24 +722,12 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
     _result = true;
     return;
   }
-  // TODO Due to reply, can't call this in a thread-safe way. Discuss.
-  this->world->RemoveModel(model);
+  auto removeModelLambda = [model, this]()
+      {
+        this->world->RemoveModel(model);
+      };
+  this->updateFunctions.push_back(removeModelLambda);
 
-  // Could get rid wait period and not notify user if failed to remove
-  // Wait while model still exists
-  int tries = 0;
-  while (this->world->GetModel(_req.data()))
-  {
-    _result = false;
-    tries++;
-    if (tries > 200)
-    {
-      gzerr << "hxs_remove_model timed out, model still exists" << std::endl;
-      _result = false;
-      return;
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-  }
   _result = true;
 }
 

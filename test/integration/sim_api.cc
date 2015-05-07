@@ -459,9 +459,6 @@ TEST_F(SimApiTest, HxsAddModel)
   EXPECT_FLOAT_EQ(model.transform.orient.x, q.x);
   EXPECT_FLOAT_EQ(model.transform.orient.y, q.y);
   EXPECT_FLOAT_EQ(model.transform.orient.z, q.z);
-
-  EXPECT_EQ(model.joint_count, 1);
-  EXPECT_EQ(model.link_count, 2);
 }
 
 TEST_F(SimApiTest, HxsTransform)
