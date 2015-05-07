@@ -799,7 +799,7 @@ TEST_F(SimApiTest, HxsReset)
 
   world->Step(1);
 
-  ASSERT_EQ(hxs_reset(0), hxOK);
+  ASSERT_EQ(hxs_reset(1), hxOK);
   world->Step(1);
   for (auto model : world->GetModels())
   {
@@ -831,9 +831,9 @@ TEST_F(SimApiTest, HxsReset)
   }
   world->Step(1);
 
-  ASSERT_EQ(hxs_reset(1), hxOK);
+  ASSERT_EQ(hxs_reset(0), hxOK);
   world->Step(1);
-  // Expect that everything is in its initial state
+  // Expect that everything is in its initial state, except for the arm
   for (auto model : world->GetModels())
   {
     if (model->GetName() != "mpl_haptix_right_forearm")

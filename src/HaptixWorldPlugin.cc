@@ -1193,7 +1193,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
   gazebo::msgs::Set(&poseMsg, this->initialCameraPose);
   this->userCameraPub->Publish(poseMsg);
 
-  if (_req.data() == 0)
+  if (_req.data() != 0)
   {
     // Signal to WorldControl to reset the world
     gazebo::msgs::WorldControl msg;
