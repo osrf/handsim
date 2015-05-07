@@ -488,7 +488,10 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
 
   if (!model)
   {
-    gzerr << "Model was NULL: " << _req.name() << std::endl;
+    gzerr << "Model named ["
+          << _req.name()
+          << "] could not be found"
+          << std::endl;
     return;
   }
 
@@ -1203,7 +1206,10 @@ void HaptixWorldPlugin::HaptixModelGravityCallback(
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
   if (!model)
   {
-    gzerr << "Model was NULL" << std::endl;
+    gzerr << "Model named ["
+          << _req.data()
+          << "] could not be found"
+          << std::endl;
     return;
   }
   bool gravity_mode = false;
@@ -1245,7 +1251,10 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!model)
   {
-    gzerr << "Model was NULL" << std::endl;
+    gzerr << "Model named ["
+          << _req.name()
+          << "] could not be found"
+          << std::endl;
     return;
   }
 
@@ -1286,7 +1295,10 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
 
   if (!model)
   {
-    gzerr << "Model was NULL" << std::endl;
+    gzerr << "Model named ["
+          << _req.name()
+          << "] could not be found"
+          << std::endl;
     return;
   }
 
@@ -1359,7 +1371,10 @@ void HaptixWorldPlugin::HaptixModelColorCallback(
 
   if (!model)
   {
-    gzerr << "Model was NULL" << std::endl;
+    gzerr << "Model named ["
+          << _req.data()
+          << "] could not be found"
+          << std::endl;
     return;
   }
 
@@ -1405,7 +1420,10 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
 
   if (!model)
   {
-    gzerr << "Model was NULL" << std::endl;
+    gzerr << "Model named ["
+          << _req.name()
+          << "] could not be found"
+          << std::endl;
     return;
   }
 
@@ -1425,7 +1443,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
         {
           for (auto collision : link->GetCollisions())
           {
-            gazebo::physics::SurfaceParamsPtr surface = collision->GetSurface();
+            auto surface = collision->GetSurface();
 
             if (mode == haptix::comm::msgs::hxCollideMode::hxsNOCOLLIDE)
             {
@@ -1479,7 +1497,10 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
 
   if (!model)
   {
-    gzerr << "Model was NULL" << std::endl;
+    gzerr << "Model named ["
+          << _req.data()
+          << "] could not be found"
+          << std::endl;
     return;
   }
   bool collideWithoutContact = true;
