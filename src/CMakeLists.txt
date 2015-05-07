@@ -69,7 +69,7 @@ target_link_libraries(HaptixGUIPlugin ${GAZEBO_LIBRARIES}
 
 target_link_libraries(HaptixWorldPlugin
   ${GAZEBO_LIBRARIES} ${PROTOBUF_LIBRARIES}
-  ${IGNITION-TRANSPORT_LIBRARIES} haptix-msgs haptix-comm
+  ${IGNITION-TRANSPORT_LIBRARIES} libhaptix-msgs.a haptix-comm
 )
 
 # below adds -std=c++11, needed to compile against ign-transport

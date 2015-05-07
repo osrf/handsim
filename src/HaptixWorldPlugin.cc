@@ -35,8 +35,8 @@
 #include <gazebo/util/LogRecord.hh>
 #include <gazebo/plugins/TimerGUIPlugin.hh>
 
-#include "haptix/comm/msg/hxCommand.pb.h"
-#include "haptix/comm/msg/hxGrasp.pb.h"
+#include <haptix/comm/msg/hxCommand.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
 
 #include "handsim/HaptixWorldPlugin.hh"
 
@@ -61,7 +61,6 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_joint_state");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_link_state");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_add_model");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_remove_model");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_transform");
@@ -197,9 +196,6 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_joint_state",
     &HaptixWorldPlugin::HaptixModelJointStateCallback, this);
 
-  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_link_state",
-    &HaptixWorldPlugin::HaptixModelLinkStateCallback, this);
-
   this->ignNode.Advertise("/haptix/gazebo/hxs_add_model",
     &HaptixWorldPlugin::HaptixAddModelCallback, this);
 
@@ -274,15 +270,17 @@ void HaptixWorldPlugin::Reset()
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::OnWorldUpdate()
 {
+  std::lock_guard<std::mutex> lock(this->worldMutex);
   gazebo::common::Time elapsed =
       this->world->GetSimTime() - this->lastSimUpdateTime;
   for (auto iter = this->wrenchDurations.begin();
-       iter != this->wrenchDurations.end();)
+       iter != this->wrenchDurations.end(); )
   {
     // Time elapsed since last update
     if (iter->timeRemaining < elapsed && !iter->persistent)
     {
       this->wrenchDurations.erase(iter);
+      // Don't increment iter, need to stay at the current entry.
     }
     else
     {
@@ -292,10 +290,16 @@ void HaptixWorldPlugin::OnWorldUpdate()
 
       iter->link->AddLinkForce(iter->force);
       iter->link->AddTorque(iter->torque);
-
+      // Increment iter since the for loop doesn't do it for us.
       ++iter;
     }
   }
+
+  for (auto function : this->updateFunctions)
+  {
+    function();
+  }
+  this->updateFunctions.clear();
 
   this->lastSimUpdateTime = this->world->GetSimTime();
 }
@@ -503,62 +507,14 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
     _result = false;
     return;
   }
-
-  joint->SetPosition(0, _req.joints(0).pos());
-  joint->SetVelocity(0, _req.joints(0).vel());
-
-  _result = true;
-}
-
-/////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixModelLinkStateCallback(
-      const std::string &/*_service*/,
-      const haptix::comm::msgs::hxModel &_req,
-      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
-{
-  std::lock_guard<std::mutex> lock(this->worldMutex);
-  if (!this->world)
-  {
-    gzerr << "World was NULL" << std::endl;
-    _result = false;
-    return;
-  }
-
-  gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
-
-  if (!model)
-  {
-    gzerr << "Model was NULL: " << _req.name() << std::endl;
-    _result = false;
-    return;
-  }
-
-  if (_req.links_size() < 1)
-  {
-    gzerr << "Not enough joints in callback" << std::endl;
-    _result = false;
-    return;
-  }
-
-  gazebo::physics::LinkPtr link = model->GetLink(_req.links(0).name());
-  if (!link)
-  {
-    gzerr << "Joint was NULL: " << _req.links(0).name() << std::endl;
-    _result = false;
-    return;
-  }
-
-  gazebo::math::Pose pose;
-  gazebo::math::Vector3 lin_vel;
-  gazebo::math::Vector3 ang_vel;
-
-  ConvertTransform(_req.links(0).transform(), pose);
-  ConvertVector(_req.links(0).lin_vel(), lin_vel);
-  ConvertVector(_req.links(0).ang_vel(), ang_vel);
-
-  link->SetWorldPose(pose);
-  link->SetLinearVel(lin_vel);
-  link->SetAngularVel(ang_vel);
+  float pos = _req.joints(0).pos();
+  float vel = _req.joints(0).vel();
+  auto setJointStateLambda = [joint, pos, vel]()
+      {
+        joint->SetPosition(0, pos);
+        joint->SetVelocity(0, vel);
+      };
+  this->updateFunctions.push_back(setJointStateLambda);
 
   _result = true;
 }
@@ -569,6 +525,7 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxModel &_rep, bool &_result)
 {
+  // TODO Due to reply, can't call this in a thread-safe way, discuss.
   if (!_req.has_string_value())
   {
     gzerr << "Missing string field in hxParam" << std::endl;
@@ -625,46 +582,57 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   // Set name
   modelElement->GetAttribute("name")->Set<std::string>(_req.name());
 
-  std::lock_guard<std::mutex> lock(this->worldMutex);
-  if (!this->world)
-  {
-    gzerr << "World pointer NULL" << std::endl;
-    _result = false;
-    return;
-  }
-
-  xml = modelSDF.ToString();
-
-  // load an SDF element from XML
-  this->world->InsertModelString(xml);
-
-  gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
-
-  int tries = 0;
-  while (!model)
-  {
-    if (tries > 10)
-    {
-      gzerr << "Model not found: " << _req.name() << std::endl;
-      _result = false;
-      return;
-    }
-    tries++;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    model = this->world->GetModel(_req.name());
-  }
-
+  // Set pose
   gazebo::math::Pose pose(_req.vector3().x(), _req.vector3().y(),
       _req.vector3().z(), _req.orientation().roll(), _req.orientation().pitch(),
       _req.orientation().yaw());
-
-  // Set pose
-  model->SetWorldPose(pose);
-
+  if (!modelElement->HasElement("pose"))
+  {
+    modelElement->AddElement("pose");
+  }
+  GZ_ASSERT(modelElement->GetElement("pose"), "failed to add pose element");
+  if (!modelElement->GetElement("pose")->Set(pose))
+  {
+    gzerr << "Failed to set model pose" << std::endl;
+    _result = false;
+    return;
+  }
+  // Set gravity
   bool gravity_mode = _req.gravity_mode();
-  model->SetGravityMode(gravity_mode);
+  for (sdf::ElementPtr linkElement = modelElement->GetElement("link");
+      linkElement; linkElement = linkElement->GetNextElement("link"))
+  {
+    if (!linkElement->GetElement("gravity"))
+    {
+      linkElement->AddElement("gravity");
+    }
+    GZ_ASSERT(linkElement->GetElement("gravity"), "failed to add gravity element");
+    if (!linkElement->GetElement("gravity")->Set(gravity_mode))
+    {
+      gzerr << "Failed to set model gravity" << std::endl;
+      _result = false;
+      return;
+    }
+  }
 
-  ConvertModel(*model, _rep);
+  /*xml = modelSDF.ToString();
+  std::cout << xml << std::endl;*/
+
+  // load an SDF element from XML
+  auto addModelLambda = [modelSDF, this]()
+      {
+        //this->world->InsertModelString(xml);
+        this->world->InsertModelSDF(modelSDF);
+      };
+  this->updateFunctions.push_back(addModelLambda);
+
+  _rep.Clear();
+  _rep.set_name(_req.name());
+  ConvertTransform(pose, *_rep.mutable_transform());
+  _rep.set_gravity_mode(gravity_mode);
+  // TODO id can't be filled before runtime!
+  // TODO: links, joints have to be filled by parsing static SDF...
+  _rep.set_id(0);
   _result = true;
 }
 
@@ -674,7 +642,6 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
-  // RemoveModel blocks, consider own thread?
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
@@ -690,20 +657,12 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
     _result = true;
     return;
   }
-  this->world->RemoveModel(model);
+  auto removeModelLambda = [model, this]()
+      {
+        this->world->RemoveModel(model);
+      };
+  this->updateFunctions.push_back(removeModelLambda);
 
-  // Wait while model still exists
-  int tries = 0;
-  while (this->world->GetModel(_req.data()))
-  {
-    _result = false;
-    tries++;
-    if (tries > 100)
-    {
-      gzerr << "hxs_remove_model timed out, model still exists" << std::endl;
-      return;
-    }
-  }
   _result = true;
 }
 
@@ -774,7 +733,11 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
     _result = false;
     return;
   }
-  model->SetWorldPose(pose);
+  auto setModelTransformLambda = [model, &pose]()
+      {
+        model->SetWorldPose(pose);
+      };
+  this->updateFunctions.push_back(setModelTransformLambda);
   _result = true;
 }
 
@@ -846,7 +809,11 @@ void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
     _result = false;
     return;
   }
-  model->SetLinearVel(lin_vel);
+  auto setLinearVelocityLambda = [model, &lin_vel] ()
+    {
+      model->SetLinearVel(lin_vel);
+    };
+  this->updateFunctions.push_back(setLinearVelocityLambda);
   _result = true;
 }
 
@@ -911,7 +878,11 @@ void HaptixWorldPlugin::HaptixSetAngularVelocityCallback(
     _result = false;
     return;
   }
-  model->SetAngularVel(ang_vel);
+  auto setAngularVelocityLambda = [model, &ang_vel] ()
+    {
+      model->SetAngularVel(ang_vel);
+    };
+  this->updateFunctions.push_back(setAngularVelocityLambda);
   _result = true;
 }
 
@@ -1146,7 +1117,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
   gazebo::msgs::Set(&poseMsg, this->initialCameraPose);
   this->userCameraPub->Publish(poseMsg);
 
-  if (_req.data() == 0)
+  if (_req.data() != 0)
   {
     // Signal to WorldControl to reset the world
     gazebo::msgs::WorldControl msg;
@@ -1318,7 +1289,12 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
     return;
   }
 
-  model->SetGravityMode(_req.gravity_mode());
+  bool gravity_mode = _req.gravity_mode();
+  auto setModelGravityLambda = [model, gravity_mode] ()
+      {
+        model->SetGravityMode(gravity_mode);
+      };
+  this->updateFunctions.push_back(setModelGravityLambda);
 
   _result = true;
 }
@@ -1482,43 +1458,55 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     return;
   }
 
-  haptix::comm::msgs::hxCollideMode modeMsg = _req.collide_mode();
-
-  for (auto link : model->GetLinks())
+  auto mode = _req.collide_mode().mode();
+  if (mode != haptix::comm::msgs::hxCollideMode::hxsNOCOLLIDE &&
+      mode != haptix::comm::msgs::hxCollideMode::hxsCOLLIDE &&
+      mode != haptix::comm::msgs::hxCollideMode::hxsDETECTIONONLY)
   {
-    for (auto collision : link->GetCollisions())
-    {
-      gazebo::physics::SurfaceParamsPtr surface = collision->GetSurface();
-
-      if (modeMsg.mode() == haptix::comm::msgs::hxCollideMode::hxsNOCOLLIDE)
-      {
-        surface->collideWithoutContact = false;
-        // Set collideBitmask in case it was unset
-        surface->collideBitmask = 0x0;
-      }
-      else if (modeMsg.mode() ==
-          haptix::comm::msgs::hxCollideMode::hxsDETECTIONONLY)
-      {
-        surface->collideWithoutContact = true;
-        // Set collideBitmask in case it was unset
-        if (surface->collideBitmask == 0x0)
-        {
-          surface->collideBitmask = 0x01;
-        }
-      }
-      else if (modeMsg.mode() == haptix::comm::msgs::hxCollideMode::hxsCOLLIDE)
-      {
-        surface->collideWithoutContact = false;
-        surface->collideBitmask = 0x01;
-      }
-      else
-      {
-        gzerr << "Unknown hxsCollideMode, cannot set" << std::endl;
-        _result = false;
-        return;
-      }
-    }
+    gzerr << "Unknown hxsCollideMode, cannot set" << std::endl;
+    _result = false;
+    return;
   }
+
+  // Bit ridiculous, could put this in its own function
+  auto setCollideModeLambda = [model, mode] ()
+      {
+        for (auto link : model->GetLinks())
+        {
+          for (auto collision : link->GetCollisions())
+          {
+            gazebo::physics::SurfaceParamsPtr surface = collision->GetSurface();
+
+            if (mode == haptix::comm::msgs::hxCollideMode::hxsNOCOLLIDE)
+            {
+              surface->collideWithoutContact = false;
+              // Set collideBitmask in case it was unset
+              surface->collideBitmask = 0x0;
+            }
+            else if (mode ==
+                haptix::comm::msgs::hxCollideMode::hxsDETECTIONONLY)
+            {
+              surface->collideWithoutContact = true;
+              // Set collideBitmask in case it was unset
+              if (surface->collideBitmask == 0x0)
+              {
+                surface->collideBitmask = 0x01;
+              }
+            }
+            else if (mode == haptix::comm::msgs::hxCollideMode::hxsCOLLIDE)
+            {
+              surface->collideWithoutContact = false;
+              surface->collideBitmask = 0x01;
+            }
+            else
+            {
+              gzerr << "Unknown collision mode inside lambda. This should "
+                    << "never happen" << std::endl;
+            }
+          }
+        }
+      };
+  this->updateFunctions.push_back(setCollideModeLambda);
 
   _result = true;
 }

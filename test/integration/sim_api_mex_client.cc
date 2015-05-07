@@ -22,7 +22,7 @@
 
 #include "test_config.h"
 
-TEST(SimApiMexClientTest, TwoProcesses)
+TEST(SimApiMexClientTest, ThreeProcesses)
 {
   pid_t PID_child = fork();
   if (PID_child == 0)
