@@ -214,7 +214,7 @@
             </instructions>
           </task>
         </task_group>
-        
+
         <arm_keys>
 	  <!-- Indices 0-5 are: tx, ty, tz, rx, ry, rz -->
           <arm inc_key="w" dec_key="s" index="0" increment=0.025></arm>
@@ -257,7 +257,7 @@
 
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
         <size>155 30</size>
-        <topic>~/timer_control</topic> 
+        <topic>~/timer_control</topic>
       </plugin>
 
     </gui>
@@ -332,7 +332,6 @@
       <static>true</static>
     </include>
 
-    <!-- The apl_description model is not (yet) publicly available. -->
     <include>
      <uri>model://mpl_haptix_right_forearm</uri>
      <pose>0.4 -0.7 1.2 0 0 3.1416</pose>

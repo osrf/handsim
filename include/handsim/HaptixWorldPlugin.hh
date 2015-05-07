@@ -18,6 +18,7 @@
 #ifndef _HANDSIM_HAPTIX_WORLD_PLUGIN_HH_
 #define _HANDSIM_HAPTIX_WORLD_HH_
 
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -549,6 +550,9 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
 
   /// \brief Maps model IDs to colors
   private: std::map<int, gazebo::common::Color> lastKnownColors;
+
+  /// \brief The functions to execute in OnWorldUpdate
+  private: std::vector<std::function<void()>> updateFunctions;
 
   /// \brief Last time the effort vectors were updates
   private: gazebo::common::Time lastSimUpdateTime;
