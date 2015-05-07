@@ -451,10 +451,10 @@ TEST_F(SimApiTest, HxsSetTransform)
   EXPECT_NEAR(model->GetWorldPose().pos.x, pose.pos.x, 1e-3);
   EXPECT_NEAR(model->GetWorldPose().pos.y, pose.pos.y, 1e-3);
   EXPECT_NEAR(model->GetWorldPose().pos.z, pose.pos.z, 1e-3);
-  EXPECT_NEAR(model->GetWorldPose().rot.w, pose.rot.w, 1e-2);
-  EXPECT_NEAR(model->GetWorldPose().rot.x, pose.rot.x, 1e-2);
-  EXPECT_NEAR(model->GetWorldPose().rot.y, pose.rot.y, 1e-2);
-  EXPECT_NEAR(model->GetWorldPose().rot.z, pose.rot.z, 1e-2);
+  EXPECT_NEAR(model->GetWorldPose().rot.w, pose.rot.w, 1e-3);
+  EXPECT_NEAR(model->GetWorldPose().rot.x, pose.rot.x, 1e-3);
+  EXPECT_NEAR(model->GetWorldPose().rot.y, pose.rot.y, 1e-3);
+  EXPECT_NEAR(model->GetWorldPose().rot.z, pose.rot.z, 1e-3);
 }
 
 TEST_F(SimApiTest, HxsLinearVel)
@@ -928,7 +928,7 @@ TEST_F(SimApiTest, HxsSetModelColor)
   ASSERT_EQ(hxs_set_model_color("cricket_ball", &blue), hxOK);
 
   // Wait a moment for visual message to publish
-  world->Step(1000);
+  world->Step(2000);
 
   EXPECT_FLOAT_EQ(blue.r, visual->GetAmbient().r);
   EXPECT_FLOAT_EQ(blue.g, visual->GetAmbient().g);

@@ -732,7 +732,7 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
     _result = false;
     return;
   }
-  auto setModelTransformLambda = [model, &pose]()
+  auto setModelTransformLambda = [model, pose]()
       {
         model->SetWorldPose(pose);
       };
@@ -808,7 +808,7 @@ void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
     _result = false;
     return;
   }
-  auto setLinearVelocityLambda = [model, &lin_vel] ()
+  auto setLinearVelocityLambda = [model, lin_vel] ()
     {
       model->SetLinearVel(lin_vel);
     };
@@ -877,7 +877,7 @@ void HaptixWorldPlugin::HaptixSetAngularVelocityCallback(
     _result = false;
     return;
   }
-  auto setAngularVelocityLambda = [model, &ang_vel] ()
+  auto setAngularVelocityLambda = [model, ang_vel] ()
     {
       model->SetAngularVel(ang_vel);
     };
