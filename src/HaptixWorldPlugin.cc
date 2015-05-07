@@ -108,7 +108,7 @@ void HaptixWorldPlugin::InitializeColorMap()
       if (linkSDF->HasElement("visual"))
       {
         for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
-             visualSDF; visualSDF = visualSDF->GetNextElement("visual"))
+             visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
         {
           GZ_ASSERT(visualSDF->HasAttribute("name"),
               "Malformed visual element!");
@@ -1352,7 +1352,7 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     if (linkSDF->HasElement("visual"))
     {
       for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
-           visualSDF; visualSDF = visualSDF->GetNextElement("visual"))
+           visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
       {
         GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
         std::string visualName = visualSDF->Get<std::string>("name");
