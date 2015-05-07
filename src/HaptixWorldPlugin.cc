@@ -586,8 +586,8 @@ void HaptixWorldPlugin::HaptixModelLinkStateCallback(
   auto setLinkStateLambda = [link, &pose, &lin_vel, &ang_vel]()
     {
       link->SetWorldPose(pose);
-      /*link->SetLinearVel(lin_vel);
-      link->SetAngularVel(ang_vel);*/
+      link->SetLinearVel(lin_vel);
+      link->SetAngularVel(ang_vel);
     };
   this->updateFunctions.push_back(setLinkStateLambda);
 
@@ -672,20 +672,6 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
 
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
 
-  int tries = 0;
-  while (!model)
-  {
-    if (tries > 200)
-    {
-      gzerr << "Model not found: " << _req.name() << std::endl;
-      _result = false;
-      return;
-    }
-    tries++;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    model = this->world->GetModel(_req.name());
-  }
-
   gazebo::math::Pose pose(_req.vector3().x(), _req.vector3().y(),
       _req.vector3().z(), _req.orientation().roll(), _req.orientation().pitch(),
       _req.orientation().yaw());
@@ -695,7 +681,19 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   model->SetWorldPose(pose);
   model->SetGravityMode(gravity_mode);
 
-  ConvertModel(*model, _rep);
+  if (!ConvertModel(*model, _rep))
+  {
+    gzerr << "Conversion to Gazebo model to message failed" << std::endl;
+    _result = false;
+    return;
+  }
+
+  auto setModelTransformLambda = [model, &pose]()
+      {
+        model->SetWorldPose(pose);
+      };
+  this->updateFunctions.push_back(setModelTransformLambda);
+
   _result = true;
 }
 

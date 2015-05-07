@@ -46,14 +46,8 @@ TEST_F(SimApiTest, HxsSimInfo)
 {
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
-  gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
-  if (!scene)
-  {
-    scene = gazebo::rendering::create_scene("default", false);
-    scene->Load();
-    scene->Init();
-  }
 
+  gazebo::rendering::ScenePtr scene = gazebo::rendering::get_scene("default");
   ASSERT_TRUE(scene != NULL);
 
   gazebo::math::Pose cameraPose(1, 2, 3, 3.14159, 0.707, -0.707);
@@ -65,9 +59,11 @@ TEST_F(SimApiTest, HxsSimInfo)
   gazebo::gui::set_active_camera(camera);
   ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
 
+  // Wait for all the models to initialize
+  gazebo::common::Time::Sleep(1);
   hxsSimInfo simInfo;
   ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
-  gazebo::common::Time::Sleep(1);
+  gazebo::common::Time::MSleep(500);
 
   gazebo::math::Pose cameraOut;
   HaptixWorldPlugin::ConvertTransform(simInfo.camera_transform, cameraOut);
@@ -336,7 +332,7 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   ASSERT_TRUE(doorLink != NULL);
 
   gazebo::math::Pose gzLinkPose = doorLink->GetWorldPose();
-  gzLinkPose.rot.y -= 0.75185;
+  gzLinkPose.rot.z -= 0.75185;
 
   hxsTransform pose;
   HaptixWorldPlugin::ConvertTransform(gzLinkPose, pose);
@@ -357,9 +353,11 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   memset(&zero, 0, sizeof(hxsVector3));
   ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &lin_vel,
       &ang_vel), hxOK);
+  gzdbg << "Link pose after service call: " << doorLink->GetWorldPose() << std::endl;
+  world->Step(1);
+  gzdbg << "Link pose after world step: " << doorLink->GetWorldPose() << std::endl;
 
   /*
-  world->Step(50);
 
   EXPECT_EQ(gzLinkPose, doorLink->GetWorldPose());
   EXPECT_EQ(gazebo::math::Vector3(lin_vel.x, lin_vel.y, lin_vel.z),
