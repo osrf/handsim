@@ -248,8 +248,12 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->monitorScreen = gazebo::math::Pose::Zero;
 
-  // Screen is actually "window"
+  // Position of the screen in the world frame
   this->worldScreen = gazebo::math::Pose(0, -0.65, 1.5, 0, 0, 0);
+  if (this->sdf->HasElement("world_screen_location"))
+  {
+    this->worldScreen = sdf->Get<math::Pose>("world_screen_location");
+  }
 
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
