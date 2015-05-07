@@ -648,6 +648,53 @@ TEST_F(SimApiTest, HxsForce)
   }
 }
 
+TEST_F(SimApiTest, MultipleForces)
+{
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+
+  // disabling gravity_mode makes it easier to verify test
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  ASSERT_TRUE(model != NULL);
+  model->SetGravityMode(0);
+
+  hxsVector3 force;
+  force.x = -0.01;
+  force.y = -0.02;
+  force.z = 0.03;
+
+  float duration = 1.0;
+  gazebo::math::Vector3 gzForce(-0.01, -0.02, 0.03);
+
+  gazebo::physics::LinkPtr link = model->GetLink("link");
+  ASSERT_TRUE(link != NULL);
+
+  for (int i = 0; i < 3; ++i)
+    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, duration), hxOK);
+
+  world->Step(1);
+
+  // Every 0.1 seconds
+  gzdbg << "Start time: " << world->GetSimTime() << std::endl;
+  for (int i = 0; i < 10; i++)
+  {
+    EXPECT_EQ(link->GetWorldForce(), 3*gzForce);
+    world->Step(100);
+  }
+  gzdbg << "End time: " << world->GetSimTime() << std::endl;
+
+  gazebo::math::Vector3 empty(0, 0, 0);
+  for (int i = 0; i < 10; i++)
+  {
+    EXPECT_EQ(link->GetWorldForce(), empty);
+    world->Step(100);
+  }
+
+}
+
 TEST_F(SimApiTest, HxsTorque)
 {
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");

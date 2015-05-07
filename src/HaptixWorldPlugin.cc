@@ -278,13 +278,13 @@ void HaptixWorldPlugin::OnWorldUpdate()
   gazebo::common::Time elapsed =
       this->world->GetSimTime() - this->lastSimUpdateTime;
   for (auto iter = this->wrenchDurations.begin();
-       iter != this->wrenchDurations.end(); ++iter)
+       iter != this->wrenchDurations.end(); )
   {
     // Time elapsed since last update
     if (iter->timeRemaining < elapsed && !iter->persistent)
     {
-      // Decrement by 1 because the loop will increment for us.
-      iter = this->wrenchDurations.erase(iter) - 1;
+      this->wrenchDurations.erase(iter);
+      // Don't increment iter, need to stay at the current entry.
     }
     else
     {
@@ -294,6 +294,8 @@ void HaptixWorldPlugin::OnWorldUpdate()
 
       iter->link->AddLinkForce(iter->force);
       iter->link->AddTorque(iter->torque);
+      // Increment iter since the for loop doesn't do it for us.
+      ++iter;
     }
   }
 
