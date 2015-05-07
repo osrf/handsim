@@ -321,45 +321,51 @@ TEST_F(SimApiTest, HxsSetModelLinkState)
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
-  world->Step(1000);
-  gazebo::physics::ModelPtr gzDoorModel = world->GetModel("door");
-  ASSERT_TRUE(gzDoorModel != NULL);
-  ASSERT_TRUE(gzDoorModel->GetJoint("hinge") != NULL);
-  gzDoorModel->SetGravityMode(0);
-  gzDoorModel->GetJoint("hinge")->SetDamping(0, 0);
+  world->Step(50);
+  gazebo::physics::ModelPtr gzHoseModel =
+    world->GetModel("fire_hose_long_curled");
+  ASSERT_TRUE(gzHoseModel != NULL);
+  gzHoseModel->SetGravityMode(0);
 
-  gazebo::physics::LinkPtr doorLink = gzDoorModel->GetLink("door");
-  ASSERT_TRUE(doorLink != NULL);
+  gazebo::physics::LinkPtr link = gzHoseModel->GetLink("link_00");
+  ASSERT_TRUE(link != NULL);
 
-  gazebo::math::Pose gzLinkPose = doorLink->GetWorldPose();
-  gzLinkPose.rot.z -= 0.75185;
+  gazebo::math::Pose gzLinkPose = link->GetWorldPose();
+  gzLinkPose.pos.x += 0.001;
+  gzLinkPose.pos.y += 0.002;
+  gzLinkPose.pos.z += 0.03;
 
   hxsTransform pose;
   HaptixWorldPlugin::ConvertTransform(gzLinkPose, pose);
-  gzdbg << "pose.x: " << pose.pos.x
-        << ", pose.y: " << pose.pos.y
-        << ", pose.z: " << pose.pos.z << std::endl;
 
   hxsVector3 lin_vel;
-  lin_vel.x = -0.00657;
-  lin_vel.y = -0.00814;
-  lin_vel.z = 0.001;
+  lin_vel.x = 0;
+  lin_vel.y = -0.04;
+  lin_vel.z = 0.07;
   hxsVector3 ang_vel;
-  ang_vel.x = 0;
+  ang_vel.x = 0.1;
   ang_vel.y = 0;
-  ang_vel.z = 1.0;
+  ang_vel.z = 0;
 
   hxsVector3 zero;
   memset(&zero, 0, sizeof(hxsVector3));
-  ASSERT_EQ(hxs_set_model_link_state("door", "door", &pose, &lin_vel,
-      &ang_vel), hxOK);
-  gzdbg << "Link pose after service call: " << doorLink->GetWorldPose() << std::endl;
+
+  /*ASSERT_EQ(hxs_set_model_link_state("case", "case", &pose, &lin_vel,
+      &ang_vel), hxOK);*/
+  //world->Step(1);
+
+  ASSERT_EQ(hxs_set_model_link_state("wooden_case", "lid", &pose, &lin_vel,
+      &zero), hxOK);
+  /*link->SetLinearVel(gazebo::math::Vector3(lin_vel.x, lin_vel.y, lin_vel.z));
+  gzdbg << "Link velocity before world step: " << link->GetWorldLinearVel() << std::endl;*/
+  gzdbg << "Link pose before world step: " << link->GetWorldPose() << std::endl;
   world->Step(1);
-  gzdbg << "Link pose after world step: " << doorLink->GetWorldPose() << std::endl;
+  gzdbg << "Link pose after world step: " << link->GetWorldPose() << std::endl;
+  gzdbg << "Link velocity after world step: " << link->GetWorldLinearVel() << std::endl;
 
   /*
 
-  EXPECT_EQ(gzLinkPose, doorLink->GetWorldPose());
+  EXPECT_EQ(gzLinkPose, link->GetWorldPose());
   EXPECT_EQ(gazebo::math::Vector3(lin_vel.x, lin_vel.y, lin_vel.z),
       doorLink->GetWorldLinearVel());
   EXPECT_EQ(gazebo::math::Vector3(0, 0, 1.0), doorLink->GetWorldAngularVel());

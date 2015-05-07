@@ -329,7 +329,11 @@
     <include>
       <uri>model://wooden_case</uri>
       <pose>0 0.037 1.015 0 0 -1.570796</pose>
-      <static>true</static>
+    </include>
+
+    <include>
+      <uri>model://fire_hose_long_curled</uri>
+      <pose>0 0 0 0 0 0</pose>
     </include>
 
     <include>
