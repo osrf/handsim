@@ -434,7 +434,7 @@ TEST_F(SimApiTest, HxsSetTransform)
   ASSERT_TRUE(model != NULL);
   model->SetGravityMode(0);
 
-  gazebo::math::Pose pose(0.01, 0.02, 0.03, 3.14, 1.57, 1.57);
+  gazebo::math::Pose pose(0.01, 0.02, 3, 3.14, 1.57, 1.57);
   hxsTransform transform;
   transform.pos.x = pose.pos.x;
   transform.pos.y = pose.pos.y;
@@ -743,6 +743,7 @@ TEST_F(SimApiTest, HxsRemoveModel)
   world->Step(20);
 
   ASSERT_EQ(hxs_remove_model("wood_cube_5cm"), hxOK);
+  world->Step(20);
 
   gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
   EXPECT_FALSE(model);
@@ -913,7 +914,7 @@ TEST_F(SimApiTest, HxsSetModelColor)
   ASSERT_EQ(hxs_set_model_color("cricket_ball", &blue), hxOK);
 
   // Wait a moment for visual message to publish
-  gazebo::common::Time::Sleep(2);
+  world->Step(1000);
 
   EXPECT_FLOAT_EQ(blue.r, visual->GetAmbient().r);
   EXPECT_FLOAT_EQ(blue.g, visual->GetAmbient().g);
