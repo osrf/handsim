@@ -256,7 +256,6 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   }
 
   this->optitrackHeadOffset = gazebo::math::Pose::Zero;
-  this->optitrackHeadOffsetRotationEnabled = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
   // Transform from elbow of simulated arm to marker
   this->elbowMarker = math::Pose(gazebo::math::Vector3(0.0, -0.20, 0.07),
@@ -1550,45 +1549,50 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     //
     // comptue optitrackHeadOffset
     //
-    this->optitrackHeadOffsetRotationEnabled =
-                                this->headMarker
-                              + this->userCameraPose
-                              + this->worldScreen.GetInverse()
-                              + this->monitorScreen
-                              + this->cameraMonitor
-                              + cameraMarker.GetInverse()
-                              ;
+    if (this->viewpointRotationsEnabled)
+    {
+      this->optitrackHeadOffset =
+                                  this->headMarker
+                                + this->userCameraPose
+                                + this->worldScreen.GetInverse()
+                                + this->monitorScreen
+                                + this->cameraMonitor
+                                + cameraMarker.GetInverse()
+                                ;
+    }
+    else
+    {
+      // for the case rotation not enabled
+      this->optitrackHeadOffset =
+                                  this->monitorScreen
+                                + this->cameraMonitor
+                                + cameraMarker.GetInverse()
+                                + this->headMarker
+                                + this->userCameraPose
+                                + this->worldScreen.GetInverse()
+                                ;
 
-    // for the case rotation not enabled
-    this->optitrackHeadOffset =
-                                this->monitorScreen
-                              + this->cameraMonitor
-                              + cameraMarker.GetInverse()
-                              + this->headMarker
-                              + this->userCameraPose
-                              + this->worldScreen.GetInverse()
-                              ;
+      // force a no-rotation offset
+      this->optitrackHeadOffset.rot = math::Quaternion();
 
-    // force a no-rotation offset
-    this->optitrackHeadOffset.rot = math::Quaternion();
+      // compute the erroroneous target pose from above
+      gazebo::math::Pose targetCameraWrong =
+                                  this->headMarker.GetInverse()
+                                + cameraMarker
+                                + this->cameraMonitor.GetInverse()
+                                + this->monitorScreen.GetInverse()
+                                + this->optitrackHeadOffset
+                                + this->worldScreen
+                                ;
 
-    // compute the erroroneous target pose from above
-    gazebo::math::Pose targetCameraWrong =
-                                this->headMarker.GetInverse()
-                              + cameraMarker
-                              + this->cameraMonitor.GetInverse()
-                              + this->monitorScreen.GetInverse()
-                              + this->optitrackHeadOffset
-                              + this->worldScreen
-                              ;
-
-    // correct error from forcing rotation to zero by
-    // adding user camera frame error from previous step
-    // (userCameraPose.pos - targetCameraWrong.pos) to create a final
-    // target pose.pos that will not introduce user
-    // camera frame offset
-    this->optitrackHeadOffset.pos = this->optitrackHeadOffset.pos
-      + (this->userCameraPose.pos - targetCameraWrong.pos);
+      // correct error from forcing rotation to zero by
+      // adding user camera frame error from previous step
+      // (userCameraPose.pos - targetCameraWrong.pos) to create a final
+      // target pose.pos that will not introduce user
+      // camera frame offset
+      this->optitrackHeadOffset.pos = this->optitrackHeadOffset.pos
+        + (this->userCameraPose.pos - targetCameraWrong.pos);
+    }
 
     this->headOffsetInitialized = true;
   }
@@ -1623,7 +1627,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
     {
       targetCamera =
                   this->headMarker.GetInverse()
-                + this->optitrackHeadOffsetRotationEnabled
+                + this->optitrackHeadOffset
                 + cameraMarker
                 + this->cameraMonitor.GetInverse()
                 + this->monitorScreen.GetInverse()
@@ -1908,6 +1912,9 @@ void HaptixControlPlugin::OnToggleViewpointRotations(ConstIntPtr &_msg)
   std::unique_lock<std::mutex> lock(this->viewpointRotationsMutex,
       std::try_to_lock);
   this->viewpointRotationsEnabled = _msg->data() == 0 ? false : true;
+
+  // force re-compute offsets
+  this->headOffsetInitialized = false;
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)
