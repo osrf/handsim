@@ -556,14 +556,11 @@ namespace gazebo
     /// \brief Receives messages to toggle viewpoint rotations.
     private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
 
-    /// \brief Mutex to lock viewpointRotationsEnabled
-    private: std::mutex viewpointRotationsMutex;
-
     /// \brief Mutex to lock optitrack monitor data
     private: std::mutex optitrackMonitorMutex;
 
     /// \brief True if motion capture rotations the head, false otherwise.
-    private: bool viewpointRotationsEnabled;
+    private: std::atomic<bool> viewpointRotationsEnabled;
 
     /// \brief True if optitrackArmOffset has been initialized
     private: bool armOffsetInitialized;

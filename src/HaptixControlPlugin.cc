@@ -1547,7 +1547,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   {
     // T_CC' = (-T_CH - T_MS + T_WS) - (-T_C'Marker - T_HMarker + T_WH)
     //
-    // comptue optitrackHeadOffset
+    // compute optitrackHeadOffset
     //
     if (this->viewpointRotationsEnabled)
     {
@@ -1557,8 +1557,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                                 + this->worldScreen.GetInverse()
                                 + this->monitorScreen
                                 + this->cameraMonitor
-                                + cameraMarker.GetInverse()
-                                ;
+                                + cameraMarker.GetInverse();
     }
     else
     {
@@ -1569,8 +1568,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                                 + cameraMarker.GetInverse()
                                 + this->headMarker
                                 + this->userCameraPose
-                                + this->worldScreen.GetInverse()
-                                ;
+                                + this->worldScreen.GetInverse();
 
       // force a no-rotation offset
       this->optitrackHeadOffset.rot = math::Quaternion();
@@ -1582,8 +1580,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                                 + this->cameraMonitor.GetInverse()
                                 + this->monitorScreen.GetInverse()
                                 + this->optitrackHeadOffset
-                                + this->worldScreen
-                                ;
+                                + this->worldScreen;
 
       // correct error from forcing rotation to zero by
       // adding user camera frame error from previous step
@@ -1808,7 +1805,8 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 
   double maxLength = 0;
   int originPointId = -1;
-  int shortPointId, longPointId;
+  int shortPointId = -1;
+  int longPointId = -1;
   // Find side with maximum length, choose the "origin" as the opposite point
   for (int i = 0; i < 3; ++i)
   {
@@ -1909,8 +1907,6 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnToggleViewpointRotations(ConstIntPtr &_msg)
 {
-  std::unique_lock<std::mutex> lock(this->viewpointRotationsMutex,
-      std::try_to_lock);
   this->viewpointRotationsEnabled = _msg->data() == 0 ? false : true;
 
   // force re-compute offsets
