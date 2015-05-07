@@ -18,22 +18,6 @@
 #ifndef _HANDSIM_HAPTIX_WORLD_PLUGIN_HH_
 #define _HANDSIM_HAPTIX_WORLD_HH_
 
-#include <functional>
-#include <map>
-#include <string>
-#include <vector>
-
-#include <sdf/sdf.hh>
-
-#include <gazebo/common/Event.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/transport/Node.hh>
-#include <gazebo/transport/Publisher.hh>
-#include <gazebo/physics/Link.hh>
-#include <gazebo/math/Pose.hh>
-#include <gazebo/math/Vector3.hh>
-
-#include <ignition/transport.hh>
 #include <haptix/comm/haptix_sim.h>
 #include <haptix/comm/haptix.h>
 #include <haptix/comm/msg/hxCollideMode.pb.h>
@@ -52,6 +36,23 @@
 #include <haptix/comm/msg/hxTransform.pb.h>
 #include <haptix/comm/msg/hxTime.pb.h>
 #include <haptix/comm/msg/hxVector3.pb.h>
+
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
+
+#include <sdf/sdf.hh>
+
+#include <gazebo/common/Event.hh>
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/transport/Node.hh>
+#include <gazebo/transport/Publisher.hh>
+#include <gazebo/physics/Link.hh>
+#include <gazebo/math/Pose.hh>
+#include <gazebo/math/Vector3.hh>
+
+#include <ignition/transport.hh>
 
 #include "handsim/WrenchHelper.hh"
 
@@ -384,7 +385,8 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_apply_torque callback. Apply a torque to a model over a duration.
+  /// \brief hxs_apply_torque callback. Apply a torque to a model over a
+  /// duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, a Vector3 representing the torque
@@ -395,7 +397,8 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_apply_wrench callback. Apply a wrench to a model over a duration.
+  /// \brief hxs_apply_wrench callback. Apply a wrench to a model over a
+  /// duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, the wrench to apply, and a

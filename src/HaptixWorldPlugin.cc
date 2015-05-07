@@ -15,6 +15,9 @@
  *
 */
 
+#include <haptix/comm/msg/hxCommand.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
+
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/gui/GLWidget.hh>
@@ -34,9 +37,6 @@
 #include <gazebo/rendering/Visual.hh>
 #include <gazebo/util/LogRecord.hh>
 #include <gazebo/plugins/TimerGUIPlugin.hh>
-
-#include <haptix/comm/msg/hxCommand.pb.h>
-#include <haptix/comm/msg/hxGrasp.pb.h>
 
 #include "handsim/HaptixWorldPlugin.hh"
 
@@ -324,12 +324,13 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
 {
   _rep.Clear();
 
+  _result = false;
+
   // Get models
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World was false in SimInfoCallback" << std::endl;
-    _result = false;
     return;
   }
 
@@ -341,7 +342,6 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
     if (!ConvertModel(*model, *modelMsg))
     {
       gzerr << "Couldn't convert Gazebo model to model message" << std::endl;
-      _result = false;
       return;
     }
   }
@@ -360,7 +360,6 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
           *_rep.mutable_camera_transform()))
   {
     gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
-    _result = false;
     return;
   }
 
@@ -373,6 +372,7 @@ void HaptixWorldPlugin::HaptixCameraTransformCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTransform &_rep, bool &_result)
 {
+  _result = false;
   gazebo::math::Pose pose = this->userCameraPose;
   if (!this->userCameraPoseValid)
   {
@@ -383,7 +383,6 @@ void HaptixWorldPlugin::HaptixCameraTransformCallback(
   if (!HaptixWorldPlugin::ConvertTransform(pose, _rep))
   {
     gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
-    _result = false;
     return;
   }
 
@@ -396,12 +395,12 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
       const haptix::comm::msgs::hxTransform &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   gazebo::math::Pose pose;
 
   if (!HaptixWorldPlugin::ConvertTransform(_req, pose))
   {
     gzerr << "Couldn't convert transform message to Gazebo pose" << std::endl;
-    _result = false;
     return;
   }
   gazebo::msgs::Pose poseMsg;
@@ -416,10 +415,10 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result)
 {
+  _result = false;
   if (!_req.has_data())
   {
     gzerr << "String request did not have data field!" << std::endl;
-    _result = false;
     return;
   }
   std::string modelName = _req.data();
@@ -428,7 +427,6 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
   if (!this->world)
   {
     gzerr << "NULL world in ContactPoints callback" << std::endl;
-    _result = false;
     return;
   }
 
@@ -478,11 +476,11 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -491,14 +489,12 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
   if (!model)
   {
     gzerr << "Model was NULL: " << _req.name() << std::endl;
-    _result = false;
     return;
   }
 
   if (_req.joints_size() < 1)
   {
     gzerr << "Not enough joints in callback" << std::endl;
-    _result = false;
     return;
   }
 
@@ -506,7 +502,6 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
   if (!joint)
   {
     gzerr << "Joint was NULL: " << _req.joints(0).name() << std::endl;
-    _result = false;
     return;
   }
   float pos = _req.joints(0).pos();
@@ -527,39 +522,37 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxModel &_rep, bool &_result)
 {
-  // TODO Due to reply, can't call this in a thread-safe way, discuss.
+  _result = false;
   if (!_req.has_string_value())
   {
-    gzerr << "Missing string field in hxParam" << std::endl;
-    _result = false;
+    gzerr << "Missing SDF in hxParam input to AddModel" << std::endl;
     return;
   }
 
   if (!_req.has_name())
   {
     gzerr << "Missing name field in hxParam" << std::endl;
-    _result = false;
     return;
   }
 
   if (!_req.has_vector3())
   {
-    gzerr << "Missing vector3 field in hxParam" << std::endl;
-    _result = false;
+    gzerr << "Missing vector3 position in hxParam input to AddModel"
+          << std::endl;
     return;
   }
 
   if (!_req.has_orientation())
   {
-    gzerr << "Missing orientation field in hxParam" << std::endl;
-    _result = false;
+    gzerr << "Missing orientation of model hxParam input to AddModel"
+          << std::endl;
     return;
   }
 
   if (!_req.has_gravity_mode())
   {
-    gzerr << "Missing gravity_mode field in hxParam" << std::endl;
-    _result = false;
+    gzerr << "Missing gravity_mode of model in hxParam input to AddModel"
+          << std::endl;
     return;
   }
 
@@ -569,7 +562,6 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   if (!modelSDF.Root() || !modelSDF.Root()->HasElement("model"))
   {
     gzerr << "Model SDF was invalid" << std::endl;
-    _result = false;
     return;
   }
   sdf::ElementPtr modelElement = modelSDF.Root()->GetElement("model");
@@ -577,7 +569,6 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   if (!modelElement || !modelElement->HasAttribute("name"))
   {
     gzerr << "Model element invalid" << std::endl;
-    _result = false;
     return;
   }
 
@@ -596,7 +587,6 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   if (!modelElement->GetElement("pose")->Set(pose))
   {
     gzerr << "Failed to set model pose" << std::endl;
-    _result = false;
     return;
   }
   // Set gravity
@@ -613,7 +603,6 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
     if (!linkElement->GetElement("gravity")->Set(gravity_mode))
     {
       gzerr << "Failed to set model gravity" << std::endl;
-      _result = false;
       return;
     }
   }
@@ -647,11 +636,11 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -677,11 +666,11 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxTransform &_rep, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -689,14 +678,12 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
   if (!model)
   {
     gzerr << "Model pointer NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::math::Pose pose = model->GetWorldPose();
   if (!ConvertTransform(pose, _rep))
   {
     gzerr << "Couldn't convert Gazebo pose to transform message" << std::endl;
-    _result = false;
     return;
   }
   _result = true;
@@ -708,11 +695,11 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -720,14 +707,12 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   if (!model)
   {
     gzerr << "Model pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
   if (!_req.has_transform())
   {
     gzerr << "Missing transform field in hxParam" << std::endl;
-    _result = false;
     return;
   }
 
@@ -735,7 +720,6 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   if (!ConvertTransform(_req.transform(), pose))
   {
     gzerr << "Couldn't convert transform message to Gazebo pose" << std::endl;
-    _result = false;
     return;
   }
   auto setModelTransformLambda = [model, pose]()
@@ -753,11 +737,11 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxVector3 &_rep, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -765,14 +749,12 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
   if (!model)
   {
     gzerr << "Model pointer NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::math::Vector3 lin_vel = model->GetWorldLinearVel();
   if (!ConvertVector(lin_vel, _rep))
   {
     gzerr << "Couldn't convert Gazebo Vector3 to message" << std::endl;
-    _result = false;
     return;
   }
   _result = true;
@@ -783,6 +765,7 @@ void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_vector3())
   {
     gzerr << "Missing vector3 field in hxParam" << std::endl;
@@ -796,7 +779,6 @@ void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -804,14 +786,12 @@ void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
   if (!model)
   {
     gzerr << "Model pointer NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::math::Vector3 lin_vel;
   if (!ConvertVector(_req.vector3(), lin_vel))
   {
     gzerr << "Couldn't convert message to Gazebo Vector3" << std::endl;
-    _result = false;
     return;
   }
   auto setLinearVelocityLambda = [model, lin_vel] ()
@@ -828,23 +808,21 @@ void HaptixWorldPlugin::HaptixAngularVelocityCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxVector3 &_rep, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
   if (!this->world)
   {
-    _result = false;
     return;
   }
 
   if (!model)
   {
-    _result = false;
     return;
   }
   gazebo::math::Vector3 ang_vel = model->GetWorldAngularVel();
   if (!ConvertVector(ang_vel, _rep))
   {
-    _result = false;
     return;
   }
   _result = true;
@@ -856,31 +834,31 @@ void HaptixWorldPlugin::HaptixSetAngularVelocityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_vector3())
   {
     gzerr << "Missing vector3 field in hxParam" << std::endl;
+    return;
   }
   if (!_req.has_name())
   {
     gzerr << "Missing name field in hxParam" << std::endl;
+    return;
   }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!this->world)
   {
-    _result = false;
     return;
   }
 
   if (!model)
   {
-    _result = false;
     return;
   }
   gazebo::math::Vector3 ang_vel;
   if (!ConvertVector(_req.vector3(), ang_vel))
   {
-    _result = false;
     return;
   }
   auto setAngularVelocityLambda = [model, ang_vel] ()
@@ -897,22 +875,20 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_vector3())
   {
     gzerr << "Missing vector3 field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_name())
   {
     gzerr << "Missing name field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_float_value())
   {
     gzerr << "Missing float field in hxParam" << std::endl;
-    _result = false;
     return;
   }
 
@@ -920,14 +896,12 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!model)
   {
     gzerr << "Model pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -935,7 +909,6 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
   if (!link)
   {
     gzerr << "Link pointer NULL" << std::endl;
-    _result = false;
     return;
   }
   float duration = _req.float_value();
@@ -943,7 +916,6 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
   if (!ConvertVector(_req.vector3(), force))
   {
     gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
-    _result = false;
     return;
   }
 
@@ -967,36 +939,32 @@ void HaptixWorldPlugin::HaptixApplyTorqueCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_vector3())
   {
     gzerr << "Missing vector3 field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_name())
   {
     gzerr << "Missing name field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_float_value())
   {
     gzerr << "Missing float field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
   if (!model)
   {
     gzerr << "Model pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1004,7 +972,6 @@ void HaptixWorldPlugin::HaptixApplyTorqueCallback(
   if (!link)
   {
     gzerr << "Link pointer NULL" << std::endl;
-    _result = false;
     return;
   }
   float duration = _req.float_value();
@@ -1012,7 +979,6 @@ void HaptixWorldPlugin::HaptixApplyTorqueCallback(
   if (!ConvertVector(_req.vector3(), torque))
   {
     gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1036,29 +1002,26 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_wrench())
   {
     gzerr << "Missing wrench field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_name())
   {
     gzerr << "Missing name field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_float_value())
   {
     gzerr << "Missing float field in hxParam" << std::endl;
-    _result = false;
     return;
   }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1066,7 +1029,6 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
   if (!model)
   {
     gzerr << "Model pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1074,7 +1036,6 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
   if (!link)
   {
     gzerr << "Link pointer NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1085,14 +1046,12 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
   if (!ConvertVector(_req.wrench().force(), force))
   {
     gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
-    _result = false;
     return;
   }
 
   if (!ConvertVector(_req.wrench().torque(), torque))
   {
     gzerr << "Couldn't convert vector message to Gazebo Vector3" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1117,6 +1076,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   GZ_ASSERT(this->userCameraPub != NULL, "Camera publisher was NULL!");
   gazebo::msgs::Pose poseMsg;
   gazebo::msgs::Set(&poseMsg, this->initialCameraPose);
@@ -1175,10 +1135,10 @@ void HaptixWorldPlugin::HaptixStartLoggingCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!gazebo::util::LogRecord::Instance())
   {
     gzerr << "Log recorder was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1188,7 +1148,6 @@ void HaptixWorldPlugin::HaptixStartLoggingCallback(
   if (!gazebo::util::LogRecord::Instance()->Start("zlib", ""))
   {
     gzerr << "Failed to start recording" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1201,10 +1160,10 @@ void HaptixWorldPlugin::HaptixIsLoggingCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxInt &_rep, bool &_result)
 {
+  _result = false;
   if (!gazebo::util::LogRecord::Instance())
   {
     gzerr << "Log recorder was NULL" << std::endl;
-    _result = false;
     return;
   }
   _rep.set_data(gazebo::util::LogRecord::Instance()->GetRunning());
@@ -1217,10 +1176,10 @@ void HaptixWorldPlugin::HaptixStopLoggingCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!gazebo::util::LogRecord::Instance())
   {
     gzerr << "Log recorder was NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::util::LogRecord::Instance()->Stop();
@@ -1233,11 +1192,11 @@ void HaptixWorldPlugin::HaptixModelGravityCallback(
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxInt &_rep, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1245,7 +1204,6 @@ void HaptixWorldPlugin::HaptixModelGravityCallback(
   if (!model)
   {
     gzerr << "Model was NULL" << std::endl;
-    _result = false;
     return;
   }
   bool gravity_mode = false;
@@ -1265,16 +1223,15 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_name())
   {
     gzerr << "Missing required field name in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_gravity_mode())
   {
     gzerr << "Missing required field gravity_mode in hxParam" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1282,7 +1239,6 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
   if (!this->world)
   {
     gzerr << "World was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1290,7 +1246,6 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
   if (!model)
   {
     gzerr << "Model was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1310,23 +1265,21 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_name())
   {
     gzerr << "Missing required field name in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_color())
   {
     gzerr << "Missing required field color in hxParam" << std::endl;
-    _result = false;
     return;
   }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World was NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
@@ -1334,7 +1287,6 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
   if (!model)
   {
     gzerr << "Model was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1351,7 +1303,6 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     if (!linkSDF)
     {
       gzerr << "Link had NULL SDF" << std::endl;
-      _result = false;
       return;
     }
     if (linkSDF->HasElement("visual"))
@@ -1397,11 +1348,11 @@ void HaptixWorldPlugin::HaptixModelColorCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxColor &_rep, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World was NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
@@ -1409,7 +1360,6 @@ void HaptixWorldPlugin::HaptixModelColorCallback(
   if (!model)
   {
     gzerr << "Model was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1417,7 +1367,6 @@ void HaptixWorldPlugin::HaptixModelColorCallback(
   if (links.size() == 0)
   {
     gzerr << "Model has no links, can't set color!" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1435,23 +1384,21 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
+  _result = false;
   if (!_req.has_name())
   {
     gzerr << "Missing required field name in hxParam" << std::endl;
-    _result = false;
     return;
   }
   if (!_req.has_collide_mode())
   {
     gzerr << "Missing required field collide_mode in hxParam" << std::endl;
-    _result = false;
     return;
   }
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World was NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
@@ -1459,7 +1406,6 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
   if (!model)
   {
     gzerr << "Model was NULL" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1469,7 +1415,6 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
       mode != haptix::comm::msgs::hxCollideMode::hxsDETECTIONONLY)
   {
     gzerr << "Unknown hxsCollideMode, cannot set" << std::endl;
-    _result = false;
     return;
   }
 
@@ -1507,6 +1452,7 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
             {
               gzerr << "Unknown collision mode inside lambda. This should "
                     << "never happen" << std::endl;
+              return;
             }
           }
         }
@@ -1522,11 +1468,11 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxCollideMode &_rep, bool &_result)
 {
+  _result = false;
   std::lock_guard<std::mutex> lock(this->worldMutex);
   if (!this->world)
   {
     gzerr << "World was NULL" << std::endl;
-    _result = false;
     return;
   }
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
@@ -1534,7 +1480,6 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
   if (!model)
   {
     gzerr << "Model was NULL" << std::endl;
-    _result = false;
     return;
   }
   bool collideWithoutContact = true;
@@ -1548,7 +1493,6 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
       if (!surface)
       {
         gzerr << "Surface was NULL" << std::endl;
-        _result = false;
         return;
       }
       collideWithoutContact &= surface->collideWithoutContact;

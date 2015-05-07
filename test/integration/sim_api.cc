@@ -27,7 +27,6 @@
 
 #include "test_config.h"
 
-
 class SimApiTest : public gazebo::ServerFixture
 {
   public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
@@ -623,7 +622,8 @@ TEST_F(SimApiTest, MultipleForces)
 
   for (int i = 0; i < 3; ++i)
   {
-    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, 2*duration), hxOK);
+    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, 2*duration),
+        hxOK);
   }
 
   world->Step(1);
@@ -648,7 +648,6 @@ TEST_F(SimApiTest, MultipleForces)
     EXPECT_EQ(link->GetWorldForce(), empty);
     world->Step(100);
   }
-
 }
 
 TEST_F(SimApiTest, HxsTorque)
