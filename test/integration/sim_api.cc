@@ -451,10 +451,10 @@ TEST_F(SimApiTest, HxsSetTransform)
   EXPECT_NEAR(model->GetWorldPose().pos.x, pose.pos.x, 1e-3);
   EXPECT_NEAR(model->GetWorldPose().pos.y, pose.pos.y, 1e-3);
   EXPECT_NEAR(model->GetWorldPose().pos.z, pose.pos.z, 1e-3);
-  EXPECT_NEAR(model->GetWorldPose().rot.w, pose.rot.w, 1e-2);
-  EXPECT_NEAR(model->GetWorldPose().rot.x, pose.rot.x, 1e-2);
-  EXPECT_NEAR(model->GetWorldPose().rot.y, pose.rot.y, 1e-2);
-  EXPECT_NEAR(model->GetWorldPose().rot.z, pose.rot.z, 1e-2);
+  EXPECT_NEAR(model->GetWorldPose().rot.w, pose.rot.w, 1e-3);
+  EXPECT_NEAR(model->GetWorldPose().rot.x, pose.rot.x, 1e-3);
+  EXPECT_NEAR(model->GetWorldPose().rot.y, pose.rot.y, 1e-3);
+  EXPECT_NEAR(model->GetWorldPose().rot.z, pose.rot.z, 1e-3);
 }
 
 TEST_F(SimApiTest, HxsLinearVel)
@@ -617,12 +617,24 @@ TEST_F(SimApiTest, MultipleForces)
   ASSERT_TRUE(link != NULL);
 
   for (int i = 0; i < 3; ++i)
+  {
     ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, duration), hxOK);
+  }
+
+  for (int i = 0; i < 3; ++i)
+  {
+    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, 2*duration), hxOK);
+  }
 
   world->Step(1);
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
+  for (int i = 0; i < 10; i++)
+  {
+    EXPECT_EQ(link->GetWorldForce(), 6*gzForce);
+    world->Step(100);
+  }
   for (int i = 0; i < 10; i++)
   {
     EXPECT_EQ(link->GetWorldForce(), 3*gzForce);
@@ -916,7 +928,7 @@ TEST_F(SimApiTest, HxsSetModelColor)
   ASSERT_EQ(hxs_set_model_color("cricket_ball", &blue), hxOK);
 
   // Wait a moment for visual message to publish
-  world->Step(1000);
+  world->Step(2000);
 
   EXPECT_FLOAT_EQ(blue.r, visual->GetAmbient().r);
   EXPECT_FLOAT_EQ(blue.g, visual->GetAmbient().g);
