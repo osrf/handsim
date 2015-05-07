@@ -98,11 +98,6 @@ TEST(SimApiClientTest, ThreeProcesses)
       ang_vel.y = 1.5;
       ang_vel.z = 1.5;
 
-      EXPECT_EQ(hxs_set_model_link_state("cricket_ball", "link", &transform,
-          &lin_vel, &ang_vel), hxOK);
-      //sleep(5);
-      std::cout << "hxs_set_model_link_state executed." << std::endl;
-
       std::string modelSDF =
           "<sdf version=\"1.5\">"
             "<model name=\"new_model\">"
@@ -139,16 +134,10 @@ TEST(SimApiClientTest, ThreeProcesses)
       EXPECT_EQ(hxs_set_model_gravity_mode("cricket_ball", gravity_mode), hxOK);
       std::cout << "hxs_set_model_gravity_mode executed." << std::endl;
 
-      lin_vel.x = 0;
-      lin_vel.y = 0;
-      lin_vel.z = 0;
       EXPECT_EQ(hxs_set_linear_velocity("cricket_ball", &lin_vel), hxOK);
       std::cout << "hxs_set_linear_velocity executed." << std::endl;
       EXPECT_EQ(hxs_linear_velocity("cricket_ball", &lin_vel), hxOK);
       std::cout << "hxs_linear_velocity executed." << std::endl;
-      ang_vel.x = 0;
-      ang_vel.y = 0;
-      ang_vel.z = 0;
       EXPECT_EQ(hxs_set_angular_velocity("cricket_ball", &ang_vel), hxOK);
       sleep(5);
       std::cout << "hxs_set_angular_velocity executed." << std::endl;

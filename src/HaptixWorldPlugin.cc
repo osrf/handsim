@@ -61,7 +61,6 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_joint_state");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_link_state");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_add_model");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_remove_model");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_transform");
@@ -196,9 +195,6 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_joint_state",
     &HaptixWorldPlugin::HaptixModelJointStateCallback, this);
-
-  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_link_state",
-    &HaptixWorldPlugin::HaptixModelLinkStateCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_add_model",
     &HaptixWorldPlugin::HaptixAddModelCallback, this);
@@ -519,78 +515,6 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
         joint->SetVelocity(0, vel);
       };
   this->updateFunctions.push_back(setJointStateLambda);
-
-  _result = true;
-}
-
-/////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixModelLinkStateCallback(
-      const std::string &/*_service*/,
-      const haptix::comm::msgs::hxModel &_req,
-      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
-{
-  std::lock_guard<std::mutex> lock(this->worldMutex);
-  if (!this->world)
-  {
-    gzerr << "World was NULL" << std::endl;
-    _result = false;
-    return;
-  }
-
-  gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
-
-  if (!model)
-  {
-    gzerr << "Model was NULL: " << _req.name() << std::endl;
-    _result = false;
-    return;
-  }
-
-  if (_req.links_size() < 1)
-  {
-    gzerr << "Not enough links in callback" << std::endl;
-    _result = false;
-    return;
-  }
-
-  gazebo::physics::LinkPtr link = model->GetLink(_req.links(0).name());
-  if (!link)
-  {
-    gzerr << "Link was NULL: " << _req.links(0).name() << std::endl;
-    _result = false;
-    return;
-  }
-
-  gazebo::math::Pose pose;
-  gazebo::math::Vector3 lin_vel;
-  gazebo::math::Vector3 ang_vel;
-
-  if (!ConvertTransform(_req.links(0).transform(), pose))
-  {
-    gzerr << "Couldn't convert link transform" << std::endl;
-    _result = false;
-    return;
-  }
-  if (!ConvertVector(_req.links(0).lin_vel(), lin_vel))
-  {
-    gzerr << "Couldn't convert linear vel vector" << std::endl;
-    _result = false;
-    return;
-  }
-  if (!ConvertVector(_req.links(0).ang_vel(), ang_vel))
-  {
-    gzerr << "Couldn't convert linear vel vector" << std::endl;
-    _result = false;
-    return;
-  }
-
-  auto setLinkStateLambda = [link, &pose, &lin_vel, &ang_vel]()
-    {
-      link->SetWorldPose(pose);
-      link->SetLinearVel(lin_vel);
-      link->SetAngularVel(ang_vel);
-    };
-  this->updateFunctions.push_back(setLinkStateLambda);
 
   _result = true;
 }
