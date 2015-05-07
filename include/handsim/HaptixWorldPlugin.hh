@@ -55,6 +55,7 @@
 
 #include "handsim/WrenchHelper.hh"
 
+/// \brief Class for representing a wrench applied to a link over a duration.
 class WrenchDuration
 {
   public:
@@ -199,7 +200,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
       haptix::comm::msgs::hxJoint &_out);
 
   /// \brief Convert from Gazebo Joint to hxsJoint
-  /// \param[in] _in Gazebo joitn to convert
+  /// \param[in] _in Gazebo joint to convert
   /// \param[out] _out hxsJoint output
   /// \return True if conversion succeeded.
   public: static bool ConvertJoint(gazebo::physics::Joint &_in,
@@ -372,7 +373,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_force callback. Apply a force to a model over a duration.
+  /// \brief hxs_apply_force callback. Apply a force to a model over a duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the force, a Vector3 representing the force
@@ -383,7 +384,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_torque callback. Apply a torque to a model over a duration.
+  /// \brief hxs_apply_torque callback. Apply a torque to a model over a duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, a Vector3 representing the torque
@@ -394,7 +395,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_wrench callback. Apply a wrench to a model over a duration.
+  /// \brief hxs_apply_wrench callback. Apply a wrench to a model over a duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, the wrench to apply, and a
@@ -528,7 +529,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \brief Node for Gazebo transport.
   protected: gazebo::transport::NodePtr gzNode;
 
-  /// \brief: ignition transport node for talking to haptix comm
+  /// \brief ignition transport node for talking to haptix comm
   private: ignition::transport::Node ignNode;
 
   /// \brief For publishing commands to the server
