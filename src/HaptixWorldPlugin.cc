@@ -289,8 +289,8 @@ void HaptixWorldPlugin::OnWorldUpdate()
 
       GZ_ASSERT(iter->link, "Link of WrenchDuration object was NULL!");
 
-      iter->link->AddLinkForce(iter->force);
-      iter->link->AddTorque(iter->torque);
+      iter->link->AddLinkForce(iter->wrench.force);
+      iter->link->AddTorque(iter->wrench.torque);
       // Increment iter since the for loop doesn't do it for us.
       ++iter;
     }
@@ -955,10 +955,9 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
     return;
   }
 
-  this->wrenchDurations.push_back(WrenchDuration(link, force,
-      gazebo::math::Vector3::Zero, gazebo::common::Time(duration),
-      duration < 0));
-
+  this->wrenchDurations.push_back(WrenchDuration(link,
+      gazebo::WrenchHelper(force, gazebo::math::Vector3::Zero),
+      gazebo::common::Time(duration), duration < 0));
   _result = true;
 }
 
@@ -1026,8 +1025,8 @@ void HaptixWorldPlugin::HaptixApplyTorqueCallback(
   }
 
   this->wrenchDurations.push_back(WrenchDuration(link,
-      gazebo::math::Vector3::Zero, torque, gazebo::common::Time(duration),
-      duration < 0));
+      gazebo::WrenchHelper(gazebo::math::Vector3::Zero, torque),
+      gazebo::common::Time(duration), duration < 0));
   _result = true;
 }
 
@@ -1106,8 +1105,9 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
     return;
   }
 
-  this->wrenchDurations.push_back(WrenchDuration(link, force,
-      torque, gazebo::common::Time(duration), duration < 0));
+  this->wrenchDurations.push_back(WrenchDuration(link,
+      gazebo::WrenchHelper(force, torque),
+      gazebo::common::Time(duration), duration < 0));
   _result = true;
 }
 
