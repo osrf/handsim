@@ -617,12 +617,24 @@ TEST_F(SimApiTest, MultipleForces)
   ASSERT_TRUE(link != NULL);
 
   for (int i = 0; i < 3; ++i)
+  {
     ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, duration), hxOK);
+  }
+
+  for (int i = 0; i < 3; ++i)
+  {
+    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, 2*duration), hxOK);
+  }
 
   world->Step(1);
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
+  for (int i = 0; i < 10; i++)
+  {
+    EXPECT_EQ(link->GetWorldForce(), 6*gzForce);
+    world->Step(100);
+  }
   for (int i = 0; i < 10; i++)
   {
     EXPECT_EQ(link->GetWorldForce(), 3*gzForce);
