@@ -535,6 +535,10 @@ namespace gazebo
     /// \brief Optitrack calibration offset for the head
     private: gazebo::math::Pose optitrackHeadOffset;
 
+    /// \brief Optitrack calibration offset for the head with rotation
+    /// enabled.
+    private: gazebo::math::Pose optitrackHeadOffsetRotationEnabled;
+
     /// \brief Optitrack calibration offset for the arm
     private: gazebo::math::Pose optitrackArmOffset;
 
