@@ -299,6 +299,7 @@ void HaptixWorldPlugin::OnWorldUpdate()
   {
     function();
   }
+
   this->updateFunctions.clear();
 
   this->lastSimUpdateTime = this->world->GetSimTime();
@@ -623,7 +624,10 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
       {
         this->world->InsertModelString(xml);
       };
-  this->updateFunctions.push_back(addModelLambda);
+  {
+    std::lock_guard<std::mutex> lock(this->worldMutex);
+    this->updateFunctions.push_back(addModelLambda);
+  }
 
   _rep.Clear();
   _rep.set_name(_req.name());
@@ -1480,22 +1484,22 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
             {
               surface->collideWithoutContact = false;
               // Set collideBitmask in case it was unset
-              surface->collideBitmask = 0x0;
+              surface->collideBitmask = 0x0u;
             }
             else if (mode ==
                 haptix::comm::msgs::hxCollideMode::hxsDETECTIONONLY)
             {
               surface->collideWithoutContact = true;
               // Set collideBitmask in case it was unset
-              if (surface->collideBitmask == 0x0)
+              if (surface->collideBitmask == 0x0u)
               {
-                surface->collideBitmask = 0x01;
+                surface->collideBitmask = 0x01u;
               }
             }
             else if (mode == haptix::comm::msgs::hxCollideMode::hxsCOLLIDE)
             {
               surface->collideWithoutContact = false;
-              surface->collideBitmask = 0x01;
+              surface->collideBitmask = 0x01u;
             }
             else
             {
@@ -1532,7 +1536,7 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
     return;
   }
   bool collideWithoutContact = true;
-  unsigned int totalCollideBitmask = 0x0;
+  unsigned int totalCollideBitmask = 0x0u;
 
   for (auto link : model->GetLinks())
   {
@@ -1550,7 +1554,7 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
     }
   }
 
-  if (totalCollideBitmask == 0x0)
+  if (totalCollideBitmask == 0x0u)
   {
     // All of the collisions had a collide_bitmask of 0x0
     _rep.set_mode(haptix::comm::msgs::hxCollideMode::hxsNOCOLLIDE);
