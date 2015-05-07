@@ -215,8 +215,8 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_angular_velocity callback. Get the angular velocity of a
-  /// model.
+  /// \brief hxs_angular_velocity callback. Get the angular velocity of the
+  /// canonical link of a model.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: name of the model to query.
   /// \param[out] _rep The reply: Vector3 representing the angular velocity of
@@ -230,7 +230,8 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// velocity of a model and all its links.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: An hxParam message containing the name of
-  /// the model and a Vector3 representing the desired angular velocity.
+  /// the model and a Vector3 representing the desired angular velocity in the
+  /// world frame.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
   private: void HaptixSetAngularVelocityCallback(const std::string &_service,
@@ -396,12 +397,12 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[in] Gazebo pose to convert
   /// \param[out] hxsTransform output
   /// \return True if the conversion succeeded.
-  public: static bool ConvertTransform(const gazebo::math::Pose &_out,
-      hxsTransform &_in);
+  public: static bool ConvertTransform(const gazebo::math::Pose &_in,
+      hxsTransform &_out);
 
   /// \brief Convert from Gazebo Pose to hxsTransform
-  /// \param[in] _in hxsTransform to convert
-  /// \param[out] _out Gazebo pose output
+  /// \param[in] _in Gazebo pose to convert
+  /// \param[out] _out hxsTransform output
   /// \return True if the conversion succeeded.
   public: static bool ConvertTransform(
       const gazebo::math::Pose &_in, haptix::comm::msgs::hxTransform &_out);
