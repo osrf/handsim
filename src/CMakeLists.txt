@@ -50,7 +50,7 @@ add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
   ${HAPTIX-COMM_INCLUDE_DIRS}/haptix/comm/msg/hxCommand.pb.cc
 )
 
-add_library(HaptixWorldPlugin SHARED HaptixWorldPlugin.cc)
+add_library(HaptixWorldPlugin SHARED HaptixWorldPlugin.cc WrenchHelper.cc)
 
 # additional library dependencies
 add_dependencies(HaptixControlPlugin

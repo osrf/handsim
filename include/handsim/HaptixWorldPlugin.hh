@@ -53,20 +53,20 @@
 #include <haptix/comm/msg/hxTime.pb.h>
 #include <haptix/comm/msg/hxVector3.pb.h>
 
+#include "handsim/WrenchHelper.hh"
+
 class WrenchDuration
 {
   public:
     gazebo::physics::LinkPtr link;
-    gazebo::math::Vector3 force;
-    gazebo::math::Vector3 torque;
+    gazebo::WrenchHelper wrench;
     gazebo::common::Time timeRemaining;
     bool persistent;
 
-    WrenchDuration() : link(NULL), persistent(false) {}
-    WrenchDuration(gazebo::physics::LinkPtr _link,
-        gazebo::math::Vector3 _force, gazebo::math::Vector3 _torque,
+    WrenchDuration() : persistent(false) {}
+    WrenchDuration(gazebo::physics::LinkPtr _link, gazebo::WrenchHelper _wrench,
         gazebo::common::Time _duration, bool _persistent)
-      : link(_link), force(_force), torque(_torque), timeRemaining(_duration),
+      : link(_link), wrench(_wrench), timeRemaining(_duration),
         persistent(_persistent) {}
 };
 

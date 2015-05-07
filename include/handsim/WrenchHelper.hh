@@ -24,6 +24,15 @@ namespace gazebo
 {
   class WrenchHelper
   {
+    /// \brief constructor
+    public: WrenchHelper() {}
+
+    /// \brief constructor
+    public: WrenchHelper(physics::LinkPtr _ref,
+      math::Vector3 _force, math::Vector3 _torque)
+      : force(_force), torque(_torque), referenceFrame(_ref)
+      {}
+
     /// \brief Operator =
     /// \param[in] _wrench wrench to set from.
     /// \return *this
