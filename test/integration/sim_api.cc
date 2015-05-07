@@ -616,9 +616,14 @@ TEST_F(SimApiTest, MultipleForces)
   gazebo::physics::LinkPtr link = model->GetLink("link");
   ASSERT_TRUE(link != NULL);
 
-  for (int i = 0; i < 5; ++i)
+  for (int i = 0; i < 3; ++i)
   {
     ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, duration), hxOK);
+  }
+
+  for (int i = 0; i < 3; ++i)
+  {
+    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, 2*duration), hxOK);
   }
 
   world->Step(1);
@@ -627,7 +632,12 @@ TEST_F(SimApiTest, MultipleForces)
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
   for (int i = 0; i < 10; i++)
   {
-    EXPECT_EQ(link->GetWorldForce(), 5*gzForce);
+    EXPECT_EQ(link->GetWorldForce(), 6*gzForce);
+    world->Step(100);
+  }
+  for (int i = 0; i < 10; i++)
+  {
+    EXPECT_EQ(link->GetWorldForce(), 3*gzForce);
     world->Step(100);
   }
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
