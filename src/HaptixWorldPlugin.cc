@@ -140,7 +140,8 @@ void HaptixWorldPlugin::InitializeColorMap()
     }
     if (numVecs == 0)
       numVecs = 1;
-    gazebo::common::Color color(r / numVecs, g / numVecs, b / numVecs, a / numVecs);
+    gazebo::common::Color color(r / numVecs, g / numVecs, b / numVecs,
+        a / numVecs);
     this->lastKnownColors[model->GetId()] = color;
   }
 }
@@ -607,7 +608,8 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
     {
       linkElement->AddElement("gravity");
     }
-    GZ_ASSERT(linkElement->GetElement("gravity"), "failed to add gravity element");
+    GZ_ASSERT(linkElement->GetElement("gravity"),
+        "failed to add gravity element");
     if (!linkElement->GetElement("gravity")->Set(gravity_mode))
     {
       gzerr << "Failed to set model gravity" << std::endl;
