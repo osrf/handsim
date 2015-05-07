@@ -28,9 +28,8 @@ namespace gazebo
     public: WrenchHelper() {}
 
     /// \brief constructor
-    public: WrenchHelper(physics::LinkPtr _ref,
-      math::Vector3 _force, math::Vector3 _torque)
-      : force(_force), torque(_torque), referenceFrame(_ref)
+    public: WrenchHelper(math::Vector3 _force, math::Vector3 _torque)
+      : force(_force), torque(_torque)
       {}
 
     /// \brief Operator =

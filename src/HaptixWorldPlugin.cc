@@ -954,7 +954,7 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
   }
 
   this->wrenchDurations.push_back(WrenchDuration(link,
-      gazebo::WrenchHelper(NULL, force, gazebo::math::Vector3::Zero),
+      gazebo::WrenchHelper(force, gazebo::math::Vector3::Zero),
       gazebo::common::Time(duration), duration < 0));
   _result = true;
 }
@@ -1023,7 +1023,7 @@ void HaptixWorldPlugin::HaptixApplyTorqueCallback(
   }
 
   this->wrenchDurations.push_back(WrenchDuration(link,
-      gazebo::WrenchHelper(NULL, gazebo::math::Vector3::Zero, torque),
+      gazebo::WrenchHelper(gazebo::math::Vector3::Zero, torque),
       gazebo::common::Time(duration), duration < 0));
   _result = true;
 }
@@ -1104,7 +1104,7 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
   }
 
   this->wrenchDurations.push_back(WrenchDuration(link,
-      gazebo::WrenchHelper(NULL, force, torque),
+      gazebo::WrenchHelper(force, torque),
       gazebo::common::Time(duration), duration < 0));
   _result = true;
 }
