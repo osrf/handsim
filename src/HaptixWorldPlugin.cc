@@ -35,8 +35,8 @@
 #include <gazebo/util/LogRecord.hh>
 #include <gazebo/plugins/TimerGUIPlugin.hh>
 
-#include "haptix/comm/msg/hxCommand.pb.h"
-#include "haptix/comm/msg/hxGrasp.pb.h"
+#include <haptix/comm/msg/hxCommand.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
 
 #include "handsim/HaptixWorldPlugin.hh"
 
