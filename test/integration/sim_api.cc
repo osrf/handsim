@@ -370,7 +370,6 @@ TEST_F(SimApiTest, HxsAddModel)
               "<lower>0</lower>"
               "<upper>0</upper>"
             "</limit>"
-            "<use_parent_model_frame>true</use_parent_model_frame>"
           "</axis>"
         "</joint>"
       "</model>"
@@ -401,6 +400,9 @@ TEST_F(SimApiTest, HxsAddModel)
   EXPECT_FLOAT_EQ(model.transform.orient.x, q.x);
   EXPECT_FLOAT_EQ(model.transform.orient.y, q.y);
   EXPECT_FLOAT_EQ(model.transform.orient.z, q.z);
+
+  world->Step(1000);
+  EXPECT_TRUE(world->GetModel("new_model") != NULL);
 }
 
 TEST_F(SimApiTest, HxsTransform)

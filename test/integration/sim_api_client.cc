@@ -121,12 +121,13 @@ TEST(SimApiClientTest, ThreeProcesses)
             "</model>"
           "</sdf>";
 
-      EXPECT_EQ(hxs_add_model(modelSDF.c_str(), "new_model", 0, 0.1, 0.2, 3.14,
+
+      EXPECT_EQ(hxs_remove_model("wooden_case"), hxOK);
+      std::cout << "hxs_remove_model executed." << std::endl;
+
+      EXPECT_EQ(hxs_add_model(modelSDF.c_str(), "new_model", 0, 0.1, 1, 3.14,
         1.57, -1.57, false, &model), hxOK);
       std::cout << "hxs_add_model executed." << std::endl;
-
-      EXPECT_EQ(hxs_remove_model("new_model"), hxOK);
-      std::cout << "hxs_remove_model executed." << std::endl;
 
       EXPECT_EQ(hxs_model_gravity_mode("cricket_ball", &gravity_mode), hxOK);
       std::cout << "hxs_model_gravity_mode executed." << std::endl;

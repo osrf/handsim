@@ -108,7 +108,7 @@ void HaptixWorldPlugin::InitializeColorMap()
       if (linkSDF->HasElement("visual"))
       {
         for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
-             visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
+             visualSDF; visualSDF = visualSDF->GetNextElement("visual"))
         {
           GZ_ASSERT(visualSDF->HasAttribute("name"),
               "Malformed visual element!");
@@ -590,6 +590,7 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   {
     modelElement->AddElement("pose");
   }
+  GZ_ASSERT(modelElement->GetElement("pose"), "failed to add pose element");
   if (!modelElement->GetElement("pose")->Set(pose))
   {
     gzerr << "Failed to set model pose" << std::endl;
@@ -599,21 +600,29 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   // Set gravity
   bool gravity_mode = _req.gravity_mode();
   for (sdf::ElementPtr linkElement = modelElement->GetElement("link");
-      linkElement; linkElement = modelElement->GetNextElement("link"))
+      linkElement; linkElement = linkElement->GetNextElement("link"))
   {
     if (!linkElement->GetElement("gravity"))
     {
       linkElement->AddElement("gravity");
     }
-    linkElement->GetElement("gravity")->Set(gravity_mode);
+    GZ_ASSERT(linkElement->GetElement("gravity"), "failed to add gravity element");
+    if (!linkElement->GetElement("gravity")->Set(gravity_mode))
+    {
+      gzerr << "Failed to set model gravity" << std::endl;
+      _result = false;
+      return;
+    }
   }
 
-  xml = modelSDF.ToString();
+  /*xml = modelSDF.ToString();
+  std::cout << xml << std::endl;*/
 
   // load an SDF element from XML
-  auto addModelLambda = [&xml, this]()
+  auto addModelLambda = [modelSDF, this]()
       {
-        this->world->InsertModelString(xml);
+        //this->world->InsertModelString(xml);
+        this->world->InsertModelSDF(modelSDF);
       };
   this->updateFunctions.push_back(addModelLambda);
 
@@ -1343,7 +1352,7 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
     if (linkSDF->HasElement("visual"))
     {
       for (sdf::ElementPtr visualSDF = linkSDF->GetElement("visual");
-           visualSDF; visualSDF = linkSDF->GetNextElement("visual"))
+           visualSDF; visualSDF = visualSDF->GetNextElement("visual"))
       {
         GZ_ASSERT(visualSDF->HasAttribute("name"), "Malformed visual element!");
         std::string visualName = visualSDF->Get<std::string>("name");
