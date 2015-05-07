@@ -279,7 +279,7 @@ void HaptixWorldPlugin::OnWorldUpdate()
     // Time elapsed since last update
     if (iter->timeRemaining < elapsed && !iter->persistent)
     {
-      this->wrenchDurations.erase(iter);
+      iter = this->wrenchDurations.erase(iter);
       // Don't increment iter, need to stay at the current entry.
     }
     else
@@ -615,14 +615,13 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
     }
   }
 
-  /*xml = modelSDF.ToString();
-  std::cout << xml << std::endl;*/
+  xml = modelSDF.ToString();
 
   // load an SDF element from XML
-  auto addModelLambda = [modelSDF, this]()
+  // copy the string via capture list
+  auto addModelLambda = [xml, this]()
       {
-        //this->world->InsertModelString(xml);
-        this->world->InsertModelSDF(modelSDF);
+        this->world->InsertModelString(xml);
       };
   this->updateFunctions.push_back(addModelLambda);
 
