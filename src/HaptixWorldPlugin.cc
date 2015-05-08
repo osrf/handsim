@@ -628,9 +628,7 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
   _rep.set_name(_req.name());
   ConvertTransform(pose, *_rep.mutable_transform());
   _rep.set_gravity_mode(gravity_mode);
-  // TODO id can't be filled before runtime!
   // TODO: links, joints have to be filled by parsing static SDF...
-  _rep.set_id(0);
   _result = true;
 }
 
@@ -1603,8 +1601,6 @@ bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
 
   gazebo::math::Pose modelPose = _in.GetWorldPose();
   HaptixWorldPlugin::ConvertTransform(modelPose, *_out.mutable_transform());
-
-  _out.set_id(_in.GetId());
 
   _out.clear_links();
   bool result = true;
