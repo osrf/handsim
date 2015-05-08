@@ -634,8 +634,8 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
   if (!model)
   {
-    gzerr << "Model pointer NULL" << std::endl;
-    _result = true;
+    gzerr << "Can't remove model [" << _req.data()
+          << "] because it does not exist." << std::endl;
     return;
   }
   auto removeModelLambda = [model, this]()
@@ -787,11 +787,13 @@ void HaptixWorldPlugin::HaptixAngularVelocityCallback(
   gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
   if (!this->world)
   {
+    gzerr << "World pointer NULL" << std::endl;
     return;
   }
 
   if (!model)
   {
+    gzerr << "Model pointer NULL" << std::endl;
     return;
   }
   gazebo::math::Vector3 ang_vel = model->GetWorldAngularVel();
@@ -1051,7 +1053,10 @@ void HaptixWorldPlugin::HaptixResetCallback(
     command.ref_pos_enabled = 1;
     hxSensor sensor;
     if (hx_update(&command, &sensor) != ::hxOK)
+    {
       gzerr << "hx_update(): Request error.\n" << std::endl;
+      return;
+    }
 
     gazebo::msgs::Int pause;
     pause.set_data(1);
@@ -1069,6 +1074,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
             result) || !result)
     {
       gzwarn << "Failed to call gazebo/Grasp service" << std::endl;
+      return;
     }
   }
   else
