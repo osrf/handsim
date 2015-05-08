@@ -15,6 +15,9 @@
  *
 */
 
+#include <gazebo/common/Assert.hh>
+#include <gazebo/gui/KeyEventHandler.hh>
+
 #include "handsim/HaptixControlPlugin.hh"
 
 namespace gazebo
@@ -86,8 +89,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->viewpointJoyPub =
     this->gazeboNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
-  this->pausePub =
-    this->gazeboNode->Advertise<gazebo::msgs::Int>("~/motion_tracking/pause_response");
+  this->pausePub = this->gazeboNode->Advertise<gazebo::msgs::Int>
+        ("~/motion_tracking/pause_response");
 
   this->joySub =
     this->gazeboNode->Subscribe("~/user_camera/joy_twist",
@@ -165,9 +168,14 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
   this->cameraToHeadSensor = math::Pose(0, 0.10, 0, 0.0, -0.3, 0.0);
 
-  // transformation from camera to marker in camera frame
-  this->cameraToOptitrackHeadMarker = math::Pose(-0.02, -0.025, 0.125,
-                                           -M_PI/2, -M_PI/2, 0);
+  // transformation from camera to marker in camera frame (optitrack)
+  this->headMarker = math::Pose(0, 0, 0, M_PI/2, 0, 0);
+  if (_sdf->HasElement("optitrack_head_to_marker_offset"))
+  {
+    this->headMarker =
+      _sdf->Get<math::Pose>("optitrack_head_to_marker_offset");
+  }
+
 
   this->viewpointRotationsSub = this->gazeboNode->Subscribe(
       "~/motion_tracking/viewpoint_rotations",
@@ -238,15 +246,28 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseJoint->SetParam("stop_erp", 0, 0.0);
   this->baseJoint->SetParam("stop_cfm", 0, 1.0/baseJointImplicitDamping);
 
-  this->optitrackArm = gazebo::math::Pose::Zero;
-  this->monitorOptitrackFrame = gazebo::math::Pose::Zero;
+  this->monitorScreen = gazebo::math::Pose::Zero;
 
-  this->optitrackWorldArmRot = gazebo::math::Pose(
-                               gazebo::math::Vector3(0, 0, 0),
-                               gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
+  // Position of the screen in the world frame
+  this->worldScreen = gazebo::math::Pose(0, -0.65, 1.5, 0, 0, 0);
+  if (this->sdf->HasElement("world_screen_location"))
+  {
+    this->worldScreen = sdf->Get<math::Pose>("world_screen_location");
+  }
 
+  this->optitrackHeadOffset = gazebo::math::Pose::Zero;
   this->optitrackArmOffset = gazebo::math::Pose::Zero;
-  this->gazeboToOptitrack = gazebo::math::Pose::Zero;
+  // Transform from elbow of simulated arm to marker
+  this->elbowMarker = math::Pose(gazebo::math::Vector3(0.0, -0.20, 0.07),
+                                 gazebo::math::Quaternion(M_PI, -M_PI/2, 0));
+  if (this->sdf->HasElement("base_link_sensor_offset"))
+  {
+    sdf::ElementPtr elbowMarkerSdf =
+        this->sdf->GetElement("base_link_sensor_offset");
+    this->elbowMarker = elbowMarkerSdf->Get<math::Pose>();
+  }
+  this->elbowMarkerCorrected = elbowMarker;
+
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
 
@@ -587,7 +608,7 @@ void HaptixControlPlugin::LoadHandControl()
 
   // Get predefined grasp poses
   sdf::ElementPtr grasp = this->sdf->GetElement("grasp");
-  while(grasp)
+  while (grasp)
   {
     std::string name;
     grasp->GetAttribute("name")->Get(name);
@@ -596,7 +617,7 @@ void HaptixControlPlugin::LoadHandControl()
     std::istringstream iss(graspBuffer);
     std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
                                     std::istream_iterator<std::string>{}};
-    for(unsigned int i = 0; i < tokens.size(); i++)
+    for (unsigned int i = 0; i < tokens.size(); i++)
       this->grasps[name].push_back(stof(tokens[i]));
     grasp = grasp->GetNextElement("grasp");
   }
@@ -1006,7 +1027,7 @@ void HaptixControlPlugin::GetHandControlFromClient()
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
   // command all joints
-  for(unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
   {
     // get joint positions and velocities
     double position = this->haptixJoints[i]->GetAngle(0).Radian();
@@ -1413,14 +1434,14 @@ void HaptixControlPlugin::HaptixGraspCallback(
   _rep.set_gain_pos_enabled(this->robotCommand.gain_pos_enabled());
   _rep.set_gain_vel_enabled(this->robotCommand.gain_vel_enabled());
 
-  for (int i=0; i < _req.grasps_size(); ++i)
+  for (int i = 0; i < _req.grasps_size(); ++i)
   {
     std::string name = _req.grasps(i).grasp_name();
     std::map<std::string, std::vector<float> >::const_iterator g =
       this->grasps.find(name);
     if (g != this->grasps.end())
     {
-      for (unsigned int j=0;
+      for (unsigned int j = 0;
           j < g->second.size() && j < this->graspPositions.size(); ++j)
       {
         float value = _req.grasps(i).grasp_value();
@@ -1516,91 +1537,380 @@ void HaptixControlPlugin::OnPause(ConstIntPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
 {
-  /// The pose transformation math traverses the following transform tree.
-
-  /// G ---------> O --------> M ---> C
-  /// | \          \__________^ ^     ^
-  /// |  \______________________|     |
-  /// \_______________________________/
-
-  /// G: Gazebo origin
-  /// O: Optitrack origin
-  /// M: Head marker
-  /// C: Gazebo camera
-  /// We will denote the transform from B to A in B's frame as A_B
-
-  /// rawMarkerPose is the pose of the marker in the Optitrack frame: M_O
-  gazebo::math::Pose rawMarkerPose = gazebo::msgs::Convert(*_msg);
-  rawMarkerPose.pos = this->headPosFilter.Process(rawMarkerPose.pos);
-  rawMarkerPose.rot = this->headOriFilter.Process(rawMarkerPose.rot);
-  std::unique_lock<std::mutex> view_lock(this->viewpointRotationsMutex,
-      std::try_to_lock);
-
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
+  std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
 
-  /// If we're paused, or if we haven't calculated an offset yet...
-  if (this->pauseTracking || !this->headOffsetInitialized)
+  gazebo::math::Pose cameraMarker = gazebo::msgs::Convert(*_msg);
+
+  if ((this->pauseTracking || !this->headOffsetInitialized)
+       && this->userCameraPoseValid)
   {
-    if (this->userCameraPoseValid)
+    // T_CC' = (-T_CH - T_MS + T_WS) - (-T_C'Marker - T_HMarker + T_WH)
+    //
+    // compute optitrackHeadOffset
+    //
+    if (this->viewpointRotationsEnabled)
     {
-      /// gazeboToOptitrack is transform from gazebo to Optitrack: O_G
-      /// O_G = O_M + M_C + C_G
-      this->gazeboToOptitrack = -rawMarkerPose
-          + this->cameraToOptitrackHeadMarker + this->userCameraPose;
-      this->headOffsetInitialized = true;
+      this->optitrackHeadOffset =
+                                  this->headMarker
+                                + this->userCameraPose
+                                + this->worldScreen.GetInverse()
+                                + this->monitorScreen
+                                + this->cameraMonitor
+                                + cameraMarker.GetInverse();
     }
+    else
+    {
+      // for the case rotation not enabled
+      this->optitrackHeadOffset =
+                                  this->monitorScreen
+                                + this->cameraMonitor
+                                + cameraMarker.GetInverse()
+                                + this->headMarker
+                                + this->userCameraPose
+                                + this->worldScreen.GetInverse();
+
+      // force a no-rotation offset
+      this->optitrackHeadOffset.rot = math::Quaternion();
+
+      // compute the erroroneous target pose from above
+      gazebo::math::Pose targetCameraWrong =
+                                  this->headMarker.GetInverse()
+                                + cameraMarker
+                                + this->cameraMonitor.GetInverse()
+                                + this->monitorScreen.GetInverse()
+                                + this->optitrackHeadOffset
+                                + this->worldScreen;
+
+      // correct error from forcing rotation to zero by
+      // adding user camera frame error from previous step
+      // (userCameraPose.pos - targetCameraWrong.pos) to create a final
+      // target pose.pos that will not introduce user
+      // camera frame offset
+      this->optitrackHeadOffset.pos = this->optitrackHeadOffset.pos
+        + (this->userCameraPose.pos - targetCameraWrong.pos);
+    }
+
+    this->headOffsetInitialized = true;
   }
-  else
+  else if (this->headOffsetInitialized)
   {
-    if (this->userCameraPoseValid)
+    //
+    // List of frames
+    //
+    //   Frame           Description
+    // --------------------------------------------------------
+    //   world           world or inertial frame in simulation.
+    //   screen          upper right corner of physical screen
+    //                   z-up, x-forward, z-left.
+    //   monitor         frame fored by its 3 optitrack markers.
+    //   camera          frame of the camera.
+    //
+    // The chain of transforms (from world to user camera):
+    //
+    //   Frame           Transform              Frame
+    // --------------------------------------------------------
+    //   world           worldScreen            screen
+    //   screen          monitorScreen.Inv      monitor
+    //   monitor         cameraMonitor.Inv      camera
+    //   camera          cameraMarker           marker
+    //   screen          optitrackHeadOffset    screen offset
+    //   marker          headMarker.Inv         head
+    //   world           targetCamera           head (user camera)
+    //
+    // T_WH = T_HMarker + T_C'Marker + T_CC' -T_CM -T_MS + T_WS
+    gazebo::math::Pose targetCamera;
+    if (this->viewpointRotationsEnabled)
     {
-      /// C_G = C_M + M_O + O_G
-      gazebo::math::Pose targetCameraPose = -this->cameraToOptitrackHeadMarker
-          + rawMarkerPose + this->gazeboToOptitrack;
-      if (!this->viewpointRotationsEnabled)
-      {
-        targetCameraPose.rot = this->userCameraPose.rot;
-      }
-      gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
-      this->viewpointJoyPub->Publish(this->joyMsg);
+      targetCamera =
+                  this->headMarker.GetInverse()
+                + this->optitrackHeadOffset
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->worldScreen
+                ;
     }
+    else
+    {
+      targetCamera =
+                  this->headMarker.GetInverse()
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->optitrackHeadOffset
+                + this->worldScreen
+                ;
+      targetCamera.rot = this->userCameraPose.rot;
+    }
+    gazebo::msgs::Set(&this->joyMsg, targetCamera);
+    this->viewpointJoyPub->Publish(this->joyMsg);
   }
 }
 
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
 {
+  // By Gazebo pose math,
+  // If A = T_OP and B = T_PQ, B+A = T_OQ
+
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
+  std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
 
-  gazebo::math::Pose pose = this->optitrackWorldArmRot +
-      gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose cameraMarker = gazebo::msgs::Convert(*_msg);
 
-  this->optitrackArm = pose + this->optitrackArmOffset;
-
-  // If we're paused, or if we haven't calculated an offset yet...
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
-    this->optitrackArmOffset = -pose + this->targetBaseLinkPose;
+    math::Pose worldArm = this->elbowMarkerCorrected
+      + this->targetBaseLinkPose;
+
+    // goal: arm sensor orientation should be the same as the screen rotation
+    // worldScreen.rot is the screen orientation in the world frame
+    // worldArm.rot is the arm orientation in the world frame, set them equal
+    worldArm.rot = (this->elbowMarker + this->targetBaseLinkPose).rot;
+    // solve for elbowMarkerCorrected.rot based on new worldArm
+    this->elbowMarkerCorrected.rot =
+      (worldArm - this->targetBaseLinkPose).rot;
+
+    // T_CC' = (-T_CM - T_MS + T_WS) - (-T_C'A - T_AE + T_WE)
+    this->optitrackArmOffset =  cameraMarker.GetInverse()
+      + this->elbowMarkerCorrected
+      + this->targetBaseLinkPose + this->worldScreen.GetInverse() +
+        this->monitorScreen + this->cameraMonitor;
+
+/*
+    // testing offset frame between cameraMarker and elbowMarker
+    this->optitrackArmOffset =
+                                this->elbowMarker
+                              + this->targetBaseLinkPose
+                              + this->worldScreen.GetInverse()
+                              + this->monitorScreen
+                              + this->cameraMonitor
+                              + cameraMarker.GetInverse()
+                              ;
+*/
+/*
+    // testing something similar to head tracking without rotation
+    // offset frame between worldScreen and monitorScreen
+    this->optitrackArmOffset =
+                                this->monitorScreen
+                              + this->cameraMonitor
+                              + cameraMarker.GetInverse()
+                              + this->elbowMarker
+                              + this->targetBaseLinkPose
+                              + this->worldScreen.GetInverse()
+                              ;
+    // force a no-rotation offset
+    this->optitrackArmOffset.rot = math::Quaternion();
+
+    // compute the erroroneous target pose from above
+    gazebo::math::Pose targetPoseWrong =
+                                this->elbowMarker.GetInverse()
+                              + cameraMarker
+                              + this->cameraMonitor.GetInverse()
+                              + this->monitorScreen.GetInverse()
+                              + this->optitrackArmOffset
+                              + this->worldScreen
+                              ;
+
+    // correct error from forcing rotation to zero by
+    // adding target pose error from previous step
+    // (current target.pos - targetPoseWrong.pos) to create a final
+    // target pose.pos that will not introduce frame offset
+    this->optitrackArmOffset.pos = this->optitrackArmOffset.pos
+      + (this->targetBaseLinkPose.pos - targetPoseWrong.pos);
+*/
+
     this->armOffsetInitialized = true;
   }
-  else
+  else if (this->armOffsetInitialized)
   {
-    this->targetBaseLinkPose = this->optitrackArm;
+    //
+    // List of frames
+    //
+    //   Frame           Description
+    // --------------------------------------------------------
+    //   world           world or inertial frame in simulation.
+    //   screen          upper right corner of physical screen
+    //                   z-up, x-forward, z-left.
+    //   monitor         frame fored by its 3 optitrack markers.
+    //   camera          frame of the camera.
+    //   elbow           targetBaseLink's frame
+    //
+    // The chain of transforms (from world to user camera):
+    //
+    //   Frame           Transform              Frame
+    // --------------------------------------------------------
+    //   world           worldScreen            screen
+    //   screen          monitorScreen.Inv      monitor
+    //   monitor         cameraMonitor.Inv      camera
+    //   camera          cameraMarker           marker
+    //   screen          optitrackHeadOffset    screen offset
+    //   marker          elbowMarker.Inv        elbow
+    //   world           targetBaseLink         elbow
+    //
+
+    // T_WE = T_AE + T_C'A + T_CC' -T_CM -T_MS + T_WS
+    this->targetBaseLinkPose = this->elbowMarkerCorrected.GetInverse()
+        + cameraMarker
+        + this->optitrackArmOffset + this->cameraMonitor.GetInverse() +
+            this->monitorScreen.GetInverse() + this->worldScreen;
+
+/*
+    // testing offset frame between cameraMarker and elbowMarker
+    this->targetBaseLinkPose =
+                  this->elbowMarker.GetInverse()
+                + this->optitrackArmOffset
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->worldScreen
+                ;
+*/
+/*
+    // offset frame between worldScreen and monitorScreen
+    this->targetBaseLinkPose =
+                  this->elbowMarker.GetInverse()
+                + cameraMarker
+                + this->cameraMonitor.GetInverse()
+                + this->monitorScreen.GetInverse()
+                + this->optitrackArmOffset
+                + this->worldScreen
+                ;
+*/
   }
 }
 
 //////////////////////////////////////////////////
-void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPosePtr &_msg)
+void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
 {
-  this->monitorOptitrackFrame = gazebo::msgs::Convert(*_msg);
+  if (_msg == NULL)
+  {
+    gzerr << "Message was NULL!" << std::endl;
+    return;
+  }
+  if (_msg->points_size() != 3)
+  {
+    gzerr << "Message had the wrong number of points!" << std::endl;
+    return;
+  }
+
+  std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
+
+  std::vector<gazebo::math::Vector3> points;
+  for (int i = 0; i < _msg->points_size(); ++i)
+  {
+    points.push_back(msgs::Convert(_msg->points(i)));
+  }
+
+  double maxLength = 0;
+  int originPointId = -1;
+  int shortPointId = -1;
+  int longPointId = -1;
+  // Find side with maximum length, choose the "origin" as the opposite point
+  for (int i = 0; i < 3; ++i)
+  {
+    int i1 = (i + 1) % 3;
+    int i2 = (i + 2) % 3;
+    double length = (points[i1] - points[i2]).GetLength();
+    if (length > maxLength)
+    {
+      maxLength = length;
+      originPointId = i;
+      longPointId = i1;
+      shortPointId = i2;
+    }
+  }
+
+  if ((points[originPointId]-points[longPointId]).GetLength() <
+      (points[originPointId]-points[shortPointId]).GetLength())
+  {
+    int tmp = longPointId;
+    longPointId = shortPointId;
+    shortPointId = tmp;
+  }
+
+  // X is the longer vector, z is the shorter one
+  // X points to the right of the screen, Z points up
+  // Y points in
+  gazebo::math::Vector3 gx = points[originPointId] - points[longPointId];
+  gazebo::math::Vector3 gz = points[originPointId] - points[shortPointId];
+
+  if (gx.GetLength() < gz.GetLength())
+  {
+    gzerr << "Swapping gx and gz, this should never happen" << std::endl;
+    gazebo::math::Vector3 tmp = gx;
+    gx = gz;
+    gz = tmp;
+  }
+  gx = gx.Normalize();
+  gz = gz.Normalize();
+
+  // gy = gz X gx
+  gazebo::math::Vector3 gy = gz.Cross(gx).Normalize();
+
+  gx = gy.Cross(gz).Normalize();
+
+  if (abs(gx.Dot(gy)) > 1e-6 || abs(gx.Dot(gz)) > 1e-6
+      || abs(gz.Dot(gy)) > 1e-6)
+  {
+    gzerr << "Basis vectors are not orthogonal!" << std::endl;
+    return;
+  }
+
+  // The rotational matrix from the camera (monitor) frame to Gazebo (Screen)
+  // frame can be represented with gx, gy, gz as its column vectors
+  // Convert from this matrix to a quaternion:
+  // http://en.wikipedia.org/wiki/Rotation_matrix#Quaternion
+
+  math::Matrix3 G;
+  G.SetFromAxes(gx, gy, gz);
+
+  if (G[0][0] + G[1][1] + G[2][2] + 1 <= 0)
+  {
+    // TODO: Integrate more robust conversion method in Gazebo
+    gzerr << "Trace of rotation matrix was invalid!" << std::endl;
+    return;
+  }
+  double qw = sqrt(1 + G[0][0] + G[1][1] + G[2][2])/2;
+  GZ_ASSERT(qw > 1e-12, "stop before division by 0");
+  double qx = (G[2][1] - G[1][2])/(4*qw);
+  double qy = (G[0][2] - G[2][0])/(4*qw);
+  double qz = (G[1][0] - G[0][1])/(4*qw);
+
+  gazebo::math::Quaternion monitorRot(qw, qx, qy, qz);
+
+  this->cameraMonitor.pos = points[1];
+
+  // Test: Assert that the inverse of the rotation we calculated rotates
+  // gx, gy and gz to their respective unit vectors.
+  gazebo::math::Quaternion optitrackToMonitor = monitorRot.GetInverse();
+  double xdiff = (gazebo::math::Vector3(1, 0, 0) -
+      optitrackToMonitor.RotateVector(gx)).GetLength();
+  double ydiff = (gazebo::math::Vector3(0, 1, 0) -
+      optitrackToMonitor.RotateVector(gy)).GetLength();
+  double zdiff = (gazebo::math::Vector3(0, 0, 1) -
+      optitrackToMonitor.RotateVector(gz)).GetLength();
+
+  if (xdiff > 1e-6 || ydiff > 1e-6 || zdiff > 1e-6)
+  {
+    gzerr << "Calculated transform was wrong. Are all the monitor markers "
+          << "visible to the Optitrack?" << std::endl;
+    return;
+  }
+
+  this->monitorScreen.rot = monitorRot;
+  // Assume screen and monitor axes share the same origin
+  this->monitorScreen.pos = math::Vector3();
 }
 
 //////////////////////////////////////////////////
 void HaptixControlPlugin::OnToggleViewpointRotations(ConstIntPtr &_msg)
 {
-  std::unique_lock<std::mutex> lock(this->viewpointRotationsMutex,
-      std::try_to_lock);
   this->viewpointRotationsEnabled = _msg->data() == 0 ? false : true;
+
+  // force re-compute offsets
+  this->headOffsetInitialized = false;
 }
 
 GZ_REGISTER_MODEL_PLUGIN(HaptixControlPlugin)
