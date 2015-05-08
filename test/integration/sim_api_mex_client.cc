@@ -16,9 +16,9 @@
 */
 
 #include <sys/prctl.h>
-#include "haptix/comm/haptix_sim.h"
-#include "gtest/gtest.h"
+#include <haptix/comm/haptix_sim.h>
 #include <gazebo/transport/Node.hh>
+#include "gtest/gtest.h"
 
 #include "test_config.h"
 
@@ -45,7 +45,7 @@ TEST(SimApiMexClientTest, ThreeProcesses)
       // Try to kill this process when parent dies
       prctl(PR_SET_PDEATHSIG, SIGKILL);
       // Exec gzclient
-      char *args[] = {(char *) "--verbose"};
+      char *args[] = {const_cast<char *>("--verbose")};
       std::cout << "Launching gzclient." << std::endl;
       execvp("gzclient", args);
     }

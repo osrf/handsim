@@ -306,6 +306,25 @@
       <real_time_update_rate>1000</real_time_update_rate>
       <max_step_size>0.001000</max_step_size>
     </physics>
+    <!-- debug model for assumed screen
+         model in simulation frame,
+         used for debugging pose transforms
+         to check alignment of movement.
+    <model name="screen">
+      <pose>0 -0.65 1.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <pose>-0.25 -0.005 -0.1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.5 0.01 0.2</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+    -->
 
     <!-- A global light source -->
     <include>
@@ -327,7 +346,6 @@
       <static>true</static>
     </include>
 
-    <!-- The apl_description model is not (yet) publicly available. -->
     <include>
      <uri>model://mpl_haptix_right_forearm</uri>
      <pose>0.4 -0.7 1.2 0 0 3.1416</pose>

@@ -332,11 +332,6 @@
     </include>
 
     <include>
-      <uri>model://fire_hose_long_curled</uri>
-      <pose>0 0 0 0 0 0</pose>
-    </include>
-
-    <include>
      <uri>model://mpl_haptix_right_forearm</uri>
      <pose>0.4 -0.7 1.2 0 0 3.1416</pose>
     </include>

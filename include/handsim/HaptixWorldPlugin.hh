@@ -18,22 +18,6 @@
 #ifndef _HANDSIM_HAPTIX_WORLD_PLUGIN_HH_
 #define _HANDSIM_HAPTIX_WORLD_HH_
 
-#include <functional>
-#include <map>
-#include <string>
-#include <vector>
-
-#include <sdf/sdf.hh>
-
-#include <gazebo/common/Event.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/transport/Node.hh>
-#include <gazebo/transport/Publisher.hh>
-#include <gazebo/physics/Link.hh>
-#include <gazebo/math/Pose.hh>
-#include <gazebo/math/Vector3.hh>
-
-#include <ignition/transport.hh>
 #include <haptix/comm/haptix_sim.h>
 #include <haptix/comm/haptix.h>
 #include <haptix/comm/msg/hxCollideMode.pb.h>
@@ -53,8 +37,26 @@
 #include <haptix/comm/msg/hxTime.pb.h>
 #include <haptix/comm/msg/hxVector3.pb.h>
 
+#include <functional>
+#include <map>
+#include <string>
+#include <vector>
+
+#include <sdf/sdf.hh>
+
+#include <gazebo/common/Event.hh>
+#include <gazebo/common/Plugin.hh>
+#include <gazebo/transport/Node.hh>
+#include <gazebo/transport/Publisher.hh>
+#include <gazebo/physics/Link.hh>
+#include <gazebo/math/Pose.hh>
+#include <gazebo/math/Vector3.hh>
+
+#include <ignition/transport.hh>
+
 #include "handsim/WrenchHelper.hh"
 
+/// \brief Class for representing a wrench applied to a link over a duration.
 class WrenchDuration
 {
   public:
@@ -94,130 +96,64 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \brief Convert from hxsTransform (message type) to Gazebo Pose
   /// \param[in] _in hxsTransform to convert
   /// \param[out] _out Gazebo pose output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertTransform(
+  public: static void ConvertTransform(
       const haptix::comm::msgs::hxTransform &_in, gazebo::math::Pose &_out);
-
-  /// \brief Convert from hxsTransform to Gazebo Pose
-  /// \param[in] _in hxsTransform to convert
-  /// \param[out] _out Gazebo pose output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertTransform(
-      const hxsTransform &_in, gazebo::math::Pose &_out);
-
-  /// \brief Convert from Gazebo pose to hxsTransform
-  /// \param[in] Gazebo pose to convert
-  /// \param[out] hxsTransform output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertTransform(const gazebo::math::Pose &_in,
-      hxsTransform &_out);
 
   /// \brief Convert from Gazebo Pose to hxsTransform
   /// \param[in] _in Gazebo pose to convert
   /// \param[out] _out hxsTransform output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertTransform(
+  public: static void ConvertTransform(
       const gazebo::math::Pose &_in, haptix::comm::msgs::hxTransform &_out);
 
   /// \brief Convert from hxsVector3 to Gazebo Vector3
   /// \param[in] _in hxsVector3 to convert
   /// \param[out] _out Gazebo Vector3 output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertVector(
+  public: static void ConvertVector(
       const haptix::comm::msgs::hxVector3 &_in, gazebo::math::Vector3 &_out);
 
   /// \brief Convert from Gazebo Vector3 to hxsVector3 (message type)
   /// \param[in] _in Gazebo Vector3 to convert
   /// \param[out] _out hxsVector3 message output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertVector(
+  public: static void ConvertVector(
       const gazebo::math::Vector3 &_in, haptix::comm::msgs::hxVector3 &_out);
 
-  /// \brief Convert from Gazebo Vector3 to hxsVector3
-  /// \param[in] _in Gazebo Vector3 to convert
-  /// \param[out] _out hxsVector3 output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertVector(
-      const gazebo::math::Vector3 &_in, hxsVector3 &_out);
-
-  /// \brief Convert from hxsVector3 to Gazebo Vector3
-  /// \param[in] _in hxsVector3 to convert
-  /// \param[out] _out Gazebo Vector3 output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertVector(const hxsVector3 &_in,
-      gazebo::math::Vector3 &_out);
-
-  /// \brief Convert from hxsQuaternion to Gazebo Quaternion
+  /// \brief Convert from hxsQuaternion (message) to Gazebo Quaternion
   /// \param[in] _in hxsQuaternion message to convert
   /// \param[out] _out Gazebo quaternion output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertQuaternion(
+  public: static void ConvertQuaternion(
       const haptix::comm::msgs::hxQuaternion &_in,
       gazebo::math::Quaternion &_out);
 
-  /// \brief Convert from Gazebo Quaternion to hxsQuaternion
+  /// \brief Convert from Gazebo Quaternion to hxsQuaternion (message)
   /// \param[in] _in Gazebo quaternion to convert
   /// \param[out] _out hxsQuaternion output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertQuaternion(
+  public: static void ConvertQuaternion(
       const gazebo::math::Quaternion &_in,
       haptix::comm::msgs::hxQuaternion &_out);
 
   /// \brief Convert from Gazebo Model to hxsModel (message type)
   /// \param[in] _in Gazebo model to convert
   /// \param[out] _out hxsModel message output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertModel(gazebo::physics::Model &_in,
+  public: static void ConvertModel(const gazebo::physics::Model &_in,
       haptix::comm::msgs::hxModel &_out);
-
-  /// \brief Convert from Gazebo Model to hxsModel
-  /// \param[in] _in Gazebo model to convert
-  /// \param[out] _out hxsModel output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertModel(gazebo::physics::Model &_in,
-      hxsModel &_out);
 
   /// \brief Convert from Gazebo Link to hxsLink (message type)
   /// \param[in] _in Gazebo link to convert
   /// \param[out] _out hxLink message output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertLink(const gazebo::physics::Link &_in,
+  public: static void ConvertLink(const gazebo::physics::Link &_in,
       haptix::comm::msgs::hxLink &_out);
-
-  /// \brief Convert from Gazebo Link to hxsLink
-  /// \param[in] _in Gazebo link to convert
-  /// \param[out] _out hxsLink output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertLink(const gazebo::physics::Link &_in,
-      hxsLink &_out);
 
   /// \brief Convert from Gazebo Joint to hxsJoint (message type)
   /// \param[in] _in Gazebo joint to convert
   /// \param[out] _out hxJoint message output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertJoint(gazebo::physics::Joint &_in,
+  public: static void ConvertJoint(gazebo::physics::Joint &_in,
       haptix::comm::msgs::hxJoint &_out);
-
-  /// \brief Convert from Gazebo Joint to hxsJoint
-  /// \param[in] _in Gazebo joitn to convert
-  /// \param[out] _out hxsJoint output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertJoint(gazebo::physics::Joint &_in,
-      hxsJoint &_out);
 
   /// \brief Convert from Gazebo Wrench to hxsWrench
   /// \param[in] _in Gazebo wrench to convert
   /// \param[out] _out hxWrench message output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertWrench(const gazebo::physics::JointWrench &_in,
+  public: static void ConvertWrench(const gazebo::physics::JointWrench &_in,
       haptix::comm::msgs::hxWrench &_out);
-
-  /// \brief Convert from Gazebo Wrench to hxsWrench (message type)
-  /// \param[in] _in Gazebo wrench to convert
-  /// \param[out] _out hxsWrench output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertWrench(const gazebo::physics::JointWrench &_in,
-      hxsWrench &_out);
 
   ///////////// Protected helpers  //////////////
   /// \brief Read the initial colors of each model from SDF.
@@ -372,7 +308,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_force callback. Apply a force to a model over a duration.
+  /// \brief hxs_apply_force callback. Apply a force to a model over a duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the force, a Vector3 representing the force
@@ -383,7 +319,8 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_torque callback. Apply a torque to a model over a duration.
+  /// \brief hxs_apply_torque callback. Apply a torque to a model over a
+  /// duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, a Vector3 representing the torque
@@ -394,7 +331,8 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_wrench callback. Apply a wrench to a model over a duration.
+  /// \brief hxs_apply_wrench callback. Apply a wrench to a model over a
+  /// duration.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, the wrench to apply, and a
@@ -528,7 +466,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \brief Node for Gazebo transport.
   protected: gazebo::transport::NodePtr gzNode;
 
-  /// \brief: ignition transport node for talking to haptix comm
+  /// \brief ignition transport node for talking to haptix comm
   private: ignition::transport::Node ignNode;
 
   /// \brief For publishing commands to the server
