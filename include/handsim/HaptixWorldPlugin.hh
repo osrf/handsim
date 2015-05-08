@@ -100,20 +100,6 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   public: static bool ConvertTransform(
       const haptix::comm::msgs::hxTransform &_in, gazebo::math::Pose &_out);
 
-  /// \brief Convert from hxsTransform to Gazebo Pose
-  /// \param[in] _in hxsTransform to convert
-  /// \param[out] _out Gazebo pose output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertTransform(
-      const hxsTransform &_in, gazebo::math::Pose &_out);
-
-  /// \brief Convert from Gazebo pose to hxsTransform
-  /// \param[in] Gazebo pose to convert
-  /// \param[out] hxsTransform output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertTransform(const gazebo::math::Pose &_in,
-      hxsTransform &_out);
-
   /// \brief Convert from Gazebo Pose to hxsTransform
   /// \param[in] _in Gazebo pose to convert
   /// \param[out] _out hxsTransform output
@@ -135,21 +121,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   public: static bool ConvertVector(
       const gazebo::math::Vector3 &_in, haptix::comm::msgs::hxVector3 &_out);
 
-  /// \brief Convert from Gazebo Vector3 to hxsVector3
-  /// \param[in] _in Gazebo Vector3 to convert
-  /// \param[out] _out hxsVector3 output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertVector(
-      const gazebo::math::Vector3 &_in, hxsVector3 &_out);
-
-  /// \brief Convert from hxsVector3 to Gazebo Vector3
-  /// \param[in] _in hxsVector3 to convert
-  /// \param[out] _out Gazebo Vector3 output
-  /// \return True if the conversion succeeded.
-  public: static bool ConvertVector(const hxsVector3 &_in,
-      gazebo::math::Vector3 &_out);
-
-  /// \brief Convert from hxsQuaternion to Gazebo Quaternion
+  /// \brief Convert from hxsQuaternion (message) to Gazebo Quaternion
   /// \param[in] _in hxsQuaternion message to convert
   /// \param[out] _out Gazebo quaternion output
   /// \return True if conversion succeeded.
@@ -157,7 +129,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
       const haptix::comm::msgs::hxQuaternion &_in,
       gazebo::math::Quaternion &_out);
 
-  /// \brief Convert from Gazebo Quaternion to hxsQuaternion
+  /// \brief Convert from Gazebo Quaternion to hxsQuaternion (message)
   /// \param[in] _in Gazebo quaternion to convert
   /// \param[out] _out hxsQuaternion output
   /// \return True if conversion succeeded.
@@ -169,15 +141,8 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[in] _in Gazebo model to convert
   /// \param[out] _out hxsModel message output
   /// \return True if conversion succeeded.
-  public: static bool ConvertModel(gazebo::physics::Model &_in,
+  public: static bool ConvertModel(const gazebo::physics::Model &_in,
       haptix::comm::msgs::hxModel &_out);
-
-  /// \brief Convert from Gazebo Model to hxsModel
-  /// \param[in] _in Gazebo model to convert
-  /// \param[out] _out hxsModel output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertModel(gazebo::physics::Model &_in,
-      hxsModel &_out);
 
   /// \brief Convert from Gazebo Link to hxsLink (message type)
   /// \param[in] _in Gazebo link to convert
@@ -186,13 +151,6 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   public: static bool ConvertLink(const gazebo::physics::Link &_in,
       haptix::comm::msgs::hxLink &_out);
 
-  /// \brief Convert from Gazebo Link to hxsLink
-  /// \param[in] _in Gazebo link to convert
-  /// \param[out] _out hxsLink output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertLink(const gazebo::physics::Link &_in,
-      hxsLink &_out);
-
   /// \brief Convert from Gazebo Joint to hxsJoint (message type)
   /// \param[in] _in Gazebo joint to convert
   /// \param[out] _out hxJoint message output
@@ -200,26 +158,12 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   public: static bool ConvertJoint(gazebo::physics::Joint &_in,
       haptix::comm::msgs::hxJoint &_out);
 
-  /// \brief Convert from Gazebo Joint to hxsJoint
-  /// \param[in] _in Gazebo joint to convert
-  /// \param[out] _out hxsJoint output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertJoint(gazebo::physics::Joint &_in,
-      hxsJoint &_out);
-
   /// \brief Convert from Gazebo Wrench to hxsWrench
   /// \param[in] _in Gazebo wrench to convert
   /// \param[out] _out hxWrench message output
   /// \return True if conversion succeeded.
   public: static bool ConvertWrench(const gazebo::physics::JointWrench &_in,
       haptix::comm::msgs::hxWrench &_out);
-
-  /// \brief Convert from Gazebo Wrench to hxsWrench (message type)
-  /// \param[in] _in Gazebo wrench to convert
-  /// \param[out] _out hxsWrench output
-  /// \return True if conversion succeeded.
-  public: static bool ConvertWrench(const gazebo::physics::JointWrench &_in,
-      hxsWrench &_out);
 
   ///////////// Protected helpers  //////////////
   /// \brief Read the initial colors of each model from SDF.

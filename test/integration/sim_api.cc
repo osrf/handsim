@@ -27,6 +27,135 @@
 
 #include "test_config.h"
 
+///////////// Utility functions /////////////
+
+/////////////////////////////////////////////////
+bool ConvertVector(const gazebo::math::Vector3 &_in, hxsVector3 &_out)
+{
+  _out.x = _in.x;
+  _out.y = _in.y;
+  _out.z = _in.z;
+
+  return true;
+}
+
+/////////////////////////////////////////////////
+bool ConvertVector(const hxsVector3 &_in, gazebo::math::Vector3 &_out)
+{
+  _out.x = _in.x;
+  _out.y = _in.y;
+  _out.z = _in.z;
+
+  return true;
+}
+
+/////////////////////////////////////////////////
+bool ConvertTransform(const hxsTransform &_in, gazebo::math::Pose &_out)
+{
+  ConvertVector(_in.pos, _out.pos);
+
+
+  _out.rot.w = _in.orient.w;
+  _out.rot.x = _in.orient.x;
+  _out.rot.y = _in.orient.y;
+  _out.rot.z = _in.orient.z;
+
+  return true;
+}
+
+//////////////////////////////////////////////////
+bool ConvertTransform(const gazebo::math::Pose &_in, hxsTransform &_out)
+{
+  if (!ConvertVector(_in.pos, _out.pos))
+    return false;
+
+  _out.orient.w = _in.rot.w;
+  _out.orient.x = _in.rot.x;
+  _out.orient.y = _in.rot.y;
+  _out.orient.z = _in.rot.z;
+
+  return true;
+}
+
+////////////////////////////////////////////////
+bool ConvertWrench(const gazebo::physics::JointWrench &_in, hxsWrench &_out)
+{
+  bool result = true;
+  result &= ConvertVector(_in.body2Force, _out.force);
+  result &= ConvertVector(_in.body2Torque, _out.torque);
+  return result;
+}
+
+/////////////////////////////////////////////////
+bool ConvertJoint(gazebo::physics::Joint &_in, hxsJoint &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
+  _out.pos = _in.GetAngle(0).Radian();
+  _out.vel = _in.GetVelocity(0);
+  bool result = true;
+  result &= ConvertWrench(_in.GetForceTorque(0), _out.wrench_reactive);
+  _out.torque_motor = _in.GetForce(0);
+
+  return result;
+}
+
+/////////////////////////////////////////////////
+bool ConvertLink(const gazebo::physics::Link &_in, hxsLink &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+  bool result = true;
+  result &= ConvertTransform(_in.GetWorldPose(), _out.transform);
+
+  result &= ConvertVector(_in.GetWorldLinearVel(), _out.lin_vel);
+
+  result &= ConvertVector(_in.GetWorldAngularVel(), _out.ang_vel);
+
+  result &= ConvertVector(_in.GetWorldLinearAccel(), _out.lin_acc);
+
+  result &= ConvertVector(_in.GetWorldAngularAccel(), _out.ang_acc);
+
+  return result;
+}
+
+/////////////////////////////////////////////////
+bool ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
+  ConvertTransform(_in.GetWorldPose(), _out.transform);
+
+  _out.id = _in.GetId();
+
+  // Gravity mode is only false if all links have gravity_mode set to false
+  bool gravity_mode = false;
+  bool result = true;
+  int i = 0;
+  for (auto link : _in.GetLinks())
+  {
+    result &= ConvertLink(*link, _out.links[i]);
+    i++;
+
+    // Check gravity_mode mode
+    gravity_mode |= link->GetGravityMode();
+  }
+  _out.link_count = i;
+
+  _out.gravity_mode = gravity_mode;
+
+  i = 0;
+  for (auto joint : _in.GetJoints())
+  {
+    result &= ConvertJoint(*joint, _out.joints[i]);
+    i++;
+  }
+  _out.joint_count = i;
+
+  return result;
+}
+
+///////////// Server Fixture /////////////
+
 class SimApiTest : public gazebo::ServerFixture
 {
   public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
@@ -59,13 +188,12 @@ TEST_F(SimApiTest, HxsSimInfo)
   ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
 
   // Wait for all the models to initialize
-  gazebo::common::Time::Sleep(1);
   hxsSimInfo simInfo;
   ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
-  gazebo::common::Time::MSleep(500);
+  sleep(1);
 
   gazebo::math::Pose cameraOut;
-  HaptixWorldPlugin::ConvertTransform(simInfo.camera_transform, cameraOut);
+  ConvertTransform(simInfo.camera_transform, cameraOut);
 
   // Verify object locations, camera pose, etc.
   EXPECT_EQ(cameraPose.pos, cameraOut.pos);
@@ -81,7 +209,7 @@ TEST_F(SimApiTest, HxsSimInfo)
     ASSERT_TRUE(gzModel != NULL);
 
     gazebo::math::Pose modelPose;
-    HaptixWorldPlugin::ConvertTransform(simInfo.models[i].transform, modelPose);
+    ConvertTransform(simInfo.models[i].transform, modelPose);
     EXPECT_EQ(modelPose, gzModel->GetWorldPose());
 
     for (int j = 0; j < simInfo.models[i].link_count; ++j)
@@ -91,21 +219,20 @@ TEST_F(SimApiTest, HxsSimInfo)
       ASSERT_TRUE(gzLink != NULL);
 
       gazebo::math::Pose linkPose;
-      HaptixWorldPlugin::ConvertTransform(simInfo.models[i].links[j].transform,
-          linkPose);
+      ConvertTransform(simInfo.models[i].links[j].transform, linkPose);
       EXPECT_EQ(linkPose, gzLink->GetWorldPose());
 
       gazebo::math::Vector3 tmp;
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].lin_vel, tmp);
+      ConvertVector(simInfo.models[i].links[j].lin_vel, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldLinearVel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].ang_vel, tmp);
+      ConvertVector(simInfo.models[i].links[j].ang_vel, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldAngularVel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].lin_acc, tmp);
+      ConvertVector(simInfo.models[i].links[j].lin_acc, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldLinearAccel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].ang_acc, tmp);
+      ConvertVector(simInfo.models[i].links[j].ang_acc, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldAngularAccel());
     }
 
@@ -169,7 +296,7 @@ TEST_F(SimApiTest, HxsCameraTransform)
   gazebo::common::Time::Sleep(2);
 
   gazebo::math::Pose cameraOut;
-  HaptixWorldPlugin::ConvertTransform(transform, cameraOut);
+  ConvertTransform(transform, cameraOut);
 
   // Verify camera pose
   EXPECT_EQ(cameraPose.pos, cameraOut.pos);
@@ -267,14 +394,10 @@ TEST_F(SimApiTest, HxsContacts)
               contact->collision2->GetLink()->GetName();
           gazebo::math::Vector3 contactPos, contactNormal, contactForce,
               contactTorque;
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].point,
-              contactPos);
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].normal,
-              contactNormal);
-          HaptixWorldPlugin::ConvertVector(
-              contactPoints.contacts[i].wrench.force, contactForce);
-          HaptixWorldPlugin::ConvertVector(
-              contactPoints.contacts[i].wrench.torque, contactTorque);
+          ConvertVector(contactPoints.contacts[i].point, contactPos);
+          ConvertVector(contactPoints.contacts[i].normal, contactNormal);
+          ConvertVector(contactPoints.contacts[i].wrench.force, contactForce);
+          ConvertVector(contactPoints.contacts[i].wrench.torque, contactTorque);
           if (link1NameMatch && link2NameMatch &&
               contactPos == contact->positions[i] &&
               contactNormal == contact->normals[i] &&

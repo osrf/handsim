@@ -447,22 +447,23 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
       contactMsg->set_link1(contact->collision1->GetLink()->GetName());
       contactMsg->set_link2(contact->collision2->GetLink()->GetName());
 
-      gazebo::math::Vector3 linkPosition =
-          contact->collision1->GetLink()->GetWorldPose().pos;
+      gazebo::math::Pose linkPose =
+          contact->collision1->GetLink()->GetWorldPose();
+      gazebo::math::Pose contactPosPose(contact->positions[i], gazebo::math::Quaternion());
 
       // All vectors are relative to the link frame.
-      ConvertVector(contact->positions[i] - linkPosition,
-          *contactMsg->mutable_point());
 
-      ConvertVector(contact->normals[i] - linkPosition,
+      // Transform the pose into the link frame
+      contactPosPose = linkPose.GetInverse() + contactPosPose;
+
+      ConvertVector(contactPosPose.pos, *contactMsg->mutable_point());
+
+      // Rotate the normal vector
+      ConvertVector(linkPose.rot.RotateVectorReverse(contact->normals[i]),
           *contactMsg->mutable_normal());
 
       // force is always body1 onto body2
       // Don't need to subtract link pos, force and torque are in link frame
-      /*ConvertVector(contact->wrench[i].body2Force,
-          *contactMsg->mutable_force());
-      ConvertVector(contact->wrench[i].body2Torque,
-          *contactMsg->mutable_torque());*/
       ConvertWrench(contact->wrench[i], *contactMsg->mutable_wrench());
       contactMsg->set_distance(contact->depths[i]);
     }
@@ -1522,41 +1523,8 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
 bool HaptixWorldPlugin::HaptixWorldPlugin::ConvertTransform(
     const haptix::comm::msgs::hxTransform &_in, gazebo::math::Pose &_out)
 {
-  if (!_in.has_pos() || !_in.has_orient())
-    return false;
-
   HaptixWorldPlugin::ConvertVector(_in.pos(), _out.pos);
   HaptixWorldPlugin::ConvertQuaternion(_in.orient(), _out.rot);
-  return true;
-}
-
-/////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertTransform(
-    const hxsTransform &_in, gazebo::math::Pose &_out)
-{
-  _out.pos.x = _in.pos.x;
-  _out.pos.y = _in.pos.y;
-  _out.pos.z = _in.pos.z;
-
-  _out.rot.w = _in.orient.w;
-  _out.rot.x = _in.orient.x;
-  _out.rot.y = _in.orient.y;
-  _out.rot.z = _in.orient.z;
-
-  return true;
-}
-
-/////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertTransform(
-    const gazebo::math::Pose &_in, hxsTransform &_out)
-{
-  ConvertVector(_in.pos, _out.pos);
-
-  _out.orient.w = _in.rot.w;
-  _out.orient.x = _in.rot.x;
-  _out.orient.y = _in.rot.y;
-  _out.orient.z = _in.rot.z;
-
   return true;
 }
 
@@ -1564,15 +1532,6 @@ bool HaptixWorldPlugin::ConvertTransform(
 bool HaptixWorldPlugin::ConvertTransform(const gazebo::math::Pose &_in,
     haptix::comm::msgs::hxTransform &_out)
 {
-  if (!_out.mutable_pos())
-  {
-    _out.set_allocated_pos(new haptix::comm::msgs::hxVector3());
-  }
-  if (!_out.mutable_orient())
-  {
-    _out.set_allocated_orient(new haptix::comm::msgs::hxQuaternion());
-  }
-
   HaptixWorldPlugin::ConvertVector(_in.pos, *_out.mutable_pos());
   HaptixWorldPlugin::ConvertQuaternion(_in.rot, *_out.mutable_orient());
   return true;
@@ -1582,8 +1541,6 @@ bool HaptixWorldPlugin::ConvertTransform(const gazebo::math::Pose &_in,
 bool HaptixWorldPlugin::ConvertVector(const haptix::comm::msgs::hxVector3 &_in,
     gazebo::math::Vector3 &_out)
 {
-  if ((!_in.has_x()) || (!_in.has_y()) || (!_in.has_z()))
-    return false;
   _out.Set(_in.x(), _in.y(), _in.z());
   return true;
 }
@@ -1599,33 +1556,9 @@ bool HaptixWorldPlugin::ConvertVector(const gazebo::math::Vector3 &_in,
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertVector(const gazebo::math::Vector3 &_in,
-    hxsVector3 &_out)
-{
-  _out.x = _in.x;
-  _out.y = _in.y;
-  _out.z = _in.z;
-
-  return true;
-}
-
-/////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertVector(const hxsVector3 &_in,
-    gazebo::math::Vector3 &_out)
-{
-  _out.x = _in.x;
-  _out.y = _in.y;
-  _out.z = _in.z;
-
-  return true;
-}
-
-/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertQuaternion(
     const haptix::comm::msgs::hxQuaternion &_in, gazebo::math::Quaternion &_out)
 {
-  if (!_in.has_w() || !_in.has_x() || !_in.has_y() || !_in.has_z())
-    return false;
   _out.Set(_in.w(), _in.x(), _in.y(), _in.z());
   return true;
 }
@@ -1642,7 +1575,7 @@ bool HaptixWorldPlugin::ConvertQuaternion(const gazebo::math::Quaternion &_in,
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
+bool HaptixWorldPlugin::ConvertModel(const gazebo::physics::Model &_in,
     haptix::comm::msgs::hxModel &_out)
 {
   _out.set_name(_in.GetName());
@@ -1679,43 +1612,6 @@ bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertModel(gazebo::physics::Model &_in,
-    hxsModel &_out)
-{
-  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
-
-  HaptixWorldPlugin::ConvertTransform(_in.GetWorldPose(), _out.transform);
-
-  _out.id = _in.GetId();
-
-  // Gravity mode is only false if all links have gravity_mode set to false
-  bool gravity_mode = false;
-  bool result = true;
-  int i = 0;
-  for (auto link : _in.GetLinks())
-  {
-    result &= ConvertLink(*link, _out.links[i]);
-    i++;
-
-    // Check gravity_mode mode
-    gravity_mode |= link->GetGravityMode();
-  }
-  _out.link_count = i;
-
-  _out.gravity_mode = gravity_mode;
-
-  i = 0;
-  for (auto joint : _in.GetJoints())
-  {
-    result &= ConvertJoint(*joint, _out.joints[i]);
-    i++;
-  }
-  _out.joint_count = i;
-
-  return result;
-}
-
-/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
     haptix::comm::msgs::hxLink &_out)
 {
@@ -1740,25 +1636,6 @@ bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertLink(const gazebo::physics::Link &_in,
-    hxsLink &_out)
-{
-  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
-  bool result = true;
-  result &= ConvertTransform(_in.GetWorldPose(), _out.transform);
-
-  result &= ConvertVector(_in.GetWorldLinearVel(), _out.lin_vel);
-
-  result &= ConvertVector(_in.GetWorldAngularVel(), _out.ang_vel);
-
-  result &= ConvertVector(_in.GetWorldLinearAccel(), _out.lin_acc);
-
-  result &= ConvertVector(_in.GetWorldAngularAccel(), _out.ang_acc);
-
-  return result;
-}
-
-/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
     haptix::comm::msgs::hxJoint &_out)
 {
@@ -1776,36 +1653,11 @@ bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
 }
 
 /////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertJoint(gazebo::physics::Joint &_in,
-    hxsJoint &_out)
-{
-  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
-
-  _out.pos = _in.GetAngle(0).Radian();
-  _out.vel = _in.GetVelocity(0);
-  bool result = true;
-  result &= ConvertWrench(_in.GetForceTorque(0), _out.wrench_reactive);
-  _out.torque_motor = _in.GetForce(0);
-
-  return result;
-}
-
-/////////////////////////////////////////////////
 bool HaptixWorldPlugin::ConvertWrench(const gazebo::physics::JointWrench &_in,
     haptix::comm::msgs::hxWrench &_out)
 {
   bool result = true;
   result &= ConvertVector(_in.body2Force, *_out.mutable_force());
   result &= ConvertVector(_in.body2Torque, *_out.mutable_torque());
-  return result;
-}
-
-/////////////////////////////////////////////////
-bool HaptixWorldPlugin::ConvertWrench(const gazebo::physics::JointWrench &_in,
-    hxsWrench &_out)
-{
-  bool result = true;
-  result &= ConvertVector(_in.body2Force, _out.force);
-  result &= ConvertVector(_in.body2Torque, _out.torque);
   return result;
 }
