@@ -332,7 +332,7 @@ TEST_F(SimApiTest, HxsContacts)
   ASSERT_TRUE(world != NULL);
 
   // Wait a little while for the world to initialize
-  world->Step(100);
+  world->Step(20);
 
   hxsContactPoints contactPoints;
 
@@ -340,10 +340,11 @@ TEST_F(SimApiTest, HxsContacts)
       world->GetPhysicsEngine()->GetContactManager();
   ASSERT_TRUE(contactManager != NULL);
 
-  gazebo::physics::ModelPtr model = world->GetModel("wooden_case");
-  ASSERT_TRUE(model != NULL);
+  const std::string modelName = "wooden_case";
+  gazebo::physics::ModelPtr tableModel = world->GetModel(modelName);
 
-  ASSERT_EQ(hxs_contacts("wooden_case", &contactPoints), hxOK);
+  ASSERT_EQ(hxs_contacts(modelName.c_str(), &contactPoints), hxOK);
+  EXPECT_GT(contactPoints.contact_count, 0);
 
   // Have to find contacts and sort them by distance to compare
   // since they don't have string keys
@@ -357,8 +358,6 @@ TEST_F(SimApiTest, HxsContacts)
       {
         gazebo::math::Vector3 linkPos =
             contact->collision1->GetLink()->GetWorldPose().pos;
-        contact->positions[i] -= linkPos;
-        contact->normals[i] -= linkPos;
 
         // Now find matching contact point as returned by hxs_contacts
         for (int j = 0; j < contactPoints.contact_count; j++)
@@ -378,11 +377,10 @@ TEST_F(SimApiTest, HxsContacts)
               contactNormal == contact->normals[i] && */
               contactForce == contact->wrench[i].body1Force &&
               contactTorque == contact->wrench[i].body1Torque &&
-              contactPoints.contacts[i].distance - contact->depths[i])
+              contactPoints.contacts[i].distance == contact->depths[i])
           {
             // Every time we match a contact:
             ++matched_contacts;
-            gzdbg << "Contacts matched" << std::endl;
             break;
           }
         }
@@ -390,7 +388,6 @@ TEST_F(SimApiTest, HxsContacts)
     }
   }
 
-  EXPECT_NE(matched_contacts, 0);
   EXPECT_EQ(matched_contacts, contactPoints.contact_count);
 }
 
