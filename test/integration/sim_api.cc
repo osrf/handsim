@@ -341,7 +341,7 @@ TEST_F(SimApiTest, HxsContacts)
   ASSERT_TRUE(contactManager != NULL);
 
   const std::string modelName = "wooden_case";
-  gazebo::physics::ModelPtr tableModel = world->GetModel(modelName);
+  gazebo::physics::ModelPtr model = world->GetModel(modelName);
 
   ASSERT_EQ(hxs_contacts(modelName.c_str(), &contactPoints), hxOK);
   EXPECT_GT(contactPoints.contact_count, 0);
