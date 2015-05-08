@@ -30,96 +30,75 @@
 ///////////// Utility functions /////////////
 
 /////////////////////////////////////////////////
-bool ConvertVector(const gazebo::math::Vector3 &_in, hxsVector3 &_out)
+void ConvertVector(const gazebo::math::Vector3 &_in, hxsVector3 &_out)
 {
   _out.x = _in.x;
   _out.y = _in.y;
   _out.z = _in.z;
-
-  return true;
 }
 
 /////////////////////////////////////////////////
-bool ConvertVector(const hxsVector3 &_in, gazebo::math::Vector3 &_out)
+void ConvertVector(const hxsVector3 &_in, gazebo::math::Vector3 &_out)
 {
   _out.x = _in.x;
   _out.y = _in.y;
   _out.z = _in.z;
-
-  return true;
 }
 
 /////////////////////////////////////////////////
-bool ConvertTransform(const hxsTransform &_in, gazebo::math::Pose &_out)
+void ConvertTransform(const hxsTransform &_in, gazebo::math::Pose &_out)
 {
   ConvertVector(_in.pos, _out.pos);
-
 
   _out.rot.w = _in.orient.w;
   _out.rot.x = _in.orient.x;
   _out.rot.y = _in.orient.y;
   _out.rot.z = _in.orient.z;
-
-  return true;
 }
 
 //////////////////////////////////////////////////
-bool ConvertTransform(const gazebo::math::Pose &_in, hxsTransform &_out)
+void ConvertTransform(const gazebo::math::Pose &_in, hxsTransform &_out)
 {
-  if (!ConvertVector(_in.pos, _out.pos))
-    return false;
+  ConvertVector(_in.pos, _out.pos);
 
   _out.orient.w = _in.rot.w;
   _out.orient.x = _in.rot.x;
   _out.orient.y = _in.rot.y;
   _out.orient.z = _in.rot.z;
-
-  return true;
 }
 
 ////////////////////////////////////////////////
-bool ConvertWrench(const gazebo::physics::JointWrench &_in, hxsWrench &_out)
+void ConvertWrench(const gazebo::physics::JointWrench &_in, hxsWrench &_out)
 {
-  bool result = true;
-  result &= ConvertVector(_in.body2Force, _out.force);
-  result &= ConvertVector(_in.body2Torque, _out.torque);
-  return result;
+  ConvertVector(_in.body2Force, _out.force);
+  ConvertVector(_in.body2Torque, _out.torque);
 }
 
 /////////////////////////////////////////////////
-bool ConvertJoint(gazebo::physics::Joint &_in, hxsJoint &_out)
+void ConvertJoint(gazebo::physics::Joint &_in, hxsJoint &_out)
 {
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
   _out.pos = _in.GetAngle(0).Radian();
   _out.vel = _in.GetVelocity(0);
-  bool result = true;
-  result &= ConvertWrench(_in.GetForceTorque(0), _out.wrench_reactive);
+  ConvertWrench(_in.GetForceTorque(0), _out.wrench_reactive);
   _out.torque_motor = _in.GetForce(0);
-
-  return result;
 }
 
 /////////////////////////////////////////////////
-bool ConvertLink(const gazebo::physics::Link &_in, hxsLink &_out)
+void ConvertLink(const gazebo::physics::Link &_in, hxsLink &_out)
 {
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
-  bool result = true;
-  result &= ConvertTransform(_in.GetWorldPose(), _out.transform);
 
-  result &= ConvertVector(_in.GetWorldLinearVel(), _out.lin_vel);
-
-  result &= ConvertVector(_in.GetWorldAngularVel(), _out.ang_vel);
-
-  result &= ConvertVector(_in.GetWorldLinearAccel(), _out.lin_acc);
-
-  result &= ConvertVector(_in.GetWorldAngularAccel(), _out.ang_acc);
-
-  return result;
+  ConvertTransform(_in.GetWorldPose(), _out.transform);
+  ConvertVector(_in.GetWorldLinearVel(), _out.lin_vel);
+  ConvertVector(_in.GetWorldAngularVel(), _out.ang_vel);
+  ConvertVector(_in.GetWorldLinearAccel(), _out.lin_acc);
+  ConvertVector(_in.GetWorldAngularAccel(), _out.ang_acc);
 }
 
 /////////////////////////////////////////////////
-bool ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
+void ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
 {
   strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
 
@@ -133,7 +112,7 @@ bool ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
   int i = 0;
   for (auto link : _in.GetLinks())
   {
-    result &= ConvertLink(*link, _out.links[i]);
+    ConvertLink(*link, _out.links[i]);
     i++;
 
     // Check gravity_mode mode
@@ -146,12 +125,10 @@ bool ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
   i = 0;
   for (auto joint : _in.GetJoints())
   {
-    result &= ConvertJoint(*joint, _out.joints[i]);
+    ConvertJoint(*joint, _out.joints[i]);
     i++;
   }
   _out.joint_count = i;
-
-  return result;
 }
 
 ///////////// Server Fixture /////////////
