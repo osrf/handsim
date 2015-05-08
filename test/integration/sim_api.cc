@@ -104,8 +104,6 @@ void ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
 
   ConvertTransform(_in.GetWorldPose(), _out.transform);
 
-  _out.id = _in.GetId();
-
   // Gravity mode is only false if all links have gravity_mode set to false
   bool gravity_mode = false;
   int i = 0;
