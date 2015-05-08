@@ -340,9 +340,11 @@ TEST_F(SimApiTest, HxsContacts)
       world->GetPhysicsEngine()->GetContactManager();
   ASSERT_TRUE(contactManager != NULL);
 
-  gazebo::physics::ModelPtr tableModel = world->GetModel("table");
+  const std::string modelName = "wooden_case";
+  gazebo::physics::ModelPtr tableModel = world->GetModel(modelName);
 
-  ASSERT_EQ(hxs_contacts("table", &contactPoints), hxOK);
+  ASSERT_EQ(hxs_contacts(modelName.c_str(), &contactPoints), hxOK);
+  EXPECT_GT(contactPoints.contact_count, 0);
 
   // Have to find contacts and sort them by distance to compare
   // since they don't have string keys
@@ -382,7 +384,7 @@ TEST_F(SimApiTest, HxsContacts)
             break;
           }
         }
-        EXPECT_LT(j, contactPoints.contact_count);
+        EXPECT_EQ(j, contactPoints.contact_count);
       }
     }
   }
