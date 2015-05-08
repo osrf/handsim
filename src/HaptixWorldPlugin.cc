@@ -414,14 +414,39 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
     return;
   }
 
+  // Check if the model exists
+  gazebo::physics::ModelPtr model = this->world->GetModel(modelName);
+  if (!model)
+  {
+    gzerr << "Requested model [" << modelName << "] does not exist."
+          << std::endl;
+    return;
+  }
+
+  if (!this->world->GetPhysicsEngine())
+  {
+    gzerr << "World physics engine was NULL!" << std::endl;
+    return;
+  }
+
+  if (!this->world->GetPhysicsEngine()->GetContactManager())
+  {
+    gzerr << "Contact manager was NULL!" << std::endl;
+    return;
+  }
+
   std::vector<gazebo::physics::Contact*> contacts =
       this->world->GetPhysicsEngine()->GetContactManager()->GetContacts();
+  gzdbg << "Contact vector size: " << contacts.size() << std::endl;
   for (auto contact : contacts)
   {
     // If contact is not relevant to the requested model name
     if (contact->collision1->GetLink()->GetModel()->GetName() != modelName &&
         contact->collision2->GetLink()->GetModel()->GetName() != modelName)
     {
+      gzdbg << "contact model names " << contact->collision1->GetLink()->GetModel()->GetName()
+          << " and " << contact->collision2->GetLink()->GetModel()->GetName()
+          << " did not match queried model " << modelName << std::endl;
       continue;
     }
     for (int i = 0; i < contact->count; i++)
