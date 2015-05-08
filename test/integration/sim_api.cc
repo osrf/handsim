@@ -1099,7 +1099,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
     for (auto collision : link->GetCollisions())
     {
       EXPECT_TRUE(collision->GetSurface()->collideWithoutContact);
-      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01);
+      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01u);
     }
   }
 
@@ -1113,7 +1113,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
     for (auto collision : link->GetCollisions())
     {
       EXPECT_FALSE(collision->GetSurface()->collideWithoutContact);
-      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01);
+      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01u);
     }
   }
 
@@ -1127,7 +1127,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
     for (auto collision : link->GetCollisions())
     {
       EXPECT_FALSE(collision->GetSurface()->collideWithoutContact);
-      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x0);
+      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x0u);
     }
   }
 }
