@@ -108,7 +108,6 @@ void ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
 
   // Gravity mode is only false if all links have gravity_mode set to false
   bool gravity_mode = false;
-  bool result = true;
   int i = 0;
   for (auto link : _in.GetLinks())
   {

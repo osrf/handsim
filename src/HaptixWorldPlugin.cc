@@ -346,7 +346,7 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
   if (!this->userCameraPoseValid)
   {
     gzwarn << "User camera pose has not yet been published. Returning default"
-           << " camera pose specified in SDF." << std::endl;
+           << " camera pose." << std::endl;
   }
 
   haptix::comm::msgs::hxTransform *cameraTransform =
@@ -433,7 +433,8 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
 
       gazebo::math::Pose linkPose =
           contact->collision1->GetLink()->GetWorldPose();
-      gazebo::math::Pose contactPosPose(contact->positions[i], gazebo::math::Quaternion());
+      gazebo::math::Pose contactPosPose(contact->positions[i],
+          gazebo::math::Quaternion());
 
       // All vectors are relative to the link frame.
 
@@ -442,7 +443,7 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
 
       ConvertVector(contactPosPose.pos, *contactMsg->mutable_point());
 
-      // Rotate the normal vector
+      // Rotate the normal vector into the link frame.
       ConvertVector(linkPose.rot.RotateVectorReverse(contact->normals[i]),
           *contactMsg->mutable_normal());
 
