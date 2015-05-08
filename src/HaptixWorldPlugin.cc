@@ -20,6 +20,7 @@
 
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
+#include <gazebo/common/Time.hh>
 #include <gazebo/gui/GLWidget.hh>
 #include <gazebo/gui/GuiIface.hh>
 #include <gazebo/gui/MainWindow.hh>
@@ -406,34 +407,81 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
     return;
   }
   std::string modelName = _req.data();
+
+  // In order to get contact points using ContactManager::GetContacts,
+  // one of the following must be satisfied:
+  // 1. something is subscribing to ~/physics/contacts
+  //    this impacts performance, so it shouldn't be the default option
+  // 2. a ContactManager filter has been created for the specified model
+  //    our approach will be to check for the existence of a filter
+  //    named after the model to be checked each time this function is called.
+  //    If the filter doesn't exist:
+  //    a. Create the filter
+  //    b. Release the worldMutex
+  //    c. Wait for a while
+  //    d. Get the mutex again and check for contacts.
+  bool hadFilter;
+  {
+    std::lock_guard<std::mutex> lock(this->worldMutex);
+
+    if (!this->world)
+    {
+      gzerr << "NULL world in ContactPoints callback" << std::endl;
+      return;
+    }
+
+    // Check if the model exists
+    auto model = this->world->GetModel(modelName);
+    if (!model)
+    {
+      gzerr << "Requested model [" << modelName << "] does not exist."
+            << std::endl;
+      return;
+    }
+
+    auto physics = this->world->GetPhysicsEngine();
+    if (!physics)
+    {
+      gzerr << "Physics engine was NULL!" << std::endl;
+      return;
+    }
+
+    auto contactManager = physics->GetContactManager();
+    if (!contactManager)
+    {
+      gzerr << "Contact manager was NULL!" << std::endl;
+      return;
+    }
+
+    hadFilter = contactManager->HasFilter(modelName);
+    if (!hadFilter)
+    {
+      // Create the filter if it doesn't exist
+      // First get names of all child collisions
+      std::vector<std::string> collisionNames;
+      auto links = model->GetLinks();
+      for (auto link : links)
+      {
+        auto collisions = link->GetCollisions();
+        for (auto collision : collisions)
+        {
+          collisionNames.push_back(collision->GetScopedName());
+        }
+      }
+      // Create the filter
+      contactManager->CreateFilter(modelName, collisionNames);
+    }
+  }
+
+  // With worldMutex released, wait if filter didn't exist
+  if (!hadFilter)
+  {
+    gzdbg << "Waiting for " << modelName << " filter" << std::endl;
+    gazebo::common::Time::MSleep(5);
+  }
+
+  // Lock worldMutex and check for contacts
   std::lock_guard<std::mutex> lock(this->worldMutex);
-
-  if (!this->world)
-  {
-    gzerr << "NULL world in ContactPoints callback" << std::endl;
-    return;
-  }
-
-  // Check if the model exists
-  gazebo::physics::ModelPtr model = this->world->GetModel(modelName);
-  if (!model)
-  {
-    gzerr << "Requested model [" << modelName << "] does not exist."
-          << std::endl;
-    return;
-  }
-
-  if (!this->world->GetPhysicsEngine())
-  {
-    gzerr << "World physics engine was NULL!" << std::endl;
-    return;
-  }
-
-  if (!this->world->GetPhysicsEngine()->GetContactManager())
-  {
-    gzerr << "Contact manager was NULL!" << std::endl;
-    return;
-  }
 
   std::vector<gazebo::physics::Contact*> contacts =
       this->world->GetPhysicsEngine()->GetContactManager()->GetContacts();
