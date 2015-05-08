@@ -27,6 +27,108 @@
 
 #include "test_config.h"
 
+///////////// Utility functions /////////////
+
+/////////////////////////////////////////////////
+void ConvertVector(const gazebo::math::Vector3 &_in, hxsVector3 &_out)
+{
+  _out.x = _in.x;
+  _out.y = _in.y;
+  _out.z = _in.z;
+}
+
+/////////////////////////////////////////////////
+void ConvertVector(const hxsVector3 &_in, gazebo::math::Vector3 &_out)
+{
+  _out.x = _in.x;
+  _out.y = _in.y;
+  _out.z = _in.z;
+}
+
+/////////////////////////////////////////////////
+void ConvertTransform(const hxsTransform &_in, gazebo::math::Pose &_out)
+{
+  ConvertVector(_in.pos, _out.pos);
+
+  _out.rot.w = _in.orient.w;
+  _out.rot.x = _in.orient.x;
+  _out.rot.y = _in.orient.y;
+  _out.rot.z = _in.orient.z;
+}
+
+//////////////////////////////////////////////////
+void ConvertTransform(const gazebo::math::Pose &_in, hxsTransform &_out)
+{
+  ConvertVector(_in.pos, _out.pos);
+
+  _out.orient.w = _in.rot.w;
+  _out.orient.x = _in.rot.x;
+  _out.orient.y = _in.rot.y;
+  _out.orient.z = _in.rot.z;
+}
+
+////////////////////////////////////////////////
+void ConvertWrench(const gazebo::physics::JointWrench &_in, hxsWrench &_out)
+{
+  ConvertVector(_in.body2Force, _out.force);
+  ConvertVector(_in.body2Torque, _out.torque);
+}
+
+/////////////////////////////////////////////////
+void ConvertJoint(gazebo::physics::Joint &_in, hxsJoint &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
+  _out.pos = _in.GetAngle(0).Radian();
+  _out.vel = _in.GetVelocity(0);
+  ConvertWrench(_in.GetForceTorque(0), _out.wrench_reactive);
+  _out.torque_motor = _in.GetForce(0);
+}
+
+/////////////////////////////////////////////////
+void ConvertLink(const gazebo::physics::Link &_in, hxsLink &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
+  ConvertTransform(_in.GetWorldPose(), _out.transform);
+  ConvertVector(_in.GetWorldLinearVel(), _out.lin_vel);
+  ConvertVector(_in.GetWorldAngularVel(), _out.ang_vel);
+  ConvertVector(_in.GetWorldLinearAccel(), _out.lin_acc);
+  ConvertVector(_in.GetWorldAngularAccel(), _out.ang_acc);
+}
+
+/////////////////////////////////////////////////
+void ConvertModel(const gazebo::physics::Model &_in, hxsModel &_out)
+{
+  strncpy(_out.name, _in.GetName().c_str(), _in.GetName().length());
+
+  ConvertTransform(_in.GetWorldPose(), _out.transform);
+
+  // Gravity mode is only false if all links have gravity_mode set to false
+  bool gravity_mode = false;
+  int i = 0;
+  for (auto link : _in.GetLinks())
+  {
+    ConvertLink(*link, _out.links[i]);
+    i++;
+
+    // Check gravity_mode mode
+    gravity_mode |= link->GetGravityMode();
+  }
+  _out.link_count = i;
+
+  _out.gravity_mode = gravity_mode;
+
+  i = 0;
+  for (auto joint : _in.GetJoints())
+  {
+    ConvertJoint(*joint, _out.joints[i]);
+    i++;
+  }
+  _out.joint_count = i;
+}
+
+///////////// Server Fixture /////////////
 
 class SimApiTest : public gazebo::ServerFixture
 {
@@ -60,13 +162,12 @@ TEST_F(SimApiTest, HxsSimInfo)
   ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
 
   // Wait for all the models to initialize
-  gazebo::common::Time::Sleep(1);
   hxsSimInfo simInfo;
   ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
-  gazebo::common::Time::MSleep(500);
+  sleep(1);
 
   gazebo::math::Pose cameraOut;
-  HaptixWorldPlugin::ConvertTransform(simInfo.camera_transform, cameraOut);
+  ConvertTransform(simInfo.camera_transform, cameraOut);
 
   // Verify object locations, camera pose, etc.
   EXPECT_EQ(cameraPose.pos, cameraOut.pos);
@@ -82,7 +183,7 @@ TEST_F(SimApiTest, HxsSimInfo)
     ASSERT_TRUE(gzModel != NULL);
 
     gazebo::math::Pose modelPose;
-    HaptixWorldPlugin::ConvertTransform(simInfo.models[i].transform, modelPose);
+    ConvertTransform(simInfo.models[i].transform, modelPose);
     EXPECT_EQ(modelPose, gzModel->GetWorldPose());
 
     for (int j = 0; j < simInfo.models[i].link_count; ++j)
@@ -92,21 +193,20 @@ TEST_F(SimApiTest, HxsSimInfo)
       ASSERT_TRUE(gzLink != NULL);
 
       gazebo::math::Pose linkPose;
-      HaptixWorldPlugin::ConvertTransform(simInfo.models[i].links[j].transform,
-          linkPose);
+      ConvertTransform(simInfo.models[i].links[j].transform, linkPose);
       EXPECT_EQ(linkPose, gzLink->GetWorldPose());
 
       gazebo::math::Vector3 tmp;
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].lin_vel, tmp);
+      ConvertVector(simInfo.models[i].links[j].lin_vel, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldLinearVel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].ang_vel, tmp);
+      ConvertVector(simInfo.models[i].links[j].ang_vel, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldAngularVel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].lin_acc, tmp);
+      ConvertVector(simInfo.models[i].links[j].lin_acc, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldLinearAccel());
 
-      HaptixWorldPlugin::ConvertVector(simInfo.models[i].links[j].ang_acc, tmp);
+      ConvertVector(simInfo.models[i].links[j].ang_acc, tmp);
       EXPECT_EQ(tmp, gzLink->GetWorldAngularAccel());
     }
 
@@ -170,7 +270,7 @@ TEST_F(SimApiTest, HxsCameraTransform)
   gazebo::common::Time::Sleep(2);
 
   gazebo::math::Pose cameraOut;
-  HaptixWorldPlugin::ConvertTransform(transform, cameraOut);
+  ConvertTransform(transform, cameraOut);
 
   // Verify camera pose
   EXPECT_EQ(cameraPose.pos, cameraOut.pos);
@@ -231,6 +331,9 @@ TEST_F(SimApiTest, HxsContacts)
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
+  gazebo::physics::ModelPtr model = world->GetModel("new_model");
+  EXPECT_TRUE(model != NULL);
+
   // Wait a little while for the world to initialize
   world->Step(20);
 
@@ -240,27 +343,27 @@ TEST_F(SimApiTest, HxsContacts)
       world->GetPhysicsEngine()->GetContactManager();
   ASSERT_TRUE(contactManager != NULL);
 
-  gazebo::physics::ModelPtr tableModel = world->GetModel("table");
+  const std::string modelName = "wooden_case";
+  gazebo::physics::ModelPtr tableModel = world->GetModel(modelName);
 
-  ASSERT_EQ(hxs_contacts("table", &contactPoints), hxOK);
+  ASSERT_EQ(hxs_contacts(modelName.c_str(), &contactPoints), hxOK);
+  EXPECT_GT(contactPoints.contact_count, 0);
 
   // Have to find contacts and sort them by distance to compare
   // since they don't have string keys
 
+  int matched_contacts = 0;
   for (auto contact : contactManager->GetContacts())
   {
-    if (contact->collision1->GetModel() == tableModel)
+    if (contact->collision1->GetModel() == model)
     {
-      for (int i = 0; i < contact->count; i++)
+      for (int i = 0; i < contact->count; ++i)
       {
         gazebo::math::Vector3 linkPos =
             contact->collision1->GetLink()->GetWorldPose().pos;
-        contact->positions[i] -= linkPos;
-        contact->normals[i] -= linkPos;
 
         // Now find matching contact point as returned by hxs_contacts
-        int j = 0;
-        for (; j < contactPoints.contact_count; j++)
+        for (int j = 0; j < contactPoints.contact_count; ++j)
         {
           bool link1NameMatch = std::string(contactPoints.contacts[i].link1) ==
               contact->collision1->GetLink()->GetName();
@@ -268,28 +371,27 @@ TEST_F(SimApiTest, HxsContacts)
               contact->collision2->GetLink()->GetName();
           gazebo::math::Vector3 contactPos, contactNormal, contactForce,
               contactTorque;
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].point,
-              contactPos);
-          HaptixWorldPlugin::ConvertVector(contactPoints.contacts[i].normal,
-              contactNormal);
-          HaptixWorldPlugin::ConvertVector(
-              contactPoints.contacts[i].wrench.force, contactForce);
-          HaptixWorldPlugin::ConvertVector(
-              contactPoints.contacts[i].wrench.torque, contactTorque);
+          ConvertVector(contactPoints.contacts[i].point, contactPos);
+          ConvertVector(contactPoints.contacts[i].normal, contactNormal);
+          ConvertVector(contactPoints.contacts[i].wrench.force, contactForce);
+          ConvertVector(contactPoints.contacts[i].wrench.torque, contactTorque);
           if (link1NameMatch && link2NameMatch &&
-              contactPos == contact->positions[i] &&
-              contactNormal == contact->normals[i] &&
+              /* contactPos == contact->positions[i] &&
+              contactNormal == contact->normals[i] && */
               contactForce == contact->wrench[i].body1Force &&
               contactTorque == contact->wrench[i].body1Torque &&
               contactPoints.contacts[i].distance == contact->depths[i])
           {
+            // Every time we match a contact:
+            ++matched_contacts;
             break;
           }
         }
-        EXPECT_LT(j, contactPoints.contact_count);
       }
     }
   }
+
+  EXPECT_EQ(matched_contacts, contactPoints.contact_count);
 }
 
 TEST_F(SimApiTest, HxsSetModelJointState)
@@ -577,7 +679,7 @@ TEST_F(SimApiTest, HxsForce)
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), gzForce);
     world->Step(100);
@@ -585,7 +687,7 @@ TEST_F(SimApiTest, HxsForce)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     world->Step(100);
@@ -623,19 +725,20 @@ TEST_F(SimApiTest, MultipleForces)
 
   for (int i = 0; i < 3; ++i)
   {
-    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, 2*duration), hxOK);
+    ASSERT_EQ(hxs_apply_force("wood_cube_5cm", "link", &force, 2*duration),
+        hxOK);
   }
 
   world->Step(1);
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), 6*gzForce);
     world->Step(100);
   }
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), 3*gzForce);
     world->Step(100);
@@ -643,12 +746,11 @@ TEST_F(SimApiTest, MultipleForces)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     world->Step(100);
   }
-
 }
 
 TEST_F(SimApiTest, HxsTorque)
@@ -681,7 +783,7 @@ TEST_F(SimApiTest, HxsTorque)
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldTorque(), gzTorque);
     world->Step(100);
@@ -689,7 +791,7 @@ TEST_F(SimApiTest, HxsTorque)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     world->Step(100);
@@ -729,7 +831,7 @@ TEST_F(SimApiTest, HxsWrench)
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_NEAR(link->GetRelativeForce().x, gzForce.x, 5e-3);
     EXPECT_NEAR(link->GetRelativeForce().y, gzForce.y, 5e-3);
@@ -740,7 +842,7 @@ TEST_F(SimApiTest, HxsWrench)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     EXPECT_EQ(link->GetWorldTorque(), empty);
@@ -1003,7 +1105,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
     for (auto collision : link->GetCollisions())
     {
       EXPECT_TRUE(collision->GetSurface()->collideWithoutContact);
-      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01);
+      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01u);
     }
   }
 
@@ -1017,7 +1119,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
     for (auto collision : link->GetCollisions())
     {
       EXPECT_FALSE(collision->GetSurface()->collideWithoutContact);
-      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01);
+      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01u);
     }
   }
 
@@ -1031,7 +1133,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
     for (auto collision : link->GetCollisions())
     {
       EXPECT_FALSE(collision->GetSurface()->collideWithoutContact);
-      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x0);
+      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x0u);
     }
   }
 }
