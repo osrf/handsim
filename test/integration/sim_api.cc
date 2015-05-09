@@ -357,13 +357,13 @@ TEST_F(SimApiTest, HxsContacts)
     if (contact->collision1->GetModel()->GetName() == modelName ||
         contact->collision2->GetModel()->GetName() == modelName)
     {
-      for (int i = 0; i < contact->count; i++)
+      for (int i = 0; i < contact->count; ++i)
       {
         gazebo::math::Vector3 linkPos =
             contact->collision1->GetLink()->GetWorldPose().pos;
 
         // Now find matching contact point as returned by hxs_contacts
-        for (int j = 0; j < contactPoints.contact_count; j++)
+        for (int j = 0; j < contactPoints.contact_count; ++j)
         {
           bool link1NameMatch = std::string(contactPoints.contacts[i].link1) ==
               contact->collision1->GetLink()->GetName();
@@ -679,7 +679,7 @@ TEST_F(SimApiTest, HxsForce)
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), gzForce);
     world->Step(100);
@@ -687,7 +687,7 @@ TEST_F(SimApiTest, HxsForce)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     world->Step(100);
@@ -733,12 +733,12 @@ TEST_F(SimApiTest, MultipleForces)
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), 6*gzForce);
     world->Step(100);
   }
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), 3*gzForce);
     world->Step(100);
@@ -746,7 +746,7 @@ TEST_F(SimApiTest, MultipleForces)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     world->Step(100);
@@ -783,7 +783,7 @@ TEST_F(SimApiTest, HxsTorque)
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldTorque(), gzTorque);
     world->Step(100);
@@ -791,7 +791,7 @@ TEST_F(SimApiTest, HxsTorque)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     world->Step(100);
@@ -831,7 +831,7 @@ TEST_F(SimApiTest, HxsWrench)
 
   // Every 0.1 seconds
   gzdbg << "Start time: " << world->GetSimTime() << std::endl;
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_NEAR(link->GetRelativeForce().x, gzForce.x, 5e-3);
     EXPECT_NEAR(link->GetRelativeForce().y, gzForce.y, 5e-3);
@@ -842,7 +842,7 @@ TEST_F(SimApiTest, HxsWrench)
   gzdbg << "End time: " << world->GetSimTime() << std::endl;
 
   gazebo::math::Vector3 empty(0, 0, 0);
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 10; ++i)
   {
     EXPECT_EQ(link->GetWorldForce(), empty);
     EXPECT_EQ(link->GetWorldTorque(), empty);

@@ -497,7 +497,7 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
           << " did not match queried model " << modelName << std::endl;
       continue;
     }
-    for (int i = 0; i < contact->count; i++)
+    for (int i = 0; i < contact->count; ++i)
     {
       haptix::comm::msgs::hxContactPoint* contactMsg = _rep.add_contacts();
 
