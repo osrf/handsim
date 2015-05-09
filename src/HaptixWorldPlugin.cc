@@ -169,8 +169,6 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->visPub = this->gzNode->Advertise<gazebo::msgs::Visual>("~/visual");
 
-  this->userCameraPoseValid = false;
-
   this->userCameraPub =
       this->gzNode->Advertise<gazebo::msgs::Pose>("~/user_camera/joy_pose");
 
@@ -193,7 +191,7 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
     &HaptixWorldPlugin::HaptixSetCameraTransformCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_contacts",
-    &HaptixWorldPlugin::HaptixContactPointsCallback, this);
+    &HaptixWorldPlugin::HaptixContactsCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_joint_state",
     &HaptixWorldPlugin::HaptixModelJointStateCallback, this);
@@ -395,7 +393,7 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixContactPointsCallback(
+void HaptixWorldPlugin::HaptixContactsCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result)
@@ -426,7 +424,7 @@ void HaptixWorldPlugin::HaptixContactPointsCallback(
 
     if (!this->world)
     {
-      gzerr << "NULL world in ContactPoints callback" << std::endl;
+      gzerr << "NULL world in Contacts callback" << std::endl;
       return;
     }
 

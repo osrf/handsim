@@ -200,7 +200,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \param[out] _rep The reply: a vector of contact points representing where
   /// the model is contacting other objects.
   /// \return _result True if no errors were encountered.
-  private: void HaptixContactPointsCallback(const std::string &_service,
+  private: void HaptixContactsCallback(const std::string &_service,
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
