@@ -210,17 +210,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// model to set and the desired joint state.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixModelJointStateCallback(const std::string &_service,
-    const haptix::comm::msgs::hxModel &_req,
-    haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
-  /// \brief hxs_set_model_link_state callback. Set the state of a joint.
-  /// \param[in] _service The service this callback is advertised on.
-  /// \param[in] _req The request: hxModel message containing the name of the
-  /// model to set and the desired link state.
-  /// \param[out] _rep The reply: empty.
-  /// \return _result True if no errors were encountered.
-  private: void HaptixModelLinkStateCallback(const std::string &_service,
+  private: void HaptixSetModelJointStateCallback(const std::string &_service,
     const haptix::comm::msgs::hxModel &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 

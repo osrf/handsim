@@ -194,7 +194,7 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
     &HaptixWorldPlugin::HaptixContactsCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_joint_state",
-    &HaptixWorldPlugin::HaptixModelJointStateCallback, this);
+    &HaptixWorldPlugin::HaptixSetModelJointStateCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_add_model",
     &HaptixWorldPlugin::HaptixAddModelCallback, this);
@@ -528,7 +528,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixModelJointStateCallback(
+void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)

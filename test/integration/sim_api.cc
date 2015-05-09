@@ -162,10 +162,10 @@ TEST_F(SimApiTest, HxsSimInfo)
   gazebo::gui::set_active_camera(camera);
   ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
 
-  // Wait for all the models to initialize
+  sleep(0.5);
   hxsSimInfo simInfo;
   ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
-  sleep(1);
+  sleep(0.5);
 
   gazebo::math::Pose cameraOut;
   ConvertTransform(simInfo.camera_transform, cameraOut);
