@@ -61,6 +61,7 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
+  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_joint_state");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_joint_state");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_add_model");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_remove_model");
@@ -193,8 +194,11 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_contacts",
     &HaptixWorldPlugin::HaptixContactsCallback, this);
 
-  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_joint_state",
+  this->ignNode.Advertise("/haptix/gazebo/hxs_model_joint_state",
     &HaptixWorldPlugin::HaptixModelJointStateCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_joint_state",
+    &HaptixWorldPlugin::HaptixSetModelJointStateCallback, this);
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_add_model",
     &HaptixWorldPlugin::HaptixAddModelCallback, this);
@@ -529,6 +533,47 @@ void HaptixWorldPlugin::HaptixContactsCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixModelJointStateCallback(
+    const std::string &/*_service*/,
+    const haptix::comm::msgs::hxString &_req,
+    haptix::comm::msgs::hxModel &_rep, bool &_result)
+{
+  _result = false;
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    gzerr << "World was NULL" << std::endl;
+    return;
+  }
+
+  gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
+
+  if (!model)
+  {
+    gzerr << "Model named ["
+          << _req.data()
+          << "] could not be found"
+          << std::endl;
+    return;
+  }
+
+  // fill out model name
+  _rep.Clear();
+  _rep.set_name(_req.data());
+  // fill out joint name, position and velocity
+  gazebo::physics::Joint_V joints = model->GetJoints();
+  for (gazebo::physics::Joint_V::iterator joint = joints.begin();
+                                          joint != joints.end(); ++joint)
+  {
+    haptix::comm::msgs::hxJoint *hxj = _rep.add_joints();
+    hxj->set_name((*joint)->GetName());
+    hxj->set_pos((*joint)->GetAngle(0).Radian());
+    hxj->set_vel((*joint)->GetVelocity(0));
+  }
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
