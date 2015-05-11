@@ -781,7 +781,8 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   gazebo::math::Pose pose;
   ConvertTransform(_req.transform(), pose);
 
-  if (model->GetName() == "mpl_haptix_right_forearm")
+  if (model->GetName() == "mpl_haptix_right_forearm" ||
+      model->GetName() == "mpl_haptix_left_forearm")
   {
     gazebo::math::Pose poseIncrement =
         pose + model->GetWorldPose().GetInverse();
