@@ -82,6 +82,8 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_color");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_color");
   this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_collide_mode");
+
+  this->ignNode.Unadvertise("haptix/arm_pose_inc");
 }
 
 /////////////////////////////////////////////////
@@ -179,6 +181,9 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->worldUpdateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
+
+  // Advertise the Ignition topic on which we'll publish arm pose changes
+  this->ignNode.Advertise("haptix/arm_pose_inc");
 
   // Advertise haptix sim services.
   this->ignNode.Advertise("/haptix/gazebo/hxs_sim_info",
@@ -775,6 +780,17 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
 
   gazebo::math::Pose pose;
   ConvertTransform(_req.transform(), pose);
+
+  if (model->GetName() == "mpl_haptix_right_forearm")
+  {
+    gazebo::math::Pose poseIncrement =
+        pose + model->GetWorldPose().GetInverse();
+
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(poseIncrement);
+
+    this->ignNode.Publish("haptix/arm_pose_inc", msg);
+  }
+
   auto setModelTransformLambda = [model, pose]()
       {
         model->SetWorldPose(pose);
