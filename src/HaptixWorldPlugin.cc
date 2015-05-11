@@ -419,6 +419,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
   //    c. Wait for a while
   //    d. Get the mutex again and check for contacts.
   bool hadFilter;
+  gazebo::physics::ContactManager *contactManager;
   {
     std::lock_guard<std::mutex> lock(this->worldMutex);
 
@@ -444,7 +445,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
       return;
     }
 
-    auto contactManager = physics->GetContactManager();
+    contactManager = physics->GetContactManager();
     if (!contactManager)
     {
       gzerr << "Contact manager was NULL!" << std::endl;
@@ -481,18 +482,25 @@ void HaptixWorldPlugin::HaptixContactsCallback(
   // Lock worldMutex and check for contacts
   std::lock_guard<std::mutex> lock(this->worldMutex);
 
-  std::vector<gazebo::physics::Contact*> contacts =
-      this->world->GetPhysicsEngine()->GetContactManager()->GetContacts();
+  auto contacts = contactManager->GetContacts();
   gzdbg << "Contact vector size: " << contacts.size() << std::endl;
-  for (auto contact : contacts)
+  //for (auto contact : contacts)
+  if (contactManager->GetContactCount() > contacts.size())
   {
+    gzerr << "invalid contact vector size" << std::endl;
+    return;
+  }
+  for (unsigned int j = 0; j < contactManager->GetContactCount(); ++j)
+  {
+    auto contact = contacts[j];
     // If contact is not relevant to the requested model name
     if (contact->collision1->GetLink()->GetModel()->GetName() != modelName &&
         contact->collision2->GetLink()->GetModel()->GetName() != modelName)
     {
-      gzdbg << "contact model names " << contact->collision1->GetLink()->GetModel()->GetName()
-          << " and " << contact->collision2->GetLink()->GetModel()->GetName()
-          << " did not match queried model " << modelName << std::endl;
+      gzdbg << "contact model names "
+            << contact->collision1->GetLink()->GetModel()->GetName()
+            << " and " << contact->collision2->GetLink()->GetModel()->GetName()
+            << " did not match queried model " << modelName << std::endl;
       continue;
     }
     for (int i = 0; i < contact->count; ++i)

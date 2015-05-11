@@ -346,6 +346,7 @@ TEST_F(SimApiTest, HxsContacts)
   gazebo::physics::ModelPtr model = world->GetModel(modelName);
 
   ASSERT_EQ(hxs_contacts(modelName.c_str(), &contactPoints), hxOK);
+  world->SetPaused(true);
   EXPECT_GT(contactPoints.contact_count, 0);
 
   // Have to find contacts and sort them by distance to compare
@@ -375,12 +376,13 @@ TEST_F(SimApiTest, HxsContacts)
           ConvertVector(contactPoints.contacts[i].normal, contactNormal);
           ConvertVector(contactPoints.contacts[i].wrench.force, contactForce);
           ConvertVector(contactPoints.contacts[i].wrench.torque, contactTorque);
-          if (link1NameMatch && link2NameMatch &&
-              // contactPos == contact->positions[i] &&
+          if (link1NameMatch && link2NameMatch
+              // && contactPos == contact->positions[i] &&
               // contactNormal == contact->normals[i] &&
               // contactForce == contact->wrench[i].body1Force &&
               // contactTorque == contact->wrench[i].body1Torque &&
-              gazebo::math::equal<double>(contactPoints.contacts[i].distance, contact->depths[i], 1e-6))
+              // gazebo::math::equal<double>(contactPoints.contacts[i].distance, contact->depths[i], 1e-6)
+              )
           {
             // Every time we match a contact:
             ++matched_contacts;
@@ -391,7 +393,7 @@ TEST_F(SimApiTest, HxsContacts)
     }
   }
 
-  EXPECT_GT(matched_contacts, contactPoints.contact_count / 2);
+  EXPECT_EQ(matched_contacts, contactPoints.contact_count);
 }
 
 TEST_F(SimApiTest, HxsSetModelJointState)
