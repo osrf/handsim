@@ -29,6 +29,7 @@ macro (handsim_build_tests)
       ${GAZEBO_LIBRARIES}
       ${Boost_LIBRARIES}
       ${IGNITION-TRANSPORT_LIBRARIES}
+      HaptixWorldPlugin
       )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
