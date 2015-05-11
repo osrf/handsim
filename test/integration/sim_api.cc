@@ -379,14 +379,14 @@ TEST_F(SimApiTest, HxsContacts)
           ConvertVector(contactPoints.contacts[i].normal, contactNormal);
           ConvertVector(contactPoints.contacts[i].wrench.force, contactForce);
           ConvertVector(contactPoints.contacts[i].wrench.torque, contactTorque);
-          if (link1NameMatch && link2NameMatch
-              // && contactPos == contact->positions[i] &&
-              // contactNormal == contact->normals[i] &&
-              // contactForce == contact->wrench[i].body1Force &&
-              // contactTorque == contact->wrench[i].body1Torque &&
-              // gazebo::math::equal<double>(contactPoints.contacts[i].distance, contact->depths[i], 1e-6)
+          if (link1NameMatch && link2NameMatch &&
+              gazebo::math::equal<double>(contactPoints.contacts[i].distance,
+                  contact->depths[i], 1e-6)
               )
           {
+            // TODO:
+            // Expect the normal to face in the Gazebo Z direction
+            // Expect the position to be on a corner of the box (known radius from center)
             // Every time we match a contact:
             ++matched_contacts;
             break;
