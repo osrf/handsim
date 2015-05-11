@@ -475,7 +475,6 @@ void HaptixWorldPlugin::HaptixContactsCallback(
   // With worldMutex released, wait if filter didn't exist
   if (!hadFilter)
   {
-    gzdbg << "Waiting for " << modelName << " filter" << std::endl;
     gazebo::common::Time::MSleep(5);
   }
 
@@ -483,24 +482,19 @@ void HaptixWorldPlugin::HaptixContactsCallback(
   std::lock_guard<std::mutex> lock(this->worldMutex);
 
   auto contacts = contactManager->GetContacts();
-  gzdbg << "Contact vector size: " << contacts.size() << std::endl;
-  //for (auto contact : contacts)
+
   if (contactManager->GetContactCount() > contacts.size())
   {
     gzerr << "invalid contact vector size" << std::endl;
     return;
   }
+
   for (unsigned int j = 0; j < contactManager->GetContactCount(); ++j)
   {
     auto contact = contacts[j];
     // If contact is not relevant to the requested model name
-    if (contact->collision1->GetLink()->GetModel()->GetName() != modelName &&
-        contact->collision2->GetLink()->GetModel()->GetName() != modelName)
+    if (contact->collision1->GetLink()->GetModel()->GetName() != modelName)
     {
-      gzdbg << "contact model names "
-            << contact->collision1->GetLink()->GetModel()->GetName()
-            << " and " << contact->collision2->GetLink()->GetModel()->GetName()
-            << " did not match queried model " << modelName << std::endl;
       continue;
     }
     for (int i = 0; i < contact->count; ++i)
@@ -518,7 +512,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
       // All vectors are relative to the link frame.
 
       // Transform the pose into the link frame
-      contactPosPose = linkPose.GetInverse() + contactPosPose;
+      contactPosPose = contactPosPose + linkPose.GetInverse();
 
       ConvertVector(contactPosPose.pos, *contactMsg->mutable_point());
 
