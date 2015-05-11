@@ -354,7 +354,6 @@ TEST_F(SimApiTest, HxsContacts)
   // since they don't have string keys
 
   int matched_contacts = 0;
-  gazebo::math::Vector3 force_sum = gazebo::math::Vector3::Zero;
 
   // Each contact manager contact should have a unique match in contacts
   for (unsigned int k = 0; k < contactManager->GetContactCount(); ++k)
@@ -396,7 +395,6 @@ TEST_F(SimApiTest, HxsContacts)
             EXPECT_NEAR(contactPoints.contacts[j].distance,
                   contact->depths[i], 1e-6);
             EXPECT_EQ(contactForce, contact->wrench[j].body2Force);
-            force_sum += contactForce;
             EXPECT_EQ(contactTorque, contact->wrench[j].body2Torque);
             // Expect the normal to face in the Gazebo Z direction, which is
             // the negative Z direction in the link frame, since we rotated
