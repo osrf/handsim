@@ -341,6 +341,7 @@ TEST_F(SimApiTest, HxsContacts)
   const std::string modelName = "wood_cube_10cm";
   gazebo::physics::ModelPtr model = world->GetModel(modelName);
   model->SetWorldPose(gazebo::math::Pose(0, 0.25, -1.33, M_PI, 0, 0));
+  model->SetAutoDisable(false);
 
   // Wait a little while for the world to initialize
   world->Step(20);
