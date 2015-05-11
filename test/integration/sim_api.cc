@@ -332,18 +332,19 @@ TEST_F(SimApiTest, HxsContacts)
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
-  // Wait a little while for the world to initialize
-  world->Step(20);
-  world->SetPaused(false);
-
   hxsContactPoints contactPoints;
 
   gazebo::physics::ContactManager *contactManager =
       world->GetPhysicsEngine()->GetContactManager();
   ASSERT_TRUE(contactManager != NULL);
 
-  const std::string modelName = "wooden_case";
+  const std::string modelName = "wood_cube_10cm";
   gazebo::physics::ModelPtr model = world->GetModel(modelName);
+  model->SetWorldPose(gazebo::math::Pose(0, -0.25, 1.033, 0, 0, 0));
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+  world->SetPaused(false);
 
   ASSERT_EQ(hxs_contacts(modelName.c_str(), &contactPoints), hxOK);
   world->SetPaused(true);
@@ -353,8 +354,10 @@ TEST_F(SimApiTest, HxsContacts)
   // since they don't have string keys
 
   int matched_contacts = 0;
-  for (auto contact : contactManager->GetContacts())
+  // for (auto contact : contactManager->GetContacts())
+  for (unsigned int j = 0; j < contactManager->GetContactCount(); ++j)
   {
+    auto contact = contactManager->GetContacts()[j];
     if (contact->collision1->GetModel()->GetName() == modelName ||
         contact->collision2->GetModel()->GetName() == modelName)
     {
