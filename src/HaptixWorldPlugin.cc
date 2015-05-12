@@ -56,34 +56,6 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
 
   gazebo::event::Events::DisconnectWorldUpdateBegin(
       this->worldUpdateConnection);
-
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_sim_info");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_camera_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_joint_state");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_add_model");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_remove_model");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_linear_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_linear_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_angular_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_angular_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_force");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_torque");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_wrench");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_reset");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_is_logging");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_start_logging");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_stop_logging");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_gravity_mode");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_gravity_mode");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_color");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_color");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_collide_mode");
-
-  this->ignNode.Unadvertise("haptix/arm_pose_inc");
 }
 
 /////////////////////////////////////////////////
