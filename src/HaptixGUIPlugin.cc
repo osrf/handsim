@@ -1235,7 +1235,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     }
     else
     {
-      position = gazebo::math::Vector3(-poseIncArgs[0], poseIncArgs[1],
+      position = gazebo::math::Vector3(-poseIncArgs[0], -poseIncArgs[1],
           poseIncArgs[2]);
       rot = gazebo::math::Vector3(-poseIncArgs[3], poseIncArgs[4],
           poseIncArgs[5]);
