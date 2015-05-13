@@ -1225,19 +1225,19 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     // Move in the local coordinate frame if true.
     if (this->localCoordMove)
     {
-      rot = gazebo::math::Vector3(poseIncArgs[4],
-          -poseIncArgs[3], poseIncArgs[5]);
-      position = gazebo::math::Vector3(-poseIncArgs[0],
-          -poseIncArgs[1], poseIncArgs[2]);
+      rot = gazebo::math::Vector3(-poseIncArgs[4],
+          poseIncArgs[3], poseIncArgs[5]);
+      position = gazebo::math::Vector3(poseIncArgs[0],
+          poseIncArgs[1], poseIncArgs[2]);
 
       position = this->armStartPose.rot.RotateVector(position);
       rot = this->armStartPose.rot.RotateVector(rot);
     }
     else
     {
-      position = gazebo::math::Vector3(poseIncArgs[0], poseIncArgs[1],
+      position = gazebo::math::Vector3(-poseIncArgs[0], poseIncArgs[1],
           poseIncArgs[2]);
-      rot = gazebo::math::Vector3(-poseIncArgs[3], -poseIncArgs[4],
+      rot = gazebo::math::Vector3(-poseIncArgs[3], poseIncArgs[4],
           poseIncArgs[5]);
     }
 
