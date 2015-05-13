@@ -1048,9 +1048,10 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     if (!this->haptixJoints[i]->SetForce(0, force))
     {
       // not a real gazebo joint, set target directly
-      this->haptixJoints[i]->SetPosition(position);
+      this->haptixJoints[i]->SetPosition(this->simRobotCommands[i].ref_pos);
       /// \TODO: something about velocity commands
-      // this->haptixJoints[i]->SetVelocity(velocity);
+      // this->haptixJoints[i]->SetVelocity(
+      //   this->simRobotCommands[i].ref_vel_max);
     }
   }
 }
