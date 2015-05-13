@@ -326,6 +326,13 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->haveKeyboard = this->LoadKeyboard();
 
+  if (!this->ignNode.Subscribe("/haptix/arm_model_pose",
+        &HaptixControlPlugin::SetWorldPose, this))
+  {
+    gzerr << "setting arm pose subscriber failed, will not be"
+          << " able to set arm pose directly.\n";
+  }
+
   this->LoadHandControl();
 
   // New Mechanism for Updating every World Cycle
@@ -706,6 +713,17 @@ void HaptixControlPlugin::Reset()
 }
 
 /////////////////////////////////////////////////
+// Allow users to set model pose directly
+void HaptixControlPlugin::SetWorldPose(const std::string &/*_topic*/,
+                     const msgs::Pose &_pose)
+{
+  boost::mutex::scoped_lock lock(this->baseLinkMutex);
+  math::Pose inputPose(msgs::Convert(_pose));
+  this->model->SetWorldPose(inputPose);
+  this->targetBaseLinkPose = this->baseLink->GetRelativePose() + inputPose;
+}
+
+/////////////////////////////////////////////////
 // Open keyboard commands
 void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
                      const msgs::Pose &_pose)
@@ -723,7 +741,7 @@ bool HaptixControlPlugin::LoadKeyboard()
 {
   this->keyboardPose = this->initialBaseLinkPose;
   this->staleKeyboardPose = true;
-  if (ignNode.Subscribe("/haptix/arm_pose_inc",
+  if (this->ignNode.Subscribe("/haptix/arm_pose_inc",
         &HaptixControlPlugin::SetKeyboardPose, this))
   {
     printf("Successfully connected to keyboard node\n");

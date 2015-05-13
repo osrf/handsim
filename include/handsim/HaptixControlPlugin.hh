@@ -183,6 +183,11 @@ namespace gazebo
     private: void SetKeyboardPose(const std::string &/*_topic*/,
                                   const msgs::Pose &_pose);
 
+    /// \brief Callback to set the model pose directly. Also update controller.
+    /// \param[in] _pose The input model pose in world frame.
+    private: void SetWorldPose(const std::string &/*_topic*/,
+                               const msgs::Pose &_pose);
+
     /// \brief Callback on Optitrack head tracker update
     private: void OnUpdateOptitrackHead(ConstPosePtr &_pose);
 

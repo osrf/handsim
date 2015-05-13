@@ -155,7 +155,7 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
-  this->ignNode.Advertise("haptix/arm_pose_inc");
+  this->ignNode.Advertise("haptix/arm_model_pose");
 
   // Advertise haptix sim services.
   this->ignNode.Advertise("/haptix/gazebo/hxs_sim_info",
@@ -756,12 +756,8 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   if (model->GetName() == "mpl_haptix_right_forearm" ||
       model->GetName() == "mpl_haptix_left_forearm")
   {
-    gazebo::math::Pose poseIncrement =
-        pose + model->GetWorldPose().GetInverse();
-
-    gazebo::msgs::Pose msg = gazebo::msgs::Convert(poseIncrement);
-
-    this->ignNode.Publish("haptix/arm_pose_inc", msg);
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose);
+    this->ignNode.Publish("haptix/arm_model_pose", msg);
   }
   else
   {
