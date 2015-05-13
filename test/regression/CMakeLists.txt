@@ -4,6 +4,13 @@ set(tests
   86_motor_values.cc
 )
 
-link_directories(${PROJECT_BINARY_DIR}/test)
+include_directories (
+  ${HAPTIX-COMM_INCLUDE_DIRS}
+)
+
+link_directories(
+  ${PROJECT_BINARY_DIR}/test
+  ${HAPTIX-COMM_LIBRARY_DIRS}
+)
 
 handsim_build_tests(${tests})

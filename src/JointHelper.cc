@@ -131,7 +131,7 @@ void JointHelper::SetPosition(double _position)
 }
 
 /////////////////////////////////////////////////
-public: const std::string JointHelper::GetName()
+const std::string JointHelper::GetName()
 {
   if (this->hasJoint)
     return this->realJoint->GetName();

@@ -508,8 +508,10 @@ void HaptixControlPlugin::LoadHandControl()
     /// broken (see gazebo issue #1534)
     this->haptixJoints[m]->SetEffortLimit(0, jointTorque);
 
-    // gzdbg << " motor torque [" << m
-    //       << "] : " << jointTorque << "\n";
+    /// \TODO: for issue #86, do something for fake motor joints too
+    gzerr << " motor [" << m
+          << "] joint : " << haptixJoints[m]->GetName()
+          << "] torque : " << jointTorque << "\n";
 
     /// \TODO: contemplate about using Joint::SetEffortLimit()
     /// instead of PID::SetCmdMax() and PID::SetCmdMin()
@@ -1336,6 +1338,10 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
   {
     int m = this->motorInfos[i].index;
     haptix::comm::msgs::hxRobot::hxLimit *motor = _rep.add_motor_limit();
+
+    /// \TODO for issue #86, compute joint limits for fake joints as well
+    gzerr << motorInfos[i].name << "\n";
+
     // compute the motor limits from joint limits
     double jointMin = this->haptixJoints[m]->GetLowerLimit(0).Radian();
     double jointMax = this->haptixJoints[m]->GetUpperLimit(0).Radian();
