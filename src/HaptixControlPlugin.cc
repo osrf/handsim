@@ -712,8 +712,7 @@ void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
 {
   math::Pose inputPose(msgs::Convert(_pose));
 
-  this->keyboardPose.pos += inputPose.pos;
-  this->keyboardPose.rot = inputPose.rot * this->keyboardPose.rot;
+  this->keyboardPose = inputPose + this->keyboardPose;
 
   // Add pose to our keyboardPose object
   this->staleKeyboardPose = false;
