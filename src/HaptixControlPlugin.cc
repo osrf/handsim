@@ -508,11 +508,6 @@ void HaptixControlPlugin::LoadHandControl()
     /// broken (see gazebo issue #1534)
     this->haptixJoints[m]->SetEffortLimit(0, jointTorque);
 
-    /// \TODO: for issue #86, do something for fake motor joints too
-    gzerr << " motor [" << m
-          << "] joint : " << haptixJoints[m]->GetName()
-          << "] torque : " << jointTorque << "\n";
-
     /// \TODO: contemplate about using Joint::SetEffortLimit()
     /// instead of PID::SetCmdMax() and PID::SetCmdMin()
 
@@ -1046,14 +1041,27 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     // compute force needed
     double force = this->pids[i].Update(error, _dt);
 
-    // this->robotState.set_motor_torque(i, force);
+
     if (!this->haptixJoints[i]->SetForce(0, force))
     {
       // not a real gazebo joint, set target directly
       this->haptixJoints[i]->SetPosition(this->simRobotCommands[i].ref_pos);
+
       /// \TODO: something about velocity commands
       // this->haptixJoints[i]->SetVelocity(
       //   this->simRobotCommands[i].ref_vel_max);
+      /// \TODO: for issue #86 motor velocity will be zero
+      /// unless we:  1) compute torque from transmissioned joints, or
+      /// 2) implement actual motor joint dynamics and servo the joint.
+      /// For example, 1) could be:
+
+      /// \TODO: for issue #86: torque for fake joint will always be zero
+      /// unless we:  1) compute torque from transmissioned joints, or
+      /// 2) implement actual motor joint dynamics and servo the joint.
+      /// For example, 1) could be:
+      // double force2 = computed from gearboxed joints
+      // this->haptixJoints[i]->SetForce(0, force2);
+
     }
   }
 }
@@ -1340,25 +1348,66 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     haptix::comm::msgs::hxRobot::hxLimit *motor = _rep.add_motor_limit();
 
     /// \TODO for issue #86, compute joint limits for fake joints as well
-    gzerr << motorInfos[i].name << "\n";
-
-    // compute the motor limits from joint limits
-    double jointMin = this->haptixJoints[m]->GetLowerLimit(0).Radian();
-    double jointMax = this->haptixJoints[m]->GetUpperLimit(0).Radian();
-    double motorMin = jointMin * this->motorInfos[i].gearRatio
-      - this->motorInfos[i].encoderOffset;
-    double motorMax = jointMax * this->motorInfos[i].gearRatio
-      - this->motorInfos[i].encoderOffset;
-    if (this->motorInfos[i].gearRatio < 0)
+    if (!this->haptixJoints[m]->HasJoint())
     {
-      // flip if gearRatio is negative
-      motor->set_maximum(motorMin);
-      motor->set_minimum(motorMax);
+      // fake joint, limit is not set in sdf, so they are +/-1e16
+      // go through all gearboxes and compute a joint limit based
+      // on joint limits of gearboxed joints.
+      gzerr << motorInfos[i].name << "\n";
+      double motorMin;
+      double motorMax;
+      for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+      {
+        int n = this->motorInfos[i].gearboxes[j].index;
+        double hi = this->haptixJoints[n]->GetUpperLimit(0).Radian();
+        double lo = this->haptixJoints[n]->GetLowerLimit(0).Radian();
+        // which multiplier to use
+        // See transmission specification in issue #60,
+        // If motor angle commanded is less than offset
+        // use multiplier1, otherwise use multiplier2
+
+        // use multiplier1 for computing lower limit
+        // take the largest of the min
+        motorMin = 0;
+
+        // use multiplier2 for computing upper limit
+        // take the smallest of the max
+        motorMax = 0;
+      }
+
+      if (this->motorInfos[i].gearRatio < 0)
+      {
+        // flip if gearRatio is negative
+        motor->set_maximum(motorMin);
+        motor->set_minimum(motorMax);
+      }
+      else
+      {
+        motor->set_minimum(motorMin);
+        motor->set_maximum(motorMax);
+      }
     }
     else
     {
-      motor->set_minimum(motorMin);
-      motor->set_maximum(motorMax);
+      // there's a real joint with valid limits,
+      // compute the motor limits from joint limits.
+      double jointMin = this->haptixJoints[m]->GetLowerLimit(0).Radian();
+      double jointMax = this->haptixJoints[m]->GetUpperLimit(0).Radian();
+      double motorMin = jointMin * this->motorInfos[i].gearRatio
+        - this->motorInfos[i].encoderOffset;
+      double motorMax = jointMax * this->motorInfos[i].gearRatio
+        - this->motorInfos[i].encoderOffset;
+      if (this->motorInfos[i].gearRatio < 0)
+      {
+        // flip if gearRatio is negative
+        motor->set_maximum(motorMin);
+        motor->set_minimum(motorMax);
+      }
+      else
+      {
+        motor->set_minimum(motorMin);
+        motor->set_maximum(motorMax);
+      }
     }
     // gzerr << motorMin << " : " << motorMax << "\n";
   }
