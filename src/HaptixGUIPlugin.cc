@@ -1009,6 +1009,9 @@ void HaptixGUIPlugin::OnResetClicked()
 
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
+
+  // Reset keyboard control pose
+  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
 ////////////////////////////////////////////////
@@ -1019,6 +1022,9 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 
   // place scene objects back
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
+
+  // Reset keyboard control pose
+  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
 /////////////////////////////////////////////////
@@ -1253,21 +1259,22 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           -poseIncArgs[3], poseIncArgs[5]);
       position = gazebo::math::Vector3(-poseIncArgs[0],
           -poseIncArgs[1], poseIncArgs[2]);
-
-      position = this->armStartPose.rot.RotateVector(position);
-      rot = this->armStartPose.rot.RotateVector(rot);
-    }
-    else
-    {
+ 
+       position = this->armStartPose.rot.RotateVector(position);
+       rot = this->armStartPose.rot.RotateVector(rot);
+     }
+     else
+     {
       position = gazebo::math::Vector3(poseIncArgs[0], poseIncArgs[1],
-          poseIncArgs[2]);
+           poseIncArgs[2]);
       rot = gazebo::math::Vector3(-poseIncArgs[3], -poseIncArgs[4],
-          poseIncArgs[5]);
+           poseIncArgs[5]);
     }
 
     gazebo::math::Pose increment(position * this->posScalingFactor, rot);
+
     this->armStartPose.rot = gazebo::math::Quaternion(rot) *
-      this->armStartPose.rot;
+    this->armStartPose.rot;
 
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
 
