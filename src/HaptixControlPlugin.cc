@@ -702,6 +702,7 @@ void HaptixControlPlugin::LoadHandControl()
 void HaptixControlPlugin::Reset()
 {
   this->keyboardPose = this->initialBaseLinkPose;
+  this->staleKeyboardPose = true;
   this->targetBaseLinkPose = this->initialBaseLinkPose;
 
   std::vector<SimRobotCommand>::iterator iter;
