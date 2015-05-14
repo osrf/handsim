@@ -226,6 +226,7 @@
         <size>155 80</size>
         <start_stop_button>1</start_stop_button>
         <topic>~/timer_control</topic>
+        <countdown_time><%= 3*60 %> 0</countdown_time>
       </plugin>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
@@ -498,13 +499,10 @@
       <pose>0 0 0 0 0 0</pose>
     </include>
 
-    <!-- awesome asset, destroys frame rate -->
-    <!--
     <include>
-      <uri>model://kitchen_dining</uri>
-      <pose>0.525 -5.103 0.268 0 0 0</pose>
+      <uri>model://dining_room</uri>
+      <pose>4 -2.553 0 0 0 0</pose>
     </include>
-    -->
 
     <include>
      <uri>model://mpl_haptix_right_forearm</uri>
