@@ -985,6 +985,9 @@ void HaptixGUIPlugin::OnResetClicked()
 
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
+
+  // Reset keyboard control pose
+  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
 ////////////////////////////////////////////////
@@ -995,6 +998,9 @@ void HaptixGUIPlugin::OnResetSceneClicked()
 
   // place scene objects back
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
+
+  // Reset keyboard control pose
+  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
 /////////////////////////////////////////////////
