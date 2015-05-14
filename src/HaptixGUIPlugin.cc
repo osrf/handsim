@@ -320,21 +320,21 @@ HaptixGUIPlugin::HaptixGUIPlugin()
     SLOT(OnResetSceneClicked()));
 
   // Next test button
-  this->nextButton = new QPushButton();
-  this->nextButton->installEventFilter(this);
-  this->nextButton->setFocusPolicy(Qt::NoFocus);
-  this->nextButton->setText(QString("Next Test"));
-  this->nextButton->setToolTip("Next test");
-  this->nextButton->setStyleSheet(buttonsStyle);
-  this->nextButton->setMaximumWidth(120);
-  connect(this->nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
+  this->resetArmButton = new QPushButton();
+  this->resetArmButton->installEventFilter(this);
+  this->resetArmButton->setFocusPolicy(Qt::NoFocus);
+  this->resetArmButton->setText(QString("Reset Arm"));
+  this->resetArmButton->setToolTip("Reset the arm pose and hand posture");
+  this->resetArmButton->setStyleSheet(buttonsStyle);
+  this->resetArmButton->setMaximumWidth(120);
+  connect(this->resetArmButton, SIGNAL(clicked()), this, SLOT(OnResetArmClicked()));
 
   // Cycle button layout
   QHBoxLayout *cycleButtonLayout = new QHBoxLayout();
   cycleButtonLayout->setContentsMargins(0, 0, 0, 0);
   cycleButtonLayout->addWidget(resetButton);
   cycleButtonLayout->addWidget(this->resetSceneButton);
-  cycleButtonLayout->addWidget(this->nextButton);
+  cycleButtonLayout->addWidget(this->resetArmButton);
 
   // Frame layout
   QVBoxLayout *scrollableFrameLayout = new QVBoxLayout;
@@ -732,9 +732,28 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     this->lastMotorCommand.ref_pos_enabled = 1;
     //::hxSensor sensor;
-    if(::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
+    if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
+      return;
+    }
+
+    hxsTransform armPose;
+    // Get the initial arm pose
+    if (::hxs_model_transform("mpl_haptix_right_forearm", &armPose) == ::hxOK
+        || ::hxs_model_transform("mpl_haptix_left_forearm", &armPose) == ::hxOK)
+    {
+      this->initialArmPose.pos.x = armPose.pos.x;
+      this->initialArmPose.pos.y = armPose.pos.y;
+      this->initialArmPose.pos.z = armPose.pos.z;
+      this->initialArmPose.rot.w = armPose.orient.w;
+      this->initialArmPose.rot.y = armPose.orient.y;
+      this->initialArmPose.rot.z = armPose.orient.z;
+      this->initialArmPose.rot.x = armPose.orient.x;
+    }
+    else
+    {
+      gzerr << "hxs_model_transform(): Request error.\n" << std::endl;
       return;
     }
 
@@ -817,7 +836,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
     this->tabFrame->hide();
     this->instructionsView->hide();
     this->resetSceneButton->hide();
-    this->nextButton->hide();
+    this->resetArmButton->hide();
     this->maxHeight = 570;
     this->resize(this->maxWidth,
         std::min(this->maxHeight, (this->renderWidget->height()-90)));
@@ -934,28 +953,33 @@ void HaptixGUIPlugin::OnTaskSent(const int _id)
 }
 
 ////////////////////////////////////////////////
-void HaptixGUIPlugin::OnNextClicked()
+void HaptixGUIPlugin::OnResetArmClicked()
 {
-  // reset the clock when a new task is selected
-  this->PublishTimerMessage("reset");
+  gazebo::msgs::Pose msg = gazebo::msgs::Convert(this->initialArmPose);
+  this->ignNode.Publish("haptix/arm_model_pose", msg);
 
-  do
+  // Also reset wrist and finger posture
+  memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+  this->lastMotorCommand.ref_pos_enabled = 1;
+  //::hxSensor sensor;
+  if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
+    gzerr << "hx_update(): Request error.\n" << std::endl;
+
+  // And zero the grasp, if any.
+  if (this->lastGraspRequest.grasps_size() > 0)
   {
-    this->currentTaskId = (this->currentTaskId+1) % this->taskList.size();
-  } while (!this->taskList[this->currentTaskId]->isEnabled());
-
-  this->instructionsView->setDocument(
-      this->taskList[this->currentTaskId]->Instructions());
-  this->taskList[this->currentTaskId]->setChecked(true);
-  this->taskTab->setCurrentIndex(this->taskList[this->currentTaskId]->Group());
-
-  this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
-
-  // Reset models
-  this->ResetModels();
-
-  // Reset the camera
-  gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
+    this->lastGraspRequest.mutable_grasps(0)->set_grasp_value(0.0);
+    haptix::comm::msgs::hxCommand resp;
+    bool result;
+    if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                              this->lastGraspRequest,
+                              1000,
+                              resp,
+                              result) || !result)
+    {
+      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+    }
+  }
 }
 
 ////////////////////////////////////////////////
