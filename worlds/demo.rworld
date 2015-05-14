@@ -226,6 +226,7 @@
         <size>155 80</size>
         <start_stop_button>1</start_stop_button>
         <topic>~/timer_control</topic>
+        <countdown_time><%= 3*60 %> 0</countdown_time>
       </plugin>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
