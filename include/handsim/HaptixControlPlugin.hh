@@ -179,11 +179,13 @@ namespace gazebo
     private: void UpdateKeyboard(double _dt);
 
     /// \brief Callback to set the saved keyboard pose based on user input.
+    /// \param[in] _topic Topic for message transport: /haptix/arm_pose_inc.
     /// \param[in] _pose The input pose.
     private: void SetKeyboardPose(const std::string &/*_topic*/,
                                   const msgs::Pose &_pose);
 
     /// \brief Callback to set the model pose directly. Also update controller.
+    /// \param[in] _topic Topic for message transport: /haptix/arm_model_pose.
     /// \param[in] _pose The input model pose in world frame.
     private: void SetWorldPose(const std::string &/*_topic*/,
                                const msgs::Pose &_pose);
