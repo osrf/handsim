@@ -31,11 +31,19 @@ void TactorsPlugin::Load(physics::WorldPtr /*_parent*/, sdf::ElementPtr /*_sdf*/
 {
   // might have to be on Init instead?
   // Open the USB device for communication with the motors.
-  this->fd = open("/dev/ttyACM1", O_WRONLY);
-  if (fd < 0)
+  for (int i = 0; i < 4; i ++)
   {
-    perror("Failed to open /dev/ttyACM0");
-    return;
+    std::string deviceName = "/dev/ttyACM" + std::to_string(i);
+    this->fd = open(deviceName.c_str(), O_WRONLY);
+    if (fd < 0 && i == 3)
+    {
+      perror("Failed to open USB port");
+      return;
+    }
+    else
+    {
+      break;
+    }
   }
 
   this->minContactForce = 0;
