@@ -1225,25 +1225,26 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     // Move in the local coordinate frame if true.
     if (this->localCoordMove)
     {
-      rot = gazebo::math::Vector3(-poseIncArgs[4],
-          poseIncArgs[3], poseIncArgs[5]);
-      position = gazebo::math::Vector3(poseIncArgs[0],
-          poseIncArgs[1], poseIncArgs[2]);
-
-      position = this->armStartPose.rot.RotateVector(position);
-      rot = this->armStartPose.rot.RotateVector(rot);
-    }
-    else
-    {
-      position = gazebo::math::Vector3(-poseIncArgs[0], -poseIncArgs[1],
-          poseIncArgs[2]);
-      rot = gazebo::math::Vector3(-poseIncArgs[3], poseIncArgs[4],
-          poseIncArgs[5]);
+      rot = gazebo::math::Vector3(poseIncArgs[4],
+          -poseIncArgs[3], poseIncArgs[5]);
+      position = gazebo::math::Vector3(-poseIncArgs[0],
+          -poseIncArgs[1], poseIncArgs[2]);
+ 
+       position = this->armStartPose.rot.RotateVector(position);
+       rot = this->armStartPose.rot.RotateVector(rot);
+     }
+     else
+     {
+      position = gazebo::math::Vector3(poseIncArgs[0], poseIncArgs[1],
+           poseIncArgs[2]);
+      rot = gazebo::math::Vector3(-poseIncArgs[3], -poseIncArgs[4],
+           poseIncArgs[5]);
     }
 
     gazebo::math::Pose increment(position * this->posScalingFactor, rot);
+
     this->armStartPose.rot = gazebo::math::Quaternion(rot) *
-      this->armStartPose.rot;
+    this->armStartPose.rot;
 
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
 
