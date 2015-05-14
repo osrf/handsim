@@ -28,6 +28,8 @@
 // For sockaddr_in
 #include <netinet/in.h>
 
+#include <poll.h>
+
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -52,7 +54,7 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   const std::string &_world)
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
-  this->active = false;
+  this->active.store(false);
   this->myNetworkInterfaces = ignition::transport::determineInterfaces();
 }
 
@@ -112,21 +114,26 @@ void Optitrack::StartReception()
                     ("~/optitrack/"+headTrackerName);
   this->armPub = this->gzNode->Advertise<gazebo::msgs::Pose>
                     ("~/optitrack/"+armTrackerName);
-  this->originPub = this->gzNode->Advertise<gazebo::msgs::Pose>
+  this->originPub = this->gzNode->Advertise<gazebo::msgs::PointCloud>
                     ("~/optitrack/"+originTrackerName);
 
   // Publisher for sending a pulse to HaptixGUIPlugin
   this->optitrackAlivePub = this->gzNode->Advertise<gazebo::msgs::Time>
                     ("~/optitrack/"+optitrackAliveTopic);
 
-  this->active = true;
   this->RunReceptionTask();
 }
 
 /////////////////////////////////////////////////
 bool Optitrack::IsActive()
 {
-  return this->active;
+  return this->active.load();
+}
+
+/////////////////////////////////////////////////
+void Optitrack::Stop()
+{
+  this->active.store(false);
 }
 
 /////////////////////////////////////////////////
@@ -136,10 +143,36 @@ void Optitrack::RunReceptionTask()
   socklen_t addr_len = sizeof(struct sockaddr);
   sockaddr_in theirAddress;
   int iterations = 0;
-  while (1)
+
+  this->active.store(true);
+
+  while (this->IsActive())
   {
     // Block until we receive a datagram from the network (from anyone
     // including ourselves)
+    struct pollfd ufds[1];
+    memset(ufds, 0, sizeof(ufds));
+    ufds[0].fd = this->dataSocket;
+    ufds[0].events = POLLIN;
+
+    // Poll every 500 milliseconds
+    int pollReturnCode = poll(ufds, 1, 500);
+    if (pollReturnCode == -1)
+    {
+      gzerr << "Polling error!" << std::endl;
+      continue;
+    }
+    else if (pollReturnCode == 0)
+    {
+      // Timeout occurred, optitrack is probably not connected
+      continue;
+    }
+    else if (!(ufds[0].revents && POLLIN))
+    {
+      gzwarn << "Received out of band message in poll" << std::endl;
+      continue;
+    }
+
     if (recvfrom(this->dataSocket, buffer, sizeof(buffer), 0,
          (sockaddr *)&theirAddress, &addr_len) < 0)
     {
@@ -167,21 +200,34 @@ void Optitrack::RunReceptionTask()
       {
         this->armPub->Publish(gazebo::msgs::Convert(it->second));
       }
-      else if (it->first.compare(originTrackerName) == 0)
+      /*else if (it->first.compare(originTrackerName) == 0)
       {
         this->originPub->Publish(gazebo::msgs::Convert(it->second));
-      }
+      }*/
       else
       {
-        if (iterations % 1000 == 0)
+        if (iterations % 1000 == 0 && it->first != originTrackerName)
           gzwarn << "Model name " << it->first << " not found!" << std::endl;
       }
     }
+    gazebo::msgs::PointCloud pc;
+
+    for (unsigned int i = 0; i < this->originMarkers.size(); i++)
+    {
+      gazebo::msgs::Vector3d *pt = pc.add_points();
+      pt->set_x(this->originMarkers[i].x);
+      pt->set_y(this->originMarkers[i].y);
+      pt->set_z(this->originMarkers[i].z);
+    }
+
+    if (originMarkers.size() > 0)
+      this->originPub->Publish(pc);
+
+    this->originMarkers.clear();
 
     this->lastModelMap.clear();
     iterations++;
   }
-  this->active = false;
 }
 
 /////////////////////////////////////////////////
@@ -224,7 +270,6 @@ void Optitrack::Unpack(char *pData)
         gazebo::math::Vector3(x, y, z),
         gazebo::math::Quaternion(qw, qx, qy, qz));
 
-      // Debug output.
       /*for (const auto &marker : body.second.markers)
       {
         x = marker.at(0);
@@ -270,6 +315,10 @@ void Optitrack::Unpack(char *pData)
         output << "\tMarker " << j << " : [x="
                << x << ",y=" << y << ",z=" << z << "]" << std::endl;
         markerSets[szName].push_back(gazebo::math::Vector3(x, y, z));
+        if (szName == originTrackerName)
+        {
+          this->originMarkers.push_back(gazebo::math::Vector3(x, y, z));
+        }
       }
     }
 

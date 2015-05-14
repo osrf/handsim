@@ -21,7 +21,9 @@
 #include <map>
 #include <string>
 #include <thread>
+#include <mutex>
 #include <vector>
+
 #include <gazebo/transport/transport.hh>
 #include <gazebo/math/Pose.hh>
 #include <gazebo/math/Vector3.hh>
@@ -47,7 +49,8 @@ namespace haptix
       /// needed for requesting commands for tweaking the tracking behavior. The
       /// server IP is not needed for receiving tracking messages. These
       /// messages are received via multicast.
-      /// \param[i] _verbose Whether or not to print incoming packets.
+      /// \param[in] _verbose Whether or not to print incoming packets.
+      /// \param[in] _world Name of the Gazebo world for this receiver.
       public: Optitrack(const std::string &_serverIP = "",
                         const bool _verbose = false,
                         const std::string &_world="");
@@ -67,8 +70,11 @@ namespace haptix
       private: void Unpack(char *_data);
 
       /// \brief Return the status of the Optitrack client initialization.
-      /// \return True if Optitrack data reception is active..
+      /// \return True if Optitrack data reception is active.
       public: bool IsActive();
+
+      /// \brief Stop activity.
+      public: void Stop();
 
       /// \brief Set the name of the world associated with the gz publishers.
       public: void SetWorld(const std::string &_world);
@@ -77,7 +83,7 @@ namespace haptix
       public: void SetVerbose(const bool _verbose);
 
       /// \brief True if Optitrack data reception is active
-      private: bool active;
+      private: std::atomic<bool> active;
 
       /// \brief Optitrack multicast address.
       private: const std::string multicastAddress = "239.255.42.99";
@@ -144,6 +150,9 @@ namespace haptix
 
       /// \brief Allow communication with the OptiTrack bridge.
       private: OptitrackBridgeComms comms;
+
+      /// \brief Keep track of monitor points
+      private: std::vector<gazebo::math::Vector3> originMarkers;
     };
   }
 }

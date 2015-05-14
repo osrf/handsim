@@ -17,15 +17,25 @@
 #ifndef _HANDSIM_HAPTIX_CONTROL_PLUGIN_HH_
 #define _HANDSIM_HAPTIX_CONTROL_PLUGIN_HH_
 
+#include <math.h>
+#include <handsim/polhemus_driver.h>
+
+#include <haptix/comm/haptix.h>
+
+#include <haptix/comm/msg/hxCommand.pb.h>
+#include <haptix/comm/msg/hxRobot.pb.h>
+#include <haptix/comm/msg/hxSensor.pb.h>
+#include <haptix/comm/msg/hxGrasp.pb.h>
+#include <ignition/transport.hh>
+
+#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+
 #include <string>
 #include <map>
 #include <memory>
 #include <thread>
 #include <vector>
-#include <math.h>
-
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
 
 #include <gazebo/physics/physics.hh>
 #include <gazebo/sensors/sensors.hh>
@@ -37,18 +47,10 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/PID.hh>
 
-#include <haptix/comm/haptix.h>
-#include <haptix/comm/msg/hxCommand.pb.h>
-#include <haptix/comm/msg/hxRobot.pb.h>
-#include <haptix/comm/msg/hxSensor.pb.h>
-#include <haptix/comm/msg/hxGrasp.pb.h>
-#include <ignition/transport.hh>
-
-#include "polhemus_driver.h"
-#include "Optitrack.hh"
-#include "MotorInfo.hh"
-#include "WrenchHelper.hh"
-#include "JointHelper.hh"
+#include <handsim/Optitrack.hh>
+#include <handsim/MotorInfo.hh>
+#include <handsim/WrenchHelper.hh>
+#include <handsim/JointHelper.hh>
 
 namespace gazebo
 {
@@ -188,7 +190,7 @@ namespace gazebo
     private: void OnUpdateOptitrackArm(ConstPosePtr &_pose);
 
     /// \brief Callback on Optitrack monitor tracker update
-    private: void OnUpdateOptitrackMonitor(ConstPosePtr &_pose);
+    private: void OnUpdateOptitrackMonitor(ConstPointCloudPtr &_pose);
 
     /// \brief Callback on message to toggle viewpoint rotations due to mocap
     /// \param[in] _msg Message sent by publisher
@@ -372,9 +374,6 @@ namespace gazebo
     /// \brief Transform from polhemus sensor orientation to camera frame
     private: math::Pose cameraToHeadSensor;
 
-    /// \brief Transform from camera frame to Optitrack head marker.
-    private: math::Pose cameraToOptitrackHeadMarker;
-
     /// \brief Transform from hydra sensor orientation to base link frame.
     private: math::Pose baseLinkToHydraSensor;
 
@@ -538,21 +537,28 @@ namespace gazebo
     /// \brief Subscriber to Optitrack monitor tracker updates
     private: gazebo::transport::SubscriberPtr optitrackMonitorSub;
 
-    /// \brief Pose of the optitrack arm tracker in the world frame
-    private: gazebo::math::Pose optitrackArm;
+    /// \brief hardcoded offset between controlled position of the link and
+    /// arm sensor
+    private: gazebo::math::Pose elbowMarker;
+    private: gazebo::math::Pose elbowMarkerCorrected;
 
-    /// \brief Pose offset between initial Optitrack arm and desired initial
-    /// pose of arm
+    /// \brief Transform from camera frame to Optitrack head marker.
+    private: math::Pose headMarker;
+
+    /// \brief Optitrack calibration offset for the head
+    private: gazebo::math::Pose optitrackHeadOffset;
+
+    /// \brief Optitrack calibration offset for the arm
     private: gazebo::math::Pose optitrackArmOffset;
 
-    /// \brief Pose of the Optitrack in Gazebo frame
-    private: gazebo::math::Pose gazeboToOptitrack;
+    /// \brief Pose of the optitrack monitor tracker in the Optitrack frame
+    private: gazebo::math::Pose cameraMonitor;
 
-    /// \brief Orthonormal transformation between Optitrack arm and world axes
-    private: gazebo::math::Pose optitrackWorldArmRot;
+    /// \brief Pose of the fake "screen" frame in the monitor tracker frame
+    private: gazebo::math::Pose monitorScreen;
 
-    /// \brief Pose of the optitrack monitor tracker in the Optitrack framne
-    private: gazebo::math::Pose monitorOptitrackFrame;
+    /// \brief Pose of the fake screen in the world frame
+    private: gazebo::math::Pose worldScreen;
 
     /// \brief Low-pass filter for head position (reduces jitter)
     private: gazebo::math::OnePoleVector3 headPosFilter;
@@ -563,11 +569,11 @@ namespace gazebo
     /// \brief Receives messages to toggle viewpoint rotations.
     private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
 
-    /// \brief Mutex to lock viewpointRotationsEnabled
-    private: std::mutex viewpointRotationsMutex;
+    /// \brief Mutex to lock optitrack monitor data
+    private: std::mutex optitrackMonitorMutex;
 
     /// \brief True if motion capture rotations the head, false otherwise.
-    private: bool viewpointRotationsEnabled;
+    private: std::atomic<bool> viewpointRotationsEnabled;
 
     /// \brief True if optitrackArmOffset has been initialized
     private: bool armOffsetInitialized;
