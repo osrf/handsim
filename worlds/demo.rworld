@@ -64,8 +64,8 @@
 
       # handle
       height_handle = 0.01
-      length_handle = 0.08
-      radius_grasp = 0.02
+      length_handle = 0.1
+      radius_grasp = 0.025
 
       color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
       colorNum = 6
@@ -131,7 +131,7 @@
 
     abs_angle = Math::PI/6.0
     center_angle = angle_offset + abs_angle/2.0
-    extended_radius = disk_radius + 1.03*radius_grasp + 0.01
+    extended_radius = disk_radius + 1.03*radius_grasp + 0.02
 
     geometry_s_disk= "<geometry>\n"  \
                    + "<polyline>\n"  \
