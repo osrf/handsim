@@ -408,6 +408,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
   this->ignNode.Advertise("haptix/arm_pose_inc");
+  this->ignNode.Advertise("haptix/arm_model_pose");
 }
 
 /////////////////////////////////////////////////
@@ -740,8 +741,8 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
 
     hxsTransform armPose;
     // Get the initial arm pose
-    if (::hxs_model_transform("mpl_haptix_right_forearm", &armPose) == ::hxOK
-        || ::hxs_model_transform("mpl_haptix_left_forearm", &armPose) == ::hxOK)
+    std::string modelName = "mpl_haptix_" + handSide + "_forearm";
+    if (::hxs_model_transform(modelName.c_str(), &armPose) == ::hxOK)
     {
       this->initialArmPose.pos.x = armPose.pos.x;
       this->initialArmPose.pos.y = armPose.pos.y;

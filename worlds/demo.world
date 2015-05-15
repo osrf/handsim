@@ -1279,7 +1279,7 @@
 
     <include>
       <uri>model://dining_room</uri>
-      <pose>4 -2.553 0 0 0 0</pose>
+      <pose>0.676 0.29 0 0 0 0</pose>
     </include>
 
     <include>
