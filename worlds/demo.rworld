@@ -118,7 +118,17 @@
     iyy = ixx
     izz = 0.5 * mass * (hole_radius**2 + disk_radius**2)
 
-    angle_offset = -Math::PI/6.0*j.to_f
+    # angle_offset = -Math::PI/6.0*j.to_f
+
+    # zero offset
+    # angle_offset = -Math::PI*0.6
+
+    # small offset
+    # angle_offset = -Math::PI*0.6+(disk_number-j).to_f*0.02*Math::PI
+
+    # large offset
+    angle_offset = -Math::PI*0.6 +(disk_number-j).to_f*0.065*Math::PI
+
     abs_angle = Math::PI/6.0
     center_angle = angle_offset + abs_angle/2.0
     extended_radius = disk_radius + 1.03*radius_grasp + 0.01
