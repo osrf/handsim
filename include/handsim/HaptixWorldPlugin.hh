@@ -16,7 +16,7 @@
 */
 
 #ifndef _HANDSIM_HAPTIX_WORLD_PLUGIN_HH_
-#define _HANDSIM_HAPTIX_WORLD_HH_
+#define _HANDSIM_HAPTIX_WORLD_PLUGIN_HH_
 
 #include <haptix/comm/haptix_sim.h>
 #include <haptix/comm/haptix.h>
