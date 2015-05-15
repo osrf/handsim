@@ -68,6 +68,7 @@
       radius_grasp = 0.02
 
       color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
+      colorNum = 6
       z_offset = 0.9
     %>
 
@@ -120,7 +121,7 @@
     angle_offset = -Math::PI/6.0*j.to_f
     abs_angle = Math::PI/6.0
     center_angle = angle_offset + abs_angle/2.0
-    extended_radius = disk_radius + 1.03*radius_grasp
+    extended_radius = disk_radius + 1.03*radius_grasp + 0.01
 
     geometry_s_disk= "<geometry>\n"  \
                    + "<polyline>\n"  \
@@ -138,7 +139,7 @@
                    + "<height>" + height_handle.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "<polyline>\n"  \
-                   + circle_points_s(radius_grasp, 15, extended_radius*Math.cos(center_angle), extended_radius*Math.sin(center_angle) ) \
+                   + circle_points_s(radius_grasp, 20, extended_radius*Math.cos(center_angle), extended_radius*Math.sin(center_angle) ) \
                    + "<height>" + height_handle.to_s + "</height>\n"  \
                    + "</polyline>\n" \
                    + "</geometry>\n"
@@ -189,7 +190,7 @@
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%disk_number].to_s + '</name>'%>
+              <%= '<name>Gazebo/' + color[j%colorNum].to_s + '</name>'%>
             </script>
           </material>
         </visual>
@@ -199,7 +200,7 @@
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%disk_number].to_s + '</name>'%>
+              <%= '<name>Gazebo/' + color[j%colorNum].to_s + '</name>'%>
             </script>
           </material>
         </visual>
