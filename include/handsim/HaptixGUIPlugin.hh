@@ -129,6 +129,15 @@ namespace haptix_gazebo_plugins
     /// \param[in] _status 0: No data; 1: On; 2: Paused.
     private slots: void OnMocapStatusChanged(int _status);
 
+    /// \brief Callback when reset models has been triggered by the user.
+    private slots: void OnResetModels();
+
+    /// \brief Callback when reset arm has been triggered by the user.
+    private slots: void OnResetArm();
+
+    /// \brief Callback when restart timer has been triggered by the user.
+    private slots: void OnRestartTimer();
+
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
     /// parameters.

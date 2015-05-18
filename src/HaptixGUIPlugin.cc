@@ -43,7 +43,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
-  this->maxHeight = 850;
+  this->maxHeight = 750;
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -303,7 +303,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   resetButton->installEventFilter(this);
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
-  resetButton->setToolTip("Reset the view, arm and models");
+  resetButton->setShortcut(tr("F"));
+  resetButton->setToolTip("Reset the view, arm and models (F)");
   resetButton->setStyleSheet(buttonsStyle);
   resetButton->setMaximumWidth(120);
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
@@ -339,7 +340,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Frame layout
   QVBoxLayout *scrollableFrameLayout = new QVBoxLayout;
   scrollableFrameLayout->setContentsMargins(0, 0, 0, 0);
-  scrollableFrameLayout->addWidget(this->topBarFrame);
+  // scrollableFrameLayout->addWidget(this->topBarFrame);
   scrollableFrameLayout->addWidget(handView, 1.0);
   scrollableFrameLayout->addLayout(mainSeparatorLayout);
   scrollableFrameLayout->addWidget(this->tabFrame);
@@ -408,6 +409,19 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
   this->ignNode.Advertise("haptix/arm_pose_inc");
+
+  // Add shortcuts
+  QShortcut *resetModels = new QShortcut(QKeySequence("G"), this);
+  QObject::connect(resetModels, SIGNAL(activated()), this,
+      SLOT(OnResetModels()));
+
+  QShortcut *resetArm = new QShortcut(QKeySequence("H"), this);
+  QObject::connect(resetArm, SIGNAL(activated()), this,
+      SLOT(OnResetArm()));
+
+  QShortcut *restartTimer = new QShortcut(QKeySequence("F1"), this);
+  QObject::connect(restartTimer, SIGNAL(activated()), this,
+      SLOT(OnRestartTimer()));
 }
 
 /////////////////////////////////////////////////
@@ -859,6 +873,18 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       bool enabled = task->Get<bool>("enabled");
 
       // Create a new button for the task
+      // FIXME: Hack to divide long names in 2 lines, tailored for current names
+      bool longName = false;
+      if (name.length() > 8)
+      {
+        int idx = name.find(" ");
+        if (idx)
+        {
+          name = name.substr(0, idx) + "\n" + name.substr(idx + 1);
+          longName = true;
+        }
+      }
+
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
       taskButton->installEventFilter(this);
       taskButton->setFocusPolicy(Qt::NoFocus);
@@ -885,8 +911,16 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
         taskButton->setIcon(QIcon(iconPixmap));
         taskButton->setIconSize(QSize(60, 54));
-        taskButton->setMinimumSize(80, 80);
-        taskButton->setMaximumSize(100, 80);
+        if (longName)
+        {
+          taskButton->setMinimumSize(80, 100);
+          taskButton->setMaximumSize(100, 100);
+        }
+        else
+        {
+          taskButton->setMinimumSize(80, 80);
+          taskButton->setMaximumSize(100, 80);
+        }
       }
 
       this->taskList[taskIndex] = taskButton;
@@ -1235,7 +1269,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           -poseIncArgs[3], poseIncArgs[5]);
       position = gazebo::math::Vector3(-poseIncArgs[0],
           -poseIncArgs[1], poseIncArgs[2]);
- 
+
        position = this->armStartPose.rot.RotateVector(position);
        rot = this->armStartPose.rot.RotateVector(rot);
      }
@@ -1616,5 +1650,24 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
         std::min(this->maxHeight, (this->renderWidget->height()-90)));
   }
   return QObject::eventFilter(_obj, _event);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetModels()
+{
+  this->ResetModels();
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetArm()
+{
+  gzdbg << "Reset arm" << std::endl;
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnRestartTimer()
+{
+  this->PublishTimerMessage("reset");
+  this->PublishTimerMessage("start");
 }
 
