@@ -43,7 +43,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
-  this->maxHeight = 750;
+  this->maxHeight = 800;
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -184,8 +184,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Top bar layout
   QHBoxLayout *topBarLayout = new QHBoxLayout();
   topBarLayout->setContentsMargins(10, 0, 0, 0);
-  topBarLayout->addWidget(this->mocapStatusIndicator);
+  // topBarLayout->addWidget(this->mocapStatusIndicator);
   topBarLayout->addWidget(this->settingsButton);
+
+  topBarLayout->setAlignment(this->settingsButton, Qt::AlignRight);
 
   // Top bar widget
   this->topBarFrame = new QFrame();
@@ -193,7 +195,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->topBarFrame->setMaximumHeight(35);
   this->topBarFrame->setStyleSheet("\
       QFrame{\
-        background-color: #fc8b03;\
+        background-color: #fff;\
         color: #eeeeee;\
       }");
 
@@ -340,7 +342,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Frame layout
   QVBoxLayout *scrollableFrameLayout = new QVBoxLayout;
   scrollableFrameLayout->setContentsMargins(0, 0, 0, 0);
-  // scrollableFrameLayout->addWidget(this->topBarFrame);
+  scrollableFrameLayout->addWidget(this->topBarFrame);
   scrollableFrameLayout->addWidget(handView, 1.0);
   scrollableFrameLayout->addLayout(mainSeparatorLayout);
   scrollableFrameLayout->addWidget(this->tabFrame);
@@ -414,10 +416,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QShortcut *resetModels = new QShortcut(QKeySequence("G"), this);
   QObject::connect(resetModels, SIGNAL(activated()), this,
       SLOT(OnResetModels()));
-
-  QShortcut *resetArm = new QShortcut(QKeySequence("H"), this);
-  QObject::connect(resetArm, SIGNAL(activated()), this,
-      SLOT(OnResetArm()));
 
   QShortcut *restartTimer = new QShortcut(QKeySequence("F1"), this);
   QObject::connect(restartTimer, SIGNAL(activated()), this,
@@ -1530,7 +1528,7 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
       this->mocapStatusIndicator->setText("Motion Capture: No data");
       this->topBarFrame->setStyleSheet("\
           QFrame{\
-            background-color: #fc8b03;\
+            background-color: #fff;\
             color: #eeeeee;\
           }");
       this->settingsButton->setStyleSheet("\
@@ -1548,7 +1546,7 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
       this->mocapStatusIndicator->setText("Motion Capture: On");
       this->topBarFrame->setStyleSheet("\
           QFrame{\
-            background-color: #4a8dbf;\
+            background-color: #fff;\
             color: #eeeeee;\
           }");
       this->settingsButton->setStyleSheet("\
@@ -1566,7 +1564,7 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
       this->mocapStatusIndicator->setText("Motion Capture: Paused");
       this->topBarFrame->setStyleSheet("\
           QFrame{\
-            background-color: #999999;\
+            background-color: #fff;\
             color: #eeeeee;\
           }");
       this->settingsButton->setStyleSheet("\
@@ -1656,12 +1654,6 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
 void HaptixGUIPlugin::OnResetModels()
 {
   this->ResetModels();
-}
-
-/////////////////////////////////////////////////
-void HaptixGUIPlugin::OnResetArm()
-{
-  gzdbg << "Reset arm" << std::endl;
 }
 
 /////////////////////////////////////////////////

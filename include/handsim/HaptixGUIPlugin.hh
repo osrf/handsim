@@ -132,9 +132,6 @@ namespace haptix_gazebo_plugins
     /// \brief Callback when reset models has been triggered by the user.
     private slots: void OnResetModels();
 
-    /// \brief Callback when reset arm has been triggered by the user.
-    private slots: void OnResetArm();
-
     /// \brief Callback when restart timer has been triggered by the user.
     private slots: void OnRestartTimer();
 
