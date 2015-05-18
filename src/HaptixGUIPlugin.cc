@@ -324,7 +324,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->resetArmButton->installEventFilter(this);
   this->resetArmButton->setFocusPolicy(Qt::NoFocus);
   this->resetArmButton->setText(QString("Reset Arm"));
-  this->resetArmButton->setToolTip("Reset the arm pose and hand posture");
+  this->resetArmButton->setToolTip("Reset the arm pose and hand posture (H)");
+  this->resetArmButton->setShortcut(tr("H"));
   this->resetArmButton->setStyleSheet(buttonsStyle);
   this->resetArmButton->setMaximumWidth(120);
   connect(this->resetArmButton, SIGNAL(clicked()), this, SLOT(OnResetArmClicked()));
@@ -1260,7 +1261,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           -poseIncArgs[3], poseIncArgs[5]);
       position = gazebo::math::Vector3(-poseIncArgs[0],
           -poseIncArgs[1], poseIncArgs[2]);
- 
+
        position = this->armStartPose.rot.RotateVector(position);
        rot = this->armStartPose.rot.RotateVector(rot);
      }
