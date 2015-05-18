@@ -3,6 +3,7 @@
 
 <sdf version="1.5">
   <world name="default">
+    <plugin name="HaptixWorldPlugin" filename="libHaptixWorldPlugin.so"/>
 
     <scene>
       <grid>false</grid>
@@ -1111,6 +1112,11 @@
             <icon>file://media/gui/arat/arat_icons/hanoi.png</icon>
             <instructions>
               Solve the classic Towers of Hanoi puzzle.
+
+              Rules:
+              - Only one disk can be moved at a time.
+              - A larger disk cannot be placed on a smaller disk.
+              - Only the top disk of a stack can be moved.
             </instructions>
           </task>
 
