@@ -72,10 +72,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QCheckBox *stereoCheck = new QCheckBox("Stereo");
   stereoCheck->setToolTip(tr("Enable stereo rendering"));
   stereoCheck->setFocusPolicy(Qt::NoFocus);
-  stereoCheck->setChecked(
-      gazebo::gui::getINIProperty<int>("rendering.stereo", 0));
+  stereoCheck->setChecked(false);
   connect(stereoCheck, SIGNAL(stateChanged(int)), this,
       SLOT(OnStereoCheck(int)));
+  gazebo::gui::get_active_camera()->EnableStereo(0);
 
   // Separator
   QFrame *settingsSeparator = new QFrame(this);
