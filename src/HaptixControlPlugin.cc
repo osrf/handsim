@@ -963,7 +963,7 @@ void HaptixControlPlugin::OnArrange(ConstGzStringPtr &_arrangement)
   std::string arrangement = _arrangement->data();
   if (arrangement == "pyramid")
   {
-    this->currentPolhemusGrasp = "Spherical";
+    this->currentPolhemusGrasp = "Cylindrical";
   }
   else if (arrangement == "hanoi")
   {
