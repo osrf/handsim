@@ -34,10 +34,9 @@ namespace gazebo
     private: bool robotInitialized;
     private: hxRobotInfo robotInfo;
     private: int fd;
-    private: std::map<int, char> sensorMotorIndexMapping;
+    private: std::map<int, unsigned char> sensorMotorIndexMapping;
     private: float minContactForce;
-    // For each motor, keep track of the last buzz time
-    private: std::map<char, common::Timer> motorTimes;
+    private: float maxContactForce;
 
     private: common::Time motorInterval;
   };

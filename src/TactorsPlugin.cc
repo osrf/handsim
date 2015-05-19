@@ -35,18 +35,20 @@ void TactorsPlugin::Load(physics::WorldPtr /*_parent*/, sdf::ElementPtr /*_sdf*/
   {
     std::string deviceName = "/dev/ttyACM" + std::to_string(i);
     this->fd = open(deviceName.c_str(), O_WRONLY);
-    if (fd < 0 && i == 3)
+    if (fd >= 0)
+    {
+      std::cout << "Writing to device: " << deviceName << std::endl;
+      break;
+    }
+    else if (i == 3)
     {
       perror("Failed to open USB port");
       return;
     }
-    else
-    {
-      break;
-    }
   }
 
   this->minContactForce = 0;
+  this->maxContactForce = 20;
 
   // Initialize sensor index to Lilypad motor index mapping
   // These sensor indices correspond to the JHU APL MPL arm
@@ -116,23 +118,22 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
     {
       if (j <= 4 && j >= 0)
       {
-        if (this->motorTimes[j].GetElapsed() > this->motorInterval)
+        // Write to the corresponding motor to make it buzz
+        float contactForce = sensor.contact[i] > this->maxContactForce ?
+            this->maxContactForce : sensor.contact[i];
+        printf("Got contact force:%f\n", contactForce);
+        contactForce = 32*contactForce/this->maxContactForce;
+        unsigned char multiplier = contactForce;
+        if (multiplier > 0)
         {
-          // Write to the corresponding motor to make it buzz
-          float contactForce = sensor.contact[i] > 20 ? 20 : sensor.contact[i];
-          float contactForceNormalized = contactForce/20;
-          int multiplier = contactForceNormalized*32;
-          char key[1] = {(j << 5) + multiplier};
+          printf("contact force multiplier: %x\n", multiplier);
+          unsigned char keyChar= (j << 5) + multiplier;
+          //std::cout << "writing char " << key << " to arduino" << std::endl;
+          printf("Writing char %x to arduino\n", keyChar);
+          unsigned char key[1] = {keyChar};
           write(this->fd, key, 1);
-
-          this->motorTimes[j].Reset();
-          this->motorTimes[j].Start();
         }
       }
-    }
-    else
-    {
-      this->motorTimes[j].Stop();
     }
   }
 }
