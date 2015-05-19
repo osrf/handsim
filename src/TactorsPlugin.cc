@@ -53,32 +53,32 @@ void TactorsPlugin::Load(physics::WorldPtr /*_parent*/, sdf::ElementPtr /*_sdf*/
   for (unsigned int i = 0; i < robotInfo.contact_sensor_count; i++)
   {
     // Uninitialized
-    this->sensorMotorIndexMapping[i] = '0';
+    this->sensorMotorIndexMapping[i] = 5;
   }
   for (unsigned int i = 3; i <= 6; i++)
   {
     // Index
-    this->sensorMotorIndexMapping[i] = '1';
+    this->sensorMotorIndexMapping[i] = 0;
   }
   for (unsigned int i = 11; i <= 14; i++)
   {
     // Middle
-    this->sensorMotorIndexMapping[i] = '2';
+    this->sensorMotorIndexMapping[i] = 1;
   }
   for (unsigned int i = 17; i <= 20; i++)
   {
     // Ring
-    this->sensorMotorIndexMapping[i] = '3';
+    this->sensorMotorIndexMapping[i] = 2;
   }
   for (unsigned int i = 7; i <= 9; i++)
   {
     // Little
-    this->sensorMotorIndexMapping[i] = '4';
+    this->sensorMotorIndexMapping[i] = 3;
   }
   for (unsigned int i = 21; i <= 23; i++)
   {
     // Thumb
-    this->sensorMotorIndexMapping[i] = '5';
+    this->sensorMotorIndexMapping[i] = 4;
   }
 
   this->motorInterval = common::Time(0.5);
@@ -114,12 +114,15 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
     char j = this->sensorMotorIndexMapping[i];
     if (sensor.contact[i] > minContactForce)
     {
-      if (j <= '5' && j >= '1')
+      if (j <= 4 && j >= 0)
       {
         if (this->motorTimes[j].GetElapsed() > this->motorInterval)
         {
           // Write to the corresponding motor to make it buzz
-          char key[1] = {j};
+          float contactForce = sensor.contact[i] > 20 ? 20 : sensor.contact[i];
+          float contactForceNormalized = contactForce/20;
+          int multiplier = contactForceNormalized*32;
+          char key[1] = {(j << 5) + multiplier};
           write(this->fd, key, 1);
 
           this->motorTimes[j].Reset();
