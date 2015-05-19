@@ -40,7 +40,7 @@
    %>
 
     <include>
-      <uri>model://cricket_ball</uri>
+      <uri>model://wood_cube_7_5cm</uri>
       <pose><%= 0.5 + distance_offset%> 0 0 0 0 0</pose>
     </include>
 
@@ -538,7 +538,7 @@
           end
        %>
 
-      <model_name>cricket_ball</model_name>
+      <model_name>wood_cube_7_5cm</model_name>
 
       <initial_arrangement>pyramid</initial_arrangement>
 
@@ -562,7 +562,7 @@
             end
           end
          %>
-          <pose model="cricket_ball"><%= 0.4%> -0.3 1.0 0 0 0</pose>
+          <pose model="wood_cube_7_5cm"><%= 0.4%> -0.3 1.0 0 0 0</pose>
       </arrangement>
     </plugin>
 

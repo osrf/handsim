@@ -1,6 +1,7 @@
 <?xml version="1.0" ?>
 
 
+
 <sdf version="1.5">
   <world name="default">
 
@@ -10,65 +11,79 @@
     </scene>
 
     <!-- begin pyramid -->
+    
+    
     <include>
       <name> tinybot_0_0 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>99.855 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_0_1 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>99.955 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_0_2 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>100.055 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_0_3 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>100.155 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_1_0 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>99.905 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_1_1 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>100.005 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_1_2 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>100.105 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_2_0 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>99.955 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_2_1 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>100.055 0 0 0 0 3.141592653589793</pose>
     </include>
+   
     <include>
       <name> tinybot_3_0 </name>
       <uri>model://tinybot_no_arms</uri>
       <pose>100.005 0 0 0 0 3.141592653589793</pose>
     </include>
+   
 
     <include>
-      <uri>model://cricket_ball</uri>
+      <uri>model://wood_cube_7_5cm</uri>
       <pose>100.5 0 0 0 0 0</pose>
     </include>
 
     <!-- end pyramid -->
 
     <!-- begin hanoi -->
+    
+
 
     <model name="disk_0">
       <pose>100 100 1.1  0 0 0</pose>
@@ -314,6 +329,7 @@
         </visual>
       </link>
     </model>
+
     <model name="disk_1">
       <pose>100 100 1.1400000000000001  0 0 0</pose>
       <link name="disk">
@@ -548,6 +564,7 @@
         </visual>
       </link>
     </model>
+
     <model name="disk_2">
       <pose>100 100 1.1800000000000002  0 0 0</pose>
       <link name="disk">
@@ -772,6 +789,7 @@
         </visual>
       </link>
     </model>
+
     <model name="disk_3">
       <pose>100 100 1.22  0 0 0</pose>
       <link name="disk">
@@ -986,6 +1004,7 @@
         </visual>
       </link>
     </model>
+
 
 
     <include>
@@ -1298,49 +1317,81 @@
       <!-- TODO generate list of model names using ERB and print them out -->
       <!-- do the same with initial positions? -->
       <!-- Hanoi -->
+      
         <model_name>disk_0</model_name>
+      
         <model_name>disk_1</model_name>
+      
         <model_name>disk_2</model_name>
+      
         <model_name>disk_3</model_name>
+      
       <model_name>hanoi_peg_board</model_name>
 
       <!-- Pyramid -->
 
+      
             <model_name>tinybot_0_0</model_name>
+      
             <model_name>tinybot_0_1</model_name>
+      
             <model_name>tinybot_0_2</model_name>
+      
             <model_name>tinybot_0_3</model_name>
+      
             <model_name>tinybot_1_0</model_name>
+      
             <model_name>tinybot_1_1</model_name>
+      
             <model_name>tinybot_1_2</model_name>
+      
             <model_name>tinybot_2_0</model_name>
+      
             <model_name>tinybot_2_1</model_name>
+      
             <model_name>tinybot_3_0</model_name>
+      
 
-      <model_name>cricket_ball</model_name>
+      <model_name>wood_cube_7_5cm</model_name>
 
       <initial_arrangement>pyramid</initial_arrangement>
 
       <arrangement name="hanoi">
+        
           <pose model="disk_0"> 0 -0.15 1.1 0 0 0</pose>
+        
           <pose model="disk_1"> 0 -0.15 1.1400000000000001 0 0 0</pose>
+        
           <pose model="disk_2"> 0 -0.15 1.1800000000000002 0 0 0</pose>
+        
           <pose model="disk_3"> 0 -0.15 1.22 0 0 0</pose>
+        
         <pose model="hanoi_peg_board">0 -0.15 1 0 0 0</pose>
       </arrangement>
 
       <arrangement name="pyramid">
+        
            <pose model="tinybot_0_0">-0.14500000000000002 0 1.005 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_0_1">-0.04500000000000002 0 1.005 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_0_2">0.054999999999999986 0 1.005 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_0_3">0.15500000000000003 0 1.005 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_1_0">-0.095 0 1.135 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_1_1">0.005 0 1.135 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_1_2">0.10500000000000001 0 1.135 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_2_0">-0.045000000000000005 0 1.2650000000000001 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_2_1">0.055 0 1.2650000000000001 0 0 3.141592653589793</pose>
+         
            <pose model="tinybot_3_0">0.005 0 1.395 0 0 3.141592653589793</pose>
-          <pose model="cricket_ball">0.4 -0.3 1.0 0 0 0</pose>
+         
+          <pose model="wood_cube_7_5cm">0.4 -0.3 1.0 0 0 0</pose>
       </arrangement>
     </plugin>
 
