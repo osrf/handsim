@@ -49,40 +49,40 @@ void TactorsPlugin::Load(physics::WorldPtr /*_parent*/,
   }
 
   this->minContactForce = 0;
-  this->maxContactForce = 5;
+  this->maxContactForce = 7;
 
   // Initialize sensor index to Lilypad motor index mapping
   // These sensor indices correspond to the JHU APL MPL arm
 
   // TODO Contact sensor remapping
-  for (unsigned int i = 0; i < robotInfo.contact_sensor_count; i++)
+  for (int i = 0; i < robotInfo.contact_sensor_count; i++)
   {
     // Uninitialized
     this->sensorMotorIndexMapping[i] = 5;
   }
-  for (unsigned int i = 3; i <= 6; i++)
+  for (unsigned int i = 4; i <= 6; i++)
   {
-    // Index
+    // thumb
     this->sensorMotorIndexMapping[i] = 0;
   }
-  for (unsigned int i = 11; i <= 14; i++)
+  for (unsigned int i = 10; i <= 12; i++)
   {
     // Middle
     this->sensorMotorIndexMapping[i] = 1;
   }
-  for (unsigned int i = 17; i <= 20; i++)
+  for (unsigned int i = 16; i <= 18; i++)
   {
-    // Ring
+    // pinky
     this->sensorMotorIndexMapping[i] = 2;
   }
   for (unsigned int i = 7; i <= 9; i++)
   {
-    // Little
+    // index
     this->sensorMotorIndexMapping[i] = 3;
   }
-  for (unsigned int i = 21; i <= 23; i++)
+  for (unsigned int i = 13; i <= 15; i++)
   {
-    // Thumb
+    // Ring
     this->sensorMotorIndexMapping[i] = 4;
   }
 
@@ -114,7 +114,8 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
     return;
   }
 
-  for (unsigned int i = 0; i < this->robotInfo.contact_sensor_count; i++)
+  // hack: skip the first 4 contact sensors because they are palm sensors
+  for (int i = 4; i < this->robotInfo.contact_sensor_count; i++)
   {
     char j = this->sensorMotorIndexMapping[i];
     if (sensor.contact[i] > minContactForce)
