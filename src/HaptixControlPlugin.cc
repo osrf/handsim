@@ -16,7 +16,6 @@
 */
 
 #include <gazebo/common/Assert.hh>
-#include <gazebo/gui/KeyEventHandler.hh>
 
 #include "handsim/HaptixControlPlugin.hh"
 
@@ -833,11 +832,6 @@ void HaptixControlPlugin::UpdatePolhemus()
         math::Pose armSensorPose = this->convertPolhemusToPose(poses[armId]);
         if (this->pauseTracking)
         {
-          // calibration mode, update offset
-          /*this->sourceWorldPoseArmOffset =
-            (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
-             this->targetBaseLinkPose) - this->sourceWorldPose;*/
-          // from "polhemus arm" to "calibrated arm"
           this->polhemusArmOffsetRotation = (this->baseLinkToArmSensor +
               this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
                   armSensorPose.GetInverse()).rot;
@@ -858,9 +852,6 @@ void HaptixControlPlugin::UpdatePolhemus()
           this->sourceWorldPoseArmOffset.rot = tmp;
           this->targetBaseLinkPose.pos = (this->baseLinkToArmSensor.GetInverse() +
               this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).pos;
-          /*this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
-            + armSensorPose
-            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);*/
         }
       }
 
