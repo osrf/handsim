@@ -27,7 +27,8 @@ using namespace gazebo;
 // Register this plugin with the simulator
 GZ_REGISTER_WORLD_PLUGIN(TactorsPlugin)
 
-void TactorsPlugin::Load(physics::WorldPtr /*_parent*/, sdf::ElementPtr /*_sdf*/)
+void TactorsPlugin::Load(physics::WorldPtr /*_parent*/,
+    sdf::ElementPtr /*_sdf*/)
 {
   // might have to be on Init instead?
   // Open the USB device for communication with the motors.
@@ -48,10 +49,12 @@ void TactorsPlugin::Load(physics::WorldPtr /*_parent*/, sdf::ElementPtr /*_sdf*/
   }
 
   this->minContactForce = 0;
-  this->maxContactForce = 20;
+  this->maxContactForce = 5;
 
   // Initialize sensor index to Lilypad motor index mapping
   // These sensor indices correspond to the JHU APL MPL arm
+
+  // TODO Contact sensor remapping
   for (unsigned int i = 0; i < robotInfo.contact_sensor_count; i++)
   {
     // Uninitialized
@@ -127,9 +130,11 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
         if (multiplier > 0)
         {
           printf("contact force multiplier: %x\n", multiplier);
-          unsigned char keyChar= (j << 5) + multiplier;
+          unsigned char keyChar = (j << 5) + multiplier;
           //std::cout << "writing char " << key << " to arduino" << std::endl;
           printf("Writing char %x to arduino\n", keyChar);
+          unsigned char result = (keyChar - (j << 5));
+          printf("Multiplier will be decoded as: %x\n", result);
           unsigned char key[1] = {keyChar};
           write(this->fd, key, 1);
         }
