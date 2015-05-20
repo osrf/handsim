@@ -838,7 +838,9 @@ void HaptixControlPlugin::UpdatePolhemus()
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
              this->targetBaseLinkPose) - this->sourceWorldPose;*/
           // from "polhemus arm" to "calibrated arm"
-          this->polhemusArmOffsetRotation = armSensorPose.rot;
+          this->polhemusArmOffsetRotation = (this->baseLinkToArmSensor +
+              this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
+                  armSensorPose.GetInverse()).rot;
           armSensorPose.rot.SetToIdentity();
           this->sourceWorldPoseArmOffset = this->baseLinkToArmSensor +
               this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
@@ -848,11 +850,12 @@ void HaptixControlPlugin::UpdatePolhemus()
         {
           boost::mutex::scoped_lock lock(this->baseLinkMutex);
           // set rot
+          math::Quaternion tmp = this->sourceWorldPoseArmOffset.rot;
           this->sourceWorldPoseArmOffset.rot = this->polhemusArmOffsetRotation;
           this->targetBaseLinkPose.rot = (this->baseLinkToArmSensor.GetInverse() +
               this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).rot;
           armSensorPose.rot.SetToIdentity();
-          this->sourceWorldPoseArmOffset.rot.SetToIdentity();
+          this->sourceWorldPoseArmOffset.rot = tmp;
           this->targetBaseLinkPose.pos = (this->baseLinkToArmSensor.GetInverse() +
               this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).pos;
           /*this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
