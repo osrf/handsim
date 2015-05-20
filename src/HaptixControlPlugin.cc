@@ -317,10 +317,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // spin up a separate thread to get polhemus sensor data
   // update target pose if using polhemus
   if (this->havePolhemus)
+  {
     this->polhemusThread = boost::thread(
       boost::bind(&HaptixControlPlugin::UpdatePolhemus, this));
-  else
-    gzwarn << "No usable polhemus setup detected.\n";
+  }
 
   this->haveKeyboard = false;
 
@@ -834,16 +834,30 @@ void HaptixControlPlugin::UpdatePolhemus()
         if (this->pauseTracking)
         {
           // calibration mode, update offset
-          this->sourceWorldPoseArmOffset =
+          /*this->sourceWorldPoseArmOffset =
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
-             this->targetBaseLinkPose) - this->sourceWorldPose;
+             this->targetBaseLinkPose) - this->sourceWorldPose;*/
+          // from "polhemus arm" to "calibrated arm"
+          this->polhemusArmOffsetRotation = armSensorPose.rot;
+          armSensorPose.rot.SetToIdentity();
+          this->sourceWorldPoseArmOffset = this->baseLinkToArmSensor +
+              this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
+                  armSensorPose.GetInverse();
         }
         else
         {
           boost::mutex::scoped_lock lock(this->baseLinkMutex);
-          this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
+          // set rot
+          this->sourceWorldPoseArmOffset.rot = this->polhemusArmOffsetRotation;
+          this->targetBaseLinkPose.rot = (this->baseLinkToArmSensor.GetInverse() +
+              this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).rot;
+          armSensorPose.rot.SetToIdentity();
+          this->sourceWorldPoseArmOffset.rot.SetToIdentity();
+          this->targetBaseLinkPose.pos = (this->baseLinkToArmSensor.GetInverse() +
+              this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).pos;
+          /*this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
             + armSensorPose
-            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
+            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);*/
         }
       }
 
