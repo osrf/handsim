@@ -43,7 +43,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
-  this->maxHeight = 850;
+  this->maxHeight = 800;
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -72,10 +72,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QCheckBox *stereoCheck = new QCheckBox("Stereo");
   stereoCheck->setToolTip(tr("Enable stereo rendering"));
   stereoCheck->setFocusPolicy(Qt::NoFocus);
-  stereoCheck->setChecked(
-      gazebo::gui::getINIProperty<int>("rendering.stereo", 0));
+  stereoCheck->setChecked(false);
   connect(stereoCheck, SIGNAL(stateChanged(int)), this,
       SLOT(OnStereoCheck(int)));
+  gazebo::gui::get_active_camera()->EnableStereo(0);
 
   // Separator
   QFrame *settingsSeparator = new QFrame(this);
@@ -184,8 +184,10 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Top bar layout
   QHBoxLayout *topBarLayout = new QHBoxLayout();
   topBarLayout->setContentsMargins(10, 0, 0, 0);
-  topBarLayout->addWidget(this->mocapStatusIndicator);
+  // topBarLayout->addWidget(this->mocapStatusIndicator);
   topBarLayout->addWidget(this->settingsButton);
+
+  topBarLayout->setAlignment(this->settingsButton, Qt::AlignRight);
 
   // Top bar widget
   this->topBarFrame = new QFrame();
@@ -193,7 +195,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->topBarFrame->setMaximumHeight(35);
   this->topBarFrame->setStyleSheet("\
       QFrame{\
-        background-color: #fc8b03;\
+        background-color: #fff;\
         color: #eeeeee;\
       }");
 
@@ -303,7 +305,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   resetButton->installEventFilter(this);
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
-  resetButton->setToolTip("Reset the view, arm and models");
+  resetButton->setShortcut(tr("F"));
+  resetButton->setToolTip("Reset the view, arm and models (F)");
   resetButton->setStyleSheet(buttonsStyle);
   resetButton->setMaximumWidth(120);
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
@@ -408,6 +411,15 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
   this->ignNode.Advertise("haptix/arm_pose_inc");
+
+  // Add shortcuts
+  QShortcut *resetModels = new QShortcut(QKeySequence("G"), this);
+  QObject::connect(resetModels, SIGNAL(activated()), this,
+      SLOT(OnResetModels()));
+
+  QShortcut *restartTimer = new QShortcut(QKeySequence("F1"), this);
+  QObject::connect(restartTimer, SIGNAL(activated()), this,
+      SLOT(OnRestartTimer()));
 }
 
 /////////////////////////////////////////////////
@@ -859,6 +871,18 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       bool enabled = task->Get<bool>("enabled");
 
       // Create a new button for the task
+      // FIXME: Hack to divide long names in 2 lines, tailored for current names
+      bool longName = false;
+      if (name.length() > 8)
+      {
+        int idx = name.find(" ");
+        if (idx)
+        {
+          name = name.substr(0, idx) + "\n" + name.substr(idx + 1);
+          longName = true;
+        }
+      }
+
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
       taskButton->installEventFilter(this);
       taskButton->setFocusPolicy(Qt::NoFocus);
@@ -885,8 +909,16 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
         taskButton->setIcon(QIcon(iconPixmap));
         taskButton->setIconSize(QSize(60, 54));
-        taskButton->setMinimumSize(80, 80);
-        taskButton->setMaximumSize(100, 80);
+        if (longName)
+        {
+          taskButton->setMinimumSize(80, 100);
+          taskButton->setMaximumSize(100, 100);
+        }
+        else
+        {
+          taskButton->setMinimumSize(80, 80);
+          taskButton->setMaximumSize(100, 80);
+        }
       }
 
       this->taskList[taskIndex] = taskButton;
@@ -1235,7 +1267,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           -poseIncArgs[3], poseIncArgs[5]);
       position = gazebo::math::Vector3(-poseIncArgs[0],
           -poseIncArgs[1], poseIncArgs[2]);
- 
+
        position = this->armStartPose.rot.RotateVector(position);
        rot = this->armStartPose.rot.RotateVector(rot);
      }
@@ -1496,7 +1528,7 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
       this->mocapStatusIndicator->setText("Motion Capture: No data");
       this->topBarFrame->setStyleSheet("\
           QFrame{\
-            background-color: #fc8b03;\
+            background-color: #fff;\
             color: #eeeeee;\
           }");
       this->settingsButton->setStyleSheet("\
@@ -1514,7 +1546,7 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
       this->mocapStatusIndicator->setText("Motion Capture: On");
       this->topBarFrame->setStyleSheet("\
           QFrame{\
-            background-color: #4a8dbf;\
+            background-color: #fff;\
             color: #eeeeee;\
           }");
       this->settingsButton->setStyleSheet("\
@@ -1532,7 +1564,7 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
       this->mocapStatusIndicator->setText("Motion Capture: Paused");
       this->topBarFrame->setStyleSheet("\
           QFrame{\
-            background-color: #999999;\
+            background-color: #fff;\
             color: #eeeeee;\
           }");
       this->settingsButton->setStyleSheet("\
@@ -1616,5 +1648,18 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
         std::min(this->maxHeight, (this->renderWidget->height()-90)));
   }
   return QObject::eventFilter(_obj, _event);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetModels()
+{
+  this->ResetModels();
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnRestartTimer()
+{
+  this->PublishTimerMessage("reset");
+  this->PublishTimerMessage("start");
 }
 
