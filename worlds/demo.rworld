@@ -47,15 +47,18 @@
     <!-- end pyramid -->
 
     <!-- begin hanoi -->
+    <%
+      disk_mass=0.01078672406846696
+     %>
     <model name="disk_0">
       <pose>100 100 1.1  0 0 0</pose>
       <link name="disk">
         <inertial>
-          <mass>0.01878672406846696</mass>
+          <mass><%= disk_mass%></mass>
           <inertia>
-            <ixx>0.00016454039163298978</ixx>
-            <iyy>0.00016454039163298978</iyy>
-            <izz>0.0003278283349947484</izz>
+            <ixx><%= disk_mass*(0.02**2+0.17**2)/12 %></ixx>
+            <iyy><%= disk_mass*(0.02**2+0.17**2)/12 %></iyy>
+            <izz><%= disk_mass*(0.17**2+0.17**2)/12 %></izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -259,11 +262,11 @@
       <pose>100 100 1.14  0 0 0</pose>
       <link name="disk">
         <inertial>
-          <mass>0.01878672406846696</mass>
+          <mass><%= disk_mass%></mass>
           <inertia>
-            <ixx>0.00016454039163298978</ixx>
-            <iyy>0.00016454039163298978</iyy>
-            <izz>0.0003278283349947484</izz>
+            <ixx><%= disk_mass*(0.02**2+0.17**2)/12 %></ixx>
+            <iyy><%= disk_mass*(0.02**2+0.17**2)/12 %></iyy>
+            <izz><%= disk_mass*(0.17**2+0.17**2)/12 %></izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -467,11 +470,11 @@
       <pose>100 100 1.18  0 0 0</pose>
       <link name="disk">
         <inertial>
-          <mass>0.01878672406846696</mass>
+          <mass><%= disk_mass%></mass>
           <inertia>
-            <ixx>0.00016454039163298978</ixx>
-            <iyy>0.00016454039163298978</iyy>
-            <izz>0.0003278283349947484</izz>
+            <ixx><%= disk_mass*(0.02**2+0.17**2)/12 %></ixx>
+            <iyy><%= disk_mass*(0.02**2+0.17**2)/12 %></iyy>
+            <izz><%= disk_mass*(0.17**2+0.17**2)/12 %></izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
@@ -675,11 +678,11 @@
       <pose>100 100 1.22  0 0 0</pose>
       <link name="disk">
         <inertial>
-          <mass>0.01878672406846696</mass>
+          <mass><%= disk_mass%></mass>
           <inertia>
-            <ixx>0.00016454039163298978</ixx>
-            <iyy>0.00016454039163298978</iyy>
-            <izz>0.0003278283349947484</izz>
+            <ixx><%= disk_mass*(0.02**2+0.17**2)/12 %></ixx>
+            <iyy><%= disk_mass*(0.02**2+0.17**2)/12 %></iyy>
+            <izz><%= disk_mass*(0.17**2+0.17**2)/12 %></izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
