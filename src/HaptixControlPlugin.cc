@@ -718,6 +718,10 @@ void HaptixControlPlugin::Reset()
     iter->ref_pos = 0.0;
     iter->ref_vel_max = 0.0;
   }
+
+  // TODO reset polhemus grasp
+  this->targetHandDist = 0;
+  this->previousHandDist = 0;
 }
 
 /////////////////////////////////////////////////
