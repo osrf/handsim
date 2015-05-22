@@ -84,70 +84,29 @@
             <iyz>0.0</iyz>
           </inertia>
         </inertial>
-        <collision name="collision_disk">
+
+        <collision name="collision_1">
+          <pose>0.055 0.095 0.01 0 0 0</pose>
           <geometry>
-<polyline>
-<point>0.18 0.0</point>
-<point>0.17710732594775333 0.0321402410637546</point>
-<point>0.16852227671515269 0.06324746833464168</point>
-<point>0.1545207828483359 0.0923218699330631</point>
-<point>0.13555286388064997 0.11842897066914826</point>
-<point>0.11222816433457204 0.14072966684424537</point>
-<point>0.08529635924513976 0.15850719573421285</point>
-<point>0.05562305898749054 0.17119017293312763</point>
-<point>0.024161987847177997 0.17837095711822823</point>
-<point>-0.008075669463092674 0.17981875197743663</point>
-<point>-0.04005376811213658 0.17548702419272824</point>
-<point>-0.0707445056977062 0.16551499905926115</point>
-<point>-0.09916145666137843 0.15022318566983447</point>
-<point>-0.12439127681763563 0.13010307548893046</point>
-<point>-0.1456230589874905 0.10580134541264519</point>
-<point>-0.16217439622243543 0.07809907304116048</point>
-<point>-0.17351331492525357 0.04788663220200154</point>
-<point>-0.17927537291914303 0.01613507560261805</point>
-<point>-0.17927537291914303 -0.016135075602618006</point>
-<point>-0.1735133149252536 -0.0478866322020015</point>
-<point>-0.16217439622243543 -0.07809907304116044</point>
-<point>-0.14562305898749056 -0.10580134541264515</point>
-<point>-0.12439127681763572 -0.1301030754889304</point>
-<point>-0.09916145666137847 -0.15022318566983445</point>
-<point>-0.07074450569770628 -0.1655149990592611</point>
-<point>-0.04005376811213662 -0.17548702419272824</point>
-<point>-0.00807566946309272 -0.17981875197743663</point>
-<point>0.024161987847177952 -0.17837095711822826</point>
-<point>0.0556230589874905 -0.17119017293312766</point>
-<point>0.08529635924513972 -0.15850719573421285</point>
-<point>0.112228164334572 -0.14072966684424537</point>
-<point>0.13555286388064994 -0.1184289706691483</point>
-<point>0.15452078284833587 -0.09232186993306314</point>
-<point>0.16852227671515266 -0.06324746833464172</point>
-<point>0.17710732594775333 -0.03214024106375463</point>
-<height>0.02</height>
-</polyline>
-<polyline>
-<point>0.05 0.0</point>
-<point>0.04755282581475768 0.01545084971874737</point>
-<point>0.04045084971874738 0.029389262614623657</point>
-<point>0.029389262614623657 0.04045084971874738</point>
-<point>0.015450849718747373 0.04755282581475768</point>
-<point>3.061616997868383e-18 0.05</point>
-<point>-0.015450849718747368 0.047552825814757685</point>
-<point>-0.029389262614623653 0.04045084971874738</point>
-<point>-0.04045084971874737 0.029389262614623664</point>
-<point>-0.04755282581475768 0.015450849718747377</point>
-<point>-0.05 6.123233995736766e-18</point>
-<point>-0.04755282581475769 -0.015450849718747346</point>
-<point>-0.04045084971874738 -0.029389262614623653</point>
-<point>-0.029389262614623664 -0.04045084971874737</point>
-<point>-0.015450849718747378 -0.04755282581475768</point>
-<point>-9.184850993605149e-18 -0.05</point>
-<point>0.015450849718747363 -0.047552825814757685</point>
-<point>0.029389262614623646 -0.04045084971874738</point>
-<point>0.04045084971874737 -0.02938926261462367</point>
-<point>0.04755282581475768 -0.015450849718747382</point>
-<height>0.02</height>
-</polyline>
-</geometry>
+            <box><size>0.19 0.11 0.02</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_2">
+          <pose>-0.055 -0.095 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.19 0.11 0.02</size></box>
+          </geometry>
 
           <surface>
             <contact>
@@ -160,36 +119,12 @@
             </contact>
           </surface>
         </collision>
-        <collision name="collision_handle">
-         <pose>0 0 0.005  0 0 0</pose>
+
+        <collision name="collision_3">
+          <pose>-0.095 0.055 0.01 0 0 0</pose>
           <geometry>
-<polyline>
-<point>0.18 0.0</point>
-<point>0.17386664873203228 0.04658742811845373</point>
-<point>0.15588457268119896 0.08999999999999998</point>
-<point>0.22516660498395408 0.12999999999999998</point>
-<point>0.26 0.0</point>
-<height>0.01</height>
-</polyline>
-<polyline>
-<point>0.2137647207535871 0.05191910044756566</point>
-<point>0.21203562990643912 0.060053833309081664</point>
-<point>0.20714733288076428 0.06678199695711354</point>
-<point>0.19994506064108605 0.07094023077346873</point>
-<point>0.19167415148823405 0.07180953835493113</point>
-<point>0.18376472075358713 0.06923960852325443</point>
-<point>0.17758438086608816 0.06367480549341513</point>
-<point>0.174201768738911 0.05607733426392085</point>
-<point>0.174201768738911 0.04776086663121048</point>
-<point>0.17758438086608816 0.0401633954017162</point>
-<point>0.1837647207535871 0.03459859237187689</point>
-<point>0.19167415148823402 0.03202866254020019</point>
-<point>0.19994506064108605 0.03289797012166259</point>
-<point>0.20714733288076428 0.037056203938017784</point>
-<point>0.21203562990643912 0.04378436758604966</point>
-<height>0.01</height>
-</polyline>
-</geometry>
+            <box><size>0.11 0.19 0.02</size></box>
+          </geometry>
 
           <surface>
             <contact>
@@ -202,71 +137,110 @@
             </contact>
           </surface>
         </collision>
+
+        <collision name="collision_4">
+          <pose>0.095 -0.055 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.11 0.19 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.2125 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1875 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1625 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.2375 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
         <visual name="visual_disk">
           <geometry>
-<polyline>
-<point>0.18 0.0</point>
-<point>0.17710732594775333 0.0321402410637546</point>
-<point>0.16852227671515269 0.06324746833464168</point>
-<point>0.1545207828483359 0.0923218699330631</point>
-<point>0.13555286388064997 0.11842897066914826</point>
-<point>0.11222816433457204 0.14072966684424537</point>
-<point>0.08529635924513976 0.15850719573421285</point>
-<point>0.05562305898749054 0.17119017293312763</point>
-<point>0.024161987847177997 0.17837095711822823</point>
-<point>-0.008075669463092674 0.17981875197743663</point>
-<point>-0.04005376811213658 0.17548702419272824</point>
-<point>-0.0707445056977062 0.16551499905926115</point>
-<point>-0.09916145666137843 0.15022318566983447</point>
-<point>-0.12439127681763563 0.13010307548893046</point>
-<point>-0.1456230589874905 0.10580134541264519</point>
-<point>-0.16217439622243543 0.07809907304116048</point>
-<point>-0.17351331492525357 0.04788663220200154</point>
-<point>-0.17927537291914303 0.01613507560261805</point>
-<point>-0.17927537291914303 -0.016135075602618006</point>
-<point>-0.1735133149252536 -0.0478866322020015</point>
-<point>-0.16217439622243543 -0.07809907304116044</point>
-<point>-0.14562305898749056 -0.10580134541264515</point>
-<point>-0.12439127681763572 -0.1301030754889304</point>
-<point>-0.09916145666137847 -0.15022318566983445</point>
-<point>-0.07074450569770628 -0.1655149990592611</point>
-<point>-0.04005376811213662 -0.17548702419272824</point>
-<point>-0.00807566946309272 -0.17981875197743663</point>
-<point>0.024161987847177952 -0.17837095711822826</point>
-<point>0.0556230589874905 -0.17119017293312766</point>
-<point>0.08529635924513972 -0.15850719573421285</point>
-<point>0.112228164334572 -0.14072966684424537</point>
-<point>0.13555286388064994 -0.1184289706691483</point>
-<point>0.15452078284833587 -0.09232186993306314</point>
-<point>0.16852227671515266 -0.06324746833464172</point>
-<point>0.17710732594775333 -0.03214024106375463</point>
-<height>0.02</height>
-</polyline>
-<polyline>
-<point>0.05 0.0</point>
-<point>0.04755282581475768 0.01545084971874737</point>
-<point>0.04045084971874738 0.029389262614623657</point>
-<point>0.029389262614623657 0.04045084971874738</point>
-<point>0.015450849718747373 0.04755282581475768</point>
-<point>3.061616997868383e-18 0.05</point>
-<point>-0.015450849718747368 0.047552825814757685</point>
-<point>-0.029389262614623653 0.04045084971874738</point>
-<point>-0.04045084971874737 0.029389262614623664</point>
-<point>-0.04755282581475768 0.015450849718747377</point>
-<point>-0.05 6.123233995736766e-18</point>
-<point>-0.04755282581475769 -0.015450849718747346</point>
-<point>-0.04045084971874738 -0.029389262614623653</point>
-<point>-0.029389262614623664 -0.04045084971874737</point>
-<point>-0.015450849718747378 -0.04755282581475768</point>
-<point>-9.184850993605149e-18 -0.05</point>
-<point>0.015450849718747363 -0.047552825814757685</point>
-<point>0.029389262614623646 -0.04045084971874738</point>
-<point>0.04045084971874737 -0.02938926261462367</point>
-<point>0.04755282581475768 -0.015450849718747382</point>
-<height>0.02</height>
-</polyline>
-</geometry>
-
+            <polyline>
+              <point>0.15 0.15</point>
+              <point>-0.15 0.15</point>
+              <point>-0.15 -0.15</point>
+              <point>0.15 -0.15</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
@@ -274,37 +248,25 @@
             </script>
           </material>
         </visual>
+
         <visual name="visual_handle">
          <pose>0 0 0.005  0 0 0</pose>
           <geometry>
-<polyline>
-<point>0.18 0.0</point>
-<point>0.17386664873203228 0.04658742811845373</point>
-<point>0.15588457268119896 0.08999999999999998</point>
-<point>0.22516660498395408 0.12999999999999998</point>
-<point>0.26 0.0</point>
-<height>0.01</height>
-</polyline>
-<polyline>
-<point>0.2137647207535871 0.05191910044756566</point>
-<point>0.21203562990643912 0.060053833309081664</point>
-<point>0.20714733288076428 0.06678199695711354</point>
-<point>0.19994506064108605 0.07094023077346873</point>
-<point>0.19167415148823405 0.07180953835493113</point>
-<point>0.18376472075358713 0.06923960852325443</point>
-<point>0.17758438086608816 0.06367480549341513</point>
-<point>0.174201768738911 0.05607733426392085</point>
-<point>0.174201768738911 0.04776086663121048</point>
-<point>0.17758438086608816 0.0401633954017162</point>
-<point>0.1837647207535871 0.03459859237187689</point>
-<point>0.19167415148823402 0.03202866254020019</point>
-<point>0.19994506064108605 0.03289797012166259</point>
-<point>0.20714733288076428 0.037056203938017784</point>
-<point>0.21203562990643912 0.04378436758604966</point>
-<height>0.01</height>
-</polyline>
-</geometry>
-
+            <polyline>
+              <point>0.25 0.05</point>
+              <point>0.15 0.05</point>
+              <point>0.15 -0.05</point>
+              <point>0.25 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.225 0.025</point>
+              <point>0.175 0.025</point>
+              <point>0.175 -0.025</point>
+              <point>0.225 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
@@ -312,81 +274,47 @@
             </script>
           </material>
         </visual>
+
       </link>
     </model>
+
     <model name="disk_1">
-      <pose>100 100 1.1400000000000001  0 0 0</pose>
+      <pose>100 100 1.14  0 0 0</pose>
       <link name="disk">
         <inertial>
-          <mass>0.014514158059584847</mass>
+          <mass>0.01878672406846696</mass>
           <inertia>
-            <ixx>0.00010244576563723636</ixx>
-            <iyy>0.00010244576563723636</iyy>
-            <izz>0.0002039239207371671</izz>
+            <ixx>0.00016454039163298978</ixx>
+            <iyy>0.00016454039163298978</iyy>
+            <izz>0.0003278283349947484</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
           </inertia>
         </inertial>
-        <collision name="collision_disk">
+
+        <collision name="collision_1">
+          <pose>0.045 0.085 0.01 0 0 0</pose>
           <geometry>
-<polyline>
-<point>0.16 0.0</point>
-<point>0.1565036161174089 0.03326587053084149</point>
-<point>0.14616727322281614 0.06507786289212802</point>
-<point>0.12944271909999158 0.0940456403667957</point>
-<point>0.10706089701741732 0.11890317207638307</point>
-<point>0.08000000000000002 0.13856406460551018</point>
-<point>0.049442719099991594 0.15216904260722458</point>
-<point>0.016724554122824555 0.15912350325892374</point>
-<point>-0.016724554122824534 0.15912350325892374</point>
-<point>-0.049442719099991574 0.15216904260722458</point>
-<point>-0.07999999999999996 0.13856406460551018</point>
-<point>-0.10706089701741726 0.11890317207638312</point>
-<point>-0.12944271909999158 0.09404564036679572</point>
-<point>-0.14616727322281617 0.06507786289212801</point>
-<point>-0.1565036161174089 0.03326587053084149</point>
-<point>-0.16 9.064862236236768e-17</point>
-<point>-0.1565036161174089 -0.03326587053084145</point>
-<point>-0.14616727322281614 -0.06507786289212804</point>
-<point>-0.1294427190999916 -0.09404564036679569</point>
-<point>-0.10706089701741736 -0.11890317207638304</point>
-<point>-0.08000000000000007 -0.13856406460551016</point>
-<point>-0.04944271909999161 -0.15216904260722458</point>
-<point>-0.016724554122824677 -0.15912350325892374</point>
-<point>0.01672455412282448 -0.15912350325892374</point>
-<point>0.04944271909999156 -0.15216904260722458</point>
-<point>0.08000000000000002 -0.13856406460551018</point>
-<point>0.10706089701741736 -0.11890317207638304</point>
-<point>0.12944271909999158 -0.09404564036679575</point>
-<point>0.14616727322281617 -0.06507786289212802</point>
-<point>0.1565036161174089 -0.033265870530841436</point>
-<height>0.02</height>
-</polyline>
-<polyline>
-<point>0.05 0.0</point>
-<point>0.04755282581475768 0.01545084971874737</point>
-<point>0.04045084971874738 0.029389262614623657</point>
-<point>0.029389262614623657 0.04045084971874738</point>
-<point>0.015450849718747373 0.04755282581475768</point>
-<point>3.061616997868383e-18 0.05</point>
-<point>-0.015450849718747368 0.047552825814757685</point>
-<point>-0.029389262614623653 0.04045084971874738</point>
-<point>-0.04045084971874737 0.029389262614623664</point>
-<point>-0.04755282581475768 0.015450849718747377</point>
-<point>-0.05 6.123233995736766e-18</point>
-<point>-0.04755282581475769 -0.015450849718747346</point>
-<point>-0.04045084971874738 -0.029389262614623653</point>
-<point>-0.029389262614623664 -0.04045084971874737</point>
-<point>-0.015450849718747378 -0.04755282581475768</point>
-<point>-9.184850993605149e-18 -0.05</point>
-<point>0.015450849718747363 -0.047552825814757685</point>
-<point>0.029389262614623646 -0.04045084971874738</point>
-<point>0.04045084971874737 -0.02938926261462367</point>
-<point>0.04755282581475768 -0.015450849718747382</point>
-<height>0.02</height>
-</polyline>
-</geometry>
+            <box><size>0.17 0.09 0.02</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_2">
+          <pose>-0.045 -0.085 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.17 0.09 0.02</size></box>
+          </geometry>
 
           <surface>
             <contact>
@@ -399,36 +327,12 @@
             </contact>
           </surface>
         </collision>
-        <collision name="collision_handle">
-         <pose>0 0 0.005  0 0 0</pose>
+
+        <collision name="collision_3">
+          <pose>-0.085 0.045 0.01 0 0 0</pose>
           <geometry>
-<polyline>
-<point>0.13856406460551018 -0.07999999999999999</point>
-<point>0.15454813220625094 -0.04141104721640332</point>
-<point>0.16 0.0</point>
-<point>0.24 0.0</point>
-<point>0.20784609690826528 -0.11999999999999998</point>
-<height>0.01</height>
-</polyline>
-<polyline>
-<point>0.19444620422780573 -0.046742719545515246</point>
-<point>0.19271711338065775 -0.03860798668399924</point>
-<point>0.1878288163549829 -0.03187982303596736</point>
-<point>0.18062654411530468 -0.027721589219612174</point>
-<point>0.17235563496245268 -0.026852281638149778</point>
-<point>0.16444620422780576 -0.029422211469826473</point>
-<point>0.1582658643403068 -0.03498701449966578</point>
-<point>0.15488325221312962 -0.04258448572916006</point>
-<point>0.15488325221312962 -0.05090095336187043</point>
-<point>0.1582658643403068 -0.05849842459136471</point>
-<point>0.16444620422780573 -0.06406322762120402</point>
-<point>0.17235563496245265 -0.06663315745288072</point>
-<point>0.18062654411530468 -0.06576384987141831</point>
-<point>0.1878288163549829 -0.06160561605506312</point>
-<point>0.19271711338065775 -0.05487745240703125</point>
-<height>0.01</height>
-</polyline>
-</geometry>
+            <box><size>0.09 0.17 0.02</size></box>
+          </geometry>
 
           <surface>
             <contact>
@@ -441,66 +345,110 @@
             </contact>
           </surface>
         </collision>
+
+        <collision name="collision_4">
+          <pose>0.085 -0.045 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.09 0.17 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.1925 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1675 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1425 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.2175 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
         <visual name="visual_disk">
           <geometry>
-<polyline>
-<point>0.16 0.0</point>
-<point>0.1565036161174089 0.03326587053084149</point>
-<point>0.14616727322281614 0.06507786289212802</point>
-<point>0.12944271909999158 0.0940456403667957</point>
-<point>0.10706089701741732 0.11890317207638307</point>
-<point>0.08000000000000002 0.13856406460551018</point>
-<point>0.049442719099991594 0.15216904260722458</point>
-<point>0.016724554122824555 0.15912350325892374</point>
-<point>-0.016724554122824534 0.15912350325892374</point>
-<point>-0.049442719099991574 0.15216904260722458</point>
-<point>-0.07999999999999996 0.13856406460551018</point>
-<point>-0.10706089701741726 0.11890317207638312</point>
-<point>-0.12944271909999158 0.09404564036679572</point>
-<point>-0.14616727322281617 0.06507786289212801</point>
-<point>-0.1565036161174089 0.03326587053084149</point>
-<point>-0.16 9.064862236236768e-17</point>
-<point>-0.1565036161174089 -0.03326587053084145</point>
-<point>-0.14616727322281614 -0.06507786289212804</point>
-<point>-0.1294427190999916 -0.09404564036679569</point>
-<point>-0.10706089701741736 -0.11890317207638304</point>
-<point>-0.08000000000000007 -0.13856406460551016</point>
-<point>-0.04944271909999161 -0.15216904260722458</point>
-<point>-0.016724554122824677 -0.15912350325892374</point>
-<point>0.01672455412282448 -0.15912350325892374</point>
-<point>0.04944271909999156 -0.15216904260722458</point>
-<point>0.08000000000000002 -0.13856406460551018</point>
-<point>0.10706089701741736 -0.11890317207638304</point>
-<point>0.12944271909999158 -0.09404564036679575</point>
-<point>0.14616727322281617 -0.06507786289212802</point>
-<point>0.1565036161174089 -0.033265870530841436</point>
-<height>0.02</height>
-</polyline>
-<polyline>
-<point>0.05 0.0</point>
-<point>0.04755282581475768 0.01545084971874737</point>
-<point>0.04045084971874738 0.029389262614623657</point>
-<point>0.029389262614623657 0.04045084971874738</point>
-<point>0.015450849718747373 0.04755282581475768</point>
-<point>3.061616997868383e-18 0.05</point>
-<point>-0.015450849718747368 0.047552825814757685</point>
-<point>-0.029389262614623653 0.04045084971874738</point>
-<point>-0.04045084971874737 0.029389262614623664</point>
-<point>-0.04755282581475768 0.015450849718747377</point>
-<point>-0.05 6.123233995736766e-18</point>
-<point>-0.04755282581475769 -0.015450849718747346</point>
-<point>-0.04045084971874738 -0.029389262614623653</point>
-<point>-0.029389262614623664 -0.04045084971874737</point>
-<point>-0.015450849718747378 -0.04755282581475768</point>
-<point>-9.184850993605149e-18 -0.05</point>
-<point>0.015450849718747363 -0.047552825814757685</point>
-<point>0.029389262614623646 -0.04045084971874738</point>
-<point>0.04045084971874737 -0.02938926261462367</point>
-<point>0.04755282581475768 -0.015450849718747382</point>
-<height>0.02</height>
-</polyline>
-</geometry>
-
+            <polyline>
+              <point>0.13 0.13</point>
+              <point>-0.13 0.13</point>
+              <point>-0.13 -0.13</point>
+              <point>0.13 -0.13</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
@@ -508,37 +456,25 @@
             </script>
           </material>
         </visual>
+
         <visual name="visual_handle">
          <pose>0 0 0.005  0 0 0</pose>
           <geometry>
-<polyline>
-<point>0.13856406460551018 -0.07999999999999999</point>
-<point>0.15454813220625094 -0.04141104721640332</point>
-<point>0.16 0.0</point>
-<point>0.24 0.0</point>
-<point>0.20784609690826528 -0.11999999999999998</point>
-<height>0.01</height>
-</polyline>
-<polyline>
-<point>0.19444620422780573 -0.046742719545515246</point>
-<point>0.19271711338065775 -0.03860798668399924</point>
-<point>0.1878288163549829 -0.03187982303596736</point>
-<point>0.18062654411530468 -0.027721589219612174</point>
-<point>0.17235563496245268 -0.026852281638149778</point>
-<point>0.16444620422780576 -0.029422211469826473</point>
-<point>0.1582658643403068 -0.03498701449966578</point>
-<point>0.15488325221312962 -0.04258448572916006</point>
-<point>0.15488325221312962 -0.05090095336187043</point>
-<point>0.1582658643403068 -0.05849842459136471</point>
-<point>0.16444620422780573 -0.06406322762120402</point>
-<point>0.17235563496245265 -0.06663315745288072</point>
-<point>0.18062654411530468 -0.06576384987141831</point>
-<point>0.1878288163549829 -0.06160561605506312</point>
-<point>0.19271711338065775 -0.05487745240703125</point>
-<height>0.01</height>
-</polyline>
-</geometry>
-
+            <polyline>
+              <point>0.23 0.05</point>
+              <point>0.13 0.05</point>
+              <point>0.13 -0.05</point>
+              <point>0.23 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.205 0.025</point>
+              <point>0.155 0.025</point>
+              <point>0.155 -0.025</point>
+              <point>0.205 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
@@ -546,9 +482,427 @@
             </script>
           </material>
         </visual>
+
       </link>
     </model>
+
     <model name="disk_2">
+      <pose>100 100 1.18  0 0 0</pose>
+      <link name="disk">
+        <inertial>
+          <mass>0.01878672406846696</mass>
+          <inertia>
+            <ixx>0.00016454039163298978</ixx>
+            <iyy>0.00016454039163298978</iyy>
+            <izz>0.0003278283349947484</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+
+        <collision name="collision_1">
+          <pose>0.035 0.075 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.15 0.07 0.02</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_2">
+          <pose>-0.035 -0.075 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.15 0.07 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_3">
+          <pose>-0.075 0.035 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.07 0.15 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_4">
+          <pose>0.075 -0.035 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.07 0.15 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.1725 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1475 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1225 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.1975 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <visual name="visual_disk">
+          <geometry>
+            <polyline>
+              <point>0.11 0.11</point>
+              <point>-0.11 0.11</point>
+              <point>-0.11 -0.11</point>
+              <point>0.11 -0.11</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_handle">
+         <pose>0 0 0.005  0 0 0</pose>
+          <geometry>
+            <polyline>
+              <point>0.21 0.05</point>
+              <point>0.11 0.05</point>
+              <point>0.11 -0.05</point>
+              <point>0.21 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.185 0.025</point>
+              <point>0.135 0.025</point>
+              <point>0.135 -0.025</point>
+              <point>0.185 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <model name="disk_3">
+      <pose>100 100 1.22  0 0 0</pose>
+      <link name="disk">
+        <inertial>
+          <mass>0.01878672406846696</mass>
+          <inertia>
+            <ixx>0.00016454039163298978</ixx>
+            <iyy>0.00016454039163298978</iyy>
+            <izz>0.0003278283349947484</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+
+        <collision name="collision_1">
+          <pose>0.025 0.065 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.13 0.05 0.02</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_2">
+          <pose>-0.025 -0.065 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.13 0.05 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_3">
+          <pose>-0.065 0.025 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.05 0.13 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_4">
+          <pose>0.065 -0.025 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.05 0.13 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.1525 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1275 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1025 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.1775 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <visual name="visual_disk">
+          <geometry>
+            <polyline>
+              <point>0.09 0.09</point>
+              <point>-0.09 0.09</point>
+              <point>-0.09 -0.09</point>
+              <point>0.09 -0.09</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Green</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_handle">
+         <pose>0 0 0.005  0 0 0</pose>
+          <geometry>
+            <polyline>
+              <point>0.19 0.05</point>
+              <point>0.09 0.05</point>
+              <point>0.09 -0.05</point>
+              <point>0.19 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.165 0.025</point>
+              <point>0.115 0.025</point>
+              <point>0.115 -0.025</point>
+              <point>0.165 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Green</name>
+            </script>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <!--<model name="disk_2">
       <pose>100 100 1.1800000000000002  0 0 0</pose>
       <link name="disk">
         <inertial>
@@ -985,7 +1339,7 @@
           </material>
         </visual>
       </link>
-    </model>
+    </model>-->
 
 
     <include>
@@ -1319,7 +1673,7 @@
 
       <model_name>cricket_ball</model_name>
 
-      <initial_arrangement>pyramid</initial_arrangement>
+      <initial_arrangement>hanoi</initial_arrangement>
 
       <arrangement name="hanoi">
           <pose model="disk_0"> 0 -0.15 1.1 0 0 0</pose>
