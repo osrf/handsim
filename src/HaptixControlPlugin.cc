@@ -16,7 +16,6 @@
 */
 
 #include <gazebo/common/Assert.hh>
-#include <gazebo/gui/KeyEventHandler.hh>
 
 #include "handsim/HaptixControlPlugin.hh"
 
@@ -719,7 +718,6 @@ void HaptixControlPlugin::Reset()
     iter->ref_vel_max = 0.0;
   }
 
-  // TODO reset polhemus grasp
   this->targetHandDist = 0;
   this->previousHandDist = 0;
 }
@@ -733,6 +731,10 @@ void HaptixControlPlugin::SetWorldPose(const std::string &/*_topic*/,
   math::Pose inputPose(msgs::Convert(_pose));
   this->model->SetWorldPose(inputPose);
   this->targetBaseLinkPose = this->baseLink->GetRelativePose() + inputPose;
+
+  // complete hack
+  this->targetHandDist = 0;
+  this->previousHandDist = 0;
 }
 
 /////////////////////////////////////////////////
