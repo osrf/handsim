@@ -124,7 +124,6 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
         // Write to the corresponding motor to make it buzz
         float contactForce = sensor.contact[i] > this->maxContactForce ?
             this->maxContactForce : sensor.contact[i];
-        printf("Got contact force:%f\n", contactForce);
         contactForce = 32*contactForce/this->maxContactForce;
         unsigned char multiplier = contactForce;
         if (multiplier > 0)

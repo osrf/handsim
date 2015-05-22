@@ -273,7 +273,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->headPosFilter.SetFc(0.002, 0.3);
   this->headOriFilter.SetFc(0.002, 0.3);
 
-  this->polhemusGraspFilter.SetFc(1, 3);
+  this->polhemusGraspFilter.SetFc(0.01, 4);
 
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
@@ -936,8 +936,8 @@ void HaptixControlPlugin::UpdatePolhemus()
           {
             dist = this->sourceDistHandOffset;
           }
+          dist = this->polhemusGraspFilter.Process(dist);
           this->targetHandDist = 1 - dist / this->sourceDistHandOffset;
-          this->targetHandDist = this->polhemusGraspFilter.Process(this->targetHandDist);
         }
       }
     }
