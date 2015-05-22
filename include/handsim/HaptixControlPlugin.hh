@@ -576,6 +576,8 @@ namespace gazebo
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
 
+    private: gazebo::math::OnePole<double> polhemusGraspFilter;
+
     /// \brief Receives messages to toggle viewpoint rotations.
     private: gazebo::transport::SubscriberPtr viewpointRotationsSub;
 
