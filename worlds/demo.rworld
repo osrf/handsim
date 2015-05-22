@@ -47,119 +47,26 @@
     <!-- end pyramid -->
 
     <!-- begin hanoi -->
-    <%
-      # Red wood density 510 kg/m^3
-      density = 10.0
-
-      disk_number = 4
-      radii = [0.18, 0.16, 0.14, 0.12, 0.10]
-
-      peg_height = 0.4
-      peg_radius = 0.01
-
-      # Constant parameters for each ring
-      height_disk = 0.02
-      radius_hole = 0.05
-      points_hole = 20
-
-      # handle
-      height_handle = 0.01
-      length_handle = 0.08
-      radius_grasp = 0.02
-
-      color = ["Red", "Orange", "Yellow", "Green", "Blue", "Purple"]
-      colorNum = 6
-      z_offset = 0.9
-    %>
-
-<%
-   def circle_points_s(radius, points=20, xcenter=0, ycenter=0)
-      polyline = []
-      points.times do |i|
-        angle = 2*Math::PI * i / points.to_f;
-        polyline << [xcenter+radius*Math.cos(angle), ycenter+radius*Math.sin(angle)]
-      end
-      points_s = ""
-      polyline.each do |p|
-        points_s += "<point>" \
-                 + p[0].to_s + " " + p[1].to_s \
-                 + "</point>\n"
-      end
-      points_s
-  end
-
-   def handle_points_s(radius, angle0, angle, h_length, xcenter=0, ycenter=0)
-        polyline = []
-      # 3 points for arc connected to disk
-        anglem = 0.5*(angle0.to_f + angle.to_f)
-        polyline << [xcenter+radius*Math.cos(angle0), ycenter+radius*Math.sin(angle0)]
-        polyline << [xcenter+radius*Math.cos(anglem), ycenter+radius*Math.sin(anglem)]
-        polyline << [xcenter+radius*Math.cos(angle), ycenter+radius*Math.sin(angle)]
-     # handle
-        polyline << [xcenter+(radius+h_length)*Math.cos(angle), ycenter+(radius+h_length)*Math.sin(angle)]
-        polyline << [xcenter+(radius+h_length)*Math.cos(angle0), ycenter+(radius+h_length)*Math.sin(angle0)]
-        points_s = ""
-        polyline.each do |p|
-          points_s += "<point>" \
-                   + p[0].to_s + " " + p[1].to_s \
-                   + "</point>\n"
-        end
-      points_s
-  end
-
-  # Star axis of symmetry: Z
-  disk_number.times do |j|
-    disk_radius = radii[j]
-    hole_radius = radius_hole
-    # approximate the inertia
-    volume = Math::PI * (disk_radius**2 - hole_radius**2) * height_disk
-    mass = density * volume
-    ixx = 1.0 / 12 * mass * (3*(hole_radius**2 + disk_radius**2) + height_disk**2)
-    iyy = ixx
-    izz = 0.5 * mass * (hole_radius**2 + disk_radius**2)
-
-    angle_offset = -Math::PI/6.0*j.to_f
-    abs_angle = Math::PI/6.0
-    center_angle = angle_offset + abs_angle/2.0
-    extended_radius = disk_radius + 1.03*radius_grasp + 0.01
-
-    geometry_s_disk= "<geometry>\n"  \
-                   + "<polyline>\n"  \
-                   + circle_points_s(disk_radius, 15+5*(disk_number-j), 0, 0 ) \
-                   + "<height>" + height_disk.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "<polyline>\n"  \
-                   + circle_points_s(hole_radius, points_hole, 0, 0 ) \
-                   + "<height>" + height_disk.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "</geometry>\n"
-  geometry_s_handle = "<geometry>\n"  \
-                   + "<polyline>\n"  \
-                   + handle_points_s(disk_radius, angle_offset, angle_offset+abs_angle, length_handle, 0, 0 ) \
-                   + "<height>" + height_handle.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "<polyline>\n"  \
-                   + circle_points_s(radius_grasp, 20, extended_radius*Math.cos(center_angle), extended_radius*Math.sin(center_angle) ) \
-                   + "<height>" + height_handle.to_s + "</height>\n"  \
-                   + "</polyline>\n" \
-                   + "</geometry>\n"
-%>
-    <%= '<model name="disk_' + j.to_s + '">' %>
-      <pose><%= distance_offset %> <%= distance_offset %> <%= 0.2 + (height_disk + 0.02)*j + z_offset%>  0 0 0</pose>
+    <model name="disk_0">
+      <pose>100 100 1.1  0 0 0</pose>
       <link name="disk">
         <inertial>
-          <mass><%= mass %></mass>
+          <mass>0.01878672406846696</mass>
           <inertia>
-            <ixx><%= ixx %></ixx>
-            <iyy><%= iyy %></iyy>
-            <izz><%= izz %></izz>
+            <ixx>0.00016454039163298978</ixx>
+            <iyy>0.00016454039163298978</iyy>
+            <izz>0.0003278283349947484</izz>
             <ixy>0.0</ixy>
             <ixz>0.0</ixz>
             <iyz>0.0</iyz>
           </inertia>
         </inertial>
-        <collision name="collision_disk">
-          <%= geometry_s_disk%>
+
+        <collision name="collision_1">
+          <pose>0.055 0.095 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.19 0.11 0.02</size></box>
+          </geometry>
           <surface>
             <contact>
               <ode>
@@ -171,9 +78,13 @@
             </contact>
           </surface>
         </collision>
-        <collision name="collision_handle">
-         <pose>0 0 <%= 0.5*height_disk-0.5*height_handle %>  0 0 0</pose>
-          <%= geometry_s_handle%>
+
+        <collision name="collision_2">
+          <pose>-0.055 -0.095 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.19 0.11 0.02</size></box>
+          </geometry>
+
           <surface>
             <contact>
               <ode>
@@ -185,30 +96,789 @@
             </contact>
           </surface>
         </collision>
+
+        <collision name="collision_3">
+          <pose>-0.095 0.055 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.11 0.19 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_4">
+          <pose>0.095 -0.055 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.11 0.19 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.2125 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1875 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1625 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.2375 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
         <visual name="visual_disk">
-          <%= geometry_s_disk%>
+          <geometry>
+            <polyline>
+              <point>0.15 0.15</point>
+              <point>-0.15 0.15</point>
+              <point>-0.15 -0.15</point>
+              <point>0.15 -0.15</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%colorNum].to_s + '</name>'%>
+              <name>Gazebo/Red</name>
             </script>
           </material>
         </visual>
+
         <visual name="visual_handle">
-         <pose>0 0 <%= 0.5*height_disk-0.5*height_handle %>  0 0 0</pose>
-          <%= geometry_s_handle%>
+         <pose>0 0 0.005  0 0 0</pose>
+          <geometry>
+            <polyline>
+              <point>0.25 0.05</point>
+              <point>0.15 0.05</point>
+              <point>0.15 -0.05</point>
+              <point>0.25 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.225 0.025</point>
+              <point>0.175 0.025</point>
+              <point>0.175 -0.025</point>
+              <point>0.225 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
           <material>
             <script>
               <uri>file://media/materials/scripts/gazebo.material</uri>
-              <%= '<name>Gazebo/' + color[j%colorNum].to_s + '</name>'%>
+              <name>Gazebo/Red</name>
             </script>
           </material>
         </visual>
+
       </link>
     </model>
-<%
-    end
-%>
+
+    <model name="disk_1">
+      <pose>100 100 1.14  0 0 0</pose>
+      <link name="disk">
+        <inertial>
+          <mass>0.01878672406846696</mass>
+          <inertia>
+            <ixx>0.00016454039163298978</ixx>
+            <iyy>0.00016454039163298978</iyy>
+            <izz>0.0003278283349947484</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+
+        <collision name="collision_1">
+          <pose>0.045 0.085 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.17 0.09 0.02</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_2">
+          <pose>-0.045 -0.085 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.17 0.09 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_3">
+          <pose>-0.085 0.045 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.09 0.17 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_4">
+          <pose>0.085 -0.045 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.09 0.17 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.1925 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1675 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1425 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.2175 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <visual name="visual_disk">
+          <geometry>
+            <polyline>
+              <point>0.13 0.13</point>
+              <point>-0.13 0.13</point>
+              <point>-0.13 -0.13</point>
+              <point>0.13 -0.13</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Orange</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_handle">
+         <pose>0 0 0.005  0 0 0</pose>
+          <geometry>
+            <polyline>
+              <point>0.23 0.05</point>
+              <point>0.13 0.05</point>
+              <point>0.13 -0.05</point>
+              <point>0.23 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.205 0.025</point>
+              <point>0.155 0.025</point>
+              <point>0.155 -0.025</point>
+              <point>0.205 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Orange</name>
+            </script>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <model name="disk_2">
+      <pose>100 100 1.18  0 0 0</pose>
+      <link name="disk">
+        <inertial>
+          <mass>0.01878672406846696</mass>
+          <inertia>
+            <ixx>0.00016454039163298978</ixx>
+            <iyy>0.00016454039163298978</iyy>
+            <izz>0.0003278283349947484</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+
+        <collision name="collision_1">
+          <pose>0.035 0.075 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.15 0.07 0.02</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_2">
+          <pose>-0.035 -0.075 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.15 0.07 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_3">
+          <pose>-0.075 0.035 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.07 0.15 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_4">
+          <pose>0.075 -0.035 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.07 0.15 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.1725 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1475 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1225 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.1975 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <visual name="visual_disk">
+          <geometry>
+            <polyline>
+              <point>0.11 0.11</point>
+              <point>-0.11 0.11</point>
+              <point>-0.11 -0.11</point>
+              <point>0.11 -0.11</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_handle">
+         <pose>0 0 0.005  0 0 0</pose>
+          <geometry>
+            <polyline>
+              <point>0.21 0.05</point>
+              <point>0.11 0.05</point>
+              <point>0.11 -0.05</point>
+              <point>0.21 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.185 0.025</point>
+              <point>0.135 0.025</point>
+              <point>0.135 -0.025</point>
+              <point>0.185 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
+    <model name="disk_3">
+      <pose>100 100 1.22  0 0 0</pose>
+      <link name="disk">
+        <inertial>
+          <mass>0.01878672406846696</mass>
+          <inertia>
+            <ixx>0.00016454039163298978</ixx>
+            <iyy>0.00016454039163298978</iyy>
+            <izz>0.0003278283349947484</izz>
+            <ixy>0.0</ixy>
+            <ixz>0.0</ixz>
+            <iyz>0.0</iyz>
+          </inertia>
+        </inertial>
+
+        <collision name="collision_1">
+          <pose>0.025 0.065 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.13 0.05 0.02</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_2">
+          <pose>-0.025 -0.065 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.13 0.05 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_3">
+          <pose>-0.065 0.025 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.05 0.13 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_4">
+          <pose>0.065 -0.025 0.01 0 0 0</pose>
+          <geometry>
+            <box><size>0.05 0.13 0.02</size></box>
+          </geometry>
+
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_1">
+         <pose>0.1525 0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_2">
+         <pose>0.1275 -0.0375 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.075 0.025 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_3">
+         <pose>0.1025 0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <collision name="collision_handle_4">
+         <pose>0.1775 -0.0125 0.01  0 0 0</pose>
+          <geometry>
+            <box><size>0.025 0.075 0.01</size></box>
+          </geometry>
+          <surface>
+            <contact>
+              <ode>
+                <min_depth>0.001</min_depth>
+                <max_vel>0.1</max_vel>
+                <kp>1e8</kp>
+                <kd>1</kd>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+
+        <visual name="visual_disk">
+          <geometry>
+            <polyline>
+              <point>0.09 0.09</point>
+              <point>-0.09 0.09</point>
+              <point>-0.09 -0.09</point>
+              <point>0.09 -0.09</point>
+              <height>0.02</height>
+            </polyline>
+            <polyline>
+              <point>0.04 0.04</point>
+              <point>-0.04 0.04</point>
+              <point>-0.04 -0.04</point>
+              <point>0.04 -0.04</point>-->
+              <height>0.02</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Green</name>
+            </script>
+          </material>
+        </visual>
+
+        <visual name="visual_handle">
+         <pose>0 0 0.005  0 0 0</pose>
+          <geometry>
+            <polyline>
+              <point>0.19 0.05</point>
+              <point>0.09 0.05</point>
+              <point>0.09 -0.05</point>
+              <point>0.19 -0.05</point>
+              <height>0.01</height>
+            </polyline>
+            <polyline>
+              <point>0.165 0.025</point>
+              <point>0.115 0.025</point>
+              <point>0.115 -0.025</point>
+              <point>0.165 -0.025</point>
+              <height>0.01</height>
+            </polyline>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Green</name>
+            </script>
+          </material>
+        </visual>
+
+      </link>
+    </model>
+
 
 
     <include>
@@ -521,7 +1191,7 @@
       <!-- TODO generate list of model names using ERB and print them out -->
       <!-- do the same with initial positions? -->
       <!-- Hanoi -->
-      <% disk_number.times do |j| %>
+      <% 4.times do |j| %>
         <model_name><%= 'disk_' + j.to_s%></model_name>
       <% end %>
       <model_name>hanoi_peg_board</model_name>
@@ -543,8 +1213,8 @@
       <initial_arrangement>pyramid</initial_arrangement>
 
       <arrangement name="hanoi">
-        <% disk_number.times do |j| %>
-          <pose model=<%= '"disk_' + j.to_s + '"'%>> 0 -0.15 <%= 0.2 + (height_disk + 0.02)*j + z_offset%> 0 0 0</pose>
+        <% 4.times do |j| %>
+          <pose model=<%= '"disk_' + j.to_s + '"'%>> 0 -0.15 <%= 0.2 + (0.02 + 0.02)*j + 0.9%> 0 0 0</pose>
         <% end %>
         <pose model="hanoi_peg_board">0 -0.15 1 0 0 0</pose>
       </arrangement>
