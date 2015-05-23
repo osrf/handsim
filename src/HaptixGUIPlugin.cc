@@ -403,6 +403,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       this->node->Advertise<gazebo::msgs::Int>(
       "~/motion_tracking/viewpoint_rotations");
 
+  this->tactorsPub = this->node->Advertise<gazebo::msgs::Int>("~/tactors_running");
+
   // Connect to the PreRender Gazebo signal
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
@@ -1479,18 +1481,25 @@ void HaptixGUIPlugin::OnScalingSlider(int _state)
 //////////////////////////////////////////////////
 void HaptixGUIPlugin::OnPauseRequest(ConstIntPtr &_msg)
 {
+  gazebo::msgs::Int tactorsMsg;
+
   if (_msg->data() == 0)
   {
     this->trackingPaused = false;
+    tactorsMsg.set_data(1);
   }
   else if (_msg->data() == 1)
   {
     this->trackingPaused = true;
+    tactorsMsg.set_data(0);
   }
   else
   {
     gzwarn << "Got unexpected message data in OnPauseRequest";
+    return;
   }
+
+  this->tactorsPub->Publish(tactorsMsg);
 }
 
 //////////////////////////////////////////////////

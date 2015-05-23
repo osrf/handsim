@@ -256,6 +256,8 @@ namespace haptix_gazebo_plugins
     /// \brief Publisher that controls the clock
     private: gazebo::transport::PublisherPtr timerPub;
 
+    private: gazebo::transport::PublisherPtr tactorsPub;
+
     /// \brief Reset arm button
     private: QPushButton *resetArmButton;
 

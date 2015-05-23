@@ -27,12 +27,18 @@ using namespace gazebo;
 // Register this plugin with the simulator
 GZ_REGISTER_WORLD_PLUGIN(TactorsPlugin)
 
-void TactorsPlugin::Load(physics::WorldPtr /*_parent*/,
+TactorsPlugin::TactorsPlugin()
+{
+  this->robotInitialized = false;
+  this->running = false;
+}
+
+void TactorsPlugin::Load(physics::WorldPtr _parent,
     sdf::ElementPtr /*_sdf*/)
 {
   // might have to be on Init instead?
   // Open the USB device for communication with the motors.
-  for (int i = 0; i < 4; i ++)
+  for (int i = 0; i < 4; i++)
   {
     std::string deviceName = "/dev/ttyACM" + std::to_string(i);
     this->fd = open(deviceName.c_str(), O_WRONLY);
@@ -85,16 +91,29 @@ void TactorsPlugin::Load(physics::WorldPtr /*_parent*/,
     this->sensorMotorIndexMapping[i] = 4;
   }
 
-  this->motorInterval = common::Time(0.5);
-
   // Listen to the update event. This event is broadcast every
   // simulation iteration.
   this->updateConnection = event::Events::ConnectWorldUpdateBegin(
       boost::bind(&TactorsPlugin::OnUpdate, this, _1));
+
+  this->gzNode = transport::NodePtr(new transport::Node());
+  gzNode->Init(_parent->GetName());
+  this->runningSub = this->gzNode->Subscribe("~/tactors_running",
+      &TactorsPlugin::OnRunningCallback, this);
+}
+
+void TactorsPlugin::OnRunningCallback(ConstIntPtr &_msg)
+{
+  this->running = _msg->data();
 }
 
 void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
 {
+  if (!running)
+  {
+    return;
+  }
+
   if (!this->robotInitialized)
   {
     // Initialize haptix-comm
