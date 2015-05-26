@@ -16,7 +16,7 @@
 */
 
 #ifndef _HANDSIM_HAPTIX_WORLD_PLUGIN_HH_
-#define _HANDSIM_HAPTIX_WORLD_HH_
+#define _HANDSIM_HAPTIX_WORLD_PLUGIN_HH_
 
 #include <haptix/comm/haptix_sim.h>
 #include <haptix/comm/haptix.h>
@@ -204,7 +204,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
-  /// \brief hxs_model_joint_state callback. Set the state of a joint.
+  /// \brief hxs_model_joint_state callback. Get the state of a joint.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: the name of the model to query.
   /// \param[out] _rep The reply: joint states
@@ -223,7 +223,7 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxModel &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_set_model_link_state callback. Set the state of a joint.
+  /// \brief hxs_model_link_state callback. Get the state of a link.
   /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: hxModel message containing the name of the
   /// model to set and the desired link state.

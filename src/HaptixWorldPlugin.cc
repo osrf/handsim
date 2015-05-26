@@ -56,33 +56,6 @@ HaptixWorldPlugin::~HaptixWorldPlugin()
 
   gazebo::event::Events::DisconnectWorldUpdateBegin(
       this->worldUpdateConnection);
-
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_sim_info");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_camera_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_camera_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_contacts");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_joint_state");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_joint_state");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_add_model");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_remove_model");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_transform");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_linear_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_linear_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_angular_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_angular_velocity");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_force");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_torque");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_apply_wrench");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_reset");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_is_logging");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_start_logging");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_stop_logging");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_gravity_mode");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_gravity_mode");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_model_color");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_color");
-  this->ignNode.Unadvertise("/haptix/gazebo/hxs_set_model_collide_mode");
 }
 
 /////////////////////////////////////////////////
@@ -180,6 +153,9 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->worldUpdateConnection = gazebo::event::Events::ConnectWorldUpdateBegin(
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
+
+  // Advertise the Ignition topic on which we'll publish arm pose changes
+  this->ignNode.Advertise("haptix/arm_model_pose");
 
   // Advertise haptix sim services.
   this->ignNode.Advertise("/haptix/gazebo/hxs_sim_info",
@@ -423,6 +399,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
   //    c. Wait for a while
   //    d. Get the mutex again and check for contacts.
   bool hadFilter;
+  gazebo::physics::ContactManager *contactManager;
   {
     std::lock_guard<std::mutex> lock(this->worldMutex);
 
@@ -448,7 +425,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
       return;
     }
 
-    auto contactManager = physics->GetContactManager();
+    contactManager = physics->GetContactManager();
     if (!contactManager)
     {
       gzerr << "Contact manager was NULL!" << std::endl;
@@ -485,18 +462,20 @@ void HaptixWorldPlugin::HaptixContactsCallback(
   // Lock worldMutex and check for contacts
   std::lock_guard<std::mutex> lock(this->worldMutex);
 
-  std::vector<gazebo::physics::Contact*> contacts =
-      this->world->GetPhysicsEngine()->GetContactManager()->GetContacts();
-  gzdbg << "Contact vector size: " << contacts.size() << std::endl;
-  for (auto contact : contacts)
+  auto contacts = contactManager->GetContacts();
+
+  if (contactManager->GetContactCount() > contacts.size())
   {
+    gzerr << "invalid contact vector size" << std::endl;
+    return;
+  }
+
+  for (unsigned int j = 0; j < contactManager->GetContactCount(); ++j)
+  {
+    auto contact = contacts[j];
     // If contact is not relevant to the requested model name
-    if (contact->collision1->GetLink()->GetModel()->GetName() != modelName &&
-        contact->collision2->GetLink()->GetModel()->GetName() != modelName)
+    if (contact->collision1->GetLink()->GetModel()->GetName() != modelName)
     {
-      gzdbg << "contact model names " << contact->collision1->GetLink()->GetModel()->GetName()
-          << " and " << contact->collision2->GetLink()->GetModel()->GetName()
-          << " did not match queried model " << modelName << std::endl;
       continue;
     }
     for (int i = 0; i < contact->count; ++i)
@@ -514,7 +493,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
       // All vectors are relative to the link frame.
 
       // Transform the pose into the link frame
-      contactPosPose = linkPose.GetInverse() + contactPosPose;
+      contactPosPose = contactPosPose + linkPose.GetInverse();
 
       ConvertVector(contactPosPose.pos, *contactMsg->mutable_point());
 
@@ -818,11 +797,21 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
 
   gazebo::math::Pose pose;
   ConvertTransform(_req.transform(), pose);
-  auto setModelTransformLambda = [model, pose]()
-      {
-        model->SetWorldPose(pose);
-      };
-  this->updateFunctions.push_back(setModelTransformLambda);
+
+  if (model->GetName() == "mpl_haptix_right_forearm" ||
+      model->GetName() == "mpl_haptix_left_forearm")
+  {
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose);
+    this->ignNode.Publish("haptix/arm_model_pose", msg);
+  }
+  else
+  {
+    auto setModelTransformLambda = [model, pose]()
+        {
+          model->SetWorldPose(pose);
+        };
+    this->updateFunctions.push_back(setModelTransformLambda);
+  }
   _result = true;
 }
 

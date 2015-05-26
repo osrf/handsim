@@ -162,10 +162,10 @@ TEST_F(SimApiTest, HxsSimInfo)
   gazebo::gui::set_active_camera(camera);
   ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
 
-  // Wait for all the models to initialize
+  sleep(0.5);
   hxsSimInfo simInfo;
   ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
-  sleep(1);
+  sleep(0.5);
 
   gazebo::math::Pose cameraOut;
   ConvertTransform(simInfo.camera_transform, cameraOut);
@@ -332,35 +332,41 @@ TEST_F(SimApiTest, HxsContacts)
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
-  // Wait a little while for the world to initialize
-  world->Step(20);
-  world->SetPaused(false);
-
   hxsContactPoints contactPoints;
 
   gazebo::physics::ContactManager *contactManager =
       world->GetPhysicsEngine()->GetContactManager();
   ASSERT_TRUE(contactManager != NULL);
 
-  const std::string modelName = "wooden_case";
+  const std::string modelName = "wood_cube_10cm";
   gazebo::physics::ModelPtr model = world->GetModel(modelName);
+  model->SetWorldPose(gazebo::math::Pose(0, 0.25, -1.33, M_PI, 0, 0));
+  model->SetAutoDisable(false);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+  world->SetPaused(false);
 
   ASSERT_EQ(hxs_contacts(modelName.c_str(), &contactPoints), hxOK);
+  world->SetPaused(true);
   EXPECT_GT(contactPoints.contact_count, 0);
 
   // Have to find contacts and sort them by distance to compare
   // since they don't have string keys
 
   int matched_contacts = 0;
-  for (auto contact : contactManager->GetContacts())
+
+  // Each contact manager contact should have a unique match in contacts
+  for (unsigned int k = 0; k < contactManager->GetContactCount(); ++k)
   {
+    auto contact = contactManager->GetContacts()[k];
     if (contact->collision1->GetModel()->GetName() == modelName ||
         contact->collision2->GetModel()->GetName() == modelName)
     {
       for (int i = 0; i < contact->count; ++i)
       {
-        gazebo::math::Vector3 linkPos =
-            contact->collision1->GetLink()->GetWorldPose().pos;
+        gazebo::math::Pose linkPose =
+            contact->collision1->GetLink()->GetWorldPose();
 
         // Now find matching contact point as returned by hxs_contacts
         for (int j = 0; j < contactPoints.contact_count; ++j)
@@ -375,14 +381,29 @@ TEST_F(SimApiTest, HxsContacts)
           ConvertVector(contactPoints.contacts[i].normal, contactNormal);
           ConvertVector(contactPoints.contacts[i].wrench.force, contactForce);
           ConvertVector(contactPoints.contacts[i].wrench.torque, contactTorque);
+
+          gazebo::math::Pose contactPosPose(contact->positions[j],
+              gazebo::math::Quaternion());
+
+          // Transform the pose into the link frame
+          contactPosPose = contactPosPose + linkPose.GetInverse();
+          gazebo::math::Vector3 expectedContactPos = contactPosPose.pos;
+
+          // Convert contactPos to the link frame
           if (link1NameMatch && link2NameMatch &&
-              // contactPos == contact->positions[i] &&
-              // contactNormal == contact->normals[i] &&
-              // contactForce == contact->wrench[i].body1Force &&
-              // contactTorque == contact->wrench[i].body1Torque &&
-              gazebo::math::equal<double>(contactPoints.contacts[i].distance, contact->depths[i], 1e-6))
+              contactPos == expectedContactPos)
           {
-            // Every time we match a contact:
+            EXPECT_NEAR(contactPoints.contacts[j].distance,
+                  contact->depths[i], 1e-6);
+            EXPECT_EQ(contactForce, contact->wrench[j].body2Force);
+            EXPECT_EQ(contactTorque, contact->wrench[j].body2Torque);
+            // Expect the normal to face in the Gazebo Z direction, which is
+            // the negative Z direction in the link frame, since we rotated
+            // the cube
+            EXPECT_EQ(contactNormal, gazebo::math::Vector3(0, 0, -1));
+            // Expect the position to be on a corner of the box
+            double radius = sqrt(3*pow(0.05, 2));
+            EXPECT_NEAR(contactPos.GetLength(), radius, 1e-3);
             ++matched_contacts;
             break;
           }
@@ -391,7 +412,8 @@ TEST_F(SimApiTest, HxsContacts)
     }
   }
 
-  EXPECT_GT(matched_contacts, contactPoints.contact_count / 2);
+  EXPECT_EQ(matched_contacts, contactPoints.contact_count);
+  EXPECT_EQ(matched_contacts, 4);
 }
 
 TEST_F(SimApiTest, HxsSetModelJointState)
