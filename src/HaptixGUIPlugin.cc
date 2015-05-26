@@ -445,9 +445,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
     this->initialCameraPose = userCamera->GetWorldPose();
   }
 
-
-  // Hide the scene tree.
-  gazebo::gui::Events::leftPaneVisibility(false);
+  // Start in full screen
+  gazebo::gui::Events::fullScreen(true);
+  gazebo::gui::Events::showToolbars(false);
 
   // Create the publisher that controls the timer
   if (_elem->HasElement("timer_topic"))
