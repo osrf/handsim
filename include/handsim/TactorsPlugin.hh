@@ -17,16 +17,20 @@
 #include <haptix/comm/haptix.h>
 #include <boost/bind.hpp>
 #include <gazebo/gazebo.hh>
+#include <gazebo/transport/Subscriber.hh>
 #include <gazebo/physics/physics.hh>
 
 namespace gazebo
 {
   class TactorsPlugin : public WorldPlugin
   {
+    public: TactorsPlugin();
     public: void Load(physics::WorldPtr _parent, sdf::ElementPtr _sdf);
 
     // Called by the world update start event
     public: void OnUpdate(const common::UpdateInfo & _info);
+
+    private: void OnRunningCallback(ConstIntPtr &_msg);
 
     // Pointer to the update event connection
     private: event::ConnectionPtr updateConnection;
@@ -34,11 +38,11 @@ namespace gazebo
     private: bool robotInitialized;
     private: hxRobotInfo robotInfo;
     private: int fd;
-    private: std::map<int, char> sensorMotorIndexMapping;
+    private: std::map<int, unsigned char> sensorMotorIndexMapping;
     private: float minContactForce;
-    // For each motor, keep track of the last buzz time
-    private: std::map<char, common::Timer> motorTimes;
-
-    private: common::Time motorInterval;
+    private: float maxContactForce;
+    private: transport::SubscriberPtr runningSub;
+    private: transport::NodePtr gzNode;
+    private: bool running;
   };
 }
