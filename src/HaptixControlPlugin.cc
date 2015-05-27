@@ -1018,6 +1018,11 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 
   double maxForce = 15.0;
   double maxTorque = 40.0;
+  if (arrangement != "hanoi")
+  {
+    maxForce = 40;
+    maxTorque = 80;
+  }
 
   this->wrench.force.x =
     gazebo::math::clamp(this->posPid.Update(errorPos.x, _dt),
