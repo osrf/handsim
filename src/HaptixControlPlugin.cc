@@ -986,12 +986,12 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 /////////////////////////////////////////////////
 void HaptixControlPlugin::OnArrange(ConstGzStringPtr &_arrangement)
 {
-  std::string arrangement = _arrangement->data();
-  if (arrangement == "pyramid")
+  this->arrangement = _arrangement->data();
+  if (this->arrangement == "pyramid")
   {
     this->currentPolhemusGrasp = "Spherical";
   }
-  else if (arrangement == "hanoi")
+  else if (this->arrangement == "hanoi")
   {
     this->currentPolhemusGrasp = "FinePinch(British)";
   }
@@ -1016,12 +1016,12 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   math::Vector3 errorRot =
     (baseLinkPose.rot * pose.rot.GetInverse()).GetAsEuler();
 
-  double maxForce = 15.0;
-  double maxTorque = 40.0;
-  if (arrangement != "hanoi")
+  double maxForce = 40;
+  double maxTorque = 80;
+  if (this->arrangement == "hanoi" || this->arrangement == "")
   {
-    maxForce = 40;
-    maxTorque = 80;
+    maxForce = 13.0;
+    maxTorque = 30.0;
   }
 
   this->wrench.force.x =
