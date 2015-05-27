@@ -148,7 +148,6 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
         if (multiplier > 0)
         {
           unsigned char keyChar = (j << 5) + multiplier;
-          unsigned char result = (keyChar - (j << 5));
           unsigned char key[1] = {keyChar};
           write(this->fd, key, 1);
         }

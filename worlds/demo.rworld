@@ -892,6 +892,15 @@
 
     <!-- end hanoi -->
 
+    <!-- begin hammer -->
+
+    <include>
+      <uri>model://hammer</uri>
+      <pose><%= 3*distance_offset%> 0 1.0 0 0 0</pose>
+    </include>
+
+    <!-- end hammer -->
+
     <gui>
       <camera name="user_camera">
         <pose>-0.26 -0.8 1.5  0 0.6 1.57</pose>
@@ -1027,11 +1036,18 @@
             </instructions>
           </task>-->
 
-          <task id="pyramid" name="Bowling Pyramid">
+          <task id="pyramid" name="Robot Pyramid">
             <enabled>1</enabled>
             <icon>file://media/gui/arat/arat_icons/pyramid.png</icon>
             <instructions>
               Can you knock down an entire pyramid of robots?
+            </instructions>
+          </task>
+
+          <task id="hammer" name="Hammer Toss">
+            <enabled>1</enabled>
+            <icon>file://media/gui/arat/arat_icons/pyramid.png</icon>
+            <instructions>
             </instructions>
           </task>
         </task_group>
@@ -1198,8 +1214,6 @@
     <plugin name="arrange_plugin" filename="libArrangePlugin.so">
       <topic_name>~/arrange</topic_name>
 
-      <!-- TODO generate list of model names using ERB and print them out -->
-      <!-- do the same with initial positions? -->
       <!-- Hanoi -->
       <% 4.times do |j| %>
         <model_name><%= 'disk_' + j.to_s%></model_name>
@@ -1218,6 +1232,7 @@
           end
        %>
 
+      <model_name>hammer</model_name>
       <model_name>bowling_cube</model_name>
 
       <initial_arrangement>hanoi</initial_arrangement>
@@ -1244,6 +1259,11 @@
          %>
           <pose model="bowling_cube"><%= 0.4%> -0.3 1.0 0 0 0</pose>
       </arrangement>
+
+      <arrangement name="hammer">
+        <pose model="hammer">0 0 1.0 0 0 0</pose>
+      </arrangement>
+
     </plugin>
 
     <plugin name="tactors" filename="libTactorsPlugin.so"/>
