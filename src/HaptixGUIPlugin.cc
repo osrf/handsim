@@ -305,8 +305,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   resetButton->installEventFilter(this);
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
-  resetButton->setShortcut(tr("F"));
-  resetButton->setToolTip("Reset the view, arm and models (F)");
+  resetButton->setShortcut(tr("A"));
+  resetButton->setToolTip("Reset the view, arm and models (A)");
   resetButton->setStyleSheet(buttonsStyle);
   resetButton->setMaximumWidth(120);
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));

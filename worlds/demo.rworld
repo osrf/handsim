@@ -1224,9 +1224,9 @@
 
       <arrangement name="hanoi">
         <% 4.times do |j| %>
-          <pose model=<%= '"disk_' + j.to_s + '"'%>> 0 -0.3 <%= 0.2 + (0.02 + 0.02)*j + 0.9%> 0 0 0</pose>
+          <pose model=<%= '"disk_' + j.to_s + '"'%>> 0 -0.15 <%= 0.2 + (0.02 + 0.02)*j + 1.06%> 0 0 0</pose>
         <% end %>
-        <pose model="hanoi_peg_board">0 -0.3 1 0 0 0</pose>
+        <pose model="hanoi_peg_board">0 -0.15 1.06 0 0 0</pose>
       </arrangement>
 
       <arrangement name="pyramid">

@@ -1016,12 +1016,30 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   math::Vector3 errorRot =
     (baseLinkPose.rot * pose.rot.GetInverse()).GetAsEuler();
 
-  this->wrench.force.x = this->posPid.Update(errorPos.x, _dt);
-  this->wrench.force.y = this->posPid.Update(errorPos.y, _dt);
-  this->wrench.force.z = this->posPid.Update(errorPos.z, _dt);
-  this->wrench.torque.x = this->rotPid.Update(errorRot.x, _dt);
-  this->wrench.torque.y = this->rotPid.Update(errorRot.y, _dt);
-  this->wrench.torque.z = this->rotPid.Update(errorRot.z, _dt);
+  double maxForce = 15.0;
+  double maxTorque = 40.0;
+
+  this->wrench.force.x =
+    gazebo::math::clamp(this->posPid.Update(errorPos.x, _dt),
+      -maxForce, maxForce);
+  this->wrench.force.y =
+    gazebo::math::clamp(this->posPid.Update(errorPos.y, _dt),
+      -maxForce, maxForce);
+  this->wrench.force.z =
+    gazebo::math::clamp(this->posPid.Update(errorPos.z, _dt),
+      -maxForce, maxForce);
+  this->wrench.torque.x =
+    gazebo::math::clamp(this->rotPid.Update(errorRot.x, _dt),
+      -maxTorque, maxTorque);
+  this->wrench.torque.y =
+    gazebo::math::clamp(this->rotPid.Update(errorRot.y, _dt),
+      -maxTorque, maxTorque);
+  this->wrench.torque.z =
+    gazebo::math::clamp(this->rotPid.Update(errorRot.z, _dt),
+      -maxTorque, maxTorque);
+
+  //std::cout << "Apply wrench to arm: " << this->wrench.force << ", " << this->wrench.torque << std::endl;
+
   this->baseLink->SetForce(this->wrench.force);
   this->baseLink->SetTorque(this->wrench.torque);
   // std::cout << "current pose: " << baseLinkPose << std::endl;
