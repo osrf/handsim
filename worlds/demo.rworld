@@ -1164,7 +1164,7 @@
 
           <task id="stack_blocks" name="Stack Blocks">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/pyramid.png</icon>
+            <icon>file://media/gui/arat/arat_icons/block_stack.png</icon>
             <instructions>
               Stack the blocks!
             </instructions>
