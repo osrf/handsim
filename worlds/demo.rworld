@@ -1138,8 +1138,8 @@
             <initial>1</initial>
             <icon>file://media/gui/arat/arat_icons/hanoi.png</icon>
             <instructions>
-              Move the disc stack to a different peg.
-              The discs should be stacked in the same order.
+              Move the disk stack to a different peg. 
+              Make sure the final result is stacked in the same order.
               Only one disk can be moved at a time.
               A larger disk cannot be placed on a smaller disk.
             </instructions>
@@ -1353,7 +1353,7 @@
 
       <model_name>bowling_cube</model_name>
 
-      <!-- Funtimes -->
+      <!-- Stack Blocks -->
 
       <% pieces.keys.each do |piece| %>
             <model_name><%='stack_blocks_'+ piece %></model_name>
