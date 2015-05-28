@@ -1548,7 +1548,7 @@
       <pose>300 0 1.0 0 0 0</pose>
       <link name="link">
       <inertial>
-        <pose>0.07500000000000001 0 0.04000000000000001 0 0 0</pose>
+        <pose>0.07500000000000001 0 0.037500000000000006 0 0 0</pose>
         <mass>0.0565</mass>
         <inertia>
           <ixx>2.3541666666666672e-05</ixx>
@@ -1702,7 +1702,7 @@
       <pose>300 0 1.0 0 0 0</pose>
       <link name="link">
       <inertial>
-        <pose>0.065 0 0.04000000000000001 0 0 0</pose>
+        <pose>0.0625 0 0.037500000000000006 0 0 0</pose>
         <mass>0.0565</mass>
         <inertia>
           <ixx>2.3541666666666672e-05</ixx>
@@ -1856,7 +1856,7 @@
       <pose>300 0 1.0 0 0 0</pose>
       <link name="link">
       <inertial>
-        <pose>0.065 0 0.04000000000000001 0 0 0</pose>
+        <pose>0.08750000000000001 0 0.037500000000000006 0 0 0</pose>
         <mass>0.0565</mass>
         <inertia>
           <ixx>2.3541666666666672e-05</ixx>
@@ -2126,8 +2126,8 @@
             <initial>1</initial>
             <icon>file://media/gui/arat/arat_icons/hanoi.png</icon>
             <instructions>
-              Move the disc stack to a different peg.
-              The discs should be stacked in the same order.
+              Move the disk stack to a different peg.
+              Make sure the final result is stacked in the same order.
               Only one disk can be moved at a time.
               A larger disk cannot be placed on a smaller disk.
             </instructions>
@@ -2359,7 +2359,7 @@
 
       <model_name>bowling_cube</model_name>
 
-      <!-- Funtimes -->
+      <!-- Stack Blocks -->
 
       
             <model_name>stack_blocks_0</model_name>

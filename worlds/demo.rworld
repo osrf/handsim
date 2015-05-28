@@ -898,6 +898,7 @@
       dy = 0.05
       dz = 0.05
       mass = 0.0565
+      # inertia as if it were one sigle cubie
       ixx  = mass/12.0 * (dy**2 + dz**2)
       iyy  = mass/12.0 * (dz**2 + dx**2)
       izz  = mass/12.0 * (dx**2 + dy**2)
@@ -907,43 +908,36 @@
                 :x1 => 1, :z1 => 0,
                 :x2 => 2, :z2 => 0,
                 :x3 => 3, :z3 => 0,
-                :xCOM => 1.5, :zCOM => 0,
                 :color => "Red"},
         "1" => {:x0 => 0, :z0 => 0,
                 :x1 => 0, :z1 => 1,
                 :x2 => 1, :z2 => 1,
                 :x3 => 1, :z3 => 2,
-                :xCOM => 0.5, :zCOM => 1,
                 :color => "Green"},
         "2" => {:x0 => 1, :z0 => 0,
                 :x1 => 1, :z1 => 1,
                 :x2 => 0, :z2 => 1,
                 :x3 => 0, :z3 => 2,
-                :xCOM => 0.5, :zCOM => 1,
                 :color => "Blue"},
         "3" => {:x0 => 0, :z0 => 0,
                 :x1 => 0, :z1 => 1,
                 :x2 => 1, :z2 => 0,
                 :x3 => 1, :z3 => 1,
-                :xCOM => 0.5, :zCOM => 0.5,
                 :color => "Yellow"},
         "4" => {:x0 => 0, :z0 => 0,
                 :x1 => 1, :z1 => 0,
                 :x2 => 2, :z2 => 0,
                 :x3 => 1, :z3 => 1,
-                :xCOM => 1, :zCOM => 0.3,
                 :color => "Magenta"},
         "5" => {:x0 => 0, :z0 => 0,
                 :x1 => 1, :z1 => 0,
                 :x2 => 2, :z2 => 0,
                 :x3 => 0, :z3 => 1,
-                :xCOM => 0.8, :zCOM => 0.3,
                 :color => "Cyan"},
         "6" => {:x0 => 0, :z0 => 0,
                 :x1 => 1, :z1 => 0,
                 :x2 => 2, :z2 => 0,
                 :x3 => 2, :z3 => 1,
-                :xCOM => 0.8, :zCOM => 0.3,
                 :color => "Orange"},
       }
     %>
@@ -955,8 +949,16 @@
           "2" => {:x => pieces[piece][:x2], :z => pieces[piece][:z2]},
           "3" => {:x => pieces[piece][:x3], :z => pieces[piece][:z3]}
         }
-        xCOM = pieces[piece][:xCOM]
-        zCOM = pieces[piece][:zCOM]
+
+        xCOM = 0
+        zCOM = 0
+        pos.keys.each do |i|
+          xCOM = xCOM + pos[i][:x]
+          zCOM = zCOM + pos[i][:z]
+        end
+        xCOM = (xCOM).to_f / pos.count
+        zCOM = (zCOM).to_f / pos.count
+
         color = pieces[piece][:color]
      %>
     <%= "<model name='stack_blocks_" + piece + "'>" %>
@@ -1138,7 +1140,7 @@
             <initial>1</initial>
             <icon>file://media/gui/arat/arat_icons/hanoi.png</icon>
             <instructions>
-              Move the disk stack to a different peg. 
+              Move the disk stack to a different peg.
               Make sure the final result is stacked in the same order.
               Only one disk can be moved at a time.
               A larger disk cannot be placed on a smaller disk.
