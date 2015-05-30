@@ -262,6 +262,7 @@ namespace gazebo
     private: std::string currentPolhemusGrasp;
     private: transport::SubscriberPtr arrangeSub;
     private: void OnArrange(ConstGzStringPtr &_arrangement);
+    private: std::string arrangement;
 
     /// \brief: from spacenav target pose to the arm base link
     private: math::Pose baseLinktoSpacenavPose;
