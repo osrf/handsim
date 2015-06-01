@@ -2417,14 +2417,15 @@
           <pose model="bowling_cube">0.4 -0.3 1.0 0 0 0</pose>
       </arrangement>
 
+      
       <arrangement name="stack_blocks">
-        <pose model="stack_blocks_0">-0.085 -0.2 1.5 0 0 0</pose>
-        <pose model="stack_blocks_1">-0.15 -0.2 1.5 0 0 0</pose>
-        <pose model="stack_blocks_2">0.065 -0.2 1.64 0 0 0</pose>
-        <pose model="stack_blocks_3">0 -0.2 1.58 0 0 0</pose>
-        <pose model="stack_blocks_4">0.05 -0.2 1.68 3.14 -1.57 3.14</pose>
-        <pose model="stack_blocks_5">-0.05 -0.3 1.5 0 0 0</pose>
-        <pose model="stack_blocks_6">0 -0.2 1.58 0 -1.57 0</pose>
+        <pose model="stack_blocks_0">-0.085 -0.1 1.5 0 0 0</pose>
+        <pose model="stack_blocks_1">-0.15 -0.1 1.5 0 0 0</pose>
+        <pose model="stack_blocks_2">0.065 -0.1 1.6400000000000001 0 0 0</pose>
+        <pose model="stack_blocks_3">0 -0.1 1.58 0 0 0</pose>
+        <pose model="stack_blocks_4">0.05 -0.1 1.68 3.14 -1.57 3.14</pose>
+        <pose model="stack_blocks_5">-0.05 -0.2 1.5 0 0 0</pose>
+        <pose model="stack_blocks_6">0 -0.1 1.58 0 -1.57 0</pose>
       </arrangement>
 
     </plugin>

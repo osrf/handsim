@@ -898,7 +898,7 @@
       dy = 0.05
       dz = 0.05
       mass = 0.0565
-      # inertia as if it were one sigle cubie
+      # inertia as if it were one single cube
       ixx  = mass/12.0 * (dy**2 + dz**2)
       iyy  = mass/12.0 * (dz**2 + dx**2)
       izz  = mass/12.0 * (dx**2 + dy**2)
@@ -1386,14 +1386,17 @@
           <pose model="bowling_cube"><%= 0.4%> -0.3 1.0 0 0 0</pose>
       </arrangement>
 
+      <% stack_y=-0.1
+         stack_z = 1.5
+       %>
       <arrangement name="stack_blocks">
-        <pose model="stack_blocks_0">-0.085 -0.2 1.5 0 0 0</pose>
-        <pose model="stack_blocks_1">-0.15 -0.2 1.5 0 0 0</pose>
-        <pose model="stack_blocks_2">0.065 -0.2 1.64 0 0 0</pose>
-        <pose model="stack_blocks_3">0 -0.2 1.58 0 0 0</pose>
-        <pose model="stack_blocks_4">0.05 -0.2 1.68 3.14 -1.57 3.14</pose>
-        <pose model="stack_blocks_5">-0.05 -0.3 1.5 0 0 0</pose>
-        <pose model="stack_blocks_6">0 -0.2 1.58 0 -1.57 0</pose>
+        <pose model="stack_blocks_0">-0.085 <%=stack_y%> <%=stack_z%> 0 0 0</pose>
+        <pose model="stack_blocks_1">-0.15 <%=stack_y%> <%=stack_z%> 0 0 0</pose>
+        <pose model="stack_blocks_2">0.065 <%=stack_y%> <%=stack_z+0.14%> 0 0 0</pose>
+        <pose model="stack_blocks_3">0 <%=stack_y%> <%=stack_z+0.08%> 0 0 0</pose>
+        <pose model="stack_blocks_4">0.05 <%=stack_y%> <%=stack_z+0.18%> 3.14 -1.57 3.14</pose>
+        <pose model="stack_blocks_5">-0.05 <%=stack_y-0.1%> <%=stack_z%> 0 0 0</pose>
+        <pose model="stack_blocks_6">0 <%=stack_y%> <%=stack_z+0.08%> 0 -1.57 0</pose>
       </arrangement>
 
     </plugin>
