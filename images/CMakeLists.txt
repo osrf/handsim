@@ -1,6 +1,7 @@
 set (files
      hanoi.png
      pyramid.png
+     block_stack.png
 
      grasp_1.jpg
      grasp_3.jpg

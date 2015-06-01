@@ -925,14 +925,1089 @@
 
     <!-- end hanoi -->
 
-    <!-- begin hammer -->
-
-    <include>
-      <uri>model://hammer</uri>
+    <!-- begin stack_blocks -->
+    
+    
+    <model name='stack_blocks_0'>
       <pose>300 0 1.0 0 0 0</pose>
-    </include>
+      <link name="link">
+      <inertial>
+        <pose>0.1 0 0.025 0 0 0</pose>
+        <mass>0.0565</mass>
+        <inertia>
+          <ixx>2.3541666666666672e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.3541666666666672e-05</iyy>
+          <iyz>0</iyz>
+          <izz>2.3541666666666672e-05</izz>
+        </inertia>
+      </inertial>
 
-    <!-- end hammer -->
+
+      
+      <collision name="collision_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Red</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Red</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Red</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_3">
+        <pose>0.17500000000000002 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_3">
+        <pose>0.17500000000000002 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Red</name>
+          </script>
+        </material>
+      </visual>
+      
+
+    </link>
+  </model>
+   
+    <model name='stack_blocks_1'>
+      <pose>300 0 1.0 0 0 0</pose>
+      <link name="link">
+      <inertial>
+        <pose>0.05 0 0.07500000000000001 0 0 0</pose>
+        <mass>0.0565</mass>
+        <inertia>
+          <ixx>2.3541666666666672e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.3541666666666672e-05</iyy>
+          <iyz>0</iyz>
+          <izz>2.3541666666666672e-05</izz>
+        </inertia>
+      </inertial>
+
+
+      
+      <collision name="collision_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Green</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_1">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_1">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Green</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_2">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_2">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Green</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_3">
+        <pose>0.07500000000000001 0 0.125 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_3">
+        <pose>0.07500000000000001 0 0.125 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Green</name>
+          </script>
+        </material>
+      </visual>
+      
+
+    </link>
+  </model>
+   
+    <model name='stack_blocks_2'>
+      <pose>300 0 1.0 0 0 0</pose>
+      <link name="link">
+      <inertial>
+        <pose>0.05 0 0.07500000000000001 0 0 0</pose>
+        <mass>0.0565</mass>
+        <inertia>
+          <ixx>2.3541666666666672e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.3541666666666672e-05</iyy>
+          <iyz>0</iyz>
+          <izz>2.3541666666666672e-05</izz>
+        </inertia>
+      </inertial>
+
+
+      
+      <collision name="collision_0">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_0">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Blue</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_1">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_1">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Blue</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_2">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_2">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Blue</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_3">
+        <pose>0.025 0 0.125 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_3">
+        <pose>0.025 0 0.125 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Blue</name>
+          </script>
+        </material>
+      </visual>
+      
+
+    </link>
+  </model>
+   
+    <model name='stack_blocks_3'>
+      <pose>300 0 1.0 0 0 0</pose>
+      <link name="link">
+      <inertial>
+        <pose>0.05 0 0.05 0 0 0</pose>
+        <mass>0.0565</mass>
+        <inertia>
+          <ixx>2.3541666666666672e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.3541666666666672e-05</iyy>
+          <iyz>0</iyz>
+          <izz>2.3541666666666672e-05</izz>
+        </inertia>
+      </inertial>
+
+
+      
+      <collision name="collision_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Yellow</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_1">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_1">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Yellow</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_2">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_2">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Yellow</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_3">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_3">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Yellow</name>
+          </script>
+        </material>
+      </visual>
+      
+
+    </link>
+  </model>
+   
+    <model name='stack_blocks_4'>
+      <pose>300 0 1.0 0 0 0</pose>
+      <link name="link">
+      <inertial>
+        <pose>0.07500000000000001 0 0.037500000000000006 0 0 0</pose>
+        <mass>0.0565</mass>
+        <inertia>
+          <ixx>2.3541666666666672e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.3541666666666672e-05</iyy>
+          <iyz>0</iyz>
+          <izz>2.3541666666666672e-05</izz>
+        </inertia>
+      </inertial>
+
+
+      
+      <collision name="collision_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Magenta</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Magenta</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Magenta</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_3">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_3">
+        <pose>0.07500000000000001 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Magenta</name>
+          </script>
+        </material>
+      </visual>
+      
+
+    </link>
+  </model>
+   
+    <model name='stack_blocks_5'>
+      <pose>300 0 1.0 0 0 0</pose>
+      <link name="link">
+      <inertial>
+        <pose>0.0625 0 0.037500000000000006 0 0 0</pose>
+        <mass>0.0565</mass>
+        <inertia>
+          <ixx>2.3541666666666672e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.3541666666666672e-05</iyy>
+          <iyz>0</iyz>
+          <izz>2.3541666666666672e-05</izz>
+        </inertia>
+      </inertial>
+
+
+      
+      <collision name="collision_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Cyan</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Cyan</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Cyan</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_3">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_3">
+        <pose>0.025 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Cyan</name>
+          </script>
+        </material>
+      </visual>
+      
+
+    </link>
+  </model>
+   
+    <model name='stack_blocks_6'>
+      <pose>300 0 1.0 0 0 0</pose>
+      <link name="link">
+      <inertial>
+        <pose>0.08750000000000001 0 0.037500000000000006 0 0 0</pose>
+        <mass>0.0565</mass>
+        <inertia>
+          <ixx>2.3541666666666672e-05</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>2.3541666666666672e-05</iyy>
+          <iyz>0</iyz>
+          <izz>2.3541666666666672e-05</izz>
+        </inertia>
+      </inertial>
+
+
+      
+      <collision name="collision_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_0">
+        <pose>0.025 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Orange</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_1">
+        <pose>0.07500000000000001 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Orange</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_2">
+        <pose>0.125 0 0.025 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Orange</name>
+          </script>
+        </material>
+      </visual>
+      
+      <collision name="collision_3">
+        <pose>0.125 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name="visual_3">
+        <pose>0.125 0 0.07500000000000001 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.05 0.05 0.05</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/Orange</name>
+          </script>
+        </material>
+      </visual>
+      
+
+    </link>
+  </model>
+   
+
+    <!-- end stack_blocks  -->
 
     <gui>
       <camera name="user_camera">
@@ -1051,12 +2126,10 @@
             <initial>1</initial>
             <icon>file://media/gui/arat/arat_icons/hanoi.png</icon>
             <instructions>
-              Solve the classic Towers of Hanoi puzzle.
-
-              Rules:
+              Move the disk stack to a different peg.
+              Make sure the final result is stacked in the same order.
               Only one disk can be moved at a time.
               A larger disk cannot be placed on a smaller disk.
-              Only the top disk of a stack can be moved.
             </instructions>
           </task>
 
@@ -1077,10 +2150,11 @@
             </instructions>
           </task>
 
-          <task id="hammer" name=>
+          <task id="stack_blocks" name="Stack Blocks">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/pyramid.png</icon>
+            <icon>file://media/gui/arat/arat_icons/block_stack.png</icon>
             <instructions>
+              Stack the blocks!
             </instructions>
           </task>
         </task_group>
@@ -1283,8 +2357,25 @@
             <model_name>tinybot_3_0</model_name>
       
 
-      <model_name>hammer</model_name>
       <model_name>bowling_cube</model_name>
+
+      <!-- Stack Blocks -->
+
+      
+            <model_name>stack_blocks_0</model_name>
+      
+            <model_name>stack_blocks_1</model_name>
+      
+            <model_name>stack_blocks_2</model_name>
+      
+            <model_name>stack_blocks_3</model_name>
+      
+            <model_name>stack_blocks_4</model_name>
+      
+            <model_name>stack_blocks_5</model_name>
+      
+            <model_name>stack_blocks_6</model_name>
+      
 
       <initial_arrangement>hanoi</initial_arrangement>
 
@@ -1326,8 +2417,14 @@
           <pose model="bowling_cube">0.4 -0.3 1.0 0 0 0</pose>
       </arrangement>
 
-      <arrangement name="hammer">
-        <pose model="hammer">0 0 1.0 0 0 0</pose>
+      <arrangement name="stack_blocks">
+        <pose model="stack_blocks_0">-0.085 -0.2 1.5 0 0 0</pose>
+        <pose model="stack_blocks_1">-0.15 -0.2 1.5 0 0 0</pose>
+        <pose model="stack_blocks_2">0.065 -0.2 1.64 0 0 0</pose>
+        <pose model="stack_blocks_3">0 -0.2 1.58 0 0 0</pose>
+        <pose model="stack_blocks_4">0.05 -0.2 1.68 3.14 -1.57 3.14</pose>
+        <pose model="stack_blocks_5">-0.05 -0.3 1.5 0 0 0</pose>
+        <pose model="stack_blocks_6">0 -0.2 1.58 0 -1.57 0</pose>
       </arrangement>
 
     </plugin>

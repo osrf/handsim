@@ -892,14 +892,136 @@
 
     <!-- end hanoi -->
 
-    <!-- begin hammer -->
+    <!-- begin stack_blocks -->
+    <%
+      dx = 0.05
+      dy = 0.05
+      dz = 0.05
+      mass = 0.0565
+      # inertia as if it were one sigle cubie
+      ixx  = mass/12.0 * (dy**2 + dz**2)
+      iyy  = mass/12.0 * (dz**2 + dx**2)
+      izz  = mass/12.0 * (dx**2 + dy**2)
 
-    <include>
-      <uri>model://hammer</uri>
+      pieces = {
+        "0" => {:x0 => 0, :z0 => 0,
+                :x1 => 1, :z1 => 0,
+                :x2 => 2, :z2 => 0,
+                :x3 => 3, :z3 => 0,
+                :color => "Red"},
+        "1" => {:x0 => 0, :z0 => 0,
+                :x1 => 0, :z1 => 1,
+                :x2 => 1, :z2 => 1,
+                :x3 => 1, :z3 => 2,
+                :color => "Green"},
+        "2" => {:x0 => 1, :z0 => 0,
+                :x1 => 1, :z1 => 1,
+                :x2 => 0, :z2 => 1,
+                :x3 => 0, :z3 => 2,
+                :color => "Blue"},
+        "3" => {:x0 => 0, :z0 => 0,
+                :x1 => 0, :z1 => 1,
+                :x2 => 1, :z2 => 0,
+                :x3 => 1, :z3 => 1,
+                :color => "Yellow"},
+        "4" => {:x0 => 0, :z0 => 0,
+                :x1 => 1, :z1 => 0,
+                :x2 => 2, :z2 => 0,
+                :x3 => 1, :z3 => 1,
+                :color => "Magenta"},
+        "5" => {:x0 => 0, :z0 => 0,
+                :x1 => 1, :z1 => 0,
+                :x2 => 2, :z2 => 0,
+                :x3 => 0, :z3 => 1,
+                :color => "Cyan"},
+        "6" => {:x0 => 0, :z0 => 0,
+                :x1 => 1, :z1 => 0,
+                :x2 => 2, :z2 => 0,
+                :x3 => 2, :z3 => 1,
+                :color => "Orange"},
+      }
+    %>
+    <%
+      pieces.keys.each do |piece|
+        pos = {
+          "0" => {:x => pieces[piece][:x0], :z => pieces[piece][:z0]},
+          "1" => {:x => pieces[piece][:x1], :z => pieces[piece][:z1]},
+          "2" => {:x => pieces[piece][:x2], :z => pieces[piece][:z2]},
+          "3" => {:x => pieces[piece][:x3], :z => pieces[piece][:z3]}
+        }
+
+        xCOM = 0
+        zCOM = 0
+        pos.keys.each do |i|
+          xCOM = xCOM + pos[i][:x]
+          zCOM = zCOM + pos[i][:z]
+        end
+        xCOM = (xCOM).to_f / pos.count
+        zCOM = (zCOM).to_f / pos.count
+
+        color = pieces[piece][:color]
+     %>
+    <%= "<model name='stack_blocks_" + piece + "'>" %>
       <pose><%= 3*distance_offset%> 0 1.0 0 0 0</pose>
-    </include>
+      <link name="link">
+      <inertial>
+        <pose><%= dx * (xCOM + 0.5) %> 0 <%= dz * (zCOM + 0.5) %> 0 0 0</pose>
+        <mass><%= mass %></mass>
+        <inertia>
+          <ixx><%= ixx %></ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy><%= iyy %></iyy>
+          <iyz>0</iyz>
+          <izz><%= izz %></izz>
+        </inertia>
+      </inertial>
 
-    <!-- end hammer -->
+
+      <%
+        pos.keys.each do |i|
+          x = pos[i][:x]
+          z = pos[i][:z]
+      %>
+      <collision name=<%= '"collision_' + i + '"' %>>
+        <pose><%= dx * (x + 0.5) %> 0 <%= dz * (z + 0.5) %> 0 0 0</pose>
+        <geometry>
+          <box>
+            <size><%= dx %> <%= dy %> <%= dz %></size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+
+      <visual name=<%= '"visual_' + i + '"' %>>
+        <pose><%= dx/2 + x*dx %> 0 <%= dz/2 + z*dz %> 0 0 0</pose>
+        <geometry>
+          <box>
+            <size><%= dx %> <%= dy %> <%= dz %></size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>model://blocks/materials/scripts/</uri>
+            <uri>model://blocks/materials/textures/</uri>
+            <name>Block/<%= color %></name>
+          </script>
+        </material>
+      </visual>
+      <% end %>
+
+    </link>
+  </model>
+   <% end %>
+
+    <!-- end stack_blocks  -->
 
     <gui>
       <camera name="user_camera">
@@ -1018,12 +1140,10 @@
             <initial>1</initial>
             <icon>file://media/gui/arat/arat_icons/hanoi.png</icon>
             <instructions>
-              Solve the classic Towers of Hanoi puzzle.
-
-              Rules:
+              Move the disk stack to a different peg.
+              Make sure the final result is stacked in the same order.
               Only one disk can be moved at a time.
               A larger disk cannot be placed on a smaller disk.
-              Only the top disk of a stack can be moved.
             </instructions>
           </task>
 
@@ -1044,10 +1164,11 @@
             </instructions>
           </task>
 
-          <task id="hammer" name="Hammer Toss">
+          <task id="stack_blocks" name="Stack Blocks">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/pyramid.png</icon>
+            <icon>file://media/gui/arat/arat_icons/block_stack.png</icon>
             <instructions>
+              Stack the blocks!
             </instructions>
           </task>
         </task_group>
@@ -1232,8 +1353,13 @@
           end
        %>
 
-      <model_name>hammer</model_name>
       <model_name>bowling_cube</model_name>
+
+      <!-- Stack Blocks -->
+
+      <% pieces.keys.each do |piece| %>
+            <model_name><%='stack_blocks_'+ piece %></model_name>
+      <% end %>
 
       <initial_arrangement>hanoi</initial_arrangement>
 
@@ -1260,8 +1386,14 @@
           <pose model="bowling_cube"><%= 0.4%> -0.3 1.0 0 0 0</pose>
       </arrangement>
 
-      <arrangement name="hammer">
-        <pose model="hammer">0 0 1.0 0 0 0</pose>
+      <arrangement name="stack_blocks">
+        <pose model="stack_blocks_0">-0.085 -0.2 1.5 0 0 0</pose>
+        <pose model="stack_blocks_1">-0.15 -0.2 1.5 0 0 0</pose>
+        <pose model="stack_blocks_2">0.065 -0.2 1.64 0 0 0</pose>
+        <pose model="stack_blocks_3">0 -0.2 1.58 0 0 0</pose>
+        <pose model="stack_blocks_4">0.05 -0.2 1.68 3.14 -1.57 3.14</pose>
+        <pose model="stack_blocks_5">-0.05 -0.3 1.5 0 0 0</pose>
+        <pose model="stack_blocks_6">0 -0.2 1.58 0 -1.57 0</pose>
       </arrangement>
 
     </plugin>

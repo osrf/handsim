@@ -305,8 +305,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   resetButton->installEventFilter(this);
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
-  resetButton->setShortcut(tr("A"));
-  resetButton->setToolTip("Reset the view, arm and models (A)");
+  resetButton->setShortcut(tr("F"));
+  resetButton->setToolTip("Reset the view, arm and models (F)");
   resetButton->setStyleSheet(buttonsStyle);
   resetButton->setMaximumWidth(120);
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
@@ -316,7 +316,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->resetSceneButton->installEventFilter(this);
   this->resetSceneButton->setFocusPolicy(Qt::NoFocus);
   this->resetSceneButton->setText(QString("Reset Scene"));
-  this->resetSceneButton->setToolTip("Reset all models in the scene");
+  this->resetSceneButton->setToolTip("Reset all models in the scene (G)");
+  this->resetSceneButton->setShortcut(tr("G"));
   this->resetSceneButton->setStyleSheet(buttonsStyle);
   this->resetSceneButton->setMaximumWidth(120);
   connect(this->resetSceneButton, SIGNAL(clicked()), this,
@@ -416,10 +417,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->ignNode.Advertise("haptix/arm_pose_inc");
 
   // Add shortcuts
-  QShortcut *resetModels = new QShortcut(QKeySequence("G"), this);
-  QObject::connect(resetModels, SIGNAL(activated()), this,
-      SLOT(OnResetModels()));
-
   QShortcut *restartTimer = new QShortcut(QKeySequence("F1"), this);
   QObject::connect(restartTimer, SIGNAL(activated()), this,
       SLOT(OnRestartTimer()));
@@ -974,7 +971,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 void HaptixGUIPlugin::OnTaskSent(const int _id)
 {
   // reset the clock when a new task is selected
-  this->PublishTimerMessage("reset");
+  // this->PublishTimerMessage("reset");
 
   // Show the instructions to the user
   this->instructionsView->setDocument(this->taskList[_id]->Instructions());
@@ -1038,7 +1035,7 @@ void HaptixGUIPlugin::PublishTaskMessage(const std::string &_taskId) const
 void HaptixGUIPlugin::OnResetClicked()
 {
   // Signal to the TimerPlugin to reset the clock
-  this->PublishTimerMessage("reset");
+//  this->PublishTimerMessage("reset");
 
   // Reset models
   this->ResetModels();
@@ -1054,13 +1051,13 @@ void HaptixGUIPlugin::OnResetClicked()
 void HaptixGUIPlugin::OnResetSceneClicked()
 {
   // Signal to the TimerPlugin to reset the clock
-  this->PublishTimerMessage("reset");
+  //this->PublishTimerMessage("reset");
 
   // place scene objects back
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 
   // Reset keyboard control pose
-  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
+  //this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
 /////////////////////////////////////////////////
