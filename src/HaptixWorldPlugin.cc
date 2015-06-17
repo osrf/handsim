@@ -540,13 +540,12 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
   _rep.set_name(_req.data());
   // fill out joint name, position and velocity
   gazebo::physics::Joint_V joints = model->GetJoints();
-  for (gazebo::physics::Joint_V::iterator joint = joints.begin();
-                                          joint != joints.end(); ++joint)
+  for (auto const &joint : joints)
   {
     haptix::comm::msgs::hxJoint *hxj = _rep.add_joints();
-    hxj->set_name((*joint)->GetName());
-    hxj->set_pos((*joint)->GetAngle(0).Radian());
-    hxj->set_vel((*joint)->GetVelocity(0));
+    hxj->set_name(joint->GetName());
+    hxj->set_pos(joint->GetAngle(0).Radian());
+    hxj->set_vel(joint->GetVelocity(0));
   }
   _result = true;
 }
