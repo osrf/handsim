@@ -1176,6 +1176,9 @@ TEST_F(SimApiTest, HxsStopLogging)
 
 int main(int argc, char **argv)
 {
+  // Set the partition name for this process.
+  setenv("IGN_PARTITION", testing::getRandomNumber().c_str(), 1);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }

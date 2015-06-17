@@ -33,9 +33,13 @@ TEST_F(PhysicsTest, Test1)
 
 int main(int argc, char **argv)
 {
+// Set the partition name for this process.
+  setenv("IGN_PARTITION", testing::getRandomNumber().c_str(), 1);
+
   // Set a specific seed to avoid occasional test failures due to
   // statistically unlikely, but possible results.
   gazebo::math::Rand::SetSeed(42);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
