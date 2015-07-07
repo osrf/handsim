@@ -15,6 +15,7 @@
  *
 */
 
+#include <errno.h>
 #include <sys/prctl.h>
 #include <haptix/comm/haptix_sim.h>
 #include <gazebo/transport/Node.hh>
@@ -31,9 +32,13 @@ TEST(SimApiMexClientTest, ThreeProcesses)
     prctl(PR_SET_PDEATHSIG, SIGKILL);
     // Exec gzserver
     char *args[] = {const_cast<char *>("--verbose"),
-        const_cast<char *>("worlds/arat.world")};
+        const_cast<char *>("worlds/arat.world"), static_cast<char *>(NULL)};
     std::cout << "Launching gzserver." << std::endl;
-    execvp("gzserver", args);
+    if (execvp("gzserver", args) == -1)
+    {
+      std::cerr << "gzserver failed with error code: " << errno;
+      FAIL();
+    }
   }
   else
   {
@@ -45,9 +50,14 @@ TEST(SimApiMexClientTest, ThreeProcesses)
       // Try to kill this process when parent dies
       prctl(PR_SET_PDEATHSIG, SIGKILL);
       // Exec gzclient
-      char *args[] = {const_cast<char *>("--verbose")};
+      char *args[] = {const_cast<char *>("--verbose"),
+        static_cast<char *>(NULL)};
       std::cout << "Launching gzclient." << std::endl;
-      execvp("gzclient", args);
+      if (execvp("gzclient", args) == -1)
+      {
+        std::cerr << "gzclient failed with error code: " << errno;
+        FAIL();
+      }
     }
     else
     {
