@@ -577,8 +577,12 @@ void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
 
   if (_req.joints_size() < 1)
   {
-    gzerr << "Not enough joints in callback" << std::endl;
+    gzerr << "No joint specified in request" << std::endl;
     return;
+  }
+  else if (_req.joints_size() > 1)
+  {
+    gzwarn << "More than 1 joint in request, only 1 will be used" << std::endl;
   }
 
   gazebo::physics::JointPtr joint = model->GetJoint(_req.joints(0).name());
