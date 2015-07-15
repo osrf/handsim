@@ -10,9 +10,10 @@ macro (handsim_build_tests)
     add_executable(${BINARY_NAME} ${GTEST_SOURCE_file})
 
     add_dependencies(${BINARY_NAME}
-      lib${PROJECT_NAME_LOWER}
-      gtest gtest_main
-      )
+      HaptixControlPlugin
+      HaptixGUIPlugin
+      HaptixWorldPlugin
+    )
 
     target_link_libraries(${BINARY_NAME}
       libgtest.a
@@ -30,7 +31,7 @@ macro (handsim_build_tests)
       ${Boost_LIBRARIES}
       ${IGNITION-TRANSPORT_LIBRARIES}
       HaptixWorldPlugin
-      )
+    )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}
 	--gtest_output=xml:${CMAKE_BINARY_DIR}/test_results/${BINARY_NAME}.xml)

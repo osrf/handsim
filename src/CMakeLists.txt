@@ -52,11 +52,6 @@ add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
 
 add_library(HaptixWorldPlugin SHARED HaptixWorldPlugin.cc WrenchHelper.cc)
 
-# additional library dependencies
-add_dependencies(HaptixControlPlugin
-  gazebo_msgs
-)
-
 # library dependencies
 target_link_libraries(HaptixControlPlugin
   ${GAZEBO_LIBRARIES}
