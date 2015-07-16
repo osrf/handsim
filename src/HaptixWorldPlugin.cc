@@ -532,6 +532,11 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
           << _req.data()
           << "] could not be found"
           << std::endl;
+
+    // set required proto fields name, transform and gravity mode
+    _rep.set_name(_req.data());
+    ConvertTransform(gazebo::math::Pose(), *_rep.mutable_transform());
+    _rep.set_gravity_mode(false);
     return;
   }
 
@@ -546,7 +551,21 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
     hxj->set_name(joint->GetName());
     hxj->set_pos(joint->GetAngle(0).Radian());
     hxj->set_vel(joint->GetVelocity(0));
+    // not specified in spec, but set required proto field wrench_reactive
+    ConvertWrench(joint->GetForceTorque(0), *(hxj->mutable_wrench_reactive()));
+    // not specified in spec, but set required proto field torque_motor
+    hxj->set_torque_motor(joint->GetForce(0));
   }
+
+  // set required proto fields transform and gravity mode
+  ConvertTransform(model->GetWorldPose(), *_rep.mutable_transform());
+  bool gravity_mode = false;
+  for (auto links : model->GetLinks())
+  {
+    gravity_mode |= links->GetGravityMode();
+  }
+  _rep.set_gravity_mode(gravity_mode);
+
   _result = true;
 }
 
