@@ -82,18 +82,18 @@ TEST(SimApiClientTest, ThreeProcesses)
 
       // turn off gravity on case before setting state
       EXPECT_EQ(hxs_set_model_gravity_mode("wooden_case", 0), hxOK);
-      getchar(); // debug
+      // getchar(); // debug
       // raise wooden_case 1m above current location
       EXPECT_EQ(hxs_model_transform("wooden_case", &transform), hxOK);
       transform.pos.z += 1.0;
       std::cout << "debug z: " << transform.pos.z << "\n";
       EXPECT_EQ(hxs_set_model_transform("wooden_case", &transform), hxOK);
-      getchar(); // debug
+      // getchar(); // debug
       EXPECT_EQ(hxs_set_model_joint_state("wooden_case", "lid_hinge", -1.1,
           10.0), hxOK);
       std::cout << "hxs_set_model_joint_state executed." << std::endl;
       /// \TODO how do we know physics has updated? check time? sleep?
-      getchar(); // debug
+      // getchar(); // debug
       EXPECT_EQ(hxs_model_joint_state("wooden_case", &model), hxOK);
       std::cout << "hxs_model_joint_state executed." << std::endl;
       ASSERT_EQ(model.joint_count, 1);
