@@ -594,6 +594,15 @@ void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
     return;
   }
 
+  if (model->IsStatic())
+  {
+    gzerr << "Model named ["
+          << _req.name()
+          << "] is static, set joint state will not work as expected"
+          << std::endl;
+    return;
+  }
+
   if (_req.joints_size() < 1)
   {
     gzerr << "No joint specified in request" << std::endl;
@@ -784,6 +793,15 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
     gzerr << "Model pointer NULL" << std::endl;
     return;
   }
+
+  if (model->IsStatic())
+  {
+    gzwarn << "Model named ["
+           << _req.data()
+           << "] is static, set transform may not work as expected"
+           << std::endl;
+  }
+
   gazebo::math::Pose pose = model->GetWorldPose();
   ConvertTransform(pose, _rep);
 
