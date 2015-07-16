@@ -80,9 +80,28 @@ TEST(SimApiClientTest, ThreeProcesses)
       EXPECT_EQ(hxs_contacts("cricket_ball", &contactPoints), hxOK);
       std::cout << "hxs_contacts executed." << std::endl;
 
-      EXPECT_EQ(hxs_set_model_joint_state("wooden_case", "lid_hinge", -1.58,
-          0.01), hxOK);
+      // turn off gravity on case before setting state
+      EXPECT_EQ(hxs_set_model_gravity_mode("wooden_case", 0), hxOK);
+      getchar(); // debug
+      // raise wooden_case 1m above current location
+      EXPECT_EQ(hxs_model_transform("wooden_case", &transform), hxOK);
+      transform.pos.z += 1.0;
+      std::cout << "debug z: " << transform.pos.z << "\n";
+      EXPECT_EQ(hxs_set_model_transform("wooden_case", &transform), hxOK);
+      getchar(); // debug
+      EXPECT_EQ(hxs_set_model_joint_state("wooden_case", "lid_hinge", -1.1,
+          10.0), hxOK);
       std::cout << "hxs_set_model_joint_state executed." << std::endl;
+      /// \TODO how do we know physics has updated? check time? sleep?
+      getchar(); // debug
+      EXPECT_EQ(hxs_model_joint_state("wooden_case", &model), hxOK);
+      std::cout << "hxs_model_joint_state executed." << std::endl;
+      ASSERT_EQ(model.joint_count, 1);
+      EXPECT_NEAR(model.joints[0].pos, -1.1, 1e-5);
+      /// \TODO velocity returned is always zero, why?
+      EXPECT_NEAR(model.joints[0].vel, 10.0, 1e-5);
+      std::cout << "debug pos: " << model.joints[0].pos << "\n";
+      std::cout << "debug vel: " << model.joints[0].vel << "\n";
 
       transform.pos.x = 1;
       transform.pos.y = 2;
