@@ -80,28 +80,68 @@ TEST(SimApiClientTest, ThreeProcesses)
       EXPECT_EQ(hxs_contacts("cricket_ball", &contactPoints), hxOK);
       std::cout << "hxs_contacts executed." << std::endl;
 
+      // test joint manipulation
+
       // turn off gravity on case before setting state
-      EXPECT_EQ(hxs_set_model_gravity_mode("wooden_case", 0), hxOK);
-      // raise wooden_case 1m above current location
-      EXPECT_EQ(hxs_model_transform("wooden_case", &transform), hxOK);
-      transform.pos.z += 1.0;
-      // std::cout << "debug z: " << transform.pos.z << "\n";
-      EXPECT_EQ(hxs_set_model_transform("wooden_case", &transform), hxOK);
-      const double pos_target = -1.103;
-      const double vel_target = 0.0;
-      EXPECT_EQ(hxs_set_model_joint_state("wooden_case", "lid_hinge",
-          pos_target, vel_target), hxOK);
-      std::cout << "hxs_set_model_joint_state executed." << std::endl;
-      /// \TODO how do we know physics has updated?
-      /// check time using hx_sensors
+      EXPECT_EQ(hxs_set_model_gravity_mode(
+        "mpl_haptix_right_forearm", 0), hxOK);
       sleep(1);
-      EXPECT_EQ(hxs_model_joint_state("wooden_case", &model), hxOK);
+
+      // turn off controller for the arm
+      hxRobotInfo robotInfo;
+      EXPECT_EQ(hx_robot_info(&robotInfo), hxOK);
+      hxSensor sensor;
+      hxCommand command;
+      command.gain_pos_enabled = 1;
+      command.gain_vel_enabled = 1;
+      for (int i = 0; i < robotInfo.motor_count; ++i)
+      {
+        command.gain_pos[i] = 0;
+        command.gain_vel[i] = 0;
+      }
+      EXPECT_EQ(hx_update(&command, &sensor), hxOK);
+      sleep(1);
+
+      // set target position and velocity for a finger
+      const double pos_target = -0.3;
+      const double vel_target = 0.0;
+      EXPECT_EQ(hxs_set_model_joint_state("mpl_haptix_right_forearm",
+          "index0", pos_target, vel_target), hxOK);
+      std::cout << "hxs_set_model_joint_state executed." << std::endl;
+
+      /// test alternative to sleep(1)
+      /// check time using in hxSensor to see if physics has updated
+      EXPECT_EQ(hx_read_sensors(&sensor), hxOK);
+      unsigned int nsec0 = sensor.time_stamp.nsec;
+      unsigned int nsec = nsec0;
+      int count = 0;
+      // wait for at least 1ms sim time
+      while (nsec - nsec0 < 1000000 && count < 100)
+      {
+        if (++count >= 100)
+          std::cout << "WARN: wait for sim time to advance failed" << std::endl;
+        EXPECT_EQ(hx_read_sensors(&sensor), hxOK);
+        nsec = sensor.time_stamp.nsec;
+        sleep(0.01);
+      }
+
+      // get model joint state and check if setting it worked.
+      EXPECT_EQ(hxs_model_joint_state("mpl_haptix_right_forearm",
+        &model), hxOK);
       std::cout << "hxs_model_joint_state executed." << std::endl;
-      ASSERT_EQ(model.joint_count, 1);
-      EXPECT_NEAR(model.joints[0].pos, pos_target, 1e-5);
-      EXPECT_NEAR(model.joints[0].vel, vel_target, 1e-5);
-      // std::cout << "debug pos: " << model.joints[0].pos << "\n";
-      // std::cout << "debug vel: " << model.joints[0].vel << "\n";
+      int jointIndex = -1;
+      for (int i = 0; i < model.joint_count; ++i)
+      {
+        if (strcmp(model.joints[i].name, "index0") == 0)
+        {
+          jointIndex = i;
+          break;
+        }
+      }
+      ASSERT_GT(jointIndex, -1);
+
+      EXPECT_NEAR(model.joints[jointIndex].pos, pos_target, 1e-5);
+      EXPECT_NEAR(model.joints[jointIndex].vel, vel_target, 1e-5);
 
       transform.pos.x = 1;
       transform.pos.y = 2;
