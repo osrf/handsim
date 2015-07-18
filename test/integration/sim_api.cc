@@ -1127,7 +1127,7 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
     for (auto collision : link->GetCollisions())
     {
       EXPECT_TRUE(collision->GetSurface()->collideWithoutContact);
-      EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x01u);
+      EXPECT_GT(collision->GetSurface()->collideBitmask, 0x0u);
     }
   }
 
