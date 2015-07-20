@@ -1235,7 +1235,7 @@
       <surface>
         <contact>
           <ode>
-            <kp>100000</kp>
+            <kp>10000</kp>
             <kd>100</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
@@ -1245,6 +1245,9 @@
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
+            <mu3>1.0</mu3>
+            <curvature_radius>0.0072</curvature_radius>
+            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -1662,7 +1665,7 @@
       <surface>
         <contact>
           <ode>
-            <kp>100000</kp>
+            <kp>10000</kp>
             <kd>100</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
@@ -1672,6 +1675,9 @@
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
+            <mu3>1.0</mu3>
+            <curvature_radius>0.0072</curvature_radius>
+            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -2064,7 +2070,7 @@
       <surface>
         <contact>
           <ode>
-            <kp>100000</kp>
+            <kp>10000</kp>
             <kd>100</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
@@ -2074,6 +2080,9 @@
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
+            <mu3>1.0</mu3>
+            <curvature_radius>0.0072</curvature_radius>
+            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -2490,7 +2499,7 @@
       <surface>
         <contact>
           <ode>
-            <kp>100000</kp>
+            <kp>10000.</kp>
             <kd>100</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
@@ -2500,6 +2509,9 @@
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
+            <mu3>1.0</mu3>
+            <curvature_radius>0.0072</curvature_radius>
+            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -2992,7 +3004,7 @@
       <surface>
         <contact>
           <ode>
-            <kp>100000</kp>
+            <kp>10000</kp>
             <kd>100</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
@@ -3002,6 +3014,9 @@
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
+            <mu3>1.0</mu3>
+            <curvature_radius>0.008</curvature_radius>
+            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
