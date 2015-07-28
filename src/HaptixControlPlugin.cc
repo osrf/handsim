@@ -1379,8 +1379,10 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
       {
         int n = this->motorInfos[i].gearboxes[j].index;
+
         double hi = this->haptixJoints[n]->GetUpperLimit(0).Radian();
         double lo = this->haptixJoints[n]->GetLowerLimit(0).Radian();
+
         // which multiplier to use
         // See transmission specification in issue #60,
         // If motor angle commanded is less than offset

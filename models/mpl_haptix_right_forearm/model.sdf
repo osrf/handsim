@@ -60,28 +60,28 @@
       <powered_motor_joint>wristy</powered_motor_joint>
       <!-- gear_ratio = motor angle / joint angle -->
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>0.0382</motor_torque>
-      <gear_ratio>180.0</gear_ratio>
+      <motor_torque>6.8580</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="1" name="motor_wristx">
       <powered_motor_joint>wristx</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>0.003</motor_torque>
-      <gear_ratio>180.0</gear_ratio>
+      <motor_torque>0.54</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="2" name="motor_wristz">
       <powered_motor_joint>wristz</powered_motor_joint>
       <!-- wrist motor torque unknown, guessing for now -->
-      <motor_torque>0.0191</motor_torque>
-      <gear_ratio>180.0</gear_ratio>
+      <motor_torque>3.438</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="3" name="motor_thumb0">
       <powered_motor_joint>thumb0</powered_motor_joint>
-      <motor_torque>3.82e-3</motor_torque>
-      <gear_ratio>352.0</gear_ratio>
+      <motor_torque>1.34464</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="4" name="motor_thumb1">
@@ -89,8 +89,8 @@
       <!--
       <motor_torque>3.82e-3</motor_torque>
       -->
-      <motor_torque>2.0e-3</motor_torque>
-      <gear_ratio>352.0</gear_ratio>
+      <motor_torque>0.704</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="5" name="motor_thumb2">
@@ -98,8 +98,8 @@
       <!--
       <motor_torque>3.82e-3</motor_torque>
       -->
-      <motor_torque>2.0e-3</motor_torque>
-      <gear_ratio>352.0</gear_ratio>
+      <motor_torque>0.704</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="6" name="motor_thumb3">
@@ -107,8 +107,8 @@
       <!--
       <motor_torque>3.82e-3</motor_torque>
       -->
-      <motor_torque>1.0e-3</motor_torque>
-      <gear_ratio>352.0</gear_ratio>
+      <motor_torque>0.704</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
     </motor>
     <motor id="7" name="motor_index0">
@@ -120,8 +120,8 @@
       <!--
       <motor_torque>3.82e-3</motor_torque>
       -->
-      <motor_torque>1.50e-3</motor_torque>
-      <gear_ratio>352.0</gear_ratio>
+      <motor_torque>0.528</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0</encoder_offset>
     </motor>
     <motor id="8" name="motor_index1">
@@ -135,8 +135,8 @@
       <motor_torque>3.82e-3</motor_torque>
       <motor_torque>2.54e-3</motor_torque>
       -->
-      <motor_torque>2.0e-3</motor_torque>
-      <gear_ratio>393.0</gear_ratio>
+      <motor_torque>0.786</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>index1</joint>
@@ -168,12 +168,8 @@
         middlem: motor joint for middle finger
       -->
       <powered_motor_joint>middlem</powered_motor_joint>
-      <!--
-      <motor_torque>3.82e-3</motor_torque>
-      <motor_torque>2.54e-3</motor_torque>
-      -->
-      <motor_torque>1.0e-3</motor_torque>
-      <gear_ratio>393.0</gear_ratio>
+      <motor_torque>0.393</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>middle1</joint>
@@ -205,12 +201,8 @@
         ringm: motor joint for ring finger
       -->
       <powered_motor_joint>ringm</powered_motor_joint>
-      <!--
-      <motor_torque>3.82e-3</motor_torque>
-      <motor_torque>2.54e-3</motor_torque>
-      -->
-      <motor_torque>1.0e-3</motor_torque>
-      <gear_ratio>393.0</gear_ratio>
+      <motor_torque>0.393</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>ring1</joint>
@@ -237,12 +229,8 @@
     </motor>
     <motor id="11" name="motor_pinky0">
       <powered_motor_joint>ring0</powered_motor_joint>
-      <!--
-      <motor_torque>3.82e-3</motor_torque>
-      <motor_torque>1.0e-3</motor_torque>
-      -->
-      <motor_torque>2.54e-3</motor_torque>
-      <gear_ratio>352.0</gear_ratio>
+      <motor_torque>0.89408</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>pinky0</joint>
@@ -258,12 +246,8 @@
         pinkym: motor joint for pinky finger
       -->
       <powered_motor_joint>pinkym</powered_motor_joint>
-      <!--
-      <motor_torque>3.82e-3</motor_torque>
-      <motor_torque>2.54e-3</motor_torque>
-      -->
-      <motor_torque>1.0e-3</motor_torque>
-      <gear_ratio>393.0</gear_ratio>
+      <motor_torque>0.393</motor_torque>
+      <gear_ratio>1.0</gear_ratio>
       <encoder_offset>0.0</encoder_offset>
       <gearbox>
         <joint>pinky1</joint>
