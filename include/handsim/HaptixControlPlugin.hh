@@ -46,6 +46,7 @@
 #include <gazebo/common/Plugin.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/common/PID.hh>
+#include <gazebo/math/Filter.hh>
 
 #include <handsim/Optitrack.hh>
 #include <handsim/MotorInfo.hh>
