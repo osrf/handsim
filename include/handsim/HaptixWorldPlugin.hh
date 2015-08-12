@@ -223,16 +223,6 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxModel &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
-  /// \brief hxs_model_link_state callback. Get the state of a link.
-  /// \param[in] _service The service this callback is advertised on.
-  /// \param[in] _req The request: hxModel message containing the name of the
-  /// model to set and the desired link state.
-  /// \param[out] _rep The reply: empty.
-  /// \param[out] _result True if no errors were encountered.
-  private: void HaptixModelLinkStateCallback(const std::string &_service,
-    const haptix::comm::msgs::hxModel &_req,
-    haptix::comm::msgs::hxEmpty &_rep, bool &_result);
-
   /// \brief hxs_add_model callback. Add a model during runtime given its SDF
   /// and its initial position.
   /// \param[in] _service The service this callback is advertised on.
