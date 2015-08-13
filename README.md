@@ -1,11 +1,18 @@
 # HAPTIX Simulator #
 
+## Dependencies
+
+This repository requires `gazebo`, `ign-transport` and `haptix-comm` from default branch.
+
+Additionally, make sure to have `libusb` installed:
+
+    sudo apt-get install libusb-1.0-0-dev
+
 ## Installation instructions: ##
-To compile, first install gazebo, ign-transport, and haptix-comm from default branch.  Next:
 
 ~~~
 hg clone https://bitbucket.org/osrf/handsim
-cd handsim 
+cd handsim
 mkdir build
 cd build
 cmake ../
