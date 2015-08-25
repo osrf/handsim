@@ -1253,9 +1253,6 @@
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
-            <mu3>1.0</mu3>
-            <curvature_radius>0.0072</curvature_radius>
-            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -1683,12 +1680,14 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
-            <mu3>1.0</mu3>
-            <curvature_radius>0.0072</curvature_radius>
-            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -2091,12 +2090,14 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
-            <mu3>1.0</mu3>
-            <curvature_radius>0.0072</curvature_radius>
-            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -2523,12 +2524,14 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
-            <mu3>1.0</mu3>
-            <curvature_radius>0.0072</curvature_radius>
-            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
@@ -2989,13 +2992,15 @@
     <collision name='collision'>
       <pose>0.01507 -0.00219 0.0001 0 0 0</pose>
       <geometry>
-        <cylinder>
-          <length>0.01476</length>
-          <radius>0.0074</radius>
-        </cylinder>
+        <sphere>
+          <radius>0.010</radius>
+        </sphere>
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -3004,6 +3009,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -3031,12 +3041,14 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
-            <mu3>1.0</mu3>
-            <curvature_radius>0.008</curvature_radius>
-            <use_curvature>true</use_curvature>
           </ode>
         </friction>
       </surface>
