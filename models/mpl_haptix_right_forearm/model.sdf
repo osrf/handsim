@@ -1232,6 +1232,7 @@
           <radius>0.0072</radius>
         </sphere>
       </geometry>
+      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -1670,6 +1671,7 @@
           <radius>0.0072</radius>
         </sphere>
       </geometry>
+      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -2078,6 +2080,7 @@
           <radius>0.0072</radius>
         </sphere>
       </geometry>
+      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -2510,6 +2513,7 @@
           <radius>0.0072</radius>
         </sphere>
       </geometry>
+      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -3018,6 +3022,7 @@
           <radius>0.008</radius>
         </sphere>
       </geometry>
+      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
