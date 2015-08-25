@@ -1234,6 +1234,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
@@ -1242,6 +1245,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1664,6 +1672,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
@@ -2069,6 +2080,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
@@ -2498,6 +2512,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000.</kp>
             <kd>100</kd>
@@ -3003,6 +3020,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
