@@ -560,9 +560,9 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
   // set required proto fields transform and gravity mode
   ConvertTransform(model->GetWorldPose(), *_rep.mutable_transform());
   bool gravity_mode = false;
-  for (auto links : model->GetLinks())
+  for (auto const &link : model->GetLinks())
   {
-    gravity_mode |= links->GetGravityMode();
+    gravity_mode |= link->GetGravityMode();
   }
   _rep.set_gravity_mode(gravity_mode);
 
