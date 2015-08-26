@@ -691,6 +691,7 @@
       </surface>
     </collision>
     <collision name='collision_palm'>
+      <max_contacts>4</max_contacts>
       <pose>0.002 -0.03739 0 0 0 0</pose>
       <geometry>
         <box>
@@ -699,6 +700,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -707,6 +711,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -715,6 +724,7 @@
       </surface>
     </collision>
     <collision name="palmEdge">
+      <max_contacts>4</max_contacts>
       <pose>-0.028 -0.03 0 1.57 0 -0.1</pose>
       <geometry>
         <cylinder>
@@ -724,6 +734,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -732,6 +745,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -741,6 +759,7 @@
     </collision>
    <!-- Dorsal surface (top) -->
     <collision name="handTop">
+      <max_contacts>4</max_contacts>
       <pose>0.002 -0.045 0.01 0 0 0</pose>
       <geometry>
         <box>
@@ -749,6 +768,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -757,6 +779,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -766,6 +793,7 @@
     </collision>
     <!-- Palm 0 (closer to thumb) -->
     <collision name="palm0">
+      <max_contacts>4</max_contacts>
       <pose>0.023 -0.04 -0.012 0 0 0.1</pose>
       <geometry>
         <box>
@@ -774,6 +802,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -782,6 +813,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -791,6 +827,7 @@
     </collision>
     <!-- Palm 1 (closer to pinky) -->
     <collision name="palm1">
+      <max_contacts>4</max_contacts>
       <pose>-0.018 -0.04 -0.012 0 0 0</pose>
       <geometry>
         <box>
@@ -799,6 +836,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -807,6 +847,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -911,6 +956,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.01339 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -920,6 +966,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -928,6 +977,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -995,6 +1049,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.02782 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1004,6 +1059,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1012,6 +1070,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1085,6 +1148,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.01152 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1094,6 +1158,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1102,6 +1169,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1110,6 +1182,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.02502 0 0 0 0</pose>
       <geometry>
         <sphere>
@@ -1118,6 +1191,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1126,6 +1202,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1201,6 +1282,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1210,6 +1292,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1218,6 +1303,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1226,13 +1316,13 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
         </sphere>
       </geometry>
-      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -1347,6 +1437,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.01339 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1356,6 +1447,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1364,6 +1458,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1431,6 +1530,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.025 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1440,6 +1540,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1448,6 +1551,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1521,6 +1629,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.01152 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1530,6 +1639,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1538,6 +1650,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1546,6 +1663,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.02302 0 0 0 0</pose>
       <geometry>
         <sphere>
@@ -1554,6 +1672,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1562,6 +1683,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1637,6 +1763,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1646,6 +1773,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1654,6 +1784,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1662,13 +1797,13 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
         </sphere>
       </geometry>
-      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -1783,6 +1918,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.01339 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1792,6 +1928,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1800,6 +1939,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1867,6 +2011,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.02082 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1876,6 +2021,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1884,6 +2032,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -1957,6 +2110,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.0076 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -1966,6 +2120,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1974,6 +2131,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2048,6 +2210,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -2057,6 +2220,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2065,6 +2231,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2073,13 +2244,13 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
         </sphere>
       </geometry>
-      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -2194,6 +2365,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.01339 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -2203,6 +2375,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2211,6 +2386,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2278,6 +2458,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.02505 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -2287,6 +2468,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2295,6 +2479,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2368,6 +2557,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.01152 0 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -2377,6 +2567,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2385,6 +2578,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2393,6 +2591,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>2</max_contacts>
       <pose>0 -0.02302 0 0 0 0</pose>
       <geometry>
         <sphere>
@@ -2401,6 +2600,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2409,6 +2611,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2483,6 +2690,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.00688 0.0001 1.5707 0 0</pose>
       <geometry>
         <cylinder>
@@ -2492,6 +2700,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2500,6 +2711,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2508,13 +2724,13 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>1</max_contacts>
       <pose>0 -0.015 0.0001 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.0072</radius>
         </sphere>
       </geometry>
-      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
@@ -2629,6 +2845,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0.0200 -0.001 0.0015 0 0 0</pose>
       <geometry>
         <cylinder>
@@ -2638,6 +2855,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2646,6 +2866,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2654,6 +2879,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>2</max_contacts>
       <pose>0.01 -.001 0.0015 0 0 0</pose>
       <geometry>
         <box>
@@ -2662,6 +2888,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2670,6 +2899,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2737,6 +2971,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>-0.00056 0.00 -0.00025 0 0 0</pose>
       <geometry>
         <cylinder>
@@ -2746,6 +2981,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2754,6 +2992,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2762,6 +3005,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>2</max_contacts>
       <pose>0.03381 0 0 0 0 0</pose>
       <geometry>
         <cylinder>
@@ -2771,6 +3015,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2779,6 +3026,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2787,6 +3039,7 @@
       </surface>
     </collision>
     <collision name='collision_2'>
+      <max_contacts>2</max_contacts>
       <pose>0.01613 0 0 0 0 0</pose>
       <geometry>
         <box>
@@ -2795,6 +3048,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2803,6 +3059,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2878,6 +3139,7 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>2</max_contacts>
       <pose>0.03415 0 0.001 0 0 0</pose>
       <geometry>
         <cylinder>
@@ -2887,6 +3149,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2895,6 +3160,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2903,6 +3173,7 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>2</max_contacts>
       <pose>0.01493 0 0.001 0 0 0</pose>
       <geometry>
         <box>
@@ -2911,6 +3182,9 @@
       </geometry>
       <surface>
         <contact>
+          <poissons_ratio>0.495</poissons_ratio>
+          <elastic_modulus>0.61e6</elastic_modulus>
+          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2919,6 +3193,11 @@
           </ode>
         </contact>
         <friction>
+          <torsional>
+            <coefficient>1.0</coefficient>
+            <use_patch_radius>0</use_patch_radius>
+            <surface_radius>0.0072</surface_radius>
+          </torsional>
           <ode>
             <mu>1</mu>
             <mu2>1</mu2>
@@ -2994,11 +3273,13 @@
       </inertia>
     </inertial>
     <collision name='collision'>
+      <max_contacts>1</max_contacts>
       <pose>0.01507 -0.00219 0.0001 0 0 0</pose>
       <geometry>
-        <sphere>
-          <radius>0.010</radius>
-        </sphere>
+        <cylinder>
+          <length>0.01476</length>
+          <radius>0.0074</radius>
+        </cylinder>
       </geometry>
       <surface>
         <contact>
@@ -3016,7 +3297,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.01</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3026,13 +3307,13 @@
       </surface>
     </collision>
     <collision name='collision_1'>
+      <max_contacts>1</max_contacts>
       <pose>0.0195 0 0 0 0 0</pose>
       <geometry>
         <sphere>
           <radius>0.008</radius>
         </sphere>
       </geometry>
-      <max_contacts>1</max_contacts>
       <surface>
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
