@@ -162,6 +162,7 @@ TEST_F(SimApiTest, HxsSimInfo)
   gazebo::gui::set_active_camera(camera);
   ASSERT_TRUE(gazebo::gui::get_active_camera() != NULL);
 
+  world->Step(1);
   sleep(0.5);
   hxsSimInfo simInfo;
   ASSERT_EQ(hxs_sim_info(&simInfo), hxOK);
