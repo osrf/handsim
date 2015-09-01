@@ -10,6 +10,7 @@ set(TEST_TYPE "INTEGRATION")
 
 
 set(tests
+  physics.cc
   sim_api.cc
   sim_api_client.cc
 )

@@ -17,6 +17,7 @@
 
 #include <gtest/gtest.h>
 
+#include <gazebo/math/gzmath.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/test/ServerFixture.hh>
 
@@ -29,6 +30,8 @@ TEST_F(PhysicsTest, Test1)
   Load("worlds/arat.world");
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
   ASSERT_TRUE(world != NULL);
+
+  gzerr << "debug"; getchar();
 }
 
 int main(int argc, char **argv)
