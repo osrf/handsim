@@ -170,6 +170,9 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
   this->ignNode.Advertise("/haptix/gazebo/hxs_contacts",
     &HaptixWorldPlugin::HaptixContactsCallback, this);
 
+  this->ignNode.Advertise("/haptix/gazebo/hxs_model_joint_state",
+    &HaptixWorldPlugin::HaptixModelJointStateCallback, this);
+
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_joint_state",
     &HaptixWorldPlugin::HaptixSetModelJointStateCallback, this);
 
@@ -452,6 +455,7 @@ void HaptixWorldPlugin::HaptixContactsCallback(
   // With worldMutex released, wait if filter didn't exist
   if (!hadFilter)
   {
+    gzdbg << "Waiting for " << modelName << " filter" << std::endl;
     gazebo::common::Time::MSleep(5);
   }
 
@@ -507,6 +511,65 @@ void HaptixWorldPlugin::HaptixContactsCallback(
 }
 
 /////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixModelJointStateCallback(
+    const std::string &/*_service*/,
+    const haptix::comm::msgs::hxString &_req,
+    haptix::comm::msgs::hxModel &_rep, bool &_result)
+{
+  _result = false;
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    gzerr << "World was NULL" << std::endl;
+    return;
+  }
+
+  gazebo::physics::ModelPtr model = this->world->GetModel(_req.data());
+
+  if (!model)
+  {
+    gzerr << "Model named ["
+          << _req.data()
+          << "] could not be found"
+          << std::endl;
+
+    // set required proto fields name, transform and gravity mode
+    _rep.set_name(_req.data());
+    ConvertTransform(gazebo::math::Pose(), *_rep.mutable_transform());
+    _rep.set_gravity_mode(false);
+    return;
+  }
+
+  // fill out model name
+  _rep.Clear();
+  _rep.set_name(_req.data());
+  // fill out joint name, position and velocity
+  gazebo::physics::Joint_V joints = model->GetJoints();
+  for (auto const &joint : joints)
+  {
+    haptix::comm::msgs::hxJoint *hxj = _rep.add_joints();
+    hxj->set_name(joint->GetName());
+    hxj->set_pos(joint->GetAngle(0).Radian());
+    hxj->set_vel(joint->GetVelocity(0));
+    // not specified in spec, but set required proto field wrench_reactive
+    ConvertWrench(joint->GetForceTorque(0), *(hxj->mutable_wrench_reactive()));
+    // not specified in spec, but set required proto field torque_motor
+    hxj->set_torque_motor(joint->GetForce(0));
+  }
+
+  // set required proto fields transform and gravity mode
+  ConvertTransform(model->GetWorldPose(), *_rep.mutable_transform());
+  bool gravity_mode = false;
+  for (auto const &link : model->GetLinks())
+  {
+    gravity_mode |= link->GetGravityMode();
+  }
+  _rep.set_gravity_mode(gravity_mode);
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
       const std::string &/*_service*/,
       const haptix::comm::msgs::hxModel &_req,
@@ -531,10 +594,23 @@ void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
     return;
   }
 
+  if (model->IsStatic())
+  {
+    gzerr << "Model named ["
+          << _req.name()
+          << "] is static, set joint state will not work as expected"
+          << std::endl;
+    return;
+  }
+
   if (_req.joints_size() < 1)
   {
-    gzerr << "Not enough joints in callback" << std::endl;
+    gzerr << "No joint specified in request" << std::endl;
     return;
+  }
+  else if (_req.joints_size() > 1)
+  {
+    gzwarn << "More than 1 joint in request, only 1 will be used" << std::endl;
   }
 
   gazebo::physics::JointPtr joint = model->GetJoint(_req.joints(0).name());
@@ -717,6 +793,15 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
     gzerr << "Model pointer NULL" << std::endl;
     return;
   }
+
+  if (model->IsStatic())
+  {
+    gzwarn << "Model named ["
+           << _req.data()
+           << "] is static, set transform may not work as expected"
+           << std::endl;
+  }
+
   gazebo::math::Pose pose = model->GetWorldPose();
   ConvertTransform(pose, _rep);
 
