@@ -313,7 +313,8 @@
     <imuSensor id="3">ring3_imu_sensor</imuSensor>
     <imuSensor id="4">pinky3_imu_sensor</imuSensor>
     <!-- These grasp postures are based on information from APL -->
-    <grasp name="Cylindrical">   0.00000   0.00000   0.00000   1.80000   0.05000   0.75000   0.75000   0.00000   1.13450   1.19450   1.19450   0.00000   1.13450 </grasp>
+    <grasp name="2Pinch">   0.00000   0.00000   0.00000   2.00000   0.05000   0.75000   1.50000  -0.30000   1.25 0   0   -0.30000   0 </grasp>
+    <grasp name="Cylindrical">   0.00000   0.00000   0.00000   1.80000   0.05000   0.75000   0.75000  -0.30000   1.13450   1.19450   1.19450   0.00000   1.13450 </grasp>
     <grasp name="Spherical">   0.00000   0.00000   0.00000   1.91990   0.52360   0.87270  -0.34910   0.00000   1.32638   1.11698   1.22174   0.34910   1.43114 </grasp>
     <grasp name="ThreeFingerPinch">   0.00000   0.00000   0.00000   1.95035   1.00918   0.43199   0.17280   0.00000   1.12390   1.25205   1.00390   0.00000   1.18390 </grasp>
     <grasp name="FinePinch(American)">   0.00000   0.00000   0.00000   1.39630   0.87270   0.52360  -0.34910   0.00000   1.22174   2.05946   2.05946   0.00000   2.05946 </grasp>
@@ -702,7 +703,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -736,7 +736,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -770,7 +769,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -804,7 +802,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -838,7 +835,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -968,7 +964,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1061,7 +1056,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1160,7 +1154,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1193,7 +1186,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1294,11 +1286,10 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
-            <max_vel>0.1</max_vel>
+            <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
         </contact>
@@ -1327,11 +1318,10 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
-            <max_vel>0.1</max_vel>
+            <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
         </contact>
@@ -1449,7 +1439,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1542,7 +1531,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1641,7 +1629,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1674,7 +1661,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1775,7 +1761,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -1808,7 +1793,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
@@ -1930,7 +1914,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2023,7 +2006,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2122,7 +2104,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2222,7 +2203,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2255,7 +2235,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
@@ -2377,7 +2356,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2470,7 +2448,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2569,7 +2546,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2602,7 +2578,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2702,7 +2677,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2735,7 +2709,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000.</kp>
             <kd>100</kd>
@@ -2857,7 +2830,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2890,7 +2862,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -2983,7 +2954,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -3017,7 +2987,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -3050,7 +3019,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -3151,7 +3119,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -3184,7 +3151,6 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
@@ -3285,11 +3251,10 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>100000</kp>
             <kd>100</kd>
-            <max_vel>0.1</max_vel>
+            <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
         </contact>
@@ -3318,11 +3283,10 @@
         <contact>
           <poissons_ratio>0.495</poissons_ratio>
           <elastic_modulus>0.61e6</elastic_modulus>
-          <elastic_modulus_reference_length>0.0015</elastic_modulus_reference_length>
           <ode>
             <kp>10000</kp>
             <kd>100</kd>
-            <max_vel>0.1</max_vel>
+            <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
         </contact>
