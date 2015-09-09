@@ -80,6 +80,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->world = _parent->GetWorld();
   this->model = _parent;
   this->world->EnablePhysicsEngine(true);
+  physics::PhysicsEnginePtr physics = this->world->GetPhysicsEngine();
+  physics->SetParam("contact_sor_scale", 1.0);
 
   // start a transport node for polhemus head pose view point control
   this->gazeboNode =
