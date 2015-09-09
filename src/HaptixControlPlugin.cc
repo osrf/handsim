@@ -1089,6 +1089,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 /////////////////////////////////////////////////
 void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
+  boost::mutex::scoped_lock lock(this->updateMutex);
+
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   if (_i >= static_cast<int>(this->contactSensorInfos.size()))
@@ -1110,20 +1112,26 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   }
   msgs::Contacts contacts = contactSensor->GetContacts();
   // contact sensor report contact between pairs of bodies
-  // if (contacts.contact().size() > 0)
-  //   gzerr << "  name " << contactSensor->GetName()
-  //         << " contacts " << contacts.contact().size() << "\n";
 
-  // reset aggregate forces and torques if contacts detected
-  this->contactSensorInfos[_i].contactForce = math::Vector3();
-  this->contactSensorInfos[_i].contactTorque = math::Vector3();
-
-  for (int j = 0; j < contacts.contact().size(); ++j)
+  // for (int j = 0; j < contacts.contact().size(); ++j)
+  if (contacts.contact().size() > 0)
   {
+    // gzerr << "  name " << contactSensor->GetName()
+    //       << " contacts buffer [" << contacts.contact().size()
+    //       << "]\n";
+
+    int j = contacts.contact().size() -1;
     msgs::Contact contact = contacts.contact(j);
+
     // each contact can have multiple wrenches
-    // if (contact.wrench().size() > 0)
-    //   gzerr << "    wrenches " << contact.wrench().size() << "\n";
+    if (contact.wrench().size() > 0)
+    {
+      // gzerr << "    num contacts [" << contact.wrench().size() << "]\n";
+      // reset aggregate forces and torques if contacts detected
+      this->contactSensorInfos[_i].contactForce = math::Vector3();
+      this->contactSensorInfos[_i].contactTorque = math::Vector3();
+    }
+
     for (int k = 0; k < contact.wrench().size(); ++k)
     {
       msgs::JointWrench wrenchMsg = contact.wrench(k);
@@ -1157,12 +1165,16 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
         return;
       }
 
-      // gzerr << "        contact [" << _i << ", " << j
-      //       << ", " << k << "] : [" << contactForce << "]\n";
+      // gzerr << "        sensor [" << _i << "] buffer [" << j
+      //       << "] contact [" << k << "] force ["
+      //       << this->contactSensorInfos[_i].contactForce
+      //       << "] sub-sum ["
+      //       << this->contactSensorInfos[_i].contactForce.GetLength()
+      //       << "]\n";
     }
   }
-  // gzerr << "contact [" << _i
-  //       << "]: [" << this->contactSensorInfos[_i].contactForce
+  // gzerr << " sensor [" << _i
+  //       << "] sum [" << this->contactSensorInfos[_i].contactForce
   //       << "]\n";
 }
 

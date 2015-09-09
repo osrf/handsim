@@ -21,12 +21,13 @@
 #include <gazebo/math/Helpers.hh>
 #include <gazebo/test/ServerFixture.hh>
 #include <gazebo/rendering/UserCamera.hh>
-
+#include <haptix/comm/haptix_sim.h>
 #include "handsim/HaptixWorldPlugin.hh"
-
-#include "haptix/comm/haptix_sim.h"
-
 #include "test_config.h"
+
+/// \brief This variable will have a random partition name for avoid collision
+/// with other instances of the same test.
+std::string partition;
 
 ///////////// Utility functions /////////////
 
@@ -1178,6 +1179,12 @@ TEST_F(SimApiTest, HxsStopLogging)
 
 int main(int argc, char **argv)
 {
+  // Get a random partition name.
+  partition = testing::getRandomNumber();
+
+  // Set the partition name for this process.
+  setenv("IGN_PARTITION", partition.c_str(), 1);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
