@@ -238,6 +238,13 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_collide_mode",
     &HaptixWorldPlugin::HaptixSetModelCollideModeCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_add_constraint",
+    &HaptixWorldPlugin::HaptixAddConstraintCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_remove_constraint",
+    &HaptixWorldPlugin::HaptixRemoveConstraintCallback, this);
+
 }
 
 /////////////////////////////////////////////////
@@ -1639,6 +1646,131 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
   {
     _rep.set_mode(haptix::comm::msgs::hxCollideMode::hxsCOLLIDE);
   }
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixAddConstraintCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  _result = false;
+  if (!_req.has_string_value())
+  {
+    gzerr << "Missing SDF in hxParam input to AddConstraint" << std::endl;
+    return;
+  }
+
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+    return;
+  }
+
+  std::string xml = _req.string_value();
+  sdf::SDF jointSDF;
+  jointSDF.SetFromString(xml);
+  if (!jointSDF.Root() || !jointSDF.Root()->HasElement("joint"))
+  {
+    gzerr << "constraint SDF was invalid" << std::endl;
+    return;
+  }
+  sdf::ElementPtr jointElement = jointSDF.Root()->GetElement("joint");
+
+  if (!jointElement || !jointElement->HasAttribute("name"))
+  {
+    gzerr << "joint element invalid" << std::endl;
+    return;
+  }
+
+  // Set name
+  std::string model = _req.name();
+
+  xml = jointSDF.ToString();
+
+  // load an SDF element from XML
+  // copy the string via capture list
+  auto addConstraintLambda = [model, xml, this]()
+      {
+        /* in handsim plugin, something to the effect of below
+        std::string name;
+        std::string parentName;
+        std::string childName;
+
+        if (_sdf->HasElement("name"))
+          name = _sdf->Get<std::string>("name");
+        else
+          return hxERROR;
+
+        if (_sdf->HasElement("parent"))
+          parentName = _sdf->Get<std::string>("parent");
+        else
+          return hxERROR;
+
+        joint = _world->GetPhysicsEngine()->CreateJoint(
+          _type, _model);
+        joint->Attach(_link1, _link2);
+        joint->Load(_sdf);
+        joint->Init();
+        */
+      };
+  {
+    std::lock_guard<std::mutex> lock(this->worldMutex);
+    this->updateFunctions.push_back(addConstraintLambda);
+  }
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixRemoveConstraintCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  _result = false;
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    gzerr << "World pointer NULL" << std::endl;
+    return;
+  }
+
+  gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
+  if (!model)
+  {
+    gzerr << "Can't find model [" << _req.name()
+          << "] because it does not exist." << std::endl;
+    return;
+  }
+
+  std::string constraint = _req.string_value();
+
+  auto removeConstraintLambda = [model, constraint, this]()
+      {
+        // actually RemoveConstraint(model, constraint);
+        /* in handsim world plugin,
+        bool paused = this->world->IsPaused();
+        this->world->SetPaused(true);
+        if (_joint)
+        {
+          // reenable collision between the link pair
+          physics::LinkPtr parent = _joint->GetParent();
+          physics::LinkPtr child = _joint->GetChild();
+          if (parent)
+            parent->SetCollideMode("all");
+          if (child)
+            child->SetCollideMode("all");
+
+          _joint->Detach();
+          _joint.reset();
+        }
+        this->world->SetPaused(paused);
+        */
+      };
+  this->updateFunctions.push_back(removeConstraintLambda);
 
   _result = true;
 }

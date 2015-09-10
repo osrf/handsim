@@ -441,6 +441,30 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxCollideMode &_rep, bool &_result);
 
+  /// \brief hxs_add_constraint callback. Add a constraint during runtime
+  /// given its SDF.
+  /// \param[in] _service The service this callback is advertised on.
+  /// \param[in] _req The request: an hxParam message containing the name of
+  /// the constraint to add, a SDF constaining constraint
+  /// gravity mode.
+  /// \param[out] _rep The reply: the sim API representation of the model as
+  /// an hxModel message.
+  /// \param[out] _result True if no errors were encountered.
+  private: void HaptixAddConstraintCallback(
+        const std::string &/*_service*/,
+        const haptix::comm::msgs::hxParam &_req,
+        haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result);
+
+  /// \brief hxs_remove_model callback. Remove a model from the world.
+  /// \param[in] _service The service this callback is advertised on.
+  /// \param[in] _req The request: the name of the model to remove.
+  /// \param[out] _rep The reply: empty.
+  /// \return _result True if no errors were encountered.
+  private: void HaptixRemoveConstraintCallback(
+        const std::string &/*_service*/,
+        const haptix::comm::msgs::hxParam &_req,
+        haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result);
+
   /// \brief Callback on world update
   private: void OnWorldUpdate();
 
