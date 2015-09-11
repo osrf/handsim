@@ -81,12 +81,19 @@ TEST_F(PhysicsTest, Test1)
 
   world->Step(1);
 
-  for (int n = 0; n < 81; ++n)
+  // call hxs_sim_info to get motor_count
+  ::hxRobotInfo robotInfo;
+  ASSERT_EQ(::hx_robot_info(&robotInfo), ::hxOK);
+  ::hxCommand lastMotorCommand;
+  ::hxSensor lastSensor;
+  // setup grasp command message
+  std::string name = "2Pinch";
+  haptix::comm::msgs::hxGrasp grasp;
+  haptix::comm::msgs::hxGrasp::hxGraspValue* gv = grasp.add_grasps();
+  gv->set_grasp_name(name);
+  for (int n = 0; n < 76; ++n)
   {
-    std::string name = "2Pinch";
-    haptix::comm::msgs::hxGrasp grasp;
-    haptix::comm::msgs::hxGrasp::hxGraspValue* gv = grasp.add_grasps();
-    gv->set_grasp_name(name);
+    // set grasp value
     gv->set_grasp_value((double)n/100);
 
     bool result;
@@ -100,10 +107,6 @@ TEST_F(PhysicsTest, Test1)
     {
       gzerr << "Failed to call gazebo/Grasp service" << std::endl;
     }
-    ::hxRobotInfo robotInfo;
-    ASSERT_EQ(::hx_robot_info(&robotInfo), ::hxOK);
-    ::hxCommand lastMotorCommand;
-    ::hxSensor lastSensor;
     unsigned int numWristMotors = 3;
     for (int i = numWristMotors; i < robotInfo.motor_count; ++i)
     {
@@ -118,15 +121,18 @@ TEST_F(PhysicsTest, Test1)
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return;
     }
-    world->Step(50);
+    world->Step(10);
   }
 
   // set new arm position
-  p.Set(0, 0, 0.1);
+  p.Set(0, 0, 0.001);
   q.Set(1, 0, 0, 0);
   msg = gazebo::msgs::Convert(ignition::math::Pose3<double>(p, q));
-  this->ignNode.Publish("/haptix/arm_pose_inc", msg);
-  world->Step(1000);
+  for (int n = 0; n < 200; ++n)
+  {
+    this->ignNode.Publish("/haptix/arm_pose_inc", msg);
+    world->Step(10);
+  }
 
   gzerr << "moved"; getchar();
 }
