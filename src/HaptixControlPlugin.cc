@@ -1103,6 +1103,10 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   msgs::Contacts contacts = contactSensor->GetContacts();
   // contact sensor report contact between pairs of bodies
 
+  // clear contact info
+  this->contactSensorInfos[_i].contactForce = math::Vector3();
+  this->contactSensorInfos[_i].contactTorque = math::Vector3();
+
   // for (int j = 0; j < contacts.contact().size(); ++j)
   if (contacts.contact().size() > 0)
   {
@@ -1114,14 +1118,6 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
     msgs::Contact contact = contacts.contact(j);
 
     // each contact can have multiple wrenches
-    if (contact.wrench().size() > 0)
-    {
-      // gzerr << "    num contacts [" << contact.wrench().size() << "]\n";
-      // reset aggregate forces and torques if contacts detected
-      this->contactSensorInfos[_i].contactForce = math::Vector3();
-      this->contactSensorInfos[_i].contactTorque = math::Vector3();
-    }
-
     for (int k = 0; k < contact.wrench().size(); ++k)
     {
       msgs::JointWrench wrenchMsg = contact.wrench(k);
