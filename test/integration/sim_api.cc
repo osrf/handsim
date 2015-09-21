@@ -21,12 +21,13 @@
 #include <gazebo/math/Helpers.hh>
 #include <gazebo/test/ServerFixture.hh>
 #include <gazebo/rendering/UserCamera.hh>
-
+#include <haptix/comm/haptix_sim.h>
 #include "handsim/HaptixWorldPlugin.hh"
-
-#include "haptix/comm/haptix_sim.h"
-
 #include "test_config.h"
+
+/// \brief This variable will have a random partition name for avoid collision
+/// with other instances of the same test.
+std::string partition;
 
 ///////////// Utility functions /////////////
 
@@ -431,6 +432,17 @@ TEST_F(SimApiTest, HxsSetModelJointState)
   float pos = -1.58;
   float vel = 0.01;
 
+  // test hxs_model_joint_state before setting joint states
+  hxsModel model;
+  ASSERT_EQ(hxs_model_joint_state("door", &model), hxOK);
+  EXPECT_EQ(model.joint_count, 3);
+  for (int i = 0; i < model.joint_count; ++i)
+  {
+    EXPECT_NEAR(model.joints[i].pos, 0, 1e-4);
+    EXPECT_NEAR(model.joints[i].vel, 0, 1e-4);
+  }
+
+  // test hxs_set_model_joint_state
   ASSERT_EQ(hxs_set_model_joint_state("door", "hinge", pos, vel), hxOK);
   world->Step(1);
 
@@ -438,6 +450,16 @@ TEST_F(SimApiTest, HxsSetModelJointState)
   EXPECT_NEAR(pos, gzDoorModel->GetJoint("hinge")->GetAngle(0).Radian(), 1e-2);
 
   EXPECT_NEAR(vel, gzDoorModel->GetJoint("hinge")->GetVelocity(0), 1e-2);
+
+  // test hxs_model_joint_state after setting joint states
+  ASSERT_EQ(hxs_model_joint_state("door", &model), hxOK);
+  ASSERT_EQ(model.joint_count, 3);
+  EXPECT_NEAR(model.joints[0].pos, 0, 1e-4);
+  EXPECT_NEAR(model.joints[0].vel, 0, 1e-4);
+  EXPECT_NEAR(model.joints[1].pos, -1.58, 1e-5);
+  EXPECT_NEAR(model.joints[1].vel, 0.01, 1e-2);
+  EXPECT_NEAR(model.joints[2].pos, 0, 1e-4);
+  EXPECT_NEAR(model.joints[2].vel, 0, 1e-4);
 }
 
 TEST_F(SimApiTest, HxsAddModel)
@@ -1176,6 +1198,12 @@ TEST_F(SimApiTest, HxsStopLogging)
 
 int main(int argc, char **argv)
 {
+  // Get a random partition name.
+  partition = testing::getRandomNumber();
+
+  // Set the partition name for this process.
+  setenv("IGN_PARTITION", partition.c_str(), 1);
+
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
