@@ -295,7 +295,7 @@ void HaptixWorldPlugin::OnWorldUpdate()
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 {
-  this->userCameraPose = gazebo::msgs::Convert(*_msg);
+  this->userCameraPose = gazebo::msgs::ConvertIgn(*_msg);
   if (!this->userCameraPoseValid)
   {
     this->initialCameraPose = this->userCameraPose;
@@ -374,7 +374,7 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
   HaptixWorldPlugin::ConvertTransform(_req, pose);
 
   gazebo::msgs::Pose poseMsg;
-  gazebo::msgs::Set(&poseMsg, pose);
+  gazebo::msgs::Set(&poseMsg, pose.Ign());
   this->userCameraPub->Publish(poseMsg);
   _result = true;
 }
@@ -848,7 +848,7 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   if (model->GetName() == "mpl_haptix_right_forearm" ||
       model->GetName() == "mpl_haptix_left_forearm")
   {
-    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose);
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose.Ign());
     this->ignNode.Publish("haptix/arm_model_pose", msg);
   }
   else
@@ -1189,7 +1189,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
   _result = false;
   GZ_ASSERT(this->userCameraPub != NULL, "Camera publisher was NULL!");
   gazebo::msgs::Pose poseMsg;
-  gazebo::msgs::Set(&poseMsg, this->initialCameraPose);
+  gazebo::msgs::Set(&poseMsg, this->initialCameraPose.Ign());
   this->userCameraPub->Publish(poseMsg);
 
   if (_req.data() != 0)
@@ -1670,51 +1670,85 @@ void HaptixWorldPlugin::HaptixAddConstraintCallback(
   }
 
   std::string xml = _req.string_value();
-  sdf::SDF jointSDF;
-  jointSDF.SetFromString(xml);
-  if (!jointSDF.Root() || !jointSDF.Root()->HasElement("joint"))
+  gzerr << "\nconstraint XML:\n" << xml << "\n\n";
+
+  sdf::ElementPtr jointSDF;
+  jointSDF.reset(new sdf::Element);
+  sdf::initFile("joint.sdf", jointSDF);
+  sdf::readString(xml, jointSDF);
+  gzerr << "[" << jointSDF
+        << "] has parent [" << jointSDF->HasElement("parent")
+        << "] str:\n" << jointSDF->ToString("test_")
+        << "\n";
+  if (!jointSDF || !jointSDF->HasElement("parent"))
   {
     gzerr << "constraint SDF was invalid" << std::endl;
     return;
   }
-  sdf::ElementPtr jointElement = jointSDF.Root()->GetElement("joint");
 
-  if (!jointElement || !jointElement->HasAttribute("name"))
+  if (!jointSDF->HasAttribute("name"))
   {
     gzerr << "joint element invalid" << std::endl;
     return;
   }
 
   // Set name
-  std::string model = _req.name();
+  std::string modelName = _req.name();
+  gazebo::physics::ModelPtr model = this->world->GetModel(modelName);
 
-  xml = jointSDF.ToString();
+  if (!model)
+  {
+    gzerr << "model [" << modelName << "] not found in world.\n";
+    return;
+  }
 
   // load an SDF element from XML
   // copy the string via capture list
-  auto addConstraintLambda = [model, xml, this]()
+  auto addConstraintLambda = [jointSDF, model, this]()
       {
-        /* in handsim plugin, something to the effect of below
-        std::string name;
         std::string parentName;
         std::string childName;
+        std::string type;
 
-        if (_sdf->HasElement("name"))
-          name = _sdf->Get<std::string>("name");
+        if (jointSDF->HasElement("child"))
+          childName = jointSDF->Get<std::string>("child");
         else
           return hxERROR;
 
-        if (_sdf->HasElement("parent"))
-          parentName = _sdf->Get<std::string>("parent");
+        if (jointSDF->HasElement("parent"))
+          parentName = jointSDF->Get<std::string>("parent");
         else
           return hxERROR;
 
-        joint = _world->GetPhysicsEngine()->CreateJoint(
-          _type, _model);
-        joint->Attach(_link1, _link2);
-        joint->Load(_sdf);
+        if (jointSDF->HasAttribute("type"))
+          type = jointSDF->GetAttribute("type")->GetAsString();
+        else
+          return hxERROR;
+
+        gazebo::physics::LinkPtr parentLink;
+        gazebo::physics::LinkPtr childLink;
+        for (auto &m : this->world->GetModels())
+        {
+          if (!parentLink)
+            parentLink = m->GetLink(parentName);
+          if (!childLink)
+            childLink = m->GetLink(childName);
+          if ((parentLink || parentName == "world") &&
+              (childLink || childName == "world"))
+            break;
+        }
+        if (!parentLink && parentName != "world")
+          return hxERROR;
+        if (!childLink && childName != "world")
+          return hxERROR;
+
+        gazebo::physics::JointPtr joint =
+          this->world->GetPhysicsEngine()->CreateJoint(
+          type, model);
+        joint->Attach(parentLink, childLink);
+        joint->Load(jointSDF);
         joint->Init();
-        */
+        return hxOK;
       };
   {
     std::lock_guard<std::mutex> lock(this->worldMutex);
