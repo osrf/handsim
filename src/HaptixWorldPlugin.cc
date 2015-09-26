@@ -1784,25 +1784,36 @@ void HaptixWorldPlugin::HaptixRemoveConstraintCallback(
 
   auto removeConstraintLambda = [model, constraint, this]()
       {
-        // actually RemoveConstraint(model, constraint);
-        /* in handsim world plugin,
         bool paused = this->world->IsPaused();
-        this->world->SetPaused(true);
-        if (_joint)
+        gazebo::physics::JointPtr joint = model->GetJoint(constraint);
+        if (!joint)
         {
+          gzerr << "constraint by name of [" << constraint
+                << "] in model [" << model->GetName()
+                << "] do not exist.\n";
+          for (auto &m : this->world->GetModels())
+          {
+            for (auto &j : m->GetJoints())
+              gzerr << m->GetName() << ": " << j->GetName() << "\n";
+          }
+          return hxERROR;
+        }
+        if (joint)
+        {
+          this->world->SetPaused(true);
           // reenable collision between the link pair
-          physics::LinkPtr parent = _joint->GetParent();
-          physics::LinkPtr child = _joint->GetChild();
+          gazebo::physics::LinkPtr parent = joint->GetParent();
+          gazebo::physics::LinkPtr child = joint->GetChild();
           if (parent)
             parent->SetCollideMode("all");
           if (child)
             child->SetCollideMode("all");
 
-          _joint->Detach();
-          _joint.reset();
+          joint->Detach();
+          joint.reset();
+          this->world->SetPaused(paused);
         }
-        this->world->SetPaused(paused);
-        */
+        return hxOK;
       };
   this->updateFunctions.push_back(removeConstraintLambda);
 
