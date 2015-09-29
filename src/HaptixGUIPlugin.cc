@@ -745,8 +745,6 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
 {
-  // gzerr << _contactName.toStdString() << " : " << _value << "\n";
-
   // constant for decay
   // const float epsilon = 0.01;
 
