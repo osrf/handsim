@@ -71,6 +71,8 @@ target_link_libraries(HaptixWorldPlugin
 set_target_properties(HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin PROPERTIES
   COMPILE_FLAGS ${IGNITION-TRANSPORT_CXX_FLAGS})
 
+MESSAGE(STATUS ${GAZEBO_PLUGIN_PATH})
+
 install (TARGETS HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin DESTINATION
   ${GAZEBO_PLUGIN_PATH}/)
 

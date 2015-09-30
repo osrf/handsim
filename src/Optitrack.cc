@@ -35,11 +35,12 @@
 #include <string>
 #include <sstream>
 
-#include <ignition/transport/NetUtils.hh>
 #include <gazebo/msgs/msgs.hh>
 
 #include "handsim/Optitrack.hh"
 #include "handsim/OptitrackBridge.hh"
+
+#include <ifaddrs.h>
 
 using namespace haptix;
 using namespace tracking;
@@ -49,13 +50,114 @@ const std::string Optitrack::armTrackerName = "ArmTracker";
 const std::string Optitrack::originTrackerName = "MonitorTracker";
 const std::string Optitrack::optitrackAliveTopic = "Alive";
 
+//////////////////////////////////////////////////
+bool isPrivateIP(const char *_ip)
+{
+  bool b = !strncmp("192.168", _ip, 7) || !strncmp("10.", _ip, 3) ||
+           !strncmp("169.254", _ip, 7);
+  return b;
+}
+
+//////////////////////////////////////////////////
+std::vector<std::string> determineInterfaces()
+{
+  std::vector<std::string> result;
+
+  // Second, fall back on interface search, which will yield an IP address
+//#ifdef HAVE_IFADDRS
+  struct ifaddrs *ifa = nullptr, *ifp = NULL;
+  int rc;
+  if ((rc = getifaddrs(&ifp)) < 0)
+  {
+    std::cerr << "error in getifaddrs: " << strerror(rc) << std::endl;
+    exit(-1);
+  }
+  char preferred_ip[200] = {0};
+
+  for (ifa = ifp; ifa; ifa = ifa->ifa_next)
+  {
+    char ip_[200];
+    socklen_t salen;
+    std::string interface;
+    if (!ifa->ifa_addr)
+      continue;  // evidently this interface has no ip address
+    if (ifa->ifa_addr->sa_family == AF_INET)
+      salen = sizeof(struct sockaddr_in);
+    else if (ifa->ifa_addr->sa_family == AF_INET6)
+      salen = sizeof(struct sockaddr_in6);
+    // Unknown family.
+    else
+      continue;
+    if (getnameinfo(ifa->ifa_addr, salen, ip_, sizeof(ip_), nullptr, 0,
+                    NI_NUMERICHOST) < 0)
+    {
+      std::cout << "getnameinfo couldn't get the ip of interface " <<
+                   ifa->ifa_name << std::endl;
+      continue;
+    }
+    // prefer non-loopback IPs
+    if (!strcmp("127.0.0.1", ip_) || strchr(ip_, ':'))
+      continue;  // ignore loopback unless we have no other choice
+    // Does not support multicast.
+    if (!(ifa->ifa_flags & IFF_MULTICAST))
+      continue;
+    // Is not running.
+    if (!(ifa->ifa_flags & IFF_UP))
+      continue;
+    // IPv6 interface.
+    if (ifa->ifa_addr->sa_family == AF_INET6 && !preferred_ip[0])
+      interface = std::string(ip_);
+    // Private network interface.
+    else if (isPrivateIP(ip_) && !preferred_ip[0])
+      interface = std::string(ip_);
+    // Any other interface.
+    else if (!isPrivateIP(ip_) &&
+             (isPrivateIP(preferred_ip) || !preferred_ip[0]))
+      interface = std::string(ip_);
+
+    // Add the new interface if it's new and unique.
+    if (!interface.empty() &&
+        std::find(std::begin(result), std::end(result),
+          interface) == std::end(result))
+    {
+      result.push_back(interface);
+    }
+  }
+  freeifaddrs(ifp);
+  if (result.empty())
+  {
+    std::cerr <<
+      "Couldn't find a preferred IP via the getifaddrs() call; "
+      "I'm assuming that your IP "
+      "address is 127.0.0.1.  This should work for local processes, "
+      "but will almost certainly not work if you have remote processes."
+      "Report to the disc-zmq development team to seek a fix." << std::endl;
+    return {"127.0.0.1"};
+  }
+  return result;
+
+//#else
+//  // @todo Fix IP determination in the case where getifaddrs() isn't
+//  // available.
+//  std::cerr <<
+//    "You don't have the getifaddrs() call; I'm assuming that your IP "
+//    "address is 127.0.0.1.  This should work for local processes, "
+//    "but will almost certainly not work if you have remote processes."
+//    "Report to the disc-zmq development team to seek a fix." << std::endl;
+//  return {"127.0.0.1"};
+//#endif
+}
+
 /////////////////////////////////////////////////
 Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   const std::string &_world)
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
   this->active.store(false);
-  this->myNetworkInterfaces = ignition::transport::determineInterfaces();
+  this->myNetworkInterfaces = determineInterfaces();
+  std::cout << "Interfaces: " << std::endl;
+  for (auto interface : this->myNetworkInterfaces)
+    std::cout << interface << std::endl;
 }
 
 /////////////////////////////////////////////////
@@ -252,6 +354,8 @@ void Optitrack::Unpack(char *pData)
 
   if (MessageID == 666)      // Frame from OptiTrack bridge.
   {
+    //return;
+    std::cout << "Custom data received" << std::endl;
     TrackingInfo_t trackingInfo;
     if (!this->comms.Unpack(pData, trackingInfo))
     {
@@ -284,6 +388,8 @@ void Optitrack::Unpack(char *pData)
   }
   else if (MessageID == 7)      // FRAME OF MOCAP DATA packet
   {
+    return;
+    std::cout << "MOCAP data received" << std::endl;
     // frame number
     int frameNumber = 0; memcpy(&frameNumber, ptr, 4); ptr += 4;
     output << "Frame # :" << frameNumber << std::endl;
