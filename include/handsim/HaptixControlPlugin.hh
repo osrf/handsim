@@ -115,6 +115,7 @@ namespace gazebo
     private: void UpdateHandControl(double _dt);
 
     /// \brief: gazebo contact sensors
+    /// \param[in] _i index of the sensor to update.
     private: void OnContactSensorUpdate(int _i);
 
     /// \brief: publish HaptixControlPlugin status

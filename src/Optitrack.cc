@@ -189,25 +189,27 @@ void Optitrack::RunReceptionTask()
     this->Unpack(buffer);
 
     // Publish messages
-    for (ModelPoses::iterator it = this->lastModelMap.begin();
-         it != this->lastModelMap.end(); ++it)
+    for (auto const &modelNamePose : this->lastModelMap)
     {
-      if (it->first.compare(headTrackerName) == 0)
+      if (modelNamePose.first.compare(headTrackerName) == 0)
       {
-        this->headPub->Publish(gazebo::msgs::Convert(it->second));
+        this->headPub->Publish(gazebo::msgs::Convert(modelNamePose.second.Ign()));
       }
-      else if (it->first.compare(armTrackerName) == 0)
+      else if (modelNamePose.first.compare(armTrackerName) == 0)
       {
-        this->armPub->Publish(gazebo::msgs::Convert(it->second));
+        this->armPub->Publish(gazebo::msgs::Convert(modelNamePose.second.Ign()));
       }
-      /*else if (it->first.compare(originTrackerName) == 0)
+      /*else if (modelNamePose.first.compare(originTrackerName) == 0)
       {
-        this->originPub->Publish(gazebo::msgs::Convert(it->second));
+        this->originPub->Publish(gazebo::msgs::Convert(modelNamePose.second));
       }*/
       else
       {
-        if (iterations % 1000 == 0 && it->first != originTrackerName)
-          gzwarn << "Model name " << it->first << " not found!" << std::endl;
+        if (iterations % 1000 == 0 && modelNamePose.first != originTrackerName)
+        {
+          gzwarn << "Model name " << modelNamePose.first << " not found!"
+                 << std::endl;
+        }
       }
     }
     gazebo::msgs::PointCloud pc;
