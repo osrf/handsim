@@ -745,8 +745,6 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
 {
-  // gzerr << _contactName.toStdString() << " : " << _value << "\n";
-
   // constant for decay
   // const float epsilon = 0.01;
 
@@ -1252,7 +1250,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     this->armStartPose.rot = gazebo::math::Quaternion(rot) *
     this->armStartPose.rot;
 
-    gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment.Ign());
 
     // std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
     this->ignNode.Publish("haptix/arm_pose_inc", msg);

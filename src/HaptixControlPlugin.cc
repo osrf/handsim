@@ -717,7 +717,7 @@ void HaptixControlPlugin::SetWorldPose(const std::string &/*_topic*/,
                      const msgs::Pose &_pose)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
-  math::Pose inputPose(msgs::Convert(_pose));
+  math::Pose inputPose(msgs::ConvertIgn(_pose));
   this->model->SetWorldPose(inputPose);
   this->targetBaseLinkPose = this->baseLink->GetRelativePose() + inputPose;
 }
@@ -727,7 +727,7 @@ void HaptixControlPlugin::SetWorldPose(const std::string &/*_topic*/,
 void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
                      const msgs::Pose &_pose)
 {
-  math::Pose inputPose(msgs::Convert(_pose));
+  math::Pose inputPose(msgs::ConvertIgn(_pose));
 
   this->keyboardPose.pos += inputPose.pos;
   this->keyboardPose.rot = inputPose.rot * this->keyboardPose.rot;
@@ -770,12 +770,12 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
 
   if (joy.has_translation())
   {
-    posRate = msgs::Convert(joy.translation());
+    posRate = msgs::ConvertIgn(joy.translation());
   }
 
   if (joy.has_rotation())
   {
-    rotRate = msgs::Convert(joy.rotation());
+    rotRate = msgs::ConvertIgn(joy.rotation());
   }
 
   // rotate posRate into camera frame
@@ -862,7 +862,7 @@ void HaptixControlPlugin::UpdatePolhemus()
             + headSensorPose
             + (this->sourceWorldPoseHeadOffset + this->sourceWorldPose);
 
-          gazebo::msgs::Set(&this->joyMsg, targetCameraPose);
+          gazebo::msgs::Set(&this->joyMsg, targetCameraPose.Ign());
           this->viewpointJoyPub->Publish(this->joyMsg);
         }
       }
@@ -1089,6 +1089,8 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 /////////////////////////////////////////////////
 void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
+  boost::mutex::scoped_lock lock(this->updateMutex);
+
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
   if (_i >= static_cast<int>(this->contactSensorInfos.size()))
@@ -1110,20 +1112,22 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   }
   msgs::Contacts contacts = contactSensor->GetContacts();
   // contact sensor report contact between pairs of bodies
-  // if (contacts.contact().size() > 0)
-  //   gzerr << "  name " << contactSensor->GetName()
-  //         << " contacts " << contacts.contact().size() << "\n";
 
-  // reset aggregate forces and torques if contacts detected
+  // clear contact info
   this->contactSensorInfos[_i].contactForce = math::Vector3();
   this->contactSensorInfos[_i].contactTorque = math::Vector3();
 
-  for (int j = 0; j < contacts.contact().size(); ++j)
+  // for (int j = 0; j < contacts.contact().size(); ++j)
+  if (contacts.contact().size() > 0)
   {
+    // gzerr << "  name " << contactSensor->GetName()
+    //       << " contacts buffer [" << contacts.contact().size()
+    //       << "]\n";
+
+    int j = contacts.contact().size() -1;
     msgs::Contact contact = contacts.contact(j);
+
     // each contact can have multiple wrenches
-    // if (contact.wrench().size() > 0)
-    //   gzerr << "    wrenches " << contact.wrench().size() << "\n";
     for (int k = 0; k < contact.wrench().size(); ++k)
     {
       msgs::JointWrench wrenchMsg = contact.wrench(k);
@@ -1137,18 +1141,18 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
                   this->model->GetName().size()) == 0)
       {
         this->contactSensorInfos[_i].contactForce +=
-          msgs::Convert(wrenchMsg.body_1_wrench().force());
+          msgs::ConvertIgn(wrenchMsg.body_1_wrench().force());
         this->contactSensorInfos[_i].contactTorque +=
-          msgs::Convert(wrenchMsg.body_1_wrench().torque());
+          msgs::ConvertIgn(wrenchMsg.body_1_wrench().torque());
       }
       else if (strncmp(this->model->GetName().c_str(),
                        wrenchMsg.body_2_name().c_str(),
                        this->model->GetName().size()) == 0)
       {
         this->contactSensorInfos[_i].contactForce +=
-          msgs::Convert(wrenchMsg.body_2_wrench().force());
+          msgs::ConvertIgn(wrenchMsg.body_2_wrench().force());
         this->contactSensorInfos[_i].contactTorque +=
-          msgs::Convert(wrenchMsg.body_2_wrench().torque());
+          msgs::ConvertIgn(wrenchMsg.body_2_wrench().torque());
       }
       else
       {
@@ -1157,12 +1161,16 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
         return;
       }
 
-      // gzerr << "        contact [" << _i << ", " << j
-      //       << ", " << k << "] : [" << contactForce << "]\n";
+      // gzerr << "        sensor [" << _i << "] buffer [" << j
+      //       << "] contact [" << k << "] force ["
+      //       << this->contactSensorInfos[_i].contactForce
+      //       << "] sub-sum ["
+      //       << this->contactSensorInfos[_i].contactForce.GetLength()
+      //       << "]\n";
     }
   }
-  // gzerr << "contact [" << _i
-  //       << "]: [" << this->contactSensorInfos[_i].contactForce
+  // gzerr << " sensor [" << _i
+  //       << "] sum [" << this->contactSensorInfos[_i].contactForce
   //       << "]\n";
 }
 
@@ -1227,8 +1235,8 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   {
     haptix::comm::msgs::imu *linacc =
         this->robotState.mutable_imu_linear_acc(i);
-    math::Vector3 acc = this->imuSensors[i]->GetLinearAcceleration();
-    math::Vector3 vel = this->imuSensors[i]->GetAngularVelocity();
+    math::Vector3 acc = this->imuSensors[i]->LinearAcceleration();
+    math::Vector3 vel = this->imuSensors[i]->AngularVelocity();
     linacc->set_x(acc.x);
     linacc->set_y(acc.y);
     linacc->set_z(acc.z);
@@ -1481,7 +1489,7 @@ void HaptixControlPlugin::HaptixUpdateCallback(
 void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
-  this->userCameraPose = math::Pose(msgs::Convert(*_msg));
+  this->userCameraPose = math::Pose(msgs::ConvertIgn(*_msg));
   this->userCameraPoseValid = true;
 }
 
@@ -1562,7 +1570,7 @@ void HaptixControlPlugin::OnHydra(ConstHydraPtr &_msg)
 {
   boost::mutex::scoped_lock lock(this->hydraMessageMutex);
   this->haveHydra = true;
-  this->hydraPose = math::Pose(msgs::Convert(_msg->right().pose()));
+  this->hydraPose = math::Pose(msgs::ConvertIgn(_msg->right().pose()));
 
   math::Pose armSensorPose = this->hydraPose;
   if (this->pauseTracking)
@@ -1617,7 +1625,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->userCameraPoseMessageMutex);
   std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
 
-  gazebo::math::Pose cameraMarker = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose cameraMarker = gazebo::msgs::ConvertIgn(*_msg);
 
   if ((this->pauseTracking || !this->headOffsetInitialized)
        && this->userCameraPoseValid)
@@ -1720,7 +1728,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                 ;
       targetCamera.rot = this->userCameraPose.rot;
     }
-    gazebo::msgs::Set(&this->joyMsg, targetCamera);
+    gazebo::msgs::Set(&this->joyMsg, targetCamera.Ign());
     this->viewpointJoyPub->Publish(this->joyMsg);
   }
 }
@@ -1734,7 +1742,7 @@ void HaptixControlPlugin::OnUpdateOptitrackArm(ConstPosePtr &_msg)
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   std::lock_guard<std::mutex> monitorLock(this->optitrackMonitorMutex);
 
-  gazebo::math::Pose cameraMarker = gazebo::msgs::Convert(*_msg);
+  gazebo::math::Pose cameraMarker = gazebo::msgs::ConvertIgn(*_msg);
 
   if (this->pauseTracking || !this->armOffsetInitialized)
   {
@@ -1877,7 +1885,7 @@ void HaptixControlPlugin::OnUpdateOptitrackMonitor(ConstPointCloudPtr &_msg)
   std::vector<gazebo::math::Vector3> points;
   for (int i = 0; i < _msg->points_size(); ++i)
   {
-    points.push_back(msgs::Convert(_msg->points(i)));
+    points.push_back(msgs::ConvertIgn(_msg->points(i)));
   }
 
   double maxLength = 0;
