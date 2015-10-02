@@ -477,7 +477,11 @@ namespace gazebo
     /// \brief single grasp point in a trajectory
     private: class GraspPoint
     {
+      /// \brief A list of set points for the grasp commands for
+      /// all motors (actuators) of the hand.
       public: std::vector<float> inputs;
+      /// \brief A list of set points for the motor position commands for
+      /// all motors (actuators) of the hand.
       public: std::vector<float> motors;
     };
     /// \brief: list of predefined grasps

@@ -1558,19 +1558,15 @@ void HaptixControlPlugin::HaptixGraspCallback(
             // update output command
             pos = output;
             // go to next point
-            gzerr << "not yet " << j
-                  << " " << value << ", " << input << " : " << output << "\n";
           }
           else
           {
             // update output command
-            pos += (value - lastInput) / (input - lastInput) * (output - lastOutput);
-            gzerr << "OK " << j
-                  << " " << value << ", " << input << " : " << output << "\n";
+            pos += (value - lastInput) / (input - lastInput) *
+                   (output - lastOutput);
             p = --points.end();
           }
         }
-        gzerr << "output [" << i << ", " << j << "] : " << output << "\n";
         // superimpose multiple _req.grasps together
         this->graspPositions[j] += pos / _req.grasps_size();
         _rep.set_ref_pos(j, this->graspPositions[j]);
