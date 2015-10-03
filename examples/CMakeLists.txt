@@ -8,10 +8,10 @@ include_directories(${HANDSIM_INCLUDE_DIRS})
 link_directories(${HANDSIM_LIBRARY_DIRS})
 
 add_executable(polhemus_example polhemus_example.c)
-target_link_libraries(polhemus_example polhemus_driver)
+target_link_libraries(polhemus_example HaptixTracking)
 
 add_executable(polhemus_example_continuous polhemus_example_continuous.c)
-target_link_libraries(polhemus_example_continuous polhemus_driver)
+target_link_libraries(polhemus_example_continuous HaptixTracking)
 
 add_executable(polhemus_example_multiple_sensors polhemus_example_multiple_sensors.c)
-target_link_libraries(polhemus_example_multiple_sensors polhemus_driver)
+target_link_libraries(polhemus_example_multiple_sensors HaptixTracking)
