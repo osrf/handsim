@@ -76,8 +76,10 @@ TEST_F(Issue86Test, MotorLimits)
   // Expect motor limits to equal limits from SDF
   for (int i = 0; i < robot_info.motor_count; i++)
   {
-    EXPECT_DOUBLE_EQ(robot_info.motor_limit[i][0], indexMotorLimitMap[i].first);
-    EXPECT_DOUBLE_EQ(robot_info.motor_limit[i][1], indexMotorLimitMap[i].second);
+    EXPECT_DOUBLE_EQ(robot_info.motor_limit[i][0],
+      indexMotorLimitMap[i].first);
+    EXPECT_DOUBLE_EQ(robot_info.motor_limit[i][1],
+      indexMotorLimitMap[i].second);
   }
 }
 
