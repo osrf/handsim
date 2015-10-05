@@ -70,6 +70,7 @@ TEST_F(Issue86Test, MotorLimits)
                                   joint->GetUpperLimit(0).Radian());
   }
 
+  world->Step(1);
   hxRobotInfo robot_info;
   ASSERT_EQ(hx_robot_info(&robot_info), hxOK);
 
