@@ -15,6 +15,10 @@ macro (handsim_build_tests)
       HaptixWorldPlugin
     )
 
+    include_directories(
+      ${IGNITION-TRANSPORT_INCLUDE_DIRS}
+    )
+
     target_link_libraries(${BINARY_NAME}
       libgtest.a
       libgtest_main.a
