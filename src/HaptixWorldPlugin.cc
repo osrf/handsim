@@ -1670,16 +1670,12 @@ void HaptixWorldPlugin::HaptixAddConstraintCallback(
   }
 
   std::string xml = _req.string_value();
-  gzerr << "\nconstraint XML:\n" << xml << "\n\n";
 
   sdf::ElementPtr jointSDF;
   jointSDF.reset(new sdf::Element);
   sdf::initFile("joint.sdf", jointSDF);
   sdf::readString(xml, jointSDF);
-  gzerr << "[" << jointSDF
-        << "] has parent [" << jointSDF->HasElement("parent")
-        << "] str:\n" << jointSDF->ToString("test_")
-        << "\n";
+
   if (!jointSDF || !jointSDF->HasElement("parent"))
   {
     gzerr << "constraint SDF was invalid" << std::endl;
