@@ -143,6 +143,7 @@ gazebo::physics::WorldPtr SimApiTest::InitWorld(const std::string &_worldFile)
   gazebo::common::SystemPaths::Instance()->AddGazeboPaths(path.string());
   Load(_worldFile, true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  world->Step(1);
   return world;
 }
 
