@@ -244,7 +244,6 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_remove_constraint",
     &HaptixWorldPlugin::HaptixRemoveConstraintCallback, this);
-
 }
 
 /////////////////////////////////////////////////
