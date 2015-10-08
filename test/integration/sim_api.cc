@@ -1184,6 +1184,38 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
   }
 }
 
+TEST_F(SimApiTest, HxsAddRemoveConstraint)
+{
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+
+  // test add, remove constraint
+  std::string constraintSDF =
+      "<sdf version=\"1.5\">"
+      "  <joint name=\"test_constraint\" type=\"revolute\">"
+      "    <parent>table::link</parent>"
+      "    <child>wood_cube_5cm::link</child>"
+      "    <axis>"
+      "      <xyz>0 1 0</xyz>"
+      "    </axis>"
+      "  </joint>"
+      "</sdf>";
+
+  EXPECT_EQ(hxs_add_constraint(constraintSDF.c_str(), "wood_cube_5cm"), hxOK);
+  std::cout << "hxs_add_constraint executed." << std::endl;
+  world->Step(1000);
+  EXPECT_TRUE(world->GetModel("wood_cube_5cm")->GetJoint("test_constraint")
+              != NULL);
+  EXPECT_EQ(hxs_remove_constraint("test_constraint", "wood_cube_5cm"), hxOK);
+  std::cout << "hxs_remove_constraint executed." << std::endl;
+  world->Step(1000);
+  EXPECT_TRUE(world->GetModel("wood_cube_5cm")->GetJoint("test_constraint")
+              == NULL);
+}
+
 // TODO Implement stubbed out tests.
 /*
 
