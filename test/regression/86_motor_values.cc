@@ -15,8 +15,10 @@
  *
 */
 
+#include <limits>
 #include <gtest/gtest.h>
 #include <haptix/comm/haptix.h>
+#include <ignition/math/Rand.hh>
 
 #include "gazebo/physics/World.hh"
 #include "gazebo/physics/Model.hh"
@@ -37,12 +39,13 @@ gazebo::physics::WorldPtr Issue86Test::InitWorld(const std::string &_worldFile)
   return world;
 }
 
-
 /////////////////////////////////////////////////
 TEST_F(Issue86Test, MotorLimits)
 {
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat.world");
   ASSERT_TRUE(world != NULL);
+
+  world->Step(1);
 
   // Get joint limits indexed on the numerical motor index
   gazebo::physics::ModelPtr armModel = world->GetModel("mpl_haptix_right_forearm");
@@ -90,6 +93,8 @@ TEST_F(Issue86Test, MotorPositions)
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat.world");
   ASSERT_TRUE(world != NULL);
 
+  world->Step(1);
+
   hxRobotInfo robot_info;
   hxSensor sensor;
   ASSERT_EQ(hx_robot_info(&robot_info), hxOK);
@@ -132,6 +137,19 @@ TEST_F(Issue86Test, MotorPositions)
       EXPECT_DOUBLE_EQ(command.ref_pos[i], sensor.motor_pos[i]);
     }
   }
+}
 
+/////////////////////////////////////////////////
+int main(int argc, char **argv)
+{
+  // Get a random partition name.
+  auto rnd = ignition::math::Rand::IntUniform(0,
+      std::numeric_limits<int>::max());
+  std::string partition = std::to_string(rnd);
 
+  // Set the partition name for this process.
+  setenv("IGN_PARTITION", partition.c_str(), 1);
+
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

@@ -1381,8 +1381,8 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       // fake joint, limit is not set in sdf, so they are +/-1e16
       // go through all gearboxes and compute a joint limit based
       // on joint limits of gearboxed joints.
-      double motorMin;
-      double motorMax;
+      double motorMin = 0.0;
+      double motorMax = 0.0;
       for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
       {
         int n = this->motorInfos[i].gearboxes[j].index;
