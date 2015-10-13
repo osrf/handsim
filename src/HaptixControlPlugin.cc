@@ -646,8 +646,6 @@ void HaptixControlPlugin::LoadHandControl()
           for (unsigned int i = 0; i < tokensInputs.size(); ++i)
           {
             // for old style trajectory, target input is 1
-            gzerr << "[" << stof(tokensInputs[i])
-                  << ", " << stof(tokensMotors[i]) << "]\n";
             p.inputs.push_back(stof(tokensInputs[i]));
             p.motors.push_back(stof(tokensMotors[i]));
           }
