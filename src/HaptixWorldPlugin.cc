@@ -1783,7 +1783,6 @@ void HaptixWorldPlugin::HaptixRemoveConstraintCallback(
 
   auto removeConstraintLambda = [model, constraint, this]()
       {
-        bool paused = this->world->IsPaused();
         gazebo::physics::JointPtr joint = model->GetJoint(constraint);
         if (!joint)
         {
@@ -1797,20 +1796,9 @@ void HaptixWorldPlugin::HaptixRemoveConstraintCallback(
           }
           return hxERROR;
         }
-        if (joint)
+        else
         {
-          this->world->SetPaused(true);
-          // reenable collision between the link pair
-          gazebo::physics::LinkPtr parent = joint->GetParent();
-          gazebo::physics::LinkPtr child = joint->GetChild();
-          if (parent)
-            parent->SetCollideMode("all");
-          if (child)
-            child->SetCollideMode("all");
-
-          joint->Detach();
-          joint.reset();
-          this->world->SetPaused(paused);
+          model->RemoveJoint(constraint);
         }
         return hxOK;
       };
