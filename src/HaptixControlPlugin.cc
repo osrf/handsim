@@ -625,7 +625,6 @@ void HaptixControlPlugin::LoadHandControl()
       sdf::ElementPtr point = grasp->GetElement("point");
       while (point)
       {
-        gzerr << "point\n";
         std::string graspInputsBuffer;
         point->GetElement("inputs")->GetValue()->Get(graspInputsBuffer);
         std::istringstream issInputs(graspInputsBuffer);
@@ -676,8 +675,6 @@ void HaptixControlPlugin::LoadHandControl()
       for (unsigned int i = 0; i < tokens.size(); ++i)
       {
         // for old style trajectory, target input is 1
-        gzerr << "[" << 1.0
-              << ", " << stof(tokens[i]) << "]\n";
         p.inputs.push_back(1.0);
         p.motors.push_back(stof(tokens[i]));
       }
