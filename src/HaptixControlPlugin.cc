@@ -1215,7 +1215,8 @@ void HaptixControlPlugin::ConvertJointDataToMotorData(
 /////////////////////////////////////////////////
 // convert motor position to joint position
 void HaptixControlPlugin::ConvertMotorPositionToJointPosition(
-  const MotorInfo &_motorInfo, double _motorPosition, double &_jointPosition)
+  const MotorInfo &_motorInfo, const double _motorPosition,
+  double &_jointPosition)
 {
   _jointPosition = (_motorPosition + _motorInfo.encoderOffset)
     / _motorInfo.gearRatio;
@@ -1224,7 +1225,8 @@ void HaptixControlPlugin::ConvertMotorPositionToJointPosition(
 /////////////////////////////////////////////////
 // convert motor velocity to joint velocity
 void HaptixControlPlugin::ConvertMotorVelocityToJointVelocity(
-  const MotorInfo &_motorInfo, double _motorVelocity, double &_jointVelocity)
+  const MotorInfo &_motorInfo, const double _motorVelocity,
+  double &_jointVelocity)
 {
   _jointVelocity = _motorVelocity * _motorInfo.gearRatio;
 }

@@ -415,7 +415,7 @@ namespace gazebo
     /// \param[in] _motorPosition motor position
     /// \param[out] _jointPosition joint position
     public: void ConvertMotorPositionToJointPosition(
-      const MotorInfo &_motorInfo, double _motorPosition,
+      const MotorInfo &_motorInfo, const double _motorPosition,
       double &_jointPosition);
 
     /// \brief: convert motor velocity to joint velocity
@@ -423,7 +423,7 @@ namespace gazebo
     /// \param[in] _motorVelocity motor velocity
     /// \param[out] _jointVelocity joint velocity
     public: void ConvertMotorVelocityToJointVelocity(
-      const MotorInfo &_motorInfo, double _motorVelocity,
+      const MotorInfo &_motorInfo, const double _motorVelocity,
       double &_jointVelocity);
 
     /// \brief: user controllable joints via motor commands in hxCommand.

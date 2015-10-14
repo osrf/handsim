@@ -110,7 +110,7 @@ namespace gazebo
 
     /// \brief Get joint name
     /// \return joint name
-    public: const std::string GetName();
+    public: const std::string GetName() const;
 
     /// \brief Returns true if joint has been assigned
     /// \return true if joint has been assigned
