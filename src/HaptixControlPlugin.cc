@@ -1089,7 +1089,6 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       /// For example, 1) could be:
       // double force2 = computed from gearboxed joints
       // this->haptixJoints[i]->SetForce(0, force2);
-
     }
   }
 }
@@ -1753,8 +1752,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                 + cameraMarker
                 + this->cameraMonitor.GetInverse()
                 + this->monitorScreen.GetInverse()
-                + this->worldScreen
-                ;
+                + this->worldScreen;
     }
     else
     {
@@ -1764,8 +1762,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                 + this->cameraMonitor.GetInverse()
                 + this->monitorScreen.GetInverse()
                 + this->optitrackHeadOffset
-                + this->worldScreen
-                ;
+                + this->worldScreen;
       targetCamera.rot = this->userCameraPose.rot;
     }
     gazebo::msgs::Set(&this->joyMsg, targetCamera.Ign());
