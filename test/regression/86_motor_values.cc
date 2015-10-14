@@ -25,6 +25,8 @@
 #include "gazebo/test/ServerFixture.hh"
 #include "test_config.h"
 
+#define TOL 1e-3
+
 class Issue86Test : public gazebo::ServerFixture
 {
   public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
@@ -59,6 +61,7 @@ TEST_F(Issue86Test, MotorLimits)
   ASSERT_TRUE(pluginSDF != NULL);
 
   std::map<int, std::pair<double, double>> indexMotorLimitMap;
+  /*c omputer from joint limit? might be hard to do
   for (sdf::ElementPtr motorSDF = pluginSDF->GetElement("motor"); motorSDF;
         motorSDF = pluginSDF->GetNextElement("motor"))
   {
@@ -72,6 +75,34 @@ TEST_F(Issue86Test, MotorLimits)
         std::pair<double, double>(joint->GetLowerLimit(0).Radian(),
                                   joint->GetUpperLimit(0).Radian());
   }
+  */
+  // manually set target results by hard coding for now.
+  // this test will at least detect changes in code.
+  indexMotorLimitMap[0] = std::pair<double, double>(-282.6, 282.6);
+  indexMotorLimitMap[1] =
+    std::pair<double, double>(-46.98, 141.30000305175781);
+  indexMotorLimitMap[2] =
+    std::pair<double, double>(-187.19999694824219, 187.19999694824219);
+  indexMotorLimitMap[3] =
+    std::pair<double, double>(0, 728.6400146484375);
+  indexMotorLimitMap[4] =
+    std::pair<double, double>(0, 362.55999755859375);
+  indexMotorLimitMap[5] =
+    std::pair<double, double>(0, 362.55999755859375);
+  indexMotorLimitMap[6] =
+    std::pair<double, double>(-288.28799438476562, 450.55999755859375);
+  indexMotorLimitMap[7] =
+    std::pair<double, double>(-121.44000244140625, 0);
+  indexMotorLimitMap[8] =
+    std::pair<double, double>(0, 0.96312499046325684);
+  indexMotorLimitMap[9] =
+    std::pair<double, double>(0, 0.96312499046325684);
+  indexMotorLimitMap[10] =
+    std::pair<double, double>(0, 0.96312499046325684);
+  indexMotorLimitMap[11] =
+    std::pair<double, double>(0, 121.44);
+  indexMotorLimitMap[12] =
+    std::pair<double, double>(0, 0.96312499046325684);
 
   world->Step(1);
   hxRobotInfo robot_info;
@@ -80,9 +111,10 @@ TEST_F(Issue86Test, MotorLimits)
   // Expect motor limits to equal limits from SDF
   for (int i = 0; i < robot_info.motor_count; i++)
   {
-    EXPECT_DOUBLE_EQ(robot_info.motor_limit[i][0],
+    gzdbg << "testing motor [" << i << "]\n";
+    EXPECT_FLOAT_EQ(robot_info.motor_limit[i][0],
       indexMotorLimitMap[i].first);
-    EXPECT_DOUBLE_EQ(robot_info.motor_limit[i][1],
+    EXPECT_FLOAT_EQ(robot_info.motor_limit[i][1],
       indexMotorLimitMap[i].second);
   }
 }
@@ -93,13 +125,44 @@ TEST_F(Issue86Test, MotorPositions)
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat.world");
   ASSERT_TRUE(world != NULL);
 
+  world->GetPhysicsEngine()->SetGravity(gazebo::math::Vector3(0, 0, 0));
+
   world->Step(1);
 
   hxRobotInfo robot_info;
   hxSensor sensor;
   ASSERT_EQ(hx_robot_info(&robot_info), hxOK);
 
+  // manually set target results by hard coding for now.
+  // this test will at least detect changes in code.
+  std::map<int, std::pair<double, double>> indexMotorLimitMap;
+  indexMotorLimitMap[0] = std::pair<double, double>(-282.6, 282.6);
+  indexMotorLimitMap[1] =
+    std::pair<double, double>(-46.98, 141.30000305175781);
+  indexMotorLimitMap[2] =
+    std::pair<double, double>(-187.19999694824219, 187.19999694824219);
+  indexMotorLimitMap[3] =
+    std::pair<double, double>(0, 728.6400146484375);
+  indexMotorLimitMap[4] =
+    std::pair<double, double>(0, 362.55999755859375);
+  indexMotorLimitMap[5] =
+    std::pair<double, double>(0, 362.55999755859375);
+  indexMotorLimitMap[6] =
+    std::pair<double, double>(-288.28799438476562, 450.55999755859375);
+  indexMotorLimitMap[7] =
+    std::pair<double, double>(-121.44000244140625, 0);
+  indexMotorLimitMap[8] =
+    std::pair<double, double>(0, 0.96312499046325684);
+  indexMotorLimitMap[9] =
+    std::pair<double, double>(0, 0.96312499046325684);
+  indexMotorLimitMap[10] =
+    std::pair<double, double>(0, 0.96312499046325684);
+  indexMotorLimitMap[11] =
+    std::pair<double, double>(0, 121.44);
+  indexMotorLimitMap[12] =
+    std::pair<double, double>(0, 0.96312499046325684);
   // Expect that the hand starts at 0
+
   hx_read_sensors(&sensor);
   for (int i = 0; i < robot_info.motor_count; i++)
   {
@@ -113,7 +176,13 @@ TEST_F(Issue86Test, MotorPositions)
     for (int i = 0; i < robot_info.motor_count; ++i)
     {
       // Set the desired position of this motor
-      command.ref_pos[i] = 0.5 * sin(0.05 * 2.0 * M_PI * j * 0.01);
+      if (j == 0)
+        command.ref_pos[i] = indexMotorLimitMap[i].first;
+      else if (j == 1)
+        command.ref_pos[i] = 0.5 * (
+          indexMotorLimitMap[i].first + indexMotorLimitMap[i].second);
+      else if (j == 2)
+        command.ref_pos[i] = 0.8*indexMotorLimitMap[i].second;
     }
     command.ref_pos_enabled = 1;
     command.ref_vel_max_enabled = 0;
@@ -126,6 +195,7 @@ TEST_F(Issue86Test, MotorPositions)
       printf("hx_update(): Request error.\n");
       continue;
     }
+    world->Step(6000);
 
     unsigned int sleeptime_us = 10000;
     usleep(sleeptime_us);
@@ -134,7 +204,8 @@ TEST_F(Issue86Test, MotorPositions)
     for (int i = 0; i < robot_info.motor_count; ++i)
     {
       gzdbg << "Verifying motor index: " << i << std::endl;
-      EXPECT_DOUBLE_EQ(command.ref_pos[i], sensor.motor_pos[i]);
+      gzdbg << command.ref_pos[i] << " : " << sensor.motor_pos[i] << "\n";
+      EXPECT_NEAR(command.ref_pos[i], sensor.motor_pos[i], TOL);
     }
   }
 }

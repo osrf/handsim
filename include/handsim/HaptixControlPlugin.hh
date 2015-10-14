@@ -390,7 +390,7 @@ namespace gazebo
 
     /// \brief: commanding all the joints in robot, and map
     /// robotCommand motor joints to a subset of the joints here.
-    private: std::vector<SimRobotCommand> simRobotCommands;
+    private: std::vector<SimRobotCommand> simJointCommands;
 
     /// \brief: joint names matching those of gazebo model
     /// All joints to be controlled by this plugin.
@@ -401,6 +401,30 @@ namespace gazebo
     private: std::map<unsigned int, std::string> jointNames;
 
     private: std::vector<JointHelper*> haptixJoints;
+
+    /// \brief: convert joint data to motor data
+    /// \param[in] _motorInfo motor info
+    /// \param[out] _motorPosition motor position
+    /// \param[out] _motorVelocity motor velocity
+    /// \param[out] _motorTorque motor torque
+    public: void ConvertJointDataToMotorData(const MotorInfo &_motorInfo,
+      double &_motorPosition, double &_motorVelocity, double &_motorTorque);
+
+    /// \brief: convert motor position to joint position
+    /// \param[in] _motorInfo motor info
+    /// \param[in] _motorPosition motor position
+    /// \param[out] _jointPosition joint position
+    public: void ConvertMotorPositionToJointPosition(
+      const MotorInfo &_motorInfo, double _motorPosition,
+      double &_jointPosition);
+
+    /// \brief: convert motor velocity to joint velocity
+    /// \param[in] _motorInfo motor info
+    /// \param[in] _motorVelocity motor velocity
+    /// \param[out] _jointVelocity joint velocity
+    public: void ConvertMotorVelocityToJointVelocity(
+      const MotorInfo &_motorInfo, double _motorVelocity,
+      double &_jointVelocity);
 
     /// \brief: user controllable joints via motor commands in hxCommand.
     /// <gearbox> joint coupling is only applied at position/velocity command
