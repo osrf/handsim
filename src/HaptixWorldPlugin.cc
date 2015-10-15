@@ -1743,19 +1743,11 @@ void HaptixWorldPlugin::HaptixAddConstraintCallback(
         if (!childLink && childName != "world")
           return hxERROR;
 
-        boost::weak_ptr<gazebo::physics::Joint> j =
+        gazebo::physics::JointPtr joint =
           model->CreateJoint(jointName, type, parentLink, childLink);
-        if (gazebo::physics::JointPtr joint = j.lock())
-        {
-          joint->Load(jointSDF);
-          joint->Init();
-          return hxOK;
-        }
-        else
-        {
-          gzerr << "Create joint dynamically failed.\n";
-          return hxERROR;
-        }
+        joint->Load(jointSDF);
+        joint->Init();
+        return hxOK;
       };
   {
     std::lock_guard<std::mutex> lock(this->worldMutex);
