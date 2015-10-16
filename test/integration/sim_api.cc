@@ -143,6 +143,7 @@ gazebo::physics::WorldPtr SimApiTest::InitWorld(const std::string &_worldFile)
   gazebo::common::SystemPaths::Instance()->AddGazeboPaths(path.string());
   Load(_worldFile, true);
   gazebo::physics::WorldPtr world = gazebo::physics::get_world("default");
+  world->Step(1);
   return world;
 }
 
@@ -1162,6 +1163,53 @@ TEST_F(SimApiTest, HxsSetModelCollideMode)
       EXPECT_EQ(collision->GetSurface()->collideBitmask, 0x0u);
     }
   }
+}
+
+TEST_F(SimApiTest, HxsAddRemoveConstraint)
+{
+  gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
+  ASSERT_TRUE(world != NULL);
+
+  gazebo::physics::ModelPtr model = world->GetModel("wood_cube_5cm");
+  ASSERT_TRUE(model != NULL);
+
+  // Wait a little while for the world to initialize
+  world->Step(20);
+
+  // test add, remove constraint
+  std::string constraintSDF =
+      "<sdf version=\"1.5\">"
+      "  <joint name=\"test_constraint\" type=\"revolute\">"
+      "    <parent>table::link</parent>"
+      "    <child>wood_cube_5cm::link</child>"
+      "    <axis>"
+      "      <xyz>0 1 0</xyz>"
+      "    </axis>"
+      "  </joint>"
+      "</sdf>";
+
+  gazebo::math::Pose pose(0.01, 0.02, 3, 3.14, 1.57, 1.57);
+  hxsTransform transform;
+  transform.pos.x = pose.pos.x;
+  transform.pos.y = pose.pos.y;
+  transform.pos.z = pose.pos.z;
+  transform.orient.w = pose.rot.w;
+  transform.orient.x = pose.rot.x;
+  transform.orient.y = pose.rot.y;
+  transform.orient.z = pose.rot.z;
+  ASSERT_EQ(hxs_set_model_transform("wood_cube_5cm", &transform), hxOK);
+
+  EXPECT_EQ(hxs_add_constraint(constraintSDF.c_str(), "wood_cube_5cm"), hxOK);
+  std::cout << "hxs_add_constraint executed." << std::endl;
+  world->Step(100);
+  EXPECT_TRUE(world->GetModel("wood_cube_5cm")->GetJoint("test_constraint")
+              != NULL);
+  EXPECT_EQ(hxs_remove_constraint("test_constraint", "wood_cube_5cm"), hxOK);
+  std::cout << "hxs_remove_constraint executed." << std::endl;
+  world->Step(100);
+  gazebo::physics::JointPtr joint =
+    world->GetModel("wood_cube_5cm")->GetJoint("test_constraint");
+  EXPECT_TRUE(joint == NULL);
 }
 
 // TODO Implement stubbed out tests.

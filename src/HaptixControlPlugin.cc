@@ -1713,8 +1713,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                 + cameraMarker
                 + this->cameraMonitor.GetInverse()
                 + this->monitorScreen.GetInverse()
-                + this->worldScreen
-                ;
+                + this->worldScreen;
     }
     else
     {
@@ -1724,8 +1723,7 @@ void HaptixControlPlugin::OnUpdateOptitrackHead(ConstPosePtr &_msg)
                 + this->cameraMonitor.GetInverse()
                 + this->monitorScreen.GetInverse()
                 + this->optitrackHeadOffset
-                + this->worldScreen
-                ;
+                + this->worldScreen;
       targetCamera.rot = this->userCameraPose.rot;
     }
     gazebo::msgs::Set(&this->joyMsg, targetCamera.Ign());
