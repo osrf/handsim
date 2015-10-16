@@ -507,7 +507,7 @@ void HaptixControlPlugin::LoadHandControl()
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     int m = this->motorInfos[i].index;
-    // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
+    // gzdbg << m << " : " << this->simJointCommands[m].ref_pos << "\n";
     double jointTorque = this->motorInfos[i].gearRatio *
                          this->motorInfos[i].motorTorque;
     this->pids[m].SetCmdMax(jointTorque);
@@ -665,7 +665,7 @@ void HaptixControlPlugin::LoadHandControl()
       c.ref_vel_max = 0.0;
       c.gain_pos = 1.0;
       c.gain_vel = 0.0;
-      this->simRobotCommands.push_back(c);
+      this->simJointCommands.push_back(c);
     }
   }
 
@@ -705,8 +705,8 @@ void HaptixControlPlugin::Reset()
   this->targetBaseLinkPose = this->initialBaseLinkPose;
 
   std::vector<SimRobotCommand>::iterator iter;
-  for (iter = this->simRobotCommands.begin();
-      iter != this->simRobotCommands.end(); ++iter)
+  for (iter = this->simJointCommands.begin();
+      iter != this->simJointCommands.end(); ++iter)
   {
     iter->ref_pos = 0.0;
     iter->ref_vel_max = 0.0;
@@ -950,36 +950,42 @@ void HaptixControlPlugin::GetHandControlFromClient()
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     int m = this->motorInfos[i].index;
-    // gzdbg << m << " : " << this->simRobotCommands[m].ref_pos << "\n";
-    // If we're in grasp mode, then take commands from elsewhere
-    unsigned int numWristMotors = 3;
-    if (this->graspMode && i >= numWristMotors)
+
+    // get motor joint target commands from motor ref_pos commands
+    if (this->graspMode)
     {
+      // If we're in grasp mode, then take commands from elsewhere
       if (this->robotCommand.ref_pos_enabled())
       {
-        this->simRobotCommands[m].ref_pos = this->graspPositions[i];
+        this->simJointCommands[m].ref_pos = this->graspPositions[i];
       }
       if (this->robotCommand.ref_vel_max_enabled())
       {
-        this->simRobotCommands[m].ref_vel_max = 0.0;
+        this->simJointCommands[m].ref_vel_max = 0.0;
       }
     }
     else
     {
+      // command joint position targets for corresponding motor joints
       if (this->robotCommand.ref_pos_enabled())
       {
-        this->simRobotCommands[m].ref_pos = this->robotCommand.ref_pos(i);
+        // convert motor position to joint position
+        this->ConvertMotorPositionToJointPosition(
+          this->motorInfos[i], this->robotCommand.ref_pos(i),
+          this->simJointCommands[m].ref_pos);
       }
       if (this->robotCommand.ref_vel_max_enabled())
       {
-        this->simRobotCommands[m].ref_vel_max =
-          this->robotCommand.ref_vel_max(i);
+        // convert motor velocity to joint velocity
+        this->ConvertMotorVelocityToJointVelocity(
+          this->motorInfos[i], this->robotCommand.ref_vel_max(i),
+          this->simJointCommands[m].ref_vel_max);
       }
     }
     if (this->robotCommand.gain_pos_enabled())
-      this->simRobotCommands[m].gain_pos = this->robotCommand.gain_pos(i);
+      this->simJointCommands[m].gain_pos = this->robotCommand.gain_pos(i);
     if (this->robotCommand.gain_vel_enabled())
-      this->simRobotCommands[m].gain_vel = this->robotCommand.gain_vel(i);
+      this->simJointCommands[m].gain_vel = this->robotCommand.gain_vel(i);
 
     // Use motor commands to set set joint command
     // based on coupling specified in <gearbox> params.
@@ -989,29 +995,31 @@ void HaptixControlPlugin::GetHandControlFromClient()
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
       minOffset = std::min(minOffset, this->motorInfos[i].gearboxes[j].offset);
 
-    // Next, apply transmission as defined:
+    // APPLY JOINT GEARBOX RATIO TO GET COUPLED JOINTS TARGET FROM
+    // MOTOR JOINT COMMANDS.
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
       int n = this->motorInfos[i].gearboxes[j].index;
       // gzdbg << " " << n
-      //       << " : " << this->simRobotCommands[n].ref_pos
+      //       << " : " << this->simJointCommands[n].ref_pos
       //       << " : " << this->robotCommand.ref_pos_enabled() << "\n";
 
       // See transmission specification in issue #60,
       // If motor angle commanded is less than offset
       // use multiplier1, otherwise use multiplier2
-      if (this->simRobotCommands[m].ref_pos < minOffset)
+      if (this->simJointCommands[m].ref_pos < minOffset)
       {
         if (this->robotCommand.ref_pos_enabled())
         {
-          this->simRobotCommands[n].ref_pos =
-            this->simRobotCommands[m].ref_pos
+          this->simJointCommands[n].ref_pos =
+          this->simJointCommands[n].ref_pos =
+            this->simJointCommands[m].ref_pos
             * this->motorInfos[i].gearboxes[j].multiplier1;
         }
         if (this->robotCommand.ref_vel_max_enabled())
         {
-          this->simRobotCommands[n].ref_vel_max =
-            this->simRobotCommands[m].ref_vel_max
+          this->simJointCommands[n].ref_vel_max =
+            this->simJointCommands[m].ref_vel_max
             / this->motorInfos[i].gearboxes[j].multiplier1;
         }
       }
@@ -1019,8 +1027,8 @@ void HaptixControlPlugin::GetHandControlFromClient()
       {
         if (this->robotCommand.ref_pos_enabled())
         {
-          this->simRobotCommands[n].ref_pos =
-            (this->simRobotCommands[m].ref_pos -
+          this->simJointCommands[n].ref_pos =
+            (this->simJointCommands[m].ref_pos -
              this->motorInfos[i].gearboxes[j].offset)
             * this->motorInfos[i].gearboxes[j].multiplier2
             + this->motorInfos[i].gearboxes[j].offset
@@ -1028,16 +1036,16 @@ void HaptixControlPlugin::GetHandControlFromClient()
         }
         if (this->robotCommand.ref_vel_max_enabled())
         {
-          this->simRobotCommands[n].ref_vel_max =
-            this->simRobotCommands[m].ref_vel_max
+          this->simJointCommands[n].ref_vel_max =
+            this->simJointCommands[m].ref_vel_max
             / this->motorInfos[i].gearboxes[j].multiplier2;
         }
       }
       // set gains
       if (this->robotCommand.gain_pos_enabled())
-        this->simRobotCommands[n].gain_pos = this->robotCommand.gain_pos(i);
+        this->simJointCommands[n].gain_pos = this->robotCommand.gain_pos(i);
       if (this->robotCommand.gain_vel_enabled())
-        this->simRobotCommands[n].gain_vel = this->robotCommand.gain_vel(i);
+        this->simJointCommands[n].gain_vel = this->robotCommand.gain_vel(i);
     }
   }
 }
@@ -1053,25 +1061,24 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     double velocity = this->haptixJoints[i]->GetVelocity(0);
 
     // compute target joint position and velocity error in gazebo
-    double errorPos = position - this->simRobotCommands[i].ref_pos;
-    double errorVel = velocity - this->simRobotCommands[i].ref_vel_max;
+    double errorPos = position - this->simJointCommands[i].ref_pos;
+    double errorVel = velocity - this->simJointCommands[i].ref_vel_max;
 
     // compute overall error
-    double error = this->simRobotCommands[i].gain_pos * errorPos
-                 + this->simRobotCommands[i].gain_vel * errorVel;
+    double error = this->simJointCommands[i].gain_pos * errorPos
+                 + this->simJointCommands[i].gain_vel * errorVel;
 
     // compute force needed
     double force = this->pids[i].Update(error, _dt);
 
-
     if (!this->haptixJoints[i]->SetForce(0, force))
     {
       // not a real gazebo joint, set target directly
-      this->haptixJoints[i]->SetPosition(this->simRobotCommands[i].ref_pos);
+      this->haptixJoints[i]->SetPosition(this->simJointCommands[i].ref_pos);
 
       /// \TODO: something about velocity commands
       // this->haptixJoints[i]->SetVelocity(
-      //   this->simRobotCommands[i].ref_vel_max);
+      //   this->simJointCommands[i].ref_vel_max);
       /// \TODO: for issue #86 motor velocity will be zero
       /// unless we:  1) compute torque from transmissioned joints, or
       /// 2) implement actual motor joint dynamics and servo the joint.
@@ -1083,7 +1090,6 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       /// For example, 1) could be:
       // double force2 = computed from gearboxed joints
       // this->haptixJoints[i]->SetForce(0, force2);
-
     }
   }
 }
@@ -1188,21 +1194,53 @@ void HaptixControlPlugin::PublishHaptixControlStatus()
 }
 
 /////////////////////////////////////////////////
+// convert joint position to motor position
+// convert joint velocity to motor velocity
+// convert joint torque to motor torque
+void HaptixControlPlugin::ConvertJointDataToMotorData(
+  const MotorInfo &_motorInfo,
+  double &_motorPosition, double &_motorVelocity, double &_motorTorque)
+{
+  int m = _motorInfo.index;
+  double jointPosition = this->haptixJoints[m]->GetAngle(0).Radian();
+  double jointVelocity = this->haptixJoints[m]->GetVelocity(0);
+  double jointTorque = this->haptixJoints[m]->GetForce(0);
+  // convert joint angle and velocities into motor using gear_ratio
+  _motorPosition = jointPosition * _motorInfo.gearRatio
+    - _motorInfo.encoderOffset;
+  _motorVelocity = jointVelocity / _motorInfo.gearRatio;
+  _motorTorque = jointTorque / _motorInfo.gearRatio;
+}
+
+/////////////////////////////////////////////////
+// convert motor position to joint position
+void HaptixControlPlugin::ConvertMotorPositionToJointPosition(
+  const MotorInfo &_motorInfo, const double _motorPosition,
+  double &_jointPosition)
+{
+  _jointPosition = (_motorPosition + _motorInfo.encoderOffset)
+    / _motorInfo.gearRatio;
+}
+
+/////////////////////////////////////////////////
+// convert motor velocity to joint velocity
+void HaptixControlPlugin::ConvertMotorVelocityToJointVelocity(
+  const MotorInfo &_motorInfo, const double _motorVelocity,
+  double &_jointVelocity)
+{
+  _jointVelocity = _motorVelocity * _motorInfo.gearRatio;
+}
+
+/////////////////////////////////////////////////
 // Play the trajectory, update states
 void HaptixControlPlugin::GetRobotStateFromSim()
 {
-  // fill robot state motor_pos, motor_vel, motor_torque
+  // fill motor state from joint state
+  double motorPosition, motorVelocity, motorTorque;
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    int m = motorInfos[i].index;
-    double jointPosition = this->haptixJoints[m]->GetAngle(0).Radian();
-    double jointVelocity = this->haptixJoints[m]->GetVelocity(0);
-    double jointTorque = this->haptixJoints[m]->GetForce(0);
-    // convert joint angle and velocities into motor using gear_ratio
-    double motorPosition = jointPosition * this->motorInfos[i].gearRatio
-      - this->motorInfos[i].encoderOffset;
-    double motorVelocity = jointVelocity / this->motorInfos[i].gearRatio;
-    double motorTorque = jointTorque / this->motorInfos[i].gearRatio;
+    this->ConvertJointDataToMotorData(this->motorInfos[i],
+      motorPosition, motorVelocity, motorTorque);
     // write to struct
     this->robotState.set_motor_pos(i, motorPosition);
     this->robotState.set_motor_vel(i, motorVelocity);
@@ -1383,13 +1421,13 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       // fake joint, limit is not set in sdf, so they are +/-1e16
       // go through all gearboxes and compute a joint limit based
       // on joint limits of gearboxed joints.
-      double motorMin;
-      double motorMax;
+      double motorMin = 0.0;
+      double motorMax = 0.0;
       for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
       {
         int n = this->motorInfos[i].gearboxes[j].index;
-        // double hi = this->haptixJoints[n]->GetUpperLimit(0).Radian();
-        // double lo = this->haptixJoints[n]->GetLowerLimit(0).Radian();
+        double hi = this->haptixJoints[n]->GetUpperLimit(0).Radian();
+        double lo = this->haptixJoints[n]->GetLowerLimit(0).Radian();
         // which multiplier to use
         // See transmission specification in issue #60,
         // If motor angle commanded is less than offset
@@ -1397,11 +1435,13 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
 
         // use multiplier1 for computing lower limit
         // take the largest of the min
-        motorMin = 0;
+        motorMin = std::max(lo,
+          lo * this->motorInfos[i].gearboxes[j].multiplier1);
 
         // use multiplier2 for computing upper limit
         // take the smallest of the max
-        motorMax = 0;
+        motorMax = std::min(hi,
+          hi * this->motorInfos[i].gearboxes[j].multiplier2);
       }
 
       if (this->motorInfos[i].gearRatio < 0)
