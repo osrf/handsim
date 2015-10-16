@@ -498,11 +498,21 @@ namespace gazebo
     /// create a list of imu sensors based on imuSensorNames
     private: std::vector<sensors::ImuSensorPtr> imuSensors;
 
+    /// \brief single grasp point in a trajectory
+    private: class GraspPoint
+    {
+      /// \brief A list of set points for the grasp commands for
+      /// all motors (actuators) of the hand.
+      public: std::vector<float> inputs;
+      /// \brief A list of set points for the motor position commands for
+      /// all motors (actuators) of the hand.
+      public: std::vector<float> motors;
+    };
     /// \brief: list of predefined grasps
     /// Give each one a name and the desired positions for the motors. E.g.:
     ///    <grasp name="MyGrasp">0 0 0 0.7679 0 0 1.3963 0 0 0 0
     ///                          0.8727 0 0.5236 -0.349</grasp>
-    private: std::map<std::string, std::vector<float> > grasps;
+    private: std::map<std::string, std::vector<GraspPoint> > grasps;
 
     /// \brief: current desired grasp pose
     /// If graspMode is true, then these are the desired positions of the finger

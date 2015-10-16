@@ -618,13 +618,68 @@ void HaptixControlPlugin::LoadHandControl()
   {
     std::string name;
     grasp->GetAttribute("name")->Get(name);
-    std::string graspBuffer;
-    grasp->GetValue()->Get(graspBuffer);
-    std::istringstream iss(graspBuffer);
-    std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
-                                    std::istream_iterator<std::string>{}};
-    for (unsigned int i = 0; i < tokens.size(); i++)
-      this->grasps[name].push_back(stof(tokens[i]));
+    std::vector<GraspPoint> graspPoints;
+    if (grasp->HasElement("point"))
+    {
+      sdf::ElementPtr point = grasp->GetElement("point");
+      while (point)
+      {
+        std::string graspInputsBuffer;
+        point->GetElement("inputs")->GetValue()->Get(graspInputsBuffer);
+        std::istringstream issInputs(graspInputsBuffer);
+        std::vector<std::string> tokensInputs{
+          std::istream_iterator<std::string>{issInputs},
+          std::istream_iterator<std::string>{}};
+
+        std::string graspMotorsBuffer;
+        point->GetElement("motors")->GetValue()->Get(graspMotorsBuffer);
+        std::istringstream issMotors(graspMotorsBuffer);
+        std::vector<std::string> tokensMotors{
+          std::istream_iterator<std::string>{issMotors},
+          std::istream_iterator<std::string>{}};
+
+        if (tokensInputs.size() == tokensMotors.size())
+        {
+          GraspPoint p;
+          for (unsigned int i = 0; i < tokensInputs.size(); ++i)
+          {
+            // for old style trajectory, target input is 1
+            p.inputs.push_back(stof(tokensInputs[i]));
+            p.motors.push_back(stof(tokensMotors[i]));
+          }
+          graspPoints.push_back(p);
+        }
+        else
+        {
+          gzerr << "<inputs> vector must equal length of <motors>\n";
+          gzerr << "grasp name=" << name << "\n";
+          gzerr << "<inputs> len=" << tokensInputs.size() << "\n";
+          gzerr << "<motors> len=" << tokensMotors.size() << "\n";
+        }
+        point = point->GetNextElement("point");
+      }
+    }
+    else
+    {
+      // old style specification with just a single vector of final values
+      // e.g.
+      //   <grasp name="pinch">0 0 1 1 1</grasp>
+      // we can set this as single point with inputs being 1's
+      std::string graspBuffer;
+      grasp->GetValue()->Get(graspBuffer);
+      std::istringstream iss(graspBuffer);
+      std::vector<std::string> tokens{std::istream_iterator<std::string>{iss},
+                                      std::istream_iterator<std::string>{}};
+      GraspPoint p;
+      for (unsigned int i = 0; i < tokens.size(); ++i)
+      {
+        // for old style trajectory, target input is 1
+        p.inputs.push_back(1.0);
+        p.motors.push_back(stof(tokens[i]));
+      }
+      graspPoints.push_back(p);
+    }
+    this->grasps[name] = graspPoints;
     grasp = grasp->GetNextElement("grasp");
   }
 
@@ -1562,21 +1617,49 @@ void HaptixControlPlugin::HaptixGraspCallback(
   for (int i = 0; i < _req.grasps_size(); ++i)
   {
     std::string name = _req.grasps(i).grasp_name();
-    std::map<std::string, std::vector<float> >::const_iterator g =
+    std::map<std::string, std::vector<GraspPoint> >::const_iterator g =
       this->grasps.find(name);
     if (g != this->grasps.end())
     {
+      float value = _req.grasps(i).grasp_value();
+      if (value < 0.0)
+        value = 0.0;
+      if (value > 1.0)
+        value = 1.0;
       for (unsigned int j = 0;
-          j < g->second.size() && j < this->graspPositions.size(); ++j)
+          j < this->graspPositions.size(); ++j)
       {
-        float value = _req.grasps(i).grasp_value();
-        if (value < 0.0)
-          value = 0.0;
-        if (value > 1.0)
-          value = 1.0;
         // This superposition logic could use a lot of thought.  But it should
         // at least work for the case of a single type of grasp.
-        this->graspPositions[j] += value * g->second[j] / _req.grasps_size();
+        std::vector<GraspPoint> points = g->second;
+        // loop through points to see where the value falls in grasp trajectory
+        float input = 0;
+        float output = 0;
+        float pos = 0;
+        for (std::vector<GraspPoint>::iterator p = points.begin();
+             p != points.end(); ++p)
+        {
+          float lastInput = input;
+          float lastOutput = output;
+          input = p->inputs[j];
+          output = p->motors[j];
+          // check to see if this value falls in this interval of input
+          if (value > input)
+          {
+            // update output command
+            pos = output;
+            // go to next point
+          }
+          else
+          {
+            // update output command
+            pos += (value - lastInput) / (input - lastInput) *
+                   (output - lastOutput);
+            p = --points.end();
+          }
+        }
+        // superimpose multiple _req.grasps together
+        this->graspPositions[j] += pos / _req.grasps_size();
         _rep.set_ref_pos(j, this->graspPositions[j]);
       }
     }
