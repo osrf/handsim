@@ -1780,25 +1780,22 @@ void HaptixWorldPlugin::HaptixRemoveConstraintCallback(
   }
 
   std::string constraint = _req.string_value();
+  gazebo::physics::Model *m = model.get();
 
-  auto removeConstraintLambda = [model, constraint, this]()
+  auto removeConstraintLambda = [m, constraint, this]()
       {
-        gazebo::physics::JointPtr joint = model->GetJoint(constraint);
-        if (!joint)
+        boost::weak_ptr<gazebo::physics::Joint> joint
+          = m->GetJoint(constraint);
+        if (!joint.lock())
         {
           gzerr << "constraint by name of [" << constraint
-                << "] in model [" << model->GetName()
+                << "] in model [" << m->GetName()
                 << "] do not exist.\n";
-          for (auto &m : this->world->GetModels())
-          {
-            for (auto &j : m->GetJoints())
-              gzerr << m->GetName() << ": " << j->GetName() << "\n";
-          }
           return hxERROR;
         }
         else
         {
-          model->RemoveJoint(constraint);
+          m->RemoveJoint(constraint);
         }
         return hxOK;
       };

@@ -1220,21 +1220,15 @@ TEST_F(SimApiTest, HxsAddRemoveConstraint)
 
   EXPECT_EQ(hxs_add_constraint(constraintSDF.c_str(), "wood_cube_5cm"), hxOK);
   std::cout << "hxs_add_constraint executed." << std::endl;
-  gzerr << "1";getchar();
   world->Step(100);
-  gzerr << "2";getchar();
   EXPECT_TRUE(world->GetModel("wood_cube_5cm")->GetJoint("test_constraint")
               != NULL);
   EXPECT_EQ(hxs_remove_constraint("test_constraint", "wood_cube_5cm"), hxOK);
   std::cout << "hxs_remove_constraint executed." << std::endl;
-  gzerr << "4";getchar();
   world->Step(100);
-  gzerr << "5";getchar();
   gazebo::physics::JointPtr joint =
     world->GetModel("wood_cube_5cm")->GetJoint("test_constraint");
-  EXPECT_TRUE(world->GetModel("wood_cube_5cm")->GetJoint("test_constraint")
-              == NULL);
-  gzerr << "done";getchar();
+  EXPECT_TRUE(joint == NULL);
 }
 
 // TODO Implement stubbed out tests.
