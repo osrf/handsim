@@ -19,6 +19,7 @@
 
 #include <gazebo/math/gzmath.hh>
 #include <gazebo/physics/physics.hh>
+#include <gazebo/sensors/sensors.hh>
 #include <gazebo/test/ServerFixture.hh>
 #include <ignition/transport.hh>
 
@@ -31,6 +32,8 @@
 
 class PhysicsTest : public gazebo::ServerFixture
 {
+  public: double GetDepth(const gazebo::msgs::Contacts &_contacts,
+    const gazebo::physics::LinkPtr _link);
   public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
   public: ignition::transport::Node ignNode;
 };
@@ -44,10 +47,144 @@ gazebo::physics::WorldPtr PhysicsTest::InitWorld(const std::string &_worldFile)
   return world;
 }
 
+double PhysicsTest::GetDepth(const gazebo::msgs::Contacts &_contacts,
+  const gazebo::physics::LinkPtr _link)
+{
+  // we must start at the end of the contacts.contact() array,
+  // go backwards and aggregate all the wrenches that have the same
+  // timestamp and same link name
+  int numContacts = _contacts.contact().size();
+
+  // initial timestamp with a negative value, initialize with the timestap of
+  // last one in the buffer array (contacts.contact()), then
+  // only aggregate the ones that have the same timestamp.
+  double timestamp = -1;
+
+  double depth = 0;
+  bool depthInitialized = false;
+  int depthCount = 0;
+
+  while (numContacts > 0)
+  {
+    --numContacts;
+    gazebo::msgs::Contact contact = _contacts.contact(numContacts);
+
+    // if (contact.wrench().size() > 0)
+    //   gzerr << "  name " << contactSensor->GetName() << "\n";
+
+    // each contact can have multiple wrenches
+    for (int k = 0; k < contact.wrench().size(); ++k)
+    {
+      gazebo::msgs::JointWrench wrenchMsg = contact.wrench(k);
+
+      double t = contact.time().sec() + 1.0e-9*contact.time().nsec();
+      if (timestamp < 0)
+      {
+        // timestamp uninitialized
+        timestamp = t;
+      }
+
+      if (!gazebo::math::equal(t, timestamp))
+      {
+        // got an older timestamp, stop the while loop
+        numContacts = 0;
+      }
+      else
+      {
+        // gzerr << "    contacts [" << numContacts
+        //       << "] t ["  << timestamp
+        //       << "] wrench size ["  << contact.wrench().size()
+        //       << "] body 1 ["  << wrenchMsg.body_1_name()
+        //       << "] body 2 ["  << wrenchMsg.body_2_name()
+        //       << "]\n";
+
+        // sum up all wrenches from body_1 or body_2
+        // check with contact corresponds to the arm and which to the arm
+        // compare body_1_name and body_2_name with model name
+
+        std::string name = _link->GetScopedName();
+        gazebo::msgs::Wrench wrench;
+        if (strncmp(name.c_str(), wrenchMsg.body_1_name().c_str(),
+                    name.size()) == 0)
+        {
+          wrench = wrenchMsg.body_1_wrench();
+        }
+        else if (strncmp(name.c_str(), wrenchMsg.body_2_name().c_str(),
+                         name.size()) == 0)
+        {
+          wrench = wrenchMsg.body_2_wrench();
+        }
+        else
+        {
+          gzerr << "collision name does not match model name. This should "
+                 << "never happen." << std::endl;
+        }
+
+        ignition::math::Pose3<double> fPose = _link->GetWorldPose().Ign();
+        ignition::math::Vector3d fPos = fPose.Pos();
+        ignition::math::Quaternion<double> fRot = fPose.Rot();
+
+        // force and torque in Link frame
+        ignition::math::Vector3d force =
+          gazebo::msgs::ConvertIgn(wrench.force());
+        ignition::math::Vector3d torque =
+          gazebo::msgs::ConvertIgn(wrench.torque());
+
+        // force and torque in inertial frame at Link origin
+        ignition::math::Vector3d forceI = fRot.RotateVector(force);
+        ignition::math::Vector3d torqueI = fRot.RotateVector(torque);
+
+        // position and normal in inertial frame
+        ignition::math::Vector3d position =
+          gazebo::msgs::ConvertIgn(contact.position(k));
+        ignition::math::Vector3d normal =
+          gazebo::msgs::ConvertIgn(contact.normal(k));
+
+        // force moment arm in inertial frame
+        ignition::math::Vector3d forceArm = position - fPos;
+
+        // compute force at contact in inertial frame
+        ignition::math::Vector3d forceAtContact =
+          forceI + torqueI.Cross(forceArm);
+
+        double fn = forceAtContact.Dot(normal);
+        double d0 = contact.depth(k) - 0.001;
+        double kp = fn / d0;
+
+        gzerr << "f_b [" << force
+              << "] t_b [" << torque
+              << "] p [" << position - fPos
+              << "] tr [" << torque.Cross(position - fPos)
+              << "] f [" << forceAtContact
+              << "] n [" << normal
+              << "] fn [" << fn
+              << "] d [" << d0
+              << "] kp [" << kp
+              << "]\n";
+
+        if (!depthInitialized)
+        {
+          depth = d0;
+          ++depthCount;
+          depthInitialized = true;
+        }
+        else
+        {
+          depth += d0;
+          ++depthCount;
+        }
+      }
+    }
+  }
+  return depth / static_cast<double>(depthCount);
+}
+
 TEST_F(PhysicsTest, Test1)
 {
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
+
+  gazebo::physics::PhysicsEnginePtr physics = world->GetPhysicsEngine();
 
   // step to make sure the arm loaded correctly
   world->Step(1);
@@ -120,11 +257,7 @@ TEST_F(PhysicsTest, Test1)
     lastMotorCommand.ref_vel_max_enabled = 0;
     lastMotorCommand.gain_pos_enabled = 0;
     lastMotorCommand.gain_vel_enabled = 0;
-    if(::hx_update(&lastMotorCommand, &lastSensor) != ::hxOK)
-    {
-      gzerr << "hx_update(): Request error.\n" << std::endl;
-      return;
-    }
+    EXPECT_TRUE(::hx_update(&lastMotorCommand, &lastSensor) == ::hxOK);
     world->Step(10);
   }
   // gzerr << "grasped"; getchar();
@@ -139,7 +272,60 @@ TEST_F(PhysicsTest, Test1)
     world->Step(10);
   }
 
-  // gzerr << "moved"; getchar();
+  gzerr << "moved"; getchar();
+
+  // set gravity to zero
+  physics->SetGravity(gazebo::math::Vector3());
+
+  // get contact sensors for depth
+  gazebo::sensors::SensorManager *mgr =
+    gazebo::sensors::SensorManager::Instance();
+  gazebo::sensors::SensorPtr indexSensor =
+    mgr->GetSensor("index3_contact_sensor");
+  gazebo::sensors::SensorPtr thumbSensor =
+    mgr->GetSensor("thumb3_contact_sensor");
+  gazebo::sensors::ContactSensorPtr indexContactSensor =
+    boost::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(indexSensor);
+  gazebo::sensors::ContactSensorPtr thumbContactSensor =
+    boost::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(thumbSensor);
+
+  // pull on the cube
+  for (int n = 0; n < 10000; ++n)
+  {
+    // get contact depth from physics engine
+    gazebo::msgs::Contacts indexContacts = indexContactSensor->GetContacts();
+    gazebo::msgs::Contacts thumbContacts = thumbContactSensor->GetContacts();
+    gazebo::physics::LinkPtr indexLink =
+      world->GetModel("mpl_haptix_right_forearm")->GetLink("index3");
+    gazebo::physics::LinkPtr thumbLink =
+      world->GetModel("mpl_haptix_right_forearm")->GetLink("thumb3");
+    double indexDepth = this->GetDepth(indexContacts, indexLink);
+    double thumbDepth = this->GetDepth(thumbContacts, thumbLink);
+    // minimum of two contacting collisions
+    // in this case, wood_cube_5cm is 0.001 and hand is 0.0015
+    const double minDepth = 0.001;
+
+    // check force on the contact sensors
+    ::hxSensor sensor;
+    EXPECT_TRUE(::hx_read_sensors(&sensor) == ::hxOK);
+    double thumbForce = sensor.contact[6];
+    double indexForce = sensor.contact[9];
+
+    gazebo::physics::LinkPtr link = world->GetModel("wood_cube_5cm")->GetLink();
+    double f = std::max(indexForce, thumbForce);
+    link->AddForce(gazebo::math::Vector3(0, 0, -f));
+    world->Step(1);
+    gzdbg << "finger contact force [" << indexForce
+          << "] [" << thumbForce
+          << "] cube pose [" << link->GetWorldPose()
+          << "] indexDepth [" << indexDepth
+          << "] thumbDepth [" << thumbDepth
+          << "] index k [" << indexForce / (indexDepth - minDepth)
+          << "] thumb k [" << thumbForce / (thumbDepth - minDepth)
+          << "]\n";
+    getchar();
+  }
+  gzerr << "done"; getchar();
 }
 
 int main(int argc, char **argv)

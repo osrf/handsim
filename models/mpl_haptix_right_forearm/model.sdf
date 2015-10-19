@@ -419,7 +419,7 @@
         <contact>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -444,7 +444,7 @@
         <contact>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -497,7 +497,7 @@
         <contact>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -581,7 +581,7 @@
         <contact>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -606,7 +606,7 @@
         <contact>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -631,7 +631,7 @@
         <contact>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -715,7 +715,7 @@
         <contact>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -742,7 +742,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -775,7 +775,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -808,7 +808,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -841,7 +841,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -874,7 +874,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1003,7 +1003,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1095,7 +1095,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1193,7 +1193,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1225,7 +1225,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1325,7 +1325,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1357,7 +1357,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>10000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1478,7 +1478,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1570,7 +1570,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1668,7 +1668,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1700,7 +1700,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1800,7 +1800,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1832,7 +1832,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>10000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -1953,7 +1953,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2045,7 +2045,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2143,7 +2143,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2242,7 +2242,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2274,7 +2274,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>10000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2395,7 +2395,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2487,7 +2487,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2585,7 +2585,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2617,7 +2617,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2716,7 +2716,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2748,7 +2748,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>10000.</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2869,7 +2869,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2901,7 +2901,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -2993,7 +2993,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -3026,7 +3026,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -3058,7 +3058,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -3158,7 +3158,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -3190,7 +3190,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>0.1</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -3290,7 +3290,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>100000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>
@@ -3322,7 +3322,7 @@
           <elastic_modulus>610000.0</elastic_modulus>
           <ode>
             <kp>10000</kp>
-            <kd>100</kd>
+            <kd>1</kd>
             <max_vel>100.0</max_vel>
             <min_depth>0.0015</min_depth>
           </ode>

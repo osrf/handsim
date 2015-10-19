@@ -273,8 +273,8 @@
         </solver>
         <constraints>
           <cfm>0.000000</cfm>
-          <erp>0.200000</erp>
-          <contact_max_correcting_vel>0.000000</contact_max_correcting_vel>
+          <erp>0.500000</erp>
+          <contact_max_correcting_vel>1000.000000</contact_max_correcting_vel>
           <contact_surface_layer>0.00000</contact_surface_layer>
         </constraints>
       </ode>
