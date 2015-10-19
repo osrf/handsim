@@ -1176,10 +1176,6 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   msgs::Contacts contacts = contactSensor->GetContacts();
   // contact sensor report contact between pairs of bodies
 
-  // clear contact info
-  this->contactSensorInfos[_i].contactForce = math::Vector3();
-  this->contactSensorInfos[_i].contactTorque = math::Vector3();
-
   // we must start at the end of the contacts.contact() array,
   // go backwards and aggregate all the wrenches that have the same
   // timestamp and same link name
@@ -1189,6 +1185,13 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   // last one in the buffer array (contacts.contact()), then
   // only aggregate the ones that have the same timestamp.
   double timestamp = -1;
+
+  // clear contact info
+  if (numContacts > 0)
+  {
+    this->contactSensorInfos[_i].contactForce = math::Vector3();
+    this->contactSensorInfos[_i].contactTorque = math::Vector3();
+  }
 
   while (numContacts > 0)
   {
