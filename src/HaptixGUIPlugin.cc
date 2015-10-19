@@ -1250,7 +1250,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     this->armStartPose.rot = gazebo::math::Quaternion(rot) *
     this->armStartPose.rot;
 
-    gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment);
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment.Ign());
 
     // std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
     this->ignNode.Publish("haptix/arm_pose_inc", msg);
