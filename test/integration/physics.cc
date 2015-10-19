@@ -49,6 +49,9 @@ TEST_F(PhysicsTest, Test1)
   gazebo::physics::WorldPtr world = this->InitWorld("worlds/arat_test.world");
   ASSERT_TRUE(world != NULL);
 
+  // step to make sure the arm loaded correctly
+  world->Step(1);
+
   // set arm position
   hxsTransform armT;
   // ASSERT_EQ(hxs_model_transform("mpl_haptix_right_forearm", &armT), hxOK);
@@ -80,6 +83,7 @@ TEST_F(PhysicsTest, Test1)
   ASSERT_EQ(hxs_set_model_transform("wood_cube_5cm", &woodT), hxOK);
 
   world->Step(1);
+  // gzerr << "ready to grab"; getchar();
 
   // call hxs_sim_info to get motor_count
   ::hxRobotInfo robotInfo;
@@ -123,6 +127,7 @@ TEST_F(PhysicsTest, Test1)
     }
     world->Step(10);
   }
+  // gzerr << "grasped"; getchar();
 
   // set new arm position
   p.Set(0, 0, 0.001);
@@ -134,7 +139,7 @@ TEST_F(PhysicsTest, Test1)
     world->Step(10);
   }
 
-  gzerr << "moved"; getchar();
+  // gzerr << "moved"; getchar();
 }
 
 int main(int argc, char **argv)
