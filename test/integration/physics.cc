@@ -147,11 +147,16 @@ double PhysicsTest::GetDepth(const gazebo::msgs::Contacts &_contacts,
         ignition::math::Vector3d forceAtContact =
           forceI + torqueI.Cross(forceArm);
 
-        double fn = forceAtContact.Dot(normal);
-        double d0 = contact.depth(k) - 0.001;
+        // minimum of two contacting collisions
+        // in this case, wood_cube_5cm is 0.001 and hand is 0.0015
+        const double minDepth = 0.001;
+
+        double fn = -forceAtContact.Dot(normal);
+        double d0 = contact.depth(k) - minDepth;
         double kp = fn / d0;
 
-        gzerr << "f_b [" << force
+        gzdbg << "name [" << name
+              << "f_b [" << force
               << "] t_b [" << torque
               << "] p [" << position - fPos
               << "] tr [" << torque.Cross(position - fPos)
@@ -301,15 +306,16 @@ TEST_F(PhysicsTest, Test1)
       world->GetModel("mpl_haptix_right_forearm")->GetLink("thumb3");
     double indexDepth = this->GetDepth(indexContacts, indexLink);
     double thumbDepth = this->GetDepth(thumbContacts, thumbLink);
-    // minimum of two contacting collisions
-    // in this case, wood_cube_5cm is 0.001 and hand is 0.0015
-    const double minDepth = 0.001;
 
     // check force on the contact sensors
     ::hxSensor sensor;
     EXPECT_TRUE(::hx_read_sensors(&sensor) == ::hxOK);
     double thumbForce = sensor.contact[6];
     double indexForce = sensor.contact[9];
+
+    // compute stiffness based on force and depth
+    double thumbKp = thumbForce / thumbDepth;
+    double indexKp = indexForce / indexDepth;
 
     gazebo::physics::LinkPtr link = world->GetModel("wood_cube_5cm")->GetLink();
     double f = std::max(indexForce, thumbForce);
@@ -320,8 +326,8 @@ TEST_F(PhysicsTest, Test1)
           << "] cube pose [" << link->GetWorldPose()
           << "] indexDepth [" << indexDepth
           << "] thumbDepth [" << thumbDepth
-          << "] index k [" << indexForce / (indexDepth - minDepth)
-          << "] thumb k [" << thumbForce / (thumbDepth - minDepth)
+          << "] index k [" << indexKp
+          << "] thumb k [" << thumbKp
           << "]\n";
     getchar();
   }
