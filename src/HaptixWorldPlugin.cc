@@ -288,7 +288,7 @@ void HaptixWorldPlugin::OnWorldUpdate()
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 {
-  this->userCameraPose = gazebo::msgs::Convert(*_msg);
+  this->userCameraPose = gazebo::msgs::ConvertIgn(*_msg);
   if (!this->userCameraPoseValid)
   {
     this->initialCameraPose = this->userCameraPose;
@@ -367,7 +367,7 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
   HaptixWorldPlugin::ConvertTransform(_req, pose);
 
   gazebo::msgs::Pose poseMsg;
-  gazebo::msgs::Set(&poseMsg, pose);
+  gazebo::msgs::Set(&poseMsg, pose.Ign());
   this->userCameraPub->Publish(poseMsg);
   _result = true;
 }
@@ -841,7 +841,7 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   if (model->GetName() == "mpl_haptix_right_forearm" ||
       model->GetName() == "mpl_haptix_left_forearm")
   {
-    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose);
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose.Ign());
     this->ignNode.Publish("haptix/arm_model_pose", msg);
   }
   else
@@ -1182,7 +1182,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
   _result = false;
   GZ_ASSERT(this->userCameraPub != NULL, "Camera publisher was NULL!");
   gazebo::msgs::Pose poseMsg;
-  gazebo::msgs::Set(&poseMsg, this->initialCameraPose);
+  gazebo::msgs::Set(&poseMsg, this->initialCameraPose.Ign());
   this->userCameraPub->Publish(poseMsg);
 
   if (_req.data() != 0)
