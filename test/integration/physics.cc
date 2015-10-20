@@ -299,6 +299,7 @@ TEST_F(PhysicsTest, Test1)
     boost::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(thumbSensor);
 
   // pull on the cube
+  gazebo::physics::LinkPtr cube = world->GetModel("wood_cube_5cm")->GetLink();
   for (int n = 0; n < 5000; ++n)
   {
     // compute surface stiffness by getting the depth info
@@ -306,21 +307,19 @@ TEST_F(PhysicsTest, Test1)
     // in the haptix sensor feedback data. Compare results with
     // stiffness results from more precise forces from physics engine.
 
-    // get contact depth from physics engine
+    // get contact depth and stiffness from physics engine
     gazebo::msgs::Contacts indexContacts = indexContactSensor->GetContacts();
     gazebo::msgs::Contacts thumbContacts = thumbContactSensor->GetContacts();
     gazebo::physics::LinkPtr indexLink =
       world->GetModel("mpl_haptix_right_forearm")->GetLink("index3");
     gazebo::physics::LinkPtr thumbLink =
       world->GetModel("mpl_haptix_right_forearm")->GetLink("thumb3");
-    // indexKp0 and thumbKp0 are more precise values obtained from
-    // physics engine
     double indexDepth, indexKp0;
     this->GetDepthStiffness(indexContacts, indexLink, indexDepth, indexKp0);
     double thumbDepth, thumbKp0;
     this->GetDepthStiffness(thumbContacts, thumbLink, thumbDepth, thumbKp0);
 
-    // check force on the contact sensors
+    // get force on the contact sensors from haptix api
     ::hxSensor sensor;
     EXPECT_TRUE(::hx_read_sensors(&sensor) == ::hxOK);
     double thumbForce = sensor.contact[6];
@@ -331,13 +330,16 @@ TEST_F(PhysicsTest, Test1)
     double indexKp = indexForce / indexDepth;
 
     // compute percent error against more precise values
+    // indexKp and thumbKp are computed from haptix sensor approximation
+    // and depth information.
+    // indexKp0 and thumbKp0 are more precise kp values obtained from
+    // physics engine.
     double indexErr = std::abs(indexKp0 - indexKp)/indexKp0;
     double thumbErr = std::abs(thumbKp0 - thumbKp)/thumbKp0;
 
-    gazebo::physics::LinkPtr link = world->GetModel("wood_cube_5cm")->GetLink();
-    gazebo::math::Pose pose = link->GetWorldPose();
+    gazebo::math::Pose pose = cube->GetWorldPose();
     double f = std::max(indexForce, thumbForce);
-    link->AddForce(gazebo::math::Vector3(0, 0, -f));
+    cube->AddForce(gazebo::math::Vector3(0, 0, -f));
     world->Step(1);
 
     if (n % 200 == 0)

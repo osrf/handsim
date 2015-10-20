@@ -15,6 +15,7 @@
  *
 */
 
+#include <gazebo/util/Diagnostics.hh>
 #include <gazebo/common/Assert.hh>
 #include <gazebo/gui/KeyEventHandler.hh>
 
@@ -1404,7 +1405,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   {
     // get summed force from contactSensorInfos
     double force = 0;
-    const double timeout = 0.003;
+    const double timeout = 0.01;
     if (curTime.Double() - this->contactSensorInfos[i].timestamp < timeout)
       force = this->contactSensorInfos[i].contactForce.GetLength();
     // return summed force
@@ -1442,6 +1443,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 // Play the trajectory, update states
 void HaptixControlPlugin::GazeboUpdateStates()
 {
+  DIAG_TIMER_START("HaptixControlPlugin::GazeboUpdateStates");
   boost::mutex::scoped_lock lock(this->updateMutex);
 
   common::Time curTime = this->world->GetSimTime();
@@ -1496,6 +1498,7 @@ void HaptixControlPlugin::GazeboUpdateStates()
     this->lastTime = curTime;
     this->lastSimTimeForControlThrottling = curTime;
   }
+  DIAG_TIMER_STOP("HaptixControlPlugin::GazeboUpdateStates");
 }
 
 /////////////////////////////////////////////////
