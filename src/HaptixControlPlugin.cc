@@ -1298,7 +1298,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   {
     // get summed force from contactSensorInfos
     double force = 0;
-    const double timeout = 0.003;
+    const double timeout = 0.01;
     if (curTime.Double() - this->contactSensorInfos[i].timestamp < timeout)
       force = this->contactSensorInfos[i].contactForce.GetLength();
     // return summed force
