@@ -340,18 +340,20 @@ TEST_F(PhysicsTest, Test1)
     link->AddForce(gazebo::math::Vector3(0, 0, -f));
     world->Step(1);
 
-    // gzdbg << "finger contact force [" << indexForce
-    //       << "] [" << thumbForce
-    //       << "] cube pose [" << pose.pos.z
-    //       << "] indexDepth [" << indexDepth
-    //       << "] thumbDepth [" << thumbDepth
-    //       << "] index k [" << indexKp0
-    //       << ", " << indexKp
-    //       << ", " << indexErr
-    //       << "] thumb k [" << thumbKp0
-    //       << ", " << thumbKp
-    //       << ", " << thumbErr
-    //       << "]\n";
+    if (n % 200 == 0)
+      gzdbg << "t [" << world->GetSimTime().Double()
+            << "] force [" << indexForce
+            << "] [" << thumbForce
+            << "] cube pose [" << pose.pos.z
+            << "] indexDepth [" << indexDepth
+            << "] thumbDepth [" << thumbDepth
+            << "] index k [" << indexKp0
+            << ", " << indexKp
+            << ", " << indexErr
+            << "] thumb k [" << thumbKp0
+            << ", " << thumbKp
+            << ", " << thumbErr
+            << "]\n";
 
     if (n > 4000)
     {
