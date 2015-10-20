@@ -32,8 +32,8 @@
 
 class PhysicsTest : public gazebo::ServerFixture
 {
-  public: double GetDepth(const gazebo::msgs::Contacts &_contacts,
-    const gazebo::physics::LinkPtr _link);
+  public: void GetDepthStiffness(const gazebo::msgs::Contacts &_contacts,
+    const gazebo::physics::LinkPtr _link, double &_depth, double &_k);
   public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
   public: ignition::transport::Node ignNode;
 };
@@ -47,8 +47,8 @@ gazebo::physics::WorldPtr PhysicsTest::InitWorld(const std::string &_worldFile)
   return world;
 }
 
-double PhysicsTest::GetDepth(const gazebo::msgs::Contacts &_contacts,
-  const gazebo::physics::LinkPtr _link)
+void PhysicsTest::GetDepthStiffness(const gazebo::msgs::Contacts &_contacts,
+  const gazebo::physics::LinkPtr _link, double &_depth, double &_k)
 {
   // we must start at the end of the contacts.contact() array,
   // go backwards and aggregate all the wrenches that have the same
@@ -60,9 +60,10 @@ double PhysicsTest::GetDepth(const gazebo::msgs::Contacts &_contacts,
   // only aggregate the ones that have the same timestamp.
   double timestamp = -1;
 
-  double depth = 0;
-  bool depthInitialized = false;
-  int depthCount = 0;
+  _depth = 0;
+  _k = 0;
+  bool initialized = false;
+  int count = 0;
 
   while (numContacts > 0)
   {
@@ -155,33 +156,36 @@ double PhysicsTest::GetDepth(const gazebo::msgs::Contacts &_contacts,
         double d0 = contact.depth(k) - minDepth;
         double kp = fn / d0;
 
-        gzdbg << "name [" << name
-              << "f_b [" << force
-              << "] t_b [" << torque
-              << "] p [" << position - fPos
-              << "] tr [" << torque.Cross(position - fPos)
-              << "] f [" << forceAtContact
-              << "] n [" << normal
-              << "] fn [" << fn
-              << "] d [" << d0
-              << "] kp [" << kp
-              << "]\n";
+        // gzdbg << "name [" << name
+        //       << "f_b [" << force
+        //       << "] t_b [" << torque
+        //       << "] p [" << position - fPos
+        //       << "] tr [" << torque.Cross(position - fPos)
+        //       << "] f [" << forceAtContact
+        //       << "] n [" << normal
+        //       << "] fn [" << fn
+        //       << "] d [" << d0
+        //       << "] kp [" << kp
+        //       << "]\n";
 
-        if (!depthInitialized)
+        if (!initialized)
         {
-          depth = d0;
-          ++depthCount;
-          depthInitialized = true;
+          _k = kp;
+          _depth = d0;
+          ++count;
+          initialized = true;
         }
         else
         {
-          depth += d0;
-          ++depthCount;
+          _k += kp;
+          _depth += d0;
+          ++count;
         }
       }
     }
   }
-  return depth / static_cast<double>(depthCount);
+  _depth = _depth / static_cast<double>(count);
+  _k = _k / static_cast<double>(count);
 }
 
 TEST_F(PhysicsTest, Test1)
@@ -277,7 +281,7 @@ TEST_F(PhysicsTest, Test1)
     world->Step(10);
   }
 
-  gzerr << "moved"; getchar();
+  // gzerr << "moved"; getchar();
 
   // set gravity to zero
   physics->SetGravity(gazebo::math::Vector3());
@@ -295,8 +299,13 @@ TEST_F(PhysicsTest, Test1)
     boost::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(thumbSensor);
 
   // pull on the cube
-  for (int n = 0; n < 10000; ++n)
+  for (int n = 0; n < 5000; ++n)
   {
+    // compute surface stiffness by getting the depth info
+    // from contact sensors. Using approximate forces as computed
+    // in the haptix sensor feedback data. Compare results with
+    // stiffness results from more precise forces from physics engine.
+
     // get contact depth from physics engine
     gazebo::msgs::Contacts indexContacts = indexContactSensor->GetContacts();
     gazebo::msgs::Contacts thumbContacts = thumbContactSensor->GetContacts();
@@ -304,8 +313,12 @@ TEST_F(PhysicsTest, Test1)
       world->GetModel("mpl_haptix_right_forearm")->GetLink("index3");
     gazebo::physics::LinkPtr thumbLink =
       world->GetModel("mpl_haptix_right_forearm")->GetLink("thumb3");
-    double indexDepth = this->GetDepth(indexContacts, indexLink);
-    double thumbDepth = this->GetDepth(thumbContacts, thumbLink);
+    // indexKp0 and thumbKp0 are more precise values obtained from
+    // physics engine
+    double indexDepth, indexKp0;
+    this->GetDepthStiffness(indexContacts, indexLink, indexDepth, indexKp0);
+    double thumbDepth, thumbKp0;
+    this->GetDepthStiffness(thumbContacts, thumbLink, thumbDepth, thumbKp0);
 
     // check force on the contact sensors
     ::hxSensor sensor;
@@ -317,21 +330,42 @@ TEST_F(PhysicsTest, Test1)
     double thumbKp = thumbForce / thumbDepth;
     double indexKp = indexForce / indexDepth;
 
+    // compute percent error against more precise values
+    double indexErr = std::abs(indexKp0 - indexKp)/indexKp0;
+    double thumbErr = std::abs(thumbKp0 - thumbKp)/thumbKp0;
+
     gazebo::physics::LinkPtr link = world->GetModel("wood_cube_5cm")->GetLink();
+    gazebo::math::Pose pose = link->GetWorldPose();
     double f = std::max(indexForce, thumbForce);
     link->AddForce(gazebo::math::Vector3(0, 0, -f));
     world->Step(1);
-    gzdbg << "finger contact force [" << indexForce
-          << "] [" << thumbForce
-          << "] cube pose [" << link->GetWorldPose()
-          << "] indexDepth [" << indexDepth
-          << "] thumbDepth [" << thumbDepth
-          << "] index k [" << indexKp
-          << "] thumb k [" << thumbKp
-          << "]\n";
-    getchar();
+
+    // gzdbg << "finger contact force [" << indexForce
+    //       << "] [" << thumbForce
+    //       << "] cube pose [" << pose.pos.z
+    //       << "] indexDepth [" << indexDepth
+    //       << "] thumbDepth [" << thumbDepth
+    //       << "] index k [" << indexKp0
+    //       << ", " << indexKp
+    //       << ", " << indexErr
+    //       << "] thumb k [" << thumbKp0
+    //       << ", " << thumbKp
+    //       << ", " << thumbErr
+    //       << "]\n";
+
+    if (n > 4000)
+    {
+      // Check that cube is not slipping
+      EXPECT_GT(pose.pos.z, 1.2546);
+
+      // Consistency check between using forces generated for haptix API
+      // and more precise surface force reconstructed in gazebo.
+      // Relative error must be less than 3%, bound set per experimentation.
+      EXPECT_LT(indexErr, 0.03);
+      EXPECT_LT(thumbErr, 0.03);
+    }
   }
-  gzerr << "done"; getchar();
+  // gzerr << "done"; getchar();
 }
 
 int main(int argc, char **argv)
