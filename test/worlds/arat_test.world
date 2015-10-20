@@ -156,7 +156,7 @@
 
           <task id="grasp_6"name="Stone">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/grasp_6.jpg</icon> 
+            <icon>file://media/gui/arat/arat_icons/grasp_6.jpg</icon>
             <instructions>
               Instructions: Pick up the stone and place it on top of the box.
             </instructions>
