@@ -478,11 +478,19 @@ namespace gazebo
     /// \brief: data structure for storing contact sensor infos
     private: class ContactSensorInfo
     {
+      /// \brief store the last time this sensor information is updated
       public: double timestamp;
+
+      /// \brief a pointer to the sensor
       public: sensors::SensorPtr sensor;
+
+      /// \brief a pointer to the sensor update connection
       public: event::ConnectionPtr connection;
-      // aggregated forces and torques from contact
+
+      /// \brief aggregated contact forces (normal forces in inertial frame)
       public: math::Vector3 contactForce;
+
+      /// \brief aggregated contact torsional torque in inertial frame.
       public: math::Vector3 contactTorque;
     };
 
