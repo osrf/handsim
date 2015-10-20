@@ -454,6 +454,7 @@ namespace gazebo
     /// \brief: data structure for storing contact sensor infos
     private: class ContactSensorInfo
     {
+      public: double timestamp;
       public: sensors::SensorPtr sensor;
       public: event::ConnectionPtr connection;
       // aggregated forces and torques from contact
