@@ -751,7 +751,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.08316</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -784,7 +784,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.06</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -817,7 +817,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.08</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -850,7 +850,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.07</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -883,7 +883,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.07</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1012,7 +1012,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.01</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1104,7 +1104,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.02781</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1202,7 +1202,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.029</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1234,7 +1234,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.0075</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1334,7 +1334,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.01376</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1487,7 +1487,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.028</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1579,7 +1579,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.03459</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1677,7 +1677,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.029</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1709,7 +1709,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.0075</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1809,7 +1809,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.01376</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -1962,7 +1962,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.028</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2054,7 +2054,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.02381</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2152,7 +2152,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.029</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2251,7 +2251,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.01376</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2404,7 +2404,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.028</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2496,7 +2496,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.03095</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2594,7 +2594,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.029</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2626,7 +2626,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.0075</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2725,7 +2725,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.01376</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2878,7 +2878,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.023</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -2910,7 +2910,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.023</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3002,7 +3002,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.0188</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3035,7 +3035,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.02176</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3067,7 +3067,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.03273</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3167,7 +3167,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.02236</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3199,7 +3199,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.03095</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3299,7 +3299,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.01</surface_radius>
+            <surface_radius>0.01476</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
@@ -3331,7 +3331,7 @@
           <torsional>
             <coefficient>1.0</coefficient>
             <use_patch_radius>0</use_patch_radius>
-            <surface_radius>0.0072</surface_radius>
+            <surface_radius>0.008</surface_radius>
           </torsional>
           <ode>
             <mu>1</mu>
