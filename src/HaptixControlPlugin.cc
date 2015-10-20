@@ -1215,8 +1215,8 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
         ignition::math::Vector3d forceAtContact =
           forceI + torqueI.Cross(forceArm);
 
-        // compute normal force at contact in inertial frame
-        ignition::math::Vector3d fn = forceAtContact.Dot(normal) * normal;
+        // negative sign so force is possitive pushing down on the surface
+        ignition::math::Vector3d fn = -forceAtContact.Dot(normal) * normal;
 
         // compute normal force at the point of contact
         this->contactSensorInfos[_i].contactForce += fn;
