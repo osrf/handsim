@@ -168,18 +168,18 @@ void PhysicsTest::GetDepthStiffness(const gazebo::msgs::Contacts &_contacts,
         //       << "] kp [" << kp
         //       << "]\n";
 
+        ++count;
+
         if (!initialized)
         {
           _k = kp;
           _depth = d0;
-          ++count;
           initialized = true;
         }
         else
         {
           _k += kp;
           _depth += d0;
-          ++count;
         }
       }
     }
