@@ -250,6 +250,7 @@
           <grasp inc_key="5" dec_key="%" name="ThreeFingerPinch" increment="0.015"></grasp>
           <grasp inc_key="6" dec_key="^" name="Palmar(Tray)" increment="0.015"></grasp>
           <grasp inc_key="7" dec_key="amp" name="Hook" increment="0.015"></grasp>
+          <grasp inc_key="8" dec_key="*" name="2Pinch" increment="0.015"></grasp>
         </grasp_keys>
 
       </plugin>
