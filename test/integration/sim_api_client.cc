@@ -229,6 +229,24 @@ TEST(SimApiClientTest, ThreeProcesses)
       EXPECT_EQ(hxs_set_model_transform("cricket_ball", &transform), hxOK);
       std::cout << "hxs_set_model_transform executed." << std::endl;
 
+      // test add, remove constraint
+      std::string constraintSDF =
+          "<sdf version=\"1.5\">"
+          "  <joint name=\"test_constraint\" type=\"revolute\">"
+          "    <parent>table::link</parent>"
+          "    <child>wood_cube_5cm::link</child>"
+          "    <axis>"
+          "      <xyz>0 1 0</xyz>"
+          "    </axis>"
+          "  </joint>"
+          "</sdf>";
+      EXPECT_EQ(
+        hxs_add_constraint(constraintSDF.c_str(), "wood_cube_5cm"), hxOK);
+      std::cout << "hxs_add_constraint executed." << std::endl;
+      EXPECT_EQ(
+        hxs_remove_constraint("test_constraint", "wood_cube_5cm"), hxOK);
+      std::cout << "hxs_remove_constraint executed." << std::endl;
+
       EXPECT_EQ(hxs_reset(0), hxOK);
       // sleep to check manually that it did the right thing
 
