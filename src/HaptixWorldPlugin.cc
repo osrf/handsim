@@ -1255,10 +1255,7 @@ void HaptixWorldPlugin::HaptixStartLoggingCallback(
     return;
   }
 
-  gazebo::util::LogRecord::Instance()->Init(_req.data());
-
-  // TODO: Encoding type?
-  if (!gazebo::util::LogRecord::Instance()->Start("zlib", ""))
+  if (!gazebo::util::LogRecord::Instance()->Start("zlib", _req.data()))
   {
     gzerr << "Failed to start recording" << std::endl;
     return;
