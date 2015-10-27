@@ -238,6 +238,12 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
 
   this->ignNode.Advertise("/haptix/gazebo/hxs_set_model_collide_mode",
     &HaptixWorldPlugin::HaptixSetModelCollideModeCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_add_constraint",
+    &HaptixWorldPlugin::HaptixAddConstraintCallback, this);
+
+  this->ignNode.Advertise("/haptix/gazebo/hxs_remove_constraint",
+    &HaptixWorldPlugin::HaptixRemoveConstraintCallback, this);
 }
 
 /////////////////////////////////////////////////
@@ -288,7 +294,7 @@ void HaptixWorldPlugin::OnWorldUpdate()
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 {
-  this->userCameraPose = gazebo::msgs::Convert(*_msg);
+  this->userCameraPose = gazebo::msgs::ConvertIgn(*_msg);
   if (!this->userCameraPoseValid)
   {
     this->initialCameraPose = this->userCameraPose;
@@ -367,7 +373,7 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
   HaptixWorldPlugin::ConvertTransform(_req, pose);
 
   gazebo::msgs::Pose poseMsg;
-  gazebo::msgs::Set(&poseMsg, pose);
+  gazebo::msgs::Set(&poseMsg, pose.Ign());
   this->userCameraPub->Publish(poseMsg);
   _result = true;
 }
@@ -841,7 +847,7 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   if (model->GetName() == "mpl_haptix_right_forearm" ||
       model->GetName() == "mpl_haptix_left_forearm")
   {
-    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose);
+    gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose.Ign());
     this->ignNode.Publish("haptix/arm_model_pose", msg);
   }
   else
@@ -1182,7 +1188,7 @@ void HaptixWorldPlugin::HaptixResetCallback(
   _result = false;
   GZ_ASSERT(this->userCameraPub != NULL, "Camera publisher was NULL!");
   gazebo::msgs::Pose poseMsg;
-  gazebo::msgs::Set(&poseMsg, this->initialCameraPose);
+  gazebo::msgs::Set(&poseMsg, this->initialCameraPose.Ign());
   this->userCameraPub->Publish(poseMsg);
 
   if (_req.data() != 0)
@@ -1639,6 +1645,161 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
   {
     _rep.set_mode(haptix::comm::msgs::hxCollideMode::hxsCOLLIDE);
   }
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixAddConstraintCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  _result = false;
+  if (!_req.has_string_value())
+  {
+    gzerr << "Missing SDF in hxParam input to AddConstraint" << std::endl;
+    return;
+  }
+
+  if (!_req.has_name())
+  {
+    gzerr << "Missing name field in hxParam" << std::endl;
+    return;
+  }
+
+  std::string xml = _req.string_value();
+
+  sdf::ElementPtr jointSDF;
+  jointSDF.reset(new sdf::Element);
+  sdf::initFile("joint.sdf", jointSDF);
+  sdf::readString(xml, jointSDF);
+
+  if (!jointSDF || !jointSDF->HasElement("parent"))
+  {
+    gzerr << "constraint SDF was invalid" << std::endl;
+    return;
+  }
+
+  if (!jointSDF->HasAttribute("name"))
+  {
+    gzerr << "joint element invalid" << std::endl;
+    return;
+  }
+
+  // Set name
+  std::string modelName = _req.name();
+  gazebo::physics::ModelPtr model = this->world->GetModel(modelName);
+
+  if (!model)
+  {
+    gzerr << "model [" << modelName << "] not found in world.\n";
+    return;
+  }
+
+  // load an SDF element from XML
+  // copy the string via capture list
+  auto addConstraintLambda = [jointSDF, model, this]()
+      {
+        std::string jointName;
+        std::string parentName;
+        std::string childName;
+        std::string type;
+
+        if (jointSDF->HasAttribute("name"))
+          jointName = jointSDF->GetAttribute("name")->GetAsString();
+        else
+          return hxERROR;
+
+        if (jointSDF->HasElement("child"))
+          childName = jointSDF->Get<std::string>("child");
+        else
+          return hxERROR;
+
+        if (jointSDF->HasElement("parent"))
+          parentName = jointSDF->Get<std::string>("parent");
+        else
+          return hxERROR;
+
+        if (jointSDF->HasAttribute("type"))
+          type = jointSDF->GetAttribute("type")->GetAsString();
+        else
+          return hxERROR;
+
+        gazebo::physics::LinkPtr parentLink;
+        gazebo::physics::LinkPtr childLink;
+        for (auto &m : this->world->GetModels())
+        {
+          if (!parentLink)
+            parentLink = m->GetLink(parentName);
+          if (!childLink)
+            childLink = m->GetLink(childName);
+          if ((parentLink || parentName == "world") &&
+              (childLink || childName == "world"))
+            break;
+        }
+        if (!parentLink && parentName != "world")
+          return hxERROR;
+        if (!childLink && childName != "world")
+          return hxERROR;
+
+        gazebo::physics::JointPtr joint =
+          model->CreateJoint(jointName, type, parentLink, childLink);
+        joint->Load(jointSDF);
+        joint->Init();
+        return hxOK;
+      };
+  {
+    std::lock_guard<std::mutex> lock(this->worldMutex);
+    this->updateFunctions.push_back(addConstraintLambda);
+  }
+
+  _result = true;
+}
+
+/////////////////////////////////////////////////
+void HaptixWorldPlugin::HaptixRemoveConstraintCallback(
+      const std::string &/*_service*/,
+      const haptix::comm::msgs::hxParam &_req,
+      haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
+{
+  _result = false;
+  std::lock_guard<std::mutex> lock(this->worldMutex);
+  if (!this->world)
+  {
+    gzerr << "World pointer NULL" << std::endl;
+    return;
+  }
+
+  gazebo::physics::ModelPtr model = this->world->GetModel(_req.name());
+  if (!model)
+  {
+    gzerr << "Can't find model [" << _req.name()
+          << "] because it does not exist." << std::endl;
+    return;
+  }
+
+  std::string constraint = _req.string_value();
+  gazebo::physics::Model *m = model.get();
+
+  auto removeConstraintLambda = [m, constraint, this]()
+      {
+        boost::weak_ptr<gazebo::physics::Joint> joint
+          = m->GetJoint(constraint);
+        if (!joint.lock())
+        {
+          gzerr << "constraint by name of [" << constraint
+                << "] in model [" << m->GetName()
+                << "] do not exist.\n";
+          return hxERROR;
+        }
+        else
+        {
+          m->RemoveJoint(constraint);
+        }
+        return hxOK;
+      };
+  this->updateFunctions.push_back(removeConstraintLambda);
 
   _result = true;
 }
