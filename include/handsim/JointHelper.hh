@@ -108,6 +108,10 @@ namespace gazebo
     /// \param[in] _index Index of the axis to set.
     public: void SetEffortLimit(unsigned int _index, double _effort);
 
+    /// \brief Get joint name
+    /// \return joint name
+    public: const std::string GetName() const;
+
     /// \brief Returns true if joint has been assigned
     /// \return true if joint has been assigned
     public: bool HasJoint() const;
