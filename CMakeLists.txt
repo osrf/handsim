@@ -226,6 +226,11 @@ if (build_errors)
 else (build_errors)
 
   ########################################
+  # Write the setup.sh file
+  configure_file(${CMAKE_SOURCE_DIR}/cmake/setup.sh.in ${PROJECT_BINARY_DIR}/setup.sh @ONLY)
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/)
+
+  ########################################
   # Write the config.h file
   configure_file (${project_cmake_dir}/config.hh.in
     ${PROJECT_BINARY_DIR}/include/handsim/config.hh)
