@@ -567,6 +567,9 @@ void HaptixControlPlugin::LoadHandControl()
       ContactSensorInfo info;
       info.sensor = sensor;
 
+      // initialize timestamp to a negative value
+      info.timestamp = -1;
+
       info.connection = sensor->ConnectUpdated(
         boost::bind(&HaptixControlPlugin::OnContactSensorUpdate, this, id));
 
@@ -1175,60 +1178,136 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
   msgs::Contacts contacts = contactSensor->GetContacts();
   // contact sensor report contact between pairs of bodies
 
+  // we must start at the end of the contacts.contact() array,
+  // go backwards and aggregate all the wrenches that have the same
+  // timestamp and same link name
+  int numContacts = contacts.contact().size();
+
+  // initial timestamp with a negative value, initialize with the timestap of
+  // last one in the buffer array (contacts.contact()), then
+  // only aggregate the ones that have the same timestamp.
+  double timestamp = -1;
+
   // clear contact info
-  this->contactSensorInfos[_i].contactForce = math::Vector3();
-  this->contactSensorInfos[_i].contactTorque = math::Vector3();
-
-  // for (int j = 0; j < contacts.contact().size(); ++j)
-  if (contacts.contact().size() > 0)
+  if (numContacts > 0)
   {
-    // gzerr << "  name " << contactSensor->GetName()
-    //       << " contacts buffer [" << contacts.contact().size()
-    //       << "]\n";
+    this->contactSensorInfos[_i].contactForce = math::Vector3();
+    this->contactSensorInfos[_i].contactTorque = math::Vector3();
+  }
 
-    int j = contacts.contact().size() -1;
-    msgs::Contact contact = contacts.contact(j);
+  while (numContacts > 0)
+  {
+    --numContacts;
+    msgs::Contact contact = contacts.contact(numContacts);
+
+    // if (contact.wrench().size() > 0)
+    //   gzerr << "  name " << contactSensor->GetName() << "\n";
 
     // each contact can have multiple wrenches
     for (int k = 0; k < contact.wrench().size(); ++k)
     {
       msgs::JointWrench wrenchMsg = contact.wrench(k);
 
-      // sum up all wrenches from body_1 or body_2
-      // check with contact corresponds to the arm and which to the arm
-      // compare body_1_name and body_2_name with model name
-
-      if (strncmp(this->model->GetName().c_str(),
-                  wrenchMsg.body_1_name().c_str(),
-                  this->model->GetName().size()) == 0)
+      double t = contact.time().sec() + 1.0e-9*contact.time().nsec();
+      if (timestamp < 0)
       {
-        this->contactSensorInfos[_i].contactForce +=
-          msgs::ConvertIgn(wrenchMsg.body_1_wrench().force());
-        this->contactSensorInfos[_i].contactTorque +=
-          msgs::ConvertIgn(wrenchMsg.body_1_wrench().torque());
+        // timestamp uninitialized
+        timestamp = t;
       }
-      else if (strncmp(this->model->GetName().c_str(),
-                       wrenchMsg.body_2_name().c_str(),
-                       this->model->GetName().size()) == 0)
+
+      if (!math::equal(t, timestamp))
       {
-        this->contactSensorInfos[_i].contactForce +=
-          msgs::ConvertIgn(wrenchMsg.body_2_wrench().force());
-        this->contactSensorInfos[_i].contactTorque +=
-          msgs::ConvertIgn(wrenchMsg.body_2_wrench().torque());
+        // got an older timestamp, stop the while loop
+        numContacts = 0;
       }
       else
       {
-        gzerr << "collision name does not match model name. This should "
-               << "never happen." << std::endl;
-        return;
-      }
+        // gzerr << "    contacts [" << numContacts
+        //       << "] t ["  << timestamp
+        //       << "] wrench size ["  << contact.wrench().size()
+        //       << "] body 1 ["  << wrenchMsg.body_1_name()
+        //       << "] body 2 ["  << wrenchMsg.body_2_name()
+        //       << "]\n";
 
-      // gzerr << "        sensor [" << _i << "] buffer [" << j
-      //       << "] contact [" << k << "] force ["
-      //       << this->contactSensorInfos[_i].contactForce
-      //       << "] sub-sum ["
-      //       << this->contactSensorInfos[_i].contactForce.GetLength()
-      //       << "]\n";
+        // sum up all wrenches from body_1 or body_2
+        // check with contact corresponds to the arm and which to the arm
+        // compare body_1_name and body_2_name with model name
+
+        gazebo::msgs::Wrench w;
+        gazebo::physics::CollisionPtr collision;
+        gazebo::physics::LinkPtr link;
+        if (strncmp(this->model->GetName().c_str(),
+                    wrenchMsg.body_1_name().c_str(),
+                    this->model->GetName().size()) == 0)
+        {
+          w = wrenchMsg.body_1_wrench();
+          collision = this->model->GetChildCollision(wrenchMsg.body_1_name());
+        }
+        else if (strncmp(this->model->GetName().c_str(),
+                         wrenchMsg.body_2_name().c_str(),
+                         this->model->GetName().size()) == 0)
+        {
+          w = wrenchMsg.body_2_wrench();
+          collision = this->model->GetChildCollision(wrenchMsg.body_2_name());
+        }
+        else
+        {
+          gzerr << "collision name does not match model name. This should "
+                 << "never happen." << std::endl;
+          return;
+        }
+
+        link = boost::dynamic_pointer_cast<gazebo::physics::Link>(
+          collision->GetParent());
+        // gzerr << link->GetName() << "\n";
+        ignition::math::Pose3<double> fPose = link->GetWorldPose().Ign();
+        ignition::math::Vector3d fPos = fPose.Pos();
+        ignition::math::Quaternion<double> fRot = fPose.Rot();
+
+        // force and torque in Link frame
+        ignition::math::Vector3d force =
+          gazebo::msgs::ConvertIgn(w.force());
+        ignition::math::Vector3d torque =
+          gazebo::msgs::ConvertIgn(w.torque());
+
+        // force and torque in inertial frame at Link origin
+        ignition::math::Vector3d forceI = fRot.RotateVector(force);
+        ignition::math::Vector3d torqueI = fRot.RotateVector(torque);
+
+        // position and normal in inertial frame
+        ignition::math::Vector3d position =
+          gazebo::msgs::ConvertIgn(contact.position(k));
+        ignition::math::Vector3d normal =
+          gazebo::msgs::ConvertIgn(contact.normal(k));
+
+        // force moment arm in inertial frame
+        ignition::math::Vector3d forceArm = position - fPos;
+
+        // compute force at contact in inertial frame
+        ignition::math::Vector3d forceAtContact =
+          forceI + torqueI.Cross(forceArm);
+
+        // negative sign so force is possitive pushing down on the surface
+        ignition::math::Vector3d fn = -forceAtContact.Dot(normal) * normal;
+
+        // compute normal force at the point of contact
+        this->contactSensorInfos[_i].contactForce += fn;
+
+        // compute torsional friction at point of contact
+        this->contactSensorInfos[_i].contactTorque +=
+          torqueI.Dot(normal) * normal;
+
+        // store time at which sensor was updated
+        this->contactSensorInfos[_i].timestamp = timestamp;
+
+        // if (contact.wrench().size() > 1)
+        //   gzerr << "        sensor [" << _i << "] buffer [" << numContacts
+        //         << "] contact [" << k << "] force ["
+        //         << this->contactSensorInfos[_i].contactForce
+        //         << "] sub-sum ["
+        //         << this->contactSensorInfos[_i].contactForce.GetLength()
+        //         << "]\n";
+      }
     }
   }
   // gzerr << " sensor [" << _i
@@ -1289,6 +1368,8 @@ void HaptixControlPlugin::ConvertMotorVelocityToJointVelocity(
 // Play the trajectory, update states
 void HaptixControlPlugin::GetRobotStateFromSim()
 {
+  common::Time curTime = this->world->GetSimTime();
+
   // fill motor state from joint state
   double motorPosition, motorVelocity, motorTorque;
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
@@ -1320,7 +1401,10 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
   {
     // get summed force from contactSensorInfos
-    double force = this->contactSensorInfos[i].contactForce.GetLength();
+    double force = 0;
+    const double timeout = 0.01;
+    if (curTime.Double() - this->contactSensorInfos[i].timestamp < timeout)
+      force = this->contactSensorInfos[i].contactForce.GetLength();
     // return summed force
     this->robotState.set_contact(i, force);
   }
@@ -1348,7 +1432,6 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     orientation->set_w(1);
   }
 
-  common::Time curTime = this->world->GetSimTime();
   this->robotState.mutable_time_stamp()->set_sec(curTime.sec);
   this->robotState.mutable_time_stamp()->set_nsec(curTime.nsec);
 }
