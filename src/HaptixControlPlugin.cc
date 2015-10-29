@@ -1071,7 +1071,6 @@ void HaptixControlPlugin::GetHandControlFromClient()
         if (this->robotCommand.ref_pos_enabled())
         {
           this->simJointCommands[n].ref_pos =
-          this->simJointCommands[n].ref_pos =
             this->simJointCommands[m].ref_pos
             * this->motorInfos[i].gearboxes[j].multiplier1;
         }
