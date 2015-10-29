@@ -72,6 +72,6 @@ set_target_properties(HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin PROP
   COMPILE_FLAGS ${IGNITION-TRANSPORT_CXX_FLAGS})
 
 install (TARGETS HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin DESTINATION
-  ${GAZEBO_PLUGIN_PATH}/)
+  ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 
 handsim_build_tests(${gtest_sources})
