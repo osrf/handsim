@@ -159,3 +159,9 @@ bool JointHelper::HasJoint() const
 {
   return this->hasJoint;
 }
+
+/////////////////////////////////////////////////
+physics::JointPtr JointHelper::GetRealJoint()
+{
+  return this->realJoint;
+}

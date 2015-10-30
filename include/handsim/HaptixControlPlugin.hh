@@ -379,6 +379,9 @@ namespace gazebo
     /// \brief: keep a local copy of hxCommand
     private: haptix::comm::msgs::hxCommand robotCommand;
 
+    /// \brief: last time a robot command was received from user
+    private: common::Time robotCommandTime;
+
     /// \brief: simulation commands for all the pid'd simulation joints
     private: class SimRobotCommand
     {
@@ -392,6 +395,21 @@ namespace gazebo
     /// robotCommand motor joints to a subset of the joints here.
     private: std::vector<SimRobotCommand> simJointCommands;
 
+    /// \brief: save joint limits
+    /// We pinch limits to current position to enforce
+    /// joint "clutch". Revert to these saved values
+    /// when moving the joint around.
+    private: std::vector<double> simJointLowerLimits;
+
+    /// \brief: save joint limits
+    /// We pinch limits to current position to enforce
+    /// joint "clutch". Revert to these saved values
+    /// when moving the joint around.
+    private: std::vector<double> simJointUpperLimits;
+
+    /// \brief: true if clutch is engaged
+    private: bool clutchEngaged;
+
     /// \brief: joint names matching those of gazebo model
     /// All joints to be controlled by this plugin.
     /// Joint id's must be consecutive.
@@ -400,7 +418,10 @@ namespace gazebo
     ///   <joint id="1">joint_55</joint>
     private: std::map<unsigned int, std::string> jointNames;
 
-    private: std::vector<JointHelper*> haptixJoints;
+    /// \brief: all sim/fake joints to be commanded by ths plugin
+    /// this vector should have the same length as simJointCommands
+    /// maybe we can merge with simJointCommands?
+    private: std::vector<JointHelper*> simJoints;
 
     /// \brief: convert joint data to motor data
     /// \param[in] _motorInfo motor info
@@ -409,6 +430,18 @@ namespace gazebo
     /// \param[out] _motorTorque motor torque
     public: void ConvertJointDataToMotorData(const MotorInfo &_motorInfo,
       double &_motorPosition, double &_motorVelocity, double &_motorTorque);
+
+    /// \brief: apply physical (effort) commands to joints
+    /// that are position servoed
+    /// \param[in] _m index of joint in simJoints vector
+    /// \param[in] _dt time step size for PID update
+    /// \return force to be applied to joint
+    public: double ApplySimJointPositionPIDCommand(int _m, double _dt);
+
+    /// \brief: apply physical (effort) commands to joints
+    /// \param[in] _m index of joint in simJoints vector
+    /// \param[in] _force force to be applied
+    public: void ApplyJointForce(int _m, double _force);
 
     /// \brief: convert motor position to joint position
     /// \param[in] _motorInfo motor info
@@ -467,7 +500,7 @@ namespace gazebo
     private: std::map<unsigned int, MotorInfo> motorInfos;
 
     /// \brief: list of gazebo joints that corresponds to each motor
-    private: std::vector<unsigned int> motors;
+    // private: std::vector<unsigned int> motors;
 
     /// \brief: contact sensor names
     /// Reads from plugin SDF, example:

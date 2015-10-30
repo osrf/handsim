@@ -40,6 +40,8 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
   this->updateRate = 50.0;
+  this->clutchEngaged = false;
+  this->robotCommandTime = -1;
   this->viewpointRotationsEnabled = false;
 
   // Advertise haptix services.
@@ -83,6 +85,13 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->world->EnablePhysicsEngine(true);
   physics::PhysicsEnginePtr physics = this->world->GetPhysicsEngine();
   physics->SetParam("contact_sor_scale", 1.0);
+  physics->SetParam("thread_position_correction", true);
+  /* experimental
+  physics->SetParam("warm_start_factor", 1.0);
+  physics->SetParam("contact_residual_smoothing", 0.2);
+  physics->SetParam("inertia_ratio_reduction", true);
+  physics->SetParam("extra_friction_iterations", 10.0);
+  */
 
   // start a transport node for polhemus head pose view point control
   this->gazeboNode =
@@ -366,9 +375,9 @@ void HaptixControlPlugin::LoadHandControl()
     jointName = jointName->GetNextElement("joint");
   }
 
-  // Set initial haptixJoints size to match jointNames
+  // Set initial simJoints size to match jointNames
   // this is incremented with fake joints from motor specifications
-  this->haptixJoints.resize(this->jointNames.size());
+  this->simJoints.resize(this->jointNames.size());
   // Get gazebo joint pointers to joints
   for (unsigned int i = 0; i < this->jointNames.size(); ++i)
   {
@@ -377,9 +386,9 @@ void HaptixControlPlugin::LoadHandControl()
     if (joint)
     {
       // gzdbg << "setting gazebo joint [" << joint->GetName() << "]\n";
-      this->haptixJoints[i] = new JointHelper();
-      this->haptixJoints[i]->SetJoint(joint);
-      this->haptixJoints[i]->SetJointName(this->jointNames[i]);
+      this->simJoints[i] = new JointHelper();
+      this->simJoints[i]->SetJoint(joint);
+      this->simJoints[i]->SetJointName(this->jointNames[i]);
     }
     else
       gzerr << "jointName [" << this->jointNames[i] << "] not found.\n";
@@ -419,7 +428,11 @@ void HaptixControlPlugin::LoadHandControl()
     this->motorInfos[id].motorTorque = motorTorqueSDF->Get<double>();
     // gzdbg << "  torque [" << this->motorInfos[id].motorTorque << "]\n";
 
-    // this should return index of the joint in this->haptixJoints
+    // initialize effort differential multiplier for parent to 1.0,
+    // subtract multiplier from this value for each child effort differential
+    this->motorInfos[id].effortDifferentialMultiplier = 1.0;
+
+    // this should return index of the joint in this->simJoints
     // where this->jointNames matches motorInfos[id].jointName.
     /// \TODO: there must be a faster way of doing this?
     this->motorInfos[id].index = -1;
@@ -436,11 +449,85 @@ void HaptixControlPlugin::LoadHandControl()
     if (this->motorInfos[id].index == -1)
     {
       // create a fake joint, append it to the end
-      int j1 = this->haptixJoints.size();
+      int j1 = this->simJoints.size();
       JointHelper *hj = new JointHelper();
       hj->SetJointName(this->motorInfos[id].jointName);
-      this->haptixJoints.push_back(hj);
+      this->simJoints.push_back(hj);
       this->motorInfos[id].index = j1;
+    }
+
+    // get differential joints from <effort_differential> blocks
+    if (motorSDF->HasElement("effort_differential"))
+    {
+      sdf::ElementPtr effortDifferentialSDF =
+        motorSDF->GetElement("effort_differential");
+      while (effortDifferentialSDF)
+      {
+        // get joint, offset and multiplier1 and multiplier2
+        sdf::ElementPtr jointSDF = effortDifferentialSDF->GetElement("joint");
+        sdf::ElementPtr multiplierSDF =
+          effortDifferentialSDF->GetElement("multiplier");
+        MotorInfo::EffortDifferential e;
+
+        // find index in this->simJoints that matches
+        // jointSDF->Get<std::string>();
+        e.index = -1;
+        for (unsigned int k = 0; k < this->jointNames.size(); ++k)
+        {
+          if (this->jointNames[k] == jointSDF->Get<std::string>())
+          {
+            e.index = k;
+            break;
+          }
+        }
+        if (e.index == -1)
+          gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
+                 << "] for effort_differential, this"
+                 << " joint will not be controlled.\n";
+
+        e.multiplier = multiplierSDF->Get<double>();
+        this->motorInfos[id].effortDifferentials.push_back(e);
+
+        // subtrace effort multiplier from main actuator torque
+        this->motorInfos[id].effortDifferentialMultiplier -= e.multiplier;
+
+        // parse spring
+        if (effortDifferentialSDF->HasElement("spring"))
+        {
+          gzerr << "spring\n";
+          sdf::ElementPtr springSDF =
+            effortDifferentialSDF->GetElement("spring");
+
+          double preload = 0;
+          if (springSDF->HasElement("preload"))
+          {
+            preload = springSDF->Get<double>("preload");
+            gzerr << "preload: " << preload << "\n";
+          }
+          double stiffness = 0;
+          if (springSDF->HasElement("stiffness"))
+          {
+            stiffness = springSDF->Get<double>("stiffness");
+            gzerr << "stiffness: " << stiffness << "\n";
+          }
+
+          // assign values to gazebo joint directly
+          if (e.index > -1)
+          {
+            double reference = 0;
+            if (fabs(stiffness) > 0.0)
+              reference = preload / stiffness;
+            gzerr << "reference " << reference << "\n";
+            this->simJoints[e.index]->GetRealJoint()->SetStiffnessDamping(
+             0, stiffness,
+             this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
+             reference);
+          }
+        }
+
+        effortDifferentialSDF =
+          effortDifferentialSDF->GetNextElement("effort_differential");
+      }
     }
 
     // get coupled joints from <gearbox> blocks
@@ -451,12 +538,15 @@ void HaptixControlPlugin::LoadHandControl()
       {
         // get joint, offset and multiplier1 and multiplier2
         sdf::ElementPtr jointSDF = gearboxSDF->GetElement("joint");
+        sdf::ElementPtr referenceJointSDF;
+        if (gearboxSDF->HasElement("reference_joint"))
+          referenceJointSDF = gearboxSDF->GetElement("reference_joint");
         sdf::ElementPtr offsetSDF = gearboxSDF->GetElement("offset");
         sdf::ElementPtr multiplier1SDF = gearboxSDF->GetElement("multiplier1");
         sdf::ElementPtr multiplier2SDF = gearboxSDF->GetElement("multiplier2");
         MotorInfo::GearBox g;
 
-        // find index in this->haptixJoints that matches
+        // find index in this->simJoints that matches
         // jointSDF->Get<std::string>();
         g.index = -1;
         for (unsigned int k = 0; k < this->jointNames.size(); ++k)
@@ -468,12 +558,56 @@ void HaptixControlPlugin::LoadHandControl()
           }
         }
         if (g.index == -1)
-          gzerr <<  "failed to find joint for gearbox\n";
+          gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
+                 << "] for gearbox, this joint will not be controlled.\n";
+
+        g.referenceIndex = -1;
+        if (referenceJointSDF)
+        {
+          for (unsigned int k = 0; k < this->jointNames.size(); ++k)
+          {
+            if (this->jointNames[k] == referenceJointSDF->Get<std::string>())
+            {
+              g.referenceIndex = k;
+              break;
+            }
+          }
+          if (g.referenceIndex == -1)
+            gzwarn << "failed to find reference joint ["
+                   << referenceJointSDF->Get<std::string>()
+                   << "] using parent motor joint for reference.\n";
+        }
 
         g.offset = offsetSDF->Get<double>();
         g.multiplier1 = multiplier1SDF->Get<double>();
         g.multiplier2 = multiplier2SDF->Get<double>();
         this->motorInfos[id].gearboxes.push_back(g);
+
+        // parse spring and set joint spring
+        if (gearboxSDF->HasElement("spring"))
+        {
+          sdf::ElementPtr springSDF =
+            gearboxSDF->GetElement("spring");
+
+          double preload = 0;
+          if (springSDF->HasElement("preload"))
+            preload = springSDF->Get<double>("preload");
+          double stiffness = 0;
+          if (springSDF->HasElement("stiffness"))
+            stiffness = springSDF->Get<double>("stiffness");
+
+          // assign values to gazebo joint directly
+          if (g.index > -1)
+          {
+            double reference = 0;
+            if (fabs(stiffness) > 0.0)
+              reference = preload / stiffness;
+            this->simJoints[g.index]->GetRealJoint()->SetStiffnessDamping(
+             0, stiffness,
+             this->simJoints[g.index]->GetRealJoint()->GetDamping(0),
+             reference);
+          }
+        }
 
         gearboxSDF = gearboxSDF->GetNextElement("gearbox");
       }
@@ -484,7 +618,7 @@ void HaptixControlPlugin::LoadHandControl()
   }
 
   // Get pid gains and insert into pid
-  this->pids.resize(this->haptixJoints.size());
+  this->pids.resize(this->simJoints.size());
   sdf::ElementPtr pid = this->sdf->GetElement("pid");
   // gzdbg << "getting pid\n";
   while (pid)
@@ -503,8 +637,9 @@ void HaptixControlPlugin::LoadHandControl()
     pid = pid->GetNextElement("pid");
   }
 
-  // Adjust max/min torque commands based on <motor_torque>,
-  // <gear_ratio> and <gearbox> params.
+  // SET MAX/MIN HAPTIX JOINT TORQUE LIMIT BASED ON
+  //   - parent <motor_torque> and differential joint <multiplier>
+  //   - parent <motor_torque> and gearbox <multiplier[1|2]>
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     int m = this->motorInfos[i].index;
@@ -516,11 +651,32 @@ void HaptixControlPlugin::LoadHandControl()
 
     /// also set joint effort limit directly, gazebo pid limits
     /// broken (see gazebo issue #1534)
-    this->haptixJoints[m]->SetEffortLimit(0, jointTorque);
+    this->simJoints[m]->SetEffortLimit(0, jointTorque);
 
     /// \TODO: contemplate about using Joint::SetEffortLimit()
     /// instead of PID::SetCmdMax() and PID::SetCmdMin()
 
+    /// parse EffortDifferentials to set effort limits
+    /// \TODO: note: power distribution is not accurate.
+    /// we should distribute the power between a effort differential
+    /// with its children joints, which are currently PID position
+    /// controlled. If we switch to physics gearbox joint constraint
+    /// effort distribution will be automatically enforced.
+    for (unsigned int j = 0;
+         j < this->motorInfos[i].effortDifferentials.size(); ++j)
+    {
+      int n = this->motorInfos[i].effortDifferentials[j].index;
+      double differentialJointTorque = jointTorque *
+        this->motorInfos[i].effortDifferentials[j].multiplier;
+
+      /// set joint effort limit
+      this->simJoints[n]->SetEffortLimit(0, differentialJointTorque);
+
+      // gzdbg << "   differential motor torque [" << n
+      //       << "] : " << differentialJointTorque << "\n";
+    }
+
+    // parse gearboxes to
     // set torque command limits through <gearbox> coupling params.
     for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
     {
@@ -536,7 +692,7 @@ void HaptixControlPlugin::LoadHandControl()
 
       /// also set joint effort limit directly, gazebo pid limits
       /// broken (see gazebo issue #1534)
-      this->haptixJoints[n]->SetEffortLimit(0, coupledJointTorque);
+      this->simJoints[n]->SetEffortLimit(0, coupledJointTorque);
 
       // gzdbg << "   coupled motor torque [" << n
       //       << "] : " << coupledJointTorque << "\n";
@@ -711,9 +867,9 @@ void HaptixControlPlugin::LoadHandControl()
   this->robotCommand.set_gain_pos_enabled(false);
   this->robotCommand.set_gain_vel_enabled(false);
 
-  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  for (unsigned int i = 0; i < this->simJoints.size(); ++i)
   {
-    if (this->haptixJoints[i]->HasJoint())
+    if (this->simJoints[i]->HasJoint())
     {
       this->robotState.add_joint_pos(0);
       this->robotState.add_joint_vel(0);
@@ -754,6 +910,20 @@ void HaptixControlPlugin::LoadHandControl()
 
   this->robotState.mutable_time_stamp()->set_sec(0);
   this->robotState.mutable_time_stamp()->set_nsec(0);
+
+  // save joint limits for simulation clutch via joint limit pinching
+  this->simJointUpperLimits.resize(this->simJoints.size());
+  this->simJointLowerLimits.resize(this->simJoints.size());
+  for (unsigned int i = 0; i < this->simJoints.size(); ++i)
+  {
+    if (this->simJoints[i]->HasJoint())
+    {
+      this->simJointLowerLimits[i] =
+        this->simJoints[i]->GetRealJoint()->GetLowerLimit(0).Radian();
+      this->simJointUpperLimits[i] =
+        this->simJoints[i]->GetRealJoint()->GetUpperLimit(0).Radian();
+    }
+  }
 }
 
 /////////////////////////////////////////////////
@@ -1070,33 +1240,77 @@ void HaptixControlPlugin::GetHandControlFromClient()
       {
         if (this->robotCommand.ref_pos_enabled())
         {
-          this->simJointCommands[n].ref_pos =
-            this->simJointCommands[m].ref_pos
-            * this->motorInfos[i].gearboxes[j].multiplier1;
+          // use reference joint if specified
+          if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
+          {
+            m = this->motorInfos[i].gearboxes[j].referenceIndex;
+            this->simJointCommands[n].ref_pos =
+              this->simJoints[m]->GetAngle(0).Radian()
+              * this->motorInfos[i].gearboxes[j].multiplier1;
+          }
+          else
+          {
+            this->simJointCommands[n].ref_pos =
+              this->simJointCommands[m].ref_pos
+              * this->motorInfos[i].gearboxes[j].multiplier1;
+          }
         }
         if (this->robotCommand.ref_vel_max_enabled())
         {
-          this->simJointCommands[n].ref_vel_max =
-            this->simJointCommands[m].ref_vel_max
-            / this->motorInfos[i].gearboxes[j].multiplier1;
+          if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
+          {
+            m = this->motorInfos[i].gearboxes[j].referenceIndex;
+            this->simJointCommands[n].ref_vel_max =
+              this->simJoints[m]->GetVelocity(0)
+              / this->motorInfos[i].gearboxes[j].multiplier1;
+          }
+          else
+          {
+            this->simJointCommands[n].ref_vel_max =
+              this->simJointCommands[m].ref_vel_max
+              / this->motorInfos[i].gearboxes[j].multiplier1;
+          }
         }
       }
       else
       {
         if (this->robotCommand.ref_pos_enabled())
         {
-          this->simJointCommands[n].ref_pos =
-            (this->simJointCommands[m].ref_pos -
-             this->motorInfos[i].gearboxes[j].offset)
-            * this->motorInfos[i].gearboxes[j].multiplier2
-            + this->motorInfos[i].gearboxes[j].offset
-            * this->motorInfos[i].gearboxes[j].multiplier2;
+          if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
+          {
+            m = this->motorInfos[i].gearboxes[j].referenceIndex;
+            this->simJointCommands[n].ref_pos =
+              (this->simJoints[m]->GetAngle(0).Radian() -
+               this->motorInfos[i].gearboxes[j].offset)
+              * this->motorInfos[i].gearboxes[j].multiplier2
+              + this->motorInfos[i].gearboxes[j].offset
+              * this->motorInfos[i].gearboxes[j].multiplier2;
+          }
+          else
+          {
+            this->simJointCommands[n].ref_pos =
+              (this->simJointCommands[m].ref_pos -
+               this->motorInfos[i].gearboxes[j].offset)
+              * this->motorInfos[i].gearboxes[j].multiplier2
+              + this->motorInfos[i].gearboxes[j].offset
+              * this->motorInfos[i].gearboxes[j].multiplier2;
+          }
         }
         if (this->robotCommand.ref_vel_max_enabled())
         {
-          this->simJointCommands[n].ref_vel_max =
-            this->simJointCommands[m].ref_vel_max
-            / this->motorInfos[i].gearboxes[j].multiplier2;
+          if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
+          {
+            m = this->motorInfos[i].gearboxes[j].referenceIndex;
+            this->simJointCommands[n].ref_vel_max =
+              this->simJoints[m]->GetVelocity(0)
+              / this->motorInfos[i].gearboxes[j].multiplier2;
+          }
+          else
+          {
+            this->simJointCommands[n].ref_vel_max =
+              this->simJointCommands[m].ref_vel_max
+              / this->motorInfos[i].gearboxes[j].multiplier2;
+          }
         }
       }
       // set gains
@@ -1109,45 +1323,142 @@ void HaptixControlPlugin::GetHandControlFromClient()
 }
 
 /////////////////////////////////////////////////
+double HaptixControlPlugin::ApplySimJointPositionPIDCommand(int _m,
+  double _dt)
+{
+  // get joint positions and velocities
+  double position = this->simJoints[_m]->GetAngle(0).Radian();
+  double velocity = this->simJoints[_m]->GetVelocity(0);
+
+  // compute target joint position and velocity error in gazebo
+  double errorPos = position - this->simJointCommands[_m].ref_pos;
+  double errorVel = velocity - this->simJointCommands[_m].ref_vel_max;
+
+  // compute overall error
+  double error = this->simJointCommands[_m].gain_pos * errorPos
+               + this->simJointCommands[_m].gain_vel * errorVel;
+
+  // compute force needed
+  double force = this->pids[_m].Update(error, _dt);
+
+  return force;
+}
+
+/////////////////////////////////////////////////
+void HaptixControlPlugin::ApplyJointForce(int _m, double _force)
+{
+  // command joint effort
+  if (!this->simJoints[_m]->SetForce(0, _force))
+  {
+    // not a real gazebo joint, set target directly
+    this->simJoints[_m]->SetPosition(this->simJointCommands[_m].ref_pos);
+
+    /// \TODO: something about velocity commands
+    // this->simJoints[_m]->SetVelocity(
+    //   this->simJointCommands[_m].ref_vel_max);
+    /// \TODO: for issue #86 motor velocity will be zero
+    /// unless we:  1) compute torque from transmissioned joints, or
+    /// 2) implement actual motor joint dynamics and servo the joint.
+    /// For example, 1) could be:
+
+    /// \TODO: for issue #86: torque for fake joint will always be zero
+    /// unless we:  1) compute torque from transmissioned joints, or
+    /// 2) implement actual motor joint dynamics and servo the joint.
+    /// For example, 1) could be:
+    // double force2 = computed from gearboxed joints
+    // this->simJoints[i]->SetForce(0, force2);
+  }
+}
+
+/////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
-  // command all joints
-  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  /* clutch not quite working yet
+  */
+  common::Time curTime = this->world->GetSimTime();
+  double timeout = 0.2;
+  // gzerr << curTime.Double()
+  //       << " : " << this->robotCommandTime.Double()
+  //       << "\n";
+  if ((curTime - this->robotCommandTime).Double() > timeout)
   {
-    // get joint positions and velocities
-    double position = this->haptixJoints[i]->GetAngle(0).Radian();
-    double velocity = this->haptixJoints[i]->GetVelocity(0);
-
-    // compute target joint position and velocity error in gazebo
-    double errorPos = position - this->simJointCommands[i].ref_pos;
-    double errorVel = velocity - this->simJointCommands[i].ref_vel_max;
-
-    // compute overall error
-    double error = this->simJointCommands[i].gain_pos * errorPos
-                 + this->simJointCommands[i].gain_vel * errorVel;
-
-    // compute force needed
-    double force = this->pids[i].Update(error, _dt);
-
-    if (!this->haptixJoints[i]->SetForce(0, force))
+    if (!this->clutchEngaged)
     {
-      // not a real gazebo joint, set target directly
-      this->haptixJoints[i]->SetPosition(this->simJointCommands[i].ref_pos);
+      for (unsigned int i = 0; i < this->simJoints.size(); ++i)
+      {
+        if (this->simJoints[i]->HasJoint())
+        {
+          // this->simJoints[i]->GetRealJoint()->SetParam("friction", 0, bigF);
+          double pos = math::clamp(
+            this->simJoints[i]->GetRealJoint()->GetAngle(0).Radian(),
+                this->simJointLowerLimits[i],
+                this->simJointUpperLimits[i]);
+          this->simJoints[i]->GetRealJoint()->SetUpperLimit(0, pos);
+          this->simJoints[i]->GetRealJoint()->SetLowerLimit(0, pos);
+          gzerr << "clutch on: "
+                << this->simJoints[i]->GetRealJoint()->GetName()
+                << " : " << this->simJointLowerLimits[i]
+                << " : " << this->simJointUpperLimits[i]
+                << " : " << pos
+                << "\n";
+        }
+      }
+      this->clutchEngaged = true;
+    }
+  }
+  else
+  {
+    if (this->clutchEngaged)
+    {
+      for (unsigned int i = 0; i < this->simJoints.size(); ++i)
+      {
+        if (this->simJoints[i]->HasJoint())
+        {
+          gzerr << "clutch off: "
+                << this->simJoints[i]->GetRealJoint()->GetName()
+                << " : " << this->simJointLowerLimits[i]
+                << " : " << this->simJointUpperLimits[i]
+                << "\n";
+          this->simJoints[i]->GetRealJoint()->SetLowerLimit(0,
+            this->simJointLowerLimits[i]);
+          this->simJoints[i]->GetRealJoint()->SetUpperLimit(0,
+            this->simJointUpperLimits[i]);
+        }
+      }
+      this->clutchEngaged = false;
+    }
+  }
 
-      /// \TODO: something about velocity commands
-      // this->haptixJoints[i]->SetVelocity(
-      //   this->simJointCommands[i].ref_vel_max);
-      /// \TODO: for issue #86 motor velocity will be zero
-      /// unless we:  1) compute torque from transmissioned joints, or
-      /// 2) implement actual motor joint dynamics and servo the joint.
-      /// For example, 1) could be:
+  // command all joints by walking through all the motors
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+  {
+    // set force on actuator joint
+    int m = this->motorInfos[i].index;
+    double actForce = this->ApplySimJointPositionPIDCommand(m, _dt);
+    this->ApplyJointForce(m,
+      this->motorInfos[i].effortDifferentialMultiplier * actForce);
 
-      /// \TODO: for issue #86: torque for fake joint will always be zero
-      /// unless we:  1) compute torque from transmissioned joints, or
-      /// 2) implement actual motor joint dynamics and servo the joint.
-      /// For example, 1) could be:
-      // double force2 = computed from gearboxed joints
-      // this->haptixJoints[i]->SetForce(0, force2);
+    // set force on effort differential joints
+    for (unsigned int j = 0;
+         j < this->motorInfos[i].effortDifferentials.size(); ++j)
+    {
+      if (actForce > 0.1) // not apply torque if torque is small
+      {
+        int n = this->motorInfos[i].effortDifferentials[j].index;
+        double multiplier =
+          this->motorInfos[i].effortDifferentials[j].multiplier;
+        this->ApplyJointForce(n, multiplier*actForce);
+        // gzerr << m << " : " << n
+        //       << " : " << multiplier << " : " << actForce << "\n";
+      }
+    }
+
+    // set force on geared joints
+    for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
+    {
+      int n = this->motorInfos[i].gearboxes[j].index;
+      double force = this->ApplySimJointPositionPIDCommand(n, _dt);
+      this->ApplyJointForce(n, force);
     }
   }
 }
@@ -1337,9 +1648,9 @@ void HaptixControlPlugin::ConvertJointDataToMotorData(
   double &_motorPosition, double &_motorVelocity, double &_motorTorque)
 {
   int m = _motorInfo.index;
-  double jointPosition = this->haptixJoints[m]->GetAngle(0).Radian();
-  double jointVelocity = this->haptixJoints[m]->GetVelocity(0);
-  double jointTorque = this->haptixJoints[m]->GetForce(0);
+  double jointPosition = this->simJoints[m]->GetAngle(0).Radian();
+  double jointVelocity = this->simJoints[m]->GetVelocity(0);
+  double jointTorque = this->simJoints[m]->GetForce(0);
   // convert joint angle and velocities into motor using gear_ratio
   _motorPosition = jointPosition * _motorInfo.gearRatio
     - _motorInfo.encoderOffset;
@@ -1386,14 +1697,14 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 
   // fill robot state joint_pos and joint_vel
   unsigned int count = 0;
-  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  for (unsigned int i = 0; i < this->simJoints.size(); ++i)
   {
-    if (this->haptixJoints[i]->HasJoint())
+    if (this->simJoints[i]->HasJoint())
     {
       this->robotState.set_joint_pos(count,
-        this->haptixJoints[i]->GetAngle(0).Radian());
+        this->simJoints[i]->GetAngle(0).Radian());
       this->robotState.set_joint_vel(count,
-        this->haptixJoints[i]->GetVelocity(0));
+        this->simJoints[i]->GetVelocity(0));
       ++count;
     }
   }
@@ -1541,23 +1852,24 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
   _rep.set_contact_sensor_count(this->contactSensorInfos.size());
   _rep.set_imu_count(this->imuSensors.size());
 
-  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  for (unsigned int i = 0; i < this->simJoints.size(); ++i)
   {
-    if (this->haptixJoints[i]->HasJoint())
+    if (this->simJoints[i]->HasJoint())
     {
       haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_joint_limit();
-      joint->set_minimum(this->haptixJoints[i]->GetLowerLimit(0).Radian());
-      joint->set_maximum(this->haptixJoints[i]->GetUpperLimit(0).Radian());
+      joint->set_minimum(this->simJoints[i]->GetLowerLimit(0).Radian());
+      joint->set_maximum(this->simJoints[i]->GetUpperLimit(0).Radian());
     }
   }
 
+  // RETURN JOINT INFO (motor max / min torques).
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     int m = this->motorInfos[i].index;
     haptix::comm::msgs::hxRobot::hxLimit *motor = _rep.add_motor_limit();
 
     /// \TODO for issue #86, compute joint limits for fake joints as well
-    if (!this->haptixJoints[m]->HasJoint())
+    if (!this->simJoints[m]->HasJoint())
     {
       // fake joint, limit is not set in sdf, so they are +/-1e16
       // go through all gearboxes and compute a joint limit based
@@ -1567,8 +1879,8 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
       {
         int n = this->motorInfos[i].gearboxes[j].index;
-        double hi = this->haptixJoints[n]->GetUpperLimit(0).Radian();
-        double lo = this->haptixJoints[n]->GetLowerLimit(0).Radian();
+        double hi = this->simJoints[n]->GetUpperLimit(0).Radian();
+        double lo = this->simJoints[n]->GetLowerLimit(0).Radian();
         // which multiplier to use
         // See transmission specification in issue #60,
         // If motor angle commanded is less than offset
@@ -1601,8 +1913,8 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     {
       // there's a real joint with valid limits,
       // compute the motor limits from joint limits.
-      double jointMin = this->haptixJoints[m]->GetLowerLimit(0).Radian();
-      double jointMax = this->haptixJoints[m]->GetUpperLimit(0).Radian();
+      double jointMin = this->simJoints[m]->GetLowerLimit(0).Radian();
+      double jointMax = this->simJoints[m]->GetUpperLimit(0).Radian();
       double motorMin = jointMin * this->motorInfos[i].gearRatio
         - this->motorInfos[i].encoderOffset;
       double motorMax = jointMax * this->motorInfos[i].gearRatio
@@ -1639,7 +1951,7 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   // Read the request parameters.
   // Debug output.
   /*std::cout << "Received a new command:" << std::endl;
-  for (unsigned int i = 0; i < this->haptixJoints.size(); ++i)
+  for (unsigned int i = 0; i < this->simJoints.size(); ++i)
   {
     std::cout << "\tMotor " << i << ":" << std::endl;
     std::cout << "\t\t" << _req.ref_pos(i) << std::endl;
@@ -1658,6 +1970,9 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   */
 
   this->robotCommand = _req;
+
+  // for clutch timing
+  this->robotCommandTime = this->world->GetSimTime();
 
   _rep.Clear();
 
@@ -1682,6 +1997,9 @@ void HaptixControlPlugin::HaptixGraspCallback(
       haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
   boost::mutex::scoped_lock lock(this->updateMutex);
+
+  // for clutch timing
+  this->robotCommandTime = this->world->GetSimTime();
 
   if (this->graspPositions.size() != this->motorInfos.size())
     this->graspPositions.resize(this->motorInfos.size());

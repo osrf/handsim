@@ -116,6 +116,10 @@ namespace gazebo
     /// \return true if joint has been assigned
     public: bool HasJoint() const;
 
+    /// \brief Returns the real joint if one exists
+    /// \return gazebo joint if one exsits
+    public: physics::JointPtr GetRealJoint();
+
     private: math::Angle fakePosition;
 
     private: double fakeVelocity;
