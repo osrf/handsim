@@ -6,6 +6,8 @@ include (FindPkgConfig)
 include (FindBoost)
 
 find_package(gazebo 7.0.0 REQUIRED)
+# Get the Gazebo major version number.
+string(REGEX REPLACE "\\..*" ""  GAZEBO_MAJOR_VERSION ${GAZEBO_VERSION})
 find_package(haptix-comm REQUIRED)
 find_package(ignition-math2 REQUIRED)
 find_package(ignition-transport0 REQUIRED)
