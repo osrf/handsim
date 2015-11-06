@@ -55,7 +55,17 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   : serverIP(_serverIP), verbose(_verbose), world(_world)
 {
   this->active.store(false);
+
+  // Save the current value of IGN_IP environment variable.
+  char *ipEnv = std::getenv("IGN_IP");
+
+  // Unset IGN_IP. If the variable is set, we'll only get one interface and
+  // we want all of them to make sure that we can communicate with Windows.
+  unsetenv("IGN_IP");
   this->myNetworkInterfaces = ignition::transport::determineInterfaces();
+
+  // Restore IGN_IP.
+  setenv("IGN_IP", ipEnv, 1);
 }
 
 /////////////////////////////////////////////////
