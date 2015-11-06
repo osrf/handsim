@@ -65,7 +65,8 @@ Optitrack::Optitrack(const std::string &_serverIP, const bool _verbose,
   this->myNetworkInterfaces = ignition::transport::determineInterfaces();
 
   // Restore IGN_IP.
-  setenv("IGN_IP", ipEnv, 1);
+  if (ipEnv)
+    setenv("IGN_IP", ipEnv, 1);
 }
 
 /////////////////////////////////////////////////
