@@ -407,8 +407,9 @@ namespace gazebo
     /// when moving the joint around.
     private: std::vector<double> simJointUpperLimits;
 
-    /// \brief: true if clutch is engaged
-    private: bool clutchEngaged;
+    /// \brief: 0 if clutch is disengaged,
+    /// 1 if hilimit is on, -1 if lolimit is on.
+    private: std::vector<int> clutchEngaged;
 
     /// \brief: joint names matching those of gazebo model
     /// All joints to be controlled by this plugin.
@@ -637,6 +638,9 @@ namespace gazebo
 
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
+
+    /// \brief Low-pass filter for torque transmission
+    private: gazebo::math::OnePole<double> torqueFilter;
 
     /// \brief Receives messages to toggle viewpoint rotations.
     private: gazebo::transport::SubscriberPtr viewpointRotationsSub;

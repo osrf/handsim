@@ -40,7 +40,6 @@ HaptixControlPlugin::HaptixControlPlugin()
   this->armOffsetInitialized = false;
   this->headOffsetInitialized = false;
   this->updateRate = 50.0;
-  this->clutchEngaged = false;
   this->robotCommandTime = -1;
   this->viewpointRotationsEnabled = false;
 
@@ -175,6 +174,10 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   // -0.3 meters towards wrist from elbow
   // 90 degrees yaw to the left
   this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
+  if (_sdf->HasElement("base_link_to_arm_sensor_pose"))
+  {
+    this->baseLinkToArmSensor = _sdf->Get<math::Pose>("base_link_to_arm_sensor_pose");
+  }
   // transform from polhemus sensor orientation to camera frame
   // 10cm to the right of the sensor is roughly where the eyes are
   // -0.3 rad pitch up: sensor is usually tilted upwards when worn on head
@@ -285,6 +288,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
 
   this->headPosFilter.SetFc(0.002, 0.3);
   this->headOriFilter.SetFc(0.002, 0.3);
+  this->torqueFilter.SetFc(1.0, 1000.0);
 
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
@@ -427,6 +431,17 @@ void HaptixControlPlugin::LoadHandControl()
       motorSDF->GetElement("motor_torque");
     this->motorInfos[id].motorTorque = motorTorqueSDF->Get<double>();
     // gzdbg << "  torque [" << this->motorInfos[id].motorTorque << "]\n";
+
+    // get joint name associated with this motor
+    if (motorSDF->HasElement("clutch"))
+    {
+      this->motorInfos[id].clutch = motorSDF->Get<bool>("clutch");
+    }
+    else
+    {
+      this->motorInfos[id].clutch = false;
+    }
+    // gzdbg << "  joint [" << this->motorInfos[id].jointName << "]\n";
 
     // initialize effort differential multiplier for parent to 1.0,
     // subtract multiplier from this value for each child effort differential
@@ -912,6 +927,7 @@ void HaptixControlPlugin::LoadHandControl()
   this->robotState.mutable_time_stamp()->set_nsec(0);
 
   // save joint limits for simulation clutch via joint limit pinching
+  this->clutchEngaged.resize(this->simJoints.size());
   this->simJointUpperLimits.resize(this->simJoints.size());
   this->simJointLowerLimits.resize(this->simJoints.size());
   for (unsigned int i = 0; i < this->simJoints.size(); ++i)
@@ -922,6 +938,7 @@ void HaptixControlPlugin::LoadHandControl()
         this->simJoints[i]->GetRealJoint()->GetLowerLimit(0).Radian();
       this->simJointUpperLimits[i] =
         this->simJoints[i]->GetRealJoint()->GetUpperLimit(0).Radian();
+      this->clutchEngaged[i] = 0;
     }
   }
 }
@@ -1373,59 +1390,137 @@ void HaptixControlPlugin::ApplyJointForce(int _m, double _force)
 /////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
-  /* clutch not quite working yet
-  */
-  common::Time curTime = this->world->GetSimTime();
-  double timeout = 0.2;
-  // gzerr << curTime.Double()
-  //       << " : " << this->robotCommandTime.Double()
-  //       << "\n";
-  if ((curTime - this->robotCommandTime).Double() > timeout)
+  /* clutch should only be enabled for motor actuated joints */
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
-    if (!this->clutchEngaged)
+    if (this->motorInfos[i].clutch)
     {
-      for (unsigned int i = 0; i < this->simJoints.size(); ++i)
+      int m = this->motorInfos[i].index;
+      double pe, ie, de;
+      this->pids[m].GetErrors(pe, ie, de);
+      double cmd = this->pids[m].GetCmd();
+
+      // if (m == 5)
+      //   gzerr << "debug "
+      //         << m
+      //         << " : " << this->clutchEngaged[m]
+      //         << " : " << cmd
+      //         << " : " << pe
+      //         << " : " << ie
+      //         << " : " << de
+      //         << "\n";
+
+      // check if lolimit needs to be engaged
+      if (cmd > 0.3 && pe < -0.003)
       {
-        if (this->simJoints[i]->HasJoint())
+        if (this->clutchEngaged[m] != -1)
         {
-          // this->simJoints[i]->GetRealJoint()->SetParam("friction", 0, bigF);
-          double pos = math::clamp(
-            this->simJoints[i]->GetRealJoint()->GetAngle(0).Radian(),
-                this->simJointLowerLimits[i],
-                this->simJointUpperLimits[i]);
-          this->simJoints[i]->GetRealJoint()->SetUpperLimit(0, pos);
-          this->simJoints[i]->GetRealJoint()->SetLowerLimit(0, pos);
-          gzerr << "clutch on: "
-                << this->simJoints[i]->GetRealJoint()->GetName()
-                << " : " << this->simJointLowerLimits[i]
-                << " : " << this->simJointUpperLimits[i]
-                << " : " << pos
+          gzerr << "engage lo " << m << " : " << cmd
+                << " : " << pe
+                << " : " << ie
+                << " : " << de
                 << "\n";
+          if (this->simJoints[m]->HasJoint())
+          {
+            // this->simJoints[m]->GetRealJoint()->SetParam("friction", 0, bigF);
+            double pos = math::clamp(
+              this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian(),
+                  this->simJointLowerLimits[m],
+                  this->simJointUpperLimits[m]);
+            // this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, pos);
+            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, pos);
+            gzerr << "lo clutch on: "
+                  << this->simJoints[m]->GetRealJoint()->GetName()
+                  << " : " << this->simJointLowerLimits[m]
+                  << " : " << this->simJointUpperLimits[m]
+                  << " : " << pos
+                  << "\n";
+          }
+          this->clutchEngaged[m] = -1;
         }
       }
-      this->clutchEngaged = true;
-    }
-  }
-  else
-  {
-    if (this->clutchEngaged)
-    {
-      for (unsigned int i = 0; i < this->simJoints.size(); ++i)
+      
+      // check if we should disengage lo
+      if (this->clutchEngaged[m] == -1)
       {
-        if (this->simJoints[i]->HasJoint())
+        if (cmd < 0.03)
         {
-          gzerr << "clutch off: "
-                << this->simJoints[i]->GetRealJoint()->GetName()
-                << " : " << this->simJointLowerLimits[i]
-                << " : " << this->simJointUpperLimits[i]
+          gzerr << "disengage lo: " << m << " : " << cmd
+                << " : " << pe
+                << " : " << ie
+                << " : " << de
                 << "\n";
-          this->simJoints[i]->GetRealJoint()->SetLowerLimit(0,
-            this->simJointLowerLimits[i]);
-          this->simJoints[i]->GetRealJoint()->SetUpperLimit(0,
-            this->simJointUpperLimits[i]);
+          if (this->simJoints[m]->HasJoint())
+          {
+            gzerr << "lo clutch off: "
+                  << this->simJoints[m]->GetRealJoint()->GetName()
+                  << " : " << this->simJointLowerLimits[m]
+                  << " : " << this->simJointUpperLimits[m]
+                  << "\n";
+            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
+              this->simJointLowerLimits[m]);
+            // this->simJoints[m]->GetRealJoint()->SetUpperLimit(0,
+            //   this->simJointUpperLimits[m]);
+          }
+          this->clutchEngaged[m] = 0;
         }
       }
-      this->clutchEngaged = false;
+
+      // check if hilimit needs to be engaged
+      if (cmd < -0.3 && pe > 0.003)
+      {
+        if (this->clutchEngaged[m] != 1)
+        {
+          gzerr << "engage hi " << m << " : " << cmd
+                << " : " << pe
+                << " : " << ie
+                << " : " << de
+                << "\n";
+          if (this->simJoints[m]->HasJoint())
+          {
+            // this->simJoints[m]->GetRealJoint()->SetParam("friction", 0, bigF);
+            double pos = math::clamp(
+              this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian(),
+                  this->simJointLowerLimits[m],
+                  this->simJointUpperLimits[m]);
+            this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, pos);
+            // this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, pos);
+            gzerr << "hi clutch on: "
+                  << this->simJoints[m]->GetRealJoint()->GetName()
+                  << " : " << this->simJointLowerLimits[m]
+                  << " : " << this->simJointUpperLimits[m]
+                  << " : " << pos
+                  << "\n";
+          }
+          this->clutchEngaged[m] = 1;
+        }
+      }
+      
+      // check if we should disengage hi
+      if (this->clutchEngaged[m] == 1)
+      {
+        if (cmd > -0.1)
+        {
+          gzerr << "disengage hi: " << m << " : " << cmd
+                << " : " << pe
+                << " : " << ie
+                << " : " << de
+                << "\n";
+          if (this->simJoints[m]->HasJoint())
+          {
+            gzerr << "hi clutch off: "
+                  << this->simJoints[m]->GetRealJoint()->GetName()
+                  << " : " << this->simJointLowerLimits[m]
+                  << " : " << this->simJointUpperLimits[m]
+                  << "\n";
+            // this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
+            //   this->simJointLowerLimits[m]);
+            this->simJoints[m]->GetRealJoint()->SetUpperLimit(0,
+              this->simJointUpperLimits[m]);
+          }
+          this->clutchEngaged[m] = 0;
+        }
+      }
     }
   }
 
@@ -1437,17 +1532,22 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
     double actForce = this->ApplySimJointPositionPIDCommand(m, _dt);
     this->ApplyJointForce(m,
       this->motorInfos[i].effortDifferentialMultiplier * actForce);
+    double actForceFiltered = this->torqueFilter.Process(actForce);
+    // gzerr << actForce << " : " << actForceFiltered << "\n";
 
     // set force on effort differential joints
     for (unsigned int j = 0;
          j < this->motorInfos[i].effortDifferentials.size(); ++j)
     {
-      if (actForce > 0.1) // not apply torque if torque is small
+      // test: do not apply torque if torque is small
+      // const double torqueTol = 0.1;
+      // if (fabs(actForceFiltered) > torqueTol)
       {
         int n = this->motorInfos[i].effortDifferentials[j].index;
         double multiplier =
           this->motorInfos[i].effortDifferentials[j].multiplier;
-        this->ApplyJointForce(n, multiplier*actForce);
+        this->ApplyJointForce(n, multiplier*actForceFiltered);
+        // this->ApplyJointForce(n, multiplier*actForce);
         // gzerr << m << " : " << n
         //       << " : " << multiplier << " : " << actForce << "\n";
       }

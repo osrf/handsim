@@ -52,6 +52,9 @@ namespace gazebo
     /// \brief: index of joint controlled by this motor
     public: int index;
 
+    /// \brief: enable clutch if true
+    public: bool clutch;
+
     /// \brief: This factor is multiplied to effort before sending effort command
     ///         to an actuator joint. Its value should be:
     ///
