@@ -494,7 +494,6 @@ void HaptixControlPlugin::LoadHandControl()
         // parse spring
         if (effortDifferentialSDF->HasElement("spring"))
         {
-          gzerr << "spring\n";
           sdf::ElementPtr springSDF =
             effortDifferentialSDF->GetElement("spring");
 
