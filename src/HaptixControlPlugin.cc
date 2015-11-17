@@ -1389,7 +1389,7 @@ void HaptixControlPlugin::ApplyJointForce(int _m, double _force)
 /////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateHandControl(double _dt)
 {
-  /* clutch should only be enabled for motor actuated joints */
+  // clutch are optional for motor actuated joints
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     if (this->motorInfos[i].clutch)
@@ -1410,7 +1410,9 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       //         << "\n";
 
       // check if lolimit needs to be engaged
-      if (cmd > 0.3 && pe < -0.003)
+      bool closeHand = (cmd > 0.3);
+      bool handPushedOpen = (pe < -0.003);
+      if (closeHand && handPushedOpen)
       {
         if (this->clutchEngaged[m] != -1)
         {
@@ -1421,7 +1423,6 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
                 << "\n";
           if (this->simJoints[m]->HasJoint())
           {
-            // this->simJoints[m]->GetRealJoint()->SetParam("friction", 0, bigF);
             double pos = math::clamp(
               this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian(),
                   this->simJointLowerLimits[m],
@@ -1442,7 +1443,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       // check if we should disengage lo
       if (this->clutchEngaged[m] == -1)
       {
-        if (cmd < 0.03)
+        if (!handPushedOpen)
         {
           gzerr << "disengage lo: " << m << " : " << cmd
                 << " : " << pe
@@ -1466,7 +1467,9 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       }
 
       // check if hilimit needs to be engaged
-      if (cmd < -0.3 && pe > 0.003)
+      bool openHand = (cmd < -0.3);
+      bool handPushedClose = (pe > 0.003);
+      if (openHand && handPushedClose)
       {
         if (this->clutchEngaged[m] != 1)
         {
@@ -1477,7 +1480,6 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
                 << "\n";
           if (this->simJoints[m]->HasJoint())
           {
-            // this->simJoints[m]->GetRealJoint()->SetParam("friction", 0, bigF);
             double pos = math::clamp(
               this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian(),
                   this->simJointLowerLimits[m],
@@ -1498,7 +1500,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       // check if we should disengage hi
       if (this->clutchEngaged[m] == 1)
       {
-        if (cmd > -0.1)
+        if (!handPushedClose)
         {
           gzerr << "disengage hi: " << m << " : " << cmd
                 << " : " << pe
@@ -2156,8 +2158,11 @@ void HaptixControlPlugin::HaptixGraspCallback(
           else
           {
             // update output command
-            pos += (value - lastInput) / (input - lastInput) *
-                   (output - lastOutput);
+            if (!math::equal(input, lastInput))
+            {
+              pos += (value - lastInput) / (input - lastInput) *
+                     (output - lastOutput);
+            }
             p = --points.end();
           }
         }
