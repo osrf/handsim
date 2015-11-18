@@ -500,9 +500,6 @@ namespace gazebo
     ///   </motor>
     private: std::map<unsigned int, MotorInfo> motorInfos;
 
-    /// \brief: list of gazebo joints that corresponds to each motor
-    // private: std::vector<unsigned int> motors;
-
     /// \brief: contact sensor names
     /// Reads from plugin SDF, example:
     ///   <contactSensor id="0">contact_sensor_0</contactSensor>
