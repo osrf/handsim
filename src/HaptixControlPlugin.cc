@@ -1400,7 +1400,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       double cmd = this->pids[m].GetCmd();
 
       // if (m == 5)
-      //   gzerr << "debug "
+      //   gzdbg << "debug "
       //         << m
       //         << " : " << this->clutchEngaged[m]
       //         << " : " << cmd
@@ -1416,7 +1416,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       {
         if (this->clutchEngaged[m] != -1)
         {
-          gzerr << "engage lo " << m << " : " << cmd
+          gzdbg << "engage lo " << m << " : " << cmd
                 << " : " << pe
                 << " : " << ie
                 << " : " << de
@@ -1429,7 +1429,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
                   this->simJointUpperLimits[m]);
             // this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, pos);
             this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, pos);
-            gzerr << "lo clutch on: "
+            gzdbg << "lo clutch on: "
                   << this->simJoints[m]->GetRealJoint()->GetName()
                   << " : " << this->simJointLowerLimits[m]
                   << " : " << this->simJointUpperLimits[m]
@@ -1445,14 +1445,14 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       {
         if (!handPushedOpen)
         {
-          gzerr << "disengage lo: " << m << " : " << cmd
+          gzdbg << "disengage lo: " << m << " : " << cmd
                 << " : " << pe
                 << " : " << ie
                 << " : " << de
                 << "\n";
           if (this->simJoints[m]->HasJoint())
           {
-            gzerr << "lo clutch off: "
+            gzdbg << "lo clutch off: "
                   << this->simJoints[m]->GetRealJoint()->GetName()
                   << " : " << this->simJointLowerLimits[m]
                   << " : " << this->simJointUpperLimits[m]
@@ -1473,7 +1473,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       {
         if (this->clutchEngaged[m] != 1)
         {
-          gzerr << "engage hi " << m << " : " << cmd
+          gzdbg << "engage hi " << m << " : " << cmd
                 << " : " << pe
                 << " : " << ie
                 << " : " << de
@@ -1486,7 +1486,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
                   this->simJointUpperLimits[m]);
             this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, pos);
             // this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, pos);
-            gzerr << "hi clutch on: "
+            gzdbg << "hi clutch on: "
                   << this->simJoints[m]->GetRealJoint()->GetName()
                   << " : " << this->simJointLowerLimits[m]
                   << " : " << this->simJointUpperLimits[m]
@@ -1502,14 +1502,14 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       {
         if (!handPushedClose)
         {
-          gzerr << "disengage hi: " << m << " : " << cmd
+          gzdbg << "disengage hi: " << m << " : " << cmd
                 << " : " << pe
                 << " : " << ie
                 << " : " << de
                 << "\n";
           if (this->simJoints[m]->HasJoint())
           {
-            gzerr << "hi clutch off: "
+            gzdbg << "hi clutch off: "
                   << this->simJoints[m]->GetRealJoint()->GetName()
                   << " : " << this->simJointLowerLimits[m]
                   << " : " << this->simJointUpperLimits[m]
