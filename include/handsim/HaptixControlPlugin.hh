@@ -434,15 +434,15 @@ namespace gazebo
 
     /// \brief: apply physical (effort) commands to joints
     /// that are position servoed
-    /// \param[in] _m index of joint in simJoints vector
+    /// \param[in] _index index of joint in simJoints vector
     /// \param[in] _dt time step size for PID update
     /// \return force to be applied to joint
-    public: double ApplySimJointPositionPIDCommand(int _m, double _dt);
+    public: double ApplySimJointPositionPIDCommand(int _index, double _dt);
 
     /// \brief: apply physical (effort) commands to joints
-    /// \param[in] _m index of joint in simJoints vector
+    /// \param[in] _index index of joint in simJoints vector
     /// \param[in] _force force to be applied
-    public: void ApplyJointForce(int _m, double _force);
+    public: void ApplyJointForce(int _index, double _force);
 
     /// \brief: convert motor position to joint position
     /// \param[in] _motorInfo motor info
