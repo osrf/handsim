@@ -2,6 +2,8 @@ set (files
   arat.world
   arat_left.world
   handsim_empty.world
+  luke_hand.world
+  primitive_hand.world
 )
 
 install(FILES ${files}
