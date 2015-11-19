@@ -1283,15 +1283,21 @@ void HaptixControlPlugin::GetHandControlFromClient()
           if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
           {
             m = this->motorInfos[i].gearboxes[j].referenceIndex;
-            this->simJointCommands[n].ref_vel_max =
-              this->simJoints[m]->GetVelocity(0)
-              / this->motorInfos[i].gearboxes[j].multiplier1;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            else
+              this->simJointCommands[n].ref_vel_max =
+                this->simJoints[m]->GetVelocity(0)
+                / this->motorInfos[i].gearboxes[j].multiplier1;
           }
           else
           {
-            this->simJointCommands[n].ref_vel_max =
-              this->simJointCommands[m].ref_vel_max
-              / this->motorInfos[i].gearboxes[j].multiplier1;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            else
+              this->simJointCommands[n].ref_vel_max =
+                this->simJointCommands[m].ref_vel_max
+                / this->motorInfos[i].gearboxes[j].multiplier1;
           }
         }
       }
@@ -1324,15 +1330,21 @@ void HaptixControlPlugin::GetHandControlFromClient()
           if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
           {
             m = this->motorInfos[i].gearboxes[j].referenceIndex;
-            this->simJointCommands[n].ref_vel_max =
-              this->simJoints[m]->GetVelocity(0)
-              / this->motorInfos[i].gearboxes[j].multiplier2;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            else
+              this->simJointCommands[n].ref_vel_max =
+                this->simJoints[m]->GetVelocity(0)
+                / this->motorInfos[i].gearboxes[j].multiplier2;
           }
           else
           {
-            this->simJointCommands[n].ref_vel_max =
-              this->simJointCommands[m].ref_vel_max
-              / this->motorInfos[i].gearboxes[j].multiplier2;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            else
+              this->simJointCommands[n].ref_vel_max =
+                this->simJointCommands[m].ref_vel_max
+                / this->motorInfos[i].gearboxes[j].multiplier2;
           }
         }
       }
