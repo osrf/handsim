@@ -176,7 +176,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
   if (_sdf->HasElement("base_link_to_arm_sensor_pose"))
   {
-    this->baseLinkToArmSensor = _sdf->Get<math::Pose>("base_link_to_arm_sensor_pose");
+    this->baseLinkToArmSensor =
+      _sdf->Get<math::Pose>("base_link_to_arm_sensor_pose");
   }
   // transform from polhemus sensor orientation to camera frame
   // 10cm to the right of the sensor is roughly where the eyes are
@@ -1440,7 +1441,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
           this->clutchEngaged[m] = -1;
         }
       }
-      
+
       // check if we should disengage lo
       if (this->clutchEngaged[m] == -1)
       {
@@ -1497,7 +1498,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
           this->clutchEngaged[m] = 1;
         }
       }
-      
+
       // check if we should disengage hi
       if (this->clutchEngaged[m] == 1)
       {

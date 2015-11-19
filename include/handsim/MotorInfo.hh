@@ -55,13 +55,13 @@ namespace gazebo
     /// \brief: enable clutch if true
     public: bool clutch;
 
-    /// \brief: This factor is multiplied to effort before sending effort command
-    ///         to an actuator joint. Its value should be:
+    /// \brief: This factor is multiplied to effort before sending effort
+    /// command to an actuator joint. Its value should be:
     ///
-    ///           1 - sum(effortDifferentials.multiplier)
+    ///  1 - sum(effortDifferentials.multiplier)
     ///
-    ///         i.e. The sum of all effortDifferential multiplier and this multiplier
-    ///         should be 1.
+    ///  i.e. The sum of all effortDifferential multiplier and this
+    ///  multiplier should be 1.
     public: double effortDifferentialMultiplier;
 
     /// \brief: share power between joints
