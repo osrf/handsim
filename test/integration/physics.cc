@@ -318,7 +318,7 @@ TEST_F(PhysicsTest, Test1)
     const double cmd0 = 0.76;
     const double dCmd = 0.04;
     double cmd = cmd0 +
-                 dCmd * sin((double)n/10000.0*M_PI*4.0);
+                 dCmd * sin(static_cast<double>(n)/10000.0*M_PI*4.0);
 
     // set grasp value (between 0 and 1)
     gv->set_grasp_value(cmd);
