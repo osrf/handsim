@@ -519,13 +519,13 @@ void HaptixControlPlugin::LoadHandControl()
           if (springSDF->HasElement("preload"))
           {
             preload = springSDF->Get<double>("preload");
-            gzerr << "preload: " << preload << "\n";
+            gzdbg << "preload: " << preload << "\n";
           }
           double stiffness = 0;
           if (springSDF->HasElement("stiffness"))
           {
             stiffness = springSDF->Get<double>("stiffness");
-            gzerr << "stiffness: " << stiffness << "\n";
+            gzdbg << "stiffness: " << stiffness << "\n";
           }
 
           // assign values to gazebo joint directly
@@ -534,7 +534,7 @@ void HaptixControlPlugin::LoadHandControl()
             double reference = 0;
             if (fabs(stiffness) > 0.0)
               reference = preload / stiffness;
-            gzerr << "reference " << reference << "\n";
+            gzdbg << "reference " << reference << "\n";
             this->simJoints[e.index]->GetRealJoint()->SetStiffnessDamping(
               0, stiffness,
               this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
