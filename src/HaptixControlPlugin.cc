@@ -497,9 +497,11 @@ void HaptixControlPlugin::LoadHandControl()
           }
         }
         if (e.index == -1)
+        {
           gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
                  << "] for effort_differential, this"
                  << " joint will not be controlled.\n";
+        }
 
         e.multiplier = multiplierSDF->Get<double>();
         this->motorInfos[id].effortDifferentials.push_back(e);
@@ -534,9 +536,9 @@ void HaptixControlPlugin::LoadHandControl()
               reference = preload / stiffness;
             gzerr << "reference " << reference << "\n";
             this->simJoints[e.index]->GetRealJoint()->SetStiffnessDamping(
-             0, stiffness,
-             this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
-             reference);
+              0, stiffness,
+              this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
+              reference);
           }
         }
 
@@ -573,8 +575,10 @@ void HaptixControlPlugin::LoadHandControl()
           }
         }
         if (g.index == -1)
+        {
           gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
                  << "] for gearbox, this joint will not be controlled.\n";
+        }
 
         g.referenceIndex = -1;
         if (referenceJointSDF)
@@ -588,9 +592,11 @@ void HaptixControlPlugin::LoadHandControl()
             }
           }
           if (g.referenceIndex == -1)
+          {
             gzwarn << "failed to find reference joint ["
                    << referenceJointSDF->Get<std::string>()
                    << "] using parent motor joint for reference.\n";
+          }
         }
 
         g.offset = offsetSDF->Get<double>();
