@@ -64,7 +64,7 @@ namespace gazebo
     ///         should be 1.
     public: double effortDifferentialMultiplier;
 
-    /// \brief: share power between joionts
+    /// \brief: share power between joints
     ///   Share multiplier * actuator effort to this joint.
     ///   This joint is commanded by an effort based controller,
     ///     not position controlled.
