@@ -419,7 +419,7 @@ namespace gazebo
     ///   <joint id="1">joint_55</joint>
     private: std::map<unsigned int, std::string> jointNames;
 
-    /// \brief: all sim/fake joints to be commanded by ths plugin
+    /// \brief: all sim/fake joints to be commanded by this plugin
     /// this vector should have the same length as simJointCommands
     /// maybe we can merge with simJointCommands?
     private: std::vector<JointHelper*> simJoints;
