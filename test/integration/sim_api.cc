@@ -441,8 +441,6 @@ TEST_F(SimApiTest, HxsSetModelJointState)
   EXPECT_NEAR(pos, gzDoorModel->GetJoint("hinge")->GetAngle(0).Radian(), 1e-2);
 
   EXPECT_NEAR(vel, gzDoorModel->GetJoint("hinge")->GetVelocity(0), 1e-2);
-
-  gzerr << "done"; getchar();
 }
 
 TEST_F(SimApiTest, HxsAddModel)
