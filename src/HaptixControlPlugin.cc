@@ -2129,7 +2129,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
         motor->set_minimum(motorMin);
         motor->set_maximum(motorMax);
       }
-      gzerr << m << " : " << motorMin << " : " << motorMax << "\n";
+      // gzerr << m << " : " << motorMin << " : " << motorMax << "\n";
     }
   }
 
