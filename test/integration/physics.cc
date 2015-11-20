@@ -532,7 +532,7 @@ TEST_F(PhysicsTest, Test1)
     if (n > 4000)
     {
       // Check that cube is not slipping
-      EXPECT_GT(pose.pos.z, 1.253);
+      EXPECT_GT(pose.pos.z, 1.25);
 
       // Consistency check between using forces generated for haptix API
       // and more precise surface force reconstructed in gazebo.
