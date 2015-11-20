@@ -176,8 +176,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
   if (_sdf->HasElement("base_link_to_arm_sensor_pose"))
   {
-    this->baseLinkToArmSensor =
-      _sdf->Get<math::Pose>("base_link_to_arm_sensor_pose");
+    this->baseLinkToArmSensor = _sdf->Get<math::Pose>("base_link_to_arm_sensor_pose");
   }
   // transform from polhemus sensor orientation to camera frame
   // 10cm to the right of the sensor is roughly where the eyes are
@@ -497,11 +496,9 @@ void HaptixControlPlugin::LoadHandControl()
           }
         }
         if (e.index == -1)
-        {
           gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
                  << "] for effort_differential, this"
                  << " joint will not be controlled.\n";
-        }
 
         e.multiplier = multiplierSDF->Get<double>();
         this->motorInfos[id].effortDifferentials.push_back(e);
@@ -519,13 +516,13 @@ void HaptixControlPlugin::LoadHandControl()
           if (springSDF->HasElement("preload"))
           {
             preload = springSDF->Get<double>("preload");
-            gzdbg << "preload: " << preload << "\n";
+            gzerr << "preload: " << preload << "\n";
           }
           double stiffness = 0;
           if (springSDF->HasElement("stiffness"))
           {
             stiffness = springSDF->Get<double>("stiffness");
-            gzdbg << "stiffness: " << stiffness << "\n";
+            gzerr << "stiffness: " << stiffness << "\n";
           }
 
           // assign values to gazebo joint directly
@@ -534,11 +531,11 @@ void HaptixControlPlugin::LoadHandControl()
             double reference = 0;
             if (fabs(stiffness) > 0.0)
               reference = preload / stiffness;
-            gzdbg << "reference " << reference << "\n";
+            gzerr << "reference " << reference << "\n";
             this->simJoints[e.index]->GetRealJoint()->SetStiffnessDamping(
-              0, stiffness,
-              this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
-              reference);
+             0, stiffness,
+             this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
+             reference);
           }
         }
 
@@ -575,10 +572,8 @@ void HaptixControlPlugin::LoadHandControl()
           }
         }
         if (g.index == -1)
-        {
           gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
                  << "] for gearbox, this joint will not be controlled.\n";
-        }
 
         g.referenceIndex = -1;
         if (referenceJointSDF)
@@ -592,11 +587,9 @@ void HaptixControlPlugin::LoadHandControl()
             }
           }
           if (g.referenceIndex == -1)
-          {
             gzwarn << "failed to find reference joint ["
                    << referenceJointSDF->Get<std::string>()
                    << "] using parent motor joint for reference.\n";
-          }
         }
 
         g.offset = offsetSDF->Get<double>();
@@ -704,16 +697,22 @@ void HaptixControlPlugin::LoadHandControl()
       int n = this->motorInfos[i].gearboxes[j].index;
       // Use the maximum of multiplier1 and multiplier2
       // for bounding joint torque command.
-      double maxMultiplier = std::max(
-        this->motorInfos[i].gearboxes[j].multiplier1,
-        this->motorInfos[i].gearboxes[j].multiplier2);
-      double coupledJointTorque = jointTorque * maxMultiplier;
-      this->pids[n].SetCmdMax(coupledJointTorque);
-      this->pids[n].SetCmdMin(-coupledJointTorque);
+      double minMultiplier = std::min(
+        fabs(this->motorInfos[i].gearboxes[j].multiplier1),
+        fabs(this->motorInfos[i].gearboxes[j].multiplier2));
+      // if a joint is geared with a multiplier,
+      // it should have higher torque if multiplier < 1 (mechanical reduction)
+      // it should have lower torque if multiplier > 1
+      double maxJointTorque = jointTorque / minMultiplier;
+      double minJointTorque = -jointTorque / minMultiplier;
+      this->pids[n].SetCmdMax(maxJointTorque);
+      this->pids[n].SetCmdMin(minJointTorque);
 
+      double maxAbsJointTorque = std::max(
+        maxJointTorque, minJointTorque);
       /// also set joint effort limit directly, gazebo pid limits
       /// broken (see gazebo issue #1534)
-      this->simJoints[n]->SetEffortLimit(0, coupledJointTorque);
+      this->simJoints[n]->SetEffortLimit(0, maxAbsJointTorque);
 
       // gzdbg << "   coupled motor torque [" << n
       //       << "] : " << coupledJointTorque << "\n";
@@ -1209,7 +1208,12 @@ void HaptixControlPlugin::GetHandControlFromClient()
       // If we're in grasp mode, then take commands from elsewhere
       if (this->robotCommand.ref_pos_enabled())
       {
-        this->simJointCommands[m].ref_pos = this->graspPositions[i];
+        // this->simJointCommands[m].ref_pos = this->graspPositions[i];
+        // gzerr << this->motorInfos[i].gearRatio << "\n";
+        /// \TODO: check if gearRatio = 0
+        this->simJointCommands[m].ref_pos =
+          (this->graspPositions[i] + this->motorInfos[i].encoderOffset)
+          / this->motorInfos[i].gearRatio;
       }
       if (this->robotCommand.ref_vel_max_enabled())
       {
@@ -1283,21 +1287,15 @@ void HaptixControlPlugin::GetHandControlFromClient()
           if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
           {
             m = this->motorInfos[i].gearboxes[j].referenceIndex;
-            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
-              this->simJointCommands[n].ref_vel_max = 0.0;
-            else
-              this->simJointCommands[n].ref_vel_max =
-                this->simJoints[m]->GetVelocity(0)
-                / this->motorInfos[i].gearboxes[j].multiplier1;
+            this->simJointCommands[n].ref_vel_max =
+              this->simJoints[m]->GetVelocity(0)
+              / this->motorInfos[i].gearboxes[j].multiplier1;
           }
           else
           {
-            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
-              this->simJointCommands[n].ref_vel_max = 0.0;
-            else
-              this->simJointCommands[n].ref_vel_max =
-                this->simJointCommands[m].ref_vel_max
-                / this->motorInfos[i].gearboxes[j].multiplier1;
+            this->simJointCommands[n].ref_vel_max =
+              this->simJointCommands[m].ref_vel_max
+              / this->motorInfos[i].gearboxes[j].multiplier1;
           }
         }
       }
@@ -1330,21 +1328,15 @@ void HaptixControlPlugin::GetHandControlFromClient()
           if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
           {
             m = this->motorInfos[i].gearboxes[j].referenceIndex;
-            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
-              this->simJointCommands[n].ref_vel_max = 0.0;
-            else
-              this->simJointCommands[n].ref_vel_max =
-                this->simJoints[m]->GetVelocity(0)
-                / this->motorInfos[i].gearboxes[j].multiplier2;
+            this->simJointCommands[n].ref_vel_max =
+              this->simJoints[m]->GetVelocity(0)
+              / this->motorInfos[i].gearboxes[j].multiplier2;
           }
           else
           {
-            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
-              this->simJointCommands[n].ref_vel_max = 0.0;
-            else
-              this->simJointCommands[n].ref_vel_max =
-                this->simJointCommands[m].ref_vel_max
-                / this->motorInfos[i].gearboxes[j].multiplier2;
+            this->simJointCommands[n].ref_vel_max =
+              this->simJointCommands[m].ref_vel_max
+              / this->motorInfos[i].gearboxes[j].multiplier2;
           }
         }
       }
@@ -1358,40 +1350,39 @@ void HaptixControlPlugin::GetHandControlFromClient()
 }
 
 /////////////////////////////////////////////////
-double HaptixControlPlugin::ApplySimJointPositionPIDCommand(int _index,
+double HaptixControlPlugin::ApplySimJointPositionPIDCommand(int _m,
   double _dt)
 {
   // get joint positions and velocities
-  double position = this->simJoints[_index]->GetAngle(0).Radian();
-  double velocity = this->simJoints[_index]->GetVelocity(0);
+  double position = this->simJoints[_m]->GetAngle(0).Radian();
+  double velocity = this->simJoints[_m]->GetVelocity(0);
 
   // compute target joint position and velocity error in gazebo
-  double errorPos = position - this->simJointCommands[_index].ref_pos;
-  double errorVel = velocity - this->simJointCommands[_index].ref_vel_max;
+  double errorPos = position - this->simJointCommands[_m].ref_pos;
+  double errorVel = velocity - this->simJointCommands[_m].ref_vel_max;
 
   // compute overall error
-  double error = this->simJointCommands[_index].gain_pos * errorPos
-               + this->simJointCommands[_index].gain_vel * errorVel;
+  double error = this->simJointCommands[_m].gain_pos * errorPos
+               + this->simJointCommands[_m].gain_vel * errorVel;
 
   // compute force needed
-  double force = this->pids[_index].Update(error, _dt);
+  double force = this->pids[_m].Update(error, _dt);
 
   return force;
 }
 
 /////////////////////////////////////////////////
-void HaptixControlPlugin::ApplyJointForce(int _index, double _force)
+void HaptixControlPlugin::ApplyJointForce(int _m, double _force)
 {
   // command joint effort
-  if (!this->simJoints[_index]->SetForce(0, _force))
+  if (!this->simJoints[_m]->SetForce(0, _force))
   {
     // not a real gazebo joint, set target directly
-    this->simJoints[_index]->SetPosition(
-      this->simJointCommands[_index].ref_pos);
+    this->simJoints[_m]->SetPosition(this->simJointCommands[_m].ref_pos);
 
     /// \TODO: something about velocity commands
-    // this->simJoints[_index]->SetVelocity(
-    //   this->simJointCommands[_index].ref_vel_max);
+    // this->simJoints[_m]->SetVelocity(
+    //   this->simJointCommands[_m].ref_vel_max);
     /// \TODO: for issue #86 motor velocity will be zero
     /// unless we:  1) compute torque from transmissioned joints, or
     /// 2) implement actual motor joint dynamics and servo the joint.
@@ -1419,126 +1410,120 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
       this->pids[m].GetErrors(pe, ie, de);
       double cmd = this->pids[m].GetCmd();
 
-      // if (m == 5)
-      //   gzdbg << "debug "
-      //         << m
-      //         << " : " << this->clutchEngaged[m]
-      //         << " : " << cmd
-      //         << " : " << pe
-      //         << " : " << ie
-      //         << " : " << de
-      //         << "\n";
-
-      // check if lolimit needs to be engaged
-      bool closeHand = (cmd > 0.3);
-      bool handPushedOpen = (pe < -0.003);
-      if (closeHand && handPushedOpen)
+      if (this->simJoints[m]->HasJoint())
       {
-        if (this->clutchEngaged[m] != -1)
-        {
-          gzdbg << "engage lo " << m << " : " << cmd
-                << " : " << pe
-                << " : " << ie
-                << " : " << de
-                << "\n";
-          if (this->simJoints[m]->HasJoint())
-          {
-            double pos = math::clamp(
-              this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian(),
-                  this->simJointLowerLimits[m],
-                  this->simJointUpperLimits[m]);
-            // this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, pos);
-            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, pos);
-            gzdbg << "lo clutch on: "
-                  << this->simJoints[m]->GetRealJoint()->GetName()
-                  << " : " << this->simJointLowerLimits[m]
-                  << " : " << this->simJointUpperLimits[m]
-                  << " : " << pos
-                  << "\n";
-          }
-          this->clutchEngaged[m] = -1;
-        }
-      }
+        // if (m == 5)
+        //   gzdbg << "debug "
+        //         << m
+        //         << " : " << this->clutchEngaged[m]
+        //         << " : " << cmd
+        //         << " : " << pe
+        //         << " : " << ie
+        //         << " : " << de
+        //         << "\n";
 
-      // check if we should disengage lo
-      if (this->clutchEngaged[m] == -1)
-      {
-        if (!handPushedOpen)
-        {
-          gzdbg << "disengage lo: " << m << " : " << cmd
-                << " : " << pe
-                << " : " << ie
-                << " : " << de
-                << "\n";
-          if (this->simJoints[m]->HasJoint())
-          {
-            gzdbg << "lo clutch off: "
-                  << this->simJoints[m]->GetRealJoint()->GetName()
-                  << " : " << this->simJointLowerLimits[m]
-                  << " : " << this->simJointUpperLimits[m]
-                  << "\n";
-            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
-              this->simJointLowerLimits[m]);
-            // this->simJoints[m]->GetRealJoint()->SetUpperLimit(0,
-            //   this->simJointUpperLimits[m]);
-          }
-          this->clutchEngaged[m] = 0;
-        }
-      }
+        double pos = this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian();
 
-      // check if hilimit needs to be engaged
-      bool openHand = (cmd < -0.3);
-      bool handPushedClose = (pe > 0.003);
-      if (openHand && handPushedClose)
-      {
-        if (this->clutchEngaged[m] != 1)
-        {
-          gzdbg << "engage hi " << m << " : " << cmd
-                << " : " << pe
-                << " : " << ie
-                << " : " << de
-                << "\n";
-          if (this->simJoints[m]->HasJoint())
-          {
-            double pos = math::clamp(
-              this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian(),
-                  this->simJointLowerLimits[m],
-                  this->simJointUpperLimits[m]);
-            this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, pos);
-            // this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, pos);
-            gzdbg << "hi clutch on: "
-                  << this->simJoints[m]->GetRealJoint()->GetName()
-                  << " : " << this->simJointLowerLimits[m]
-                  << " : " << this->simJointUpperLimits[m]
-                  << " : " << pos
-                  << "\n";
-          }
-          this->clutchEngaged[m] = 1;
-        }
-      }
+        // 2 degrees deadband for pos violation detection
+        const double tol = 2.0/180.0*M_PI;
 
-      // check if we should disengage hi
-      if (this->clutchEngaged[m] == 1)
-      {
-        if (!handPushedClose)
+        // check if lolimit needs to be engaged
+        bool handPushedOpen = (pos < this->simJointCommands[m].ref_pos - tol);
+        if (handPushedOpen)
         {
-          gzdbg << "disengage hi: " << m << " : " << cmd
-                << " : " << pe
-                << " : " << ie
-                << " : " << de
-                << "\n";
-          if (this->simJoints[m]->HasJoint())
+          if (this->clutchEngaged[m] != -1)
           {
-            gzdbg << "hi clutch off: "
+            gzdbg << "engage lo ["
                   << this->simJoints[m]->GetRealJoint()->GetName()
-                  << " : " << this->simJointLowerLimits[m]
-                  << " : " << this->simJointUpperLimits[m]
+                  << "] m: " << m
+                  << " pos: " << pos
+                  << " ref_pos: " << this->simJointCommands[m].ref_pos
+                  << " cmd: " << cmd
+                  << " pe: " << pe
+                  << " ie: " << ie
+                  << " de: " << de
+                  << " lo: " << this->simJointLowerLimits[m]
+                  << " hi: " << this->simJointUpperLimits[m]
                   << "\n";
-            // this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
-            //   this->simJointLowerLimits[m]);
+            double posClamp = math::clamp(pos,
+                  this->simJointLowerLimits[m], this->simJointUpperLimits[m]);
+            // lo clutch enabled
+            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, posClamp);
+            // hi clutch disabled
             this->simJoints[m]->GetRealJoint()->SetUpperLimit(0,
               this->simJointUpperLimits[m]);
+            this->clutchEngaged[m] = -1;
           }
+        }
+        
+        // check if we should disengage lo
+        if (this->clutchEngaged[m] == -1 && !handPushedOpen)
+        {
+            gzdbg << "disengage lo ["
+                  << this->simJoints[m]->GetRealJoint()->GetName()
+                  << "] m: " << m
+                  << " pos: " << pos
+                  << " ref_pos: " << this->simJointCommands[m].ref_pos
+                  << " cmd: " << cmd
+                  << " pe: " << pe
+                  << " ie: " << ie
+                  << " de: " << de
+                  << " lo: " << this->simJointLowerLimits[m]
+                  << " hi: " << this->simJointUpperLimits[m]
+                  << "\n";
+          // lo clutch disabled
+          this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
+            this->simJointLowerLimits[m]);
+          this->clutchEngaged[m] = 0;
+        }
+
+        // check if hilimit needs to be engaged
+        bool handPushedClose = (pos > this->simJointCommands[m].ref_pos + tol);
+        if (handPushedClose)
+        {
+          if (this->clutchEngaged[m] != 1)
+          {
+            gzdbg << "engage hi ["
+                  << this->simJoints[m]->GetRealJoint()->GetName()
+                  << "] m: " << m
+                  << " pos: " << pos
+                  << " ref_pos: " << this->simJointCommands[m].ref_pos
+                  << " cmd: " << cmd
+                  << " pe: " << pe
+                  << " ie: " << ie
+                  << " de: " << de
+                  << " lo: " << this->simJointLowerLimits[m]
+                  << " hi: " << this->simJointUpperLimits[m]
+                  << "\n";
+            double posClamp = math::clamp(pos,
+                  this->simJointLowerLimits[m], this->simJointUpperLimits[m]);
+            // hi clutch engaged
+            this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, posClamp);
+            // lo clutch disabled
+            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
+              this->simJointLowerLimits[m]);
+            this->clutchEngaged[m] = 1;
+          }
+        }
+        
+        // check if we should disengage hi
+        if (this->clutchEngaged[m] == 1 && !handPushedClose)
+        {
+            gzdbg << "disengage hi ["
+                  << this->simJoints[m]->GetRealJoint()->GetName()
+                  << "] m: " << m
+                  << " pos: " << pos
+                  << " ref_pos: " << this->simJointCommands[m].ref_pos
+                  << " cmd: " << cmd
+                  << " pe: " << pe
+                  << " ie: " << ie
+                  << " de: " << de
+                  << " lo: " << this->simJointLowerLimits[m]
+                  << " hi: " << this->simJointUpperLimits[m]
+                  << "\n";
+          // hi clutch disabled
+          this->simJoints[m]->GetRealJoint()->SetUpperLimit(0,
+            this->simJointUpperLimits[m]);
           this->clutchEngaged[m] = 0;
         }
       }
@@ -1983,7 +1968,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
     }
   }
 
-  // RETURN JOINT INFO (motor max / min torques).
+  // RETURN JOINT INFO (motor max / min limits).
   for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
   {
     int m = this->motorInfos[i].index;
@@ -2002,20 +1987,63 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
         int n = this->motorInfos[i].gearboxes[j].index;
         double hi = this->simJoints[n]->GetUpperLimit(0).Radian();
         double lo = this->simJoints[n]->GetLowerLimit(0).Radian();
+
         // which multiplier to use
         // See transmission specification in issue #60,
         // If motor angle commanded is less than offset
         // use multiplier1, otherwise use multiplier2
+        // Assumption here is that offset is >= 0, otherwise
+        // joint motion is discontinuous.
 
-        // use multiplier1 for computing lower limit
-        // take the largest of the min
+        // THE GOAL HERE IS TO COMPUTE MOTOR POSITION RANGE BASED
+        // ON CHILD GEARBOXED JOINT LIMITS IN THE MODEL.
+        // given:
+        // motor_position = actuator_joint_position * gear_ratio - offset
+        // the correct approach is to compute the range of motor positions
+        // based on actuator joint position limits for the segment from:
+        //   - lowest motor angle to encoder offset angle (using multiplier1)
+        //   - encoder offset angle to highest motor angle (using multiplier2)
+
+        /* improved transmission, work in progress
+        // compute actuator joint position with limits using multiplier1
+        double actuatorJoint1a =
+          lo * this->motorInfos[i].gearboxes[j].multiplier1;
+        double actuatorJoint1b =
+          hi * this->motorInfos[i].gearboxes[j].multiplier1;
+        // compute motor position limits based on actuator joint positions
+        double motor1a =
+          actuatorJoint1a * this->motorInfos[i].gearboxes[j].gearRatio
+          - this->motorInfos[i].gearboxes[j].encoderOffset;
+        double motor1b =
+          actuatorJoint1b * this->motorInfos[i].gearboxes[j].gearRatio
+          - this->motorInfos[i].gearboxes[j].encoderOffset;
+        // take max/min of motor position limits
+        double motor1Lo = std::min(motor1a, motor1b);
+        double motor1Hi = std::max(motor1a, motor1b);
+        // motor high limit is limited by the encoder offset
+        motor1Hi = std::min(motor1Hi,
+          this->motorInfos[i].gearboxes[j].encoderOffset);
+        // take the segment 
+        // double m1Lo = lo * this->motorInfos[i].gearboxes[j].multiplier1;
+        // double m1Hi = this->motorInfos[i].gearboxes[j].encoderOffset
+        //   * this->motorInfos[i].gearboxes[j].multiplier1;
+        */
+
+
+        // using multiplier1:
+        // note: this is wrong
         motorMin = std::max(lo,
-          lo * this->motorInfos[i].gearboxes[j].multiplier1);
+          lo * this->motorInfos[i].gearboxes[j].multiplier1
+             * this->motorInfos[i].gearRatio
+             - this->motorInfos[i].encoderOffset);
 
         // use multiplier2 for computing upper limit
         // take the smallest of the max
+        // note: this is wrong
         motorMax = std::min(hi,
-          hi * this->motorInfos[i].gearboxes[j].multiplier2);
+          hi * this->motorInfos[i].gearboxes[j].multiplier2
+             * this->motorInfos[i].gearRatio
+             - this->motorInfos[i].encoderOffset);
       }
 
       if (this->motorInfos[i].gearRatio < 0)
