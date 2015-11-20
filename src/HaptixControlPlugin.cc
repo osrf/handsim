@@ -1448,15 +1448,27 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
             double posClamp = math::clamp(pos,
                   this->simJointLowerLimits[m], this->simJointUpperLimits[m]);
             // lo clutch enabled
-            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0, posClamp);
+            this->simJoints[m]->GetRealJoint()->SetLowStop(0, posClamp);
             // hi clutch disabled
-            this->simJoints[m]->GetRealJoint()->SetUpperLimit(0,
+            this->simJoints[m]->GetRealJoint()->SetHighStop(0,
               this->simJointUpperLimits[m]);
             this->clutchEngaged[m] = -1;
           }
         }
         
         // check if we should disengage lo
+
+        // debug:
+        // bool loClutchEngaged =
+        //   (this->simJoints[m]->GetRealJoint()->GetParam("lo_stop", 0) >
+        //    this->simJointLowerLimits[m]);
+        // if (this->simJoints[m]->GetRealJoint()->GetName() ==
+        //     "index_proximal_flex" && loClutchEngaged)
+        // {
+        //   gzerr << this->simJoints[m]->GetRealJoint()->GetParam("lo_stop", 0)
+        //         << "\n";
+        // }
+        // if (loClutchEngaged && !handPushedOpen)
         if (this->clutchEngaged[m] == -1 && !handPushedOpen)
         {
             gzdbg << "disengage lo ["
@@ -1464,6 +1476,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
                   << "] m: " << m
                   << " pos: " << pos
                   << " ref_pos: " << this->simJointCommands[m].ref_pos
+                  << " lo_limit: " << this->simJointLowerLimits[m]
                   << " cmd: " << cmd
                   << " pe: " << pe
                   << " ie: " << ie
@@ -1472,7 +1485,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
                   << " hi: " << this->simJointUpperLimits[m]
                   << "\n";
           // lo clutch disabled
-          this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
+          this->simJoints[m]->GetRealJoint()->SetLowStop(0,
             this->simJointLowerLimits[m]);
           this->clutchEngaged[m] = 0;
         }
@@ -1498,9 +1511,9 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
             double posClamp = math::clamp(pos,
                   this->simJointLowerLimits[m], this->simJointUpperLimits[m]);
             // hi clutch engaged
-            this->simJoints[m]->GetRealJoint()->SetUpperLimit(0, posClamp);
+            this->simJoints[m]->GetRealJoint()->SetHighStop(0, posClamp);
             // lo clutch disabled
-            this->simJoints[m]->GetRealJoint()->SetLowerLimit(0,
+            this->simJoints[m]->GetRealJoint()->SetLowStop(0,
               this->simJointLowerLimits[m]);
             this->clutchEngaged[m] = 1;
           }
@@ -1522,7 +1535,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
                   << " hi: " << this->simJointUpperLimits[m]
                   << "\n";
           // hi clutch disabled
-          this->simJoints[m]->GetRealJoint()->SetUpperLimit(0,
+          this->simJoints[m]->GetRealJoint()->SetHighStop(0,
             this->simJointUpperLimits[m]);
           this->clutchEngaged[m] = 0;
         }
