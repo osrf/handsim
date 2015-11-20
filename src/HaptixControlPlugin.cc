@@ -704,7 +704,7 @@ void HaptixControlPlugin::LoadHandControl()
       int n = this->motorInfos[i].gearboxes[j].index;
       // Use the maximum of multiplier1 and multiplier2
       // for bounding joint torque command.
-      const double minMultiplierLimit = 0.001;
+      const double minMultiplierLimit = 1.0;
       double minMultiplier = std::max(minMultiplierLimit, std::min(
         fabs(this->motorInfos[i].gearboxes[j].multiplier1),
         fabs(this->motorInfos[i].gearboxes[j].multiplier2)));
@@ -2018,8 +2018,8 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
       // fake joint, limit is not set in sdf, so they are +/-1e16
       // go through all gearboxes and compute a joint limit based
       // on joint limits of gearboxed joints.
-      double motorMin = 0.0;
-      double motorMax = 0.0;
+      double motorMin = -1e16;
+      double motorMax = 1e16;
       for (unsigned int j = 0; j < this->motorInfos[i].gearboxes.size(); ++j)
       {
         int n = this->motorInfos[i].gearboxes[j].index;
@@ -2070,7 +2070,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
 
         // using multiplier1:
         // note: this is wrong
-        motorMin = std::max(lo,
+        motorMin = std::max(motorMin,
           lo * this->motorInfos[i].gearboxes[j].multiplier1
              * this->motorInfos[i].gearRatio
              - this->motorInfos[i].encoderOffset);
@@ -2078,12 +2078,24 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
         // use multiplier2 for computing upper limit
         // take the smallest of the max
         // note: this is wrong
-        motorMax = std::min(hi,
+        motorMax = std::min(motorMax,
           hi * this->motorInfos[i].gearboxes[j].multiplier2
              * this->motorInfos[i].gearRatio
              - this->motorInfos[i].encoderOffset);
+        // gzdbg << " lo: " << lo
+        //       << " hi: " << hi
+        //       << " min: " << motorMin
+        //       << " max: " << motorMax
+        //       << "\n";
       }
 
+      // gzdbg << m
+      //       << " : " << motorMin
+      //       << " : " << motorMax
+      //       << " min: " << motorMin
+      //       << " max: " << motorMax
+      //       << " gr: " << this->motorInfos[i].gearRatio
+      //       << "\n";
       if (this->motorInfos[i].gearRatio < 0)
       {
         // flip if gearRatio is negative
@@ -2117,8 +2129,8 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
         motor->set_minimum(motorMin);
         motor->set_maximum(motorMax);
       }
+      gzerr << m << " : " << motorMin << " : " << motorMax << "\n";
     }
-    // gzerr << motorMin << " : " << motorMax << "\n";
   }
 
   _rep.set_update_rate(this->updateRate);
