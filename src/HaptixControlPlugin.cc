@@ -176,7 +176,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->baseLinkToArmSensor = math::Pose(0, -0.3, 0, 0, 0, -0.5*M_PI);
   if (_sdf->HasElement("base_link_to_arm_sensor_pose"))
   {
-    this->baseLinkToArmSensor = _sdf->Get<math::Pose>("base_link_to_arm_sensor_pose");
+    this->baseLinkToArmSensor =
+      _sdf->Get<math::Pose>("base_link_to_arm_sensor_pose");
   }
   // transform from polhemus sensor orientation to camera frame
   // 10cm to the right of the sensor is roughly where the eyes are
@@ -496,9 +497,11 @@ void HaptixControlPlugin::LoadHandControl()
           }
         }
         if (e.index == -1)
+        {
           gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
                  << "] for effort_differential, this"
                  << " joint will not be controlled.\n";
+        }
 
         e.multiplier = multiplierSDF->Get<double>();
         this->motorInfos[id].effortDifferentials.push_back(e);
@@ -516,13 +519,13 @@ void HaptixControlPlugin::LoadHandControl()
           if (springSDF->HasElement("preload"))
           {
             preload = springSDF->Get<double>("preload");
-            gzerr << "preload: " << preload << "\n";
+            gzdbg << "preload: " << preload << "\n";
           }
           double stiffness = 0;
           if (springSDF->HasElement("stiffness"))
           {
             stiffness = springSDF->Get<double>("stiffness");
-            gzerr << "stiffness: " << stiffness << "\n";
+            gzdbg << "stiffness: " << stiffness << "\n";
           }
 
           // assign values to gazebo joint directly
@@ -531,11 +534,11 @@ void HaptixControlPlugin::LoadHandControl()
             double reference = 0;
             if (fabs(stiffness) > 0.0)
               reference = preload / stiffness;
-            gzerr << "reference " << reference << "\n";
+            gzdbg << "reference " << reference << "\n";
             this->simJoints[e.index]->GetRealJoint()->SetStiffnessDamping(
-             0, stiffness,
-             this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
-             reference);
+              0, stiffness,
+              this->simJoints[e.index]->GetRealJoint()->GetDamping(0),
+              reference);
           }
         }
 
@@ -572,8 +575,10 @@ void HaptixControlPlugin::LoadHandControl()
           }
         }
         if (g.index == -1)
+        {
           gzwarn << "failed to find joint [" << jointSDF->Get<std::string>()
                  << "] for gearbox, this joint will not be controlled.\n";
+        }
 
         g.referenceIndex = -1;
         if (referenceJointSDF)
@@ -587,9 +592,11 @@ void HaptixControlPlugin::LoadHandControl()
             }
           }
           if (g.referenceIndex == -1)
+          {
             gzwarn << "failed to find reference joint ["
                    << referenceJointSDF->Get<std::string>()
                    << "] using parent motor joint for reference.\n";
+          }
         }
 
         g.offset = offsetSDF->Get<double>();
@@ -697,9 +704,10 @@ void HaptixControlPlugin::LoadHandControl()
       int n = this->motorInfos[i].gearboxes[j].index;
       // Use the maximum of multiplier1 and multiplier2
       // for bounding joint torque command.
-      double minMultiplier = std::min(
+      const double minMultiplierLimit = 0.001;
+      double minMultiplier = std::max(minMultiplierLimit, std::min(
         fabs(this->motorInfos[i].gearboxes[j].multiplier1),
-        fabs(this->motorInfos[i].gearboxes[j].multiplier2));
+        fabs(this->motorInfos[i].gearboxes[j].multiplier2)));
       // if a joint is geared with a multiplier,
       // it should have higher torque if multiplier < 1 (mechanical reduction)
       // it should have lower torque if multiplier > 1
@@ -1208,8 +1216,6 @@ void HaptixControlPlugin::GetHandControlFromClient()
       // If we're in grasp mode, then take commands from elsewhere
       if (this->robotCommand.ref_pos_enabled())
       {
-        // this->simJointCommands[m].ref_pos = this->graspPositions[i];
-        // gzerr << this->motorInfos[i].gearRatio << "\n";
         /// \TODO: check if gearRatio = 0
         this->simJointCommands[m].ref_pos =
           (this->graspPositions[i] + this->motorInfos[i].encoderOffset)
@@ -1287,15 +1293,29 @@ void HaptixControlPlugin::GetHandControlFromClient()
           if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
           {
             m = this->motorInfos[i].gearboxes[j].referenceIndex;
-            this->simJointCommands[n].ref_vel_max =
-              this->simJoints[m]->GetVelocity(0)
-              / this->motorInfos[i].gearboxes[j].multiplier1;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
+            {
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel_max =
+                this->simJoints[m]->GetVelocity(0)
+                / this->motorInfos[i].gearboxes[j].multiplier1;
+            }
           }
           else
           {
-            this->simJointCommands[n].ref_vel_max =
-              this->simJointCommands[m].ref_vel_max
-              / this->motorInfos[i].gearboxes[j].multiplier1;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
+            {
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel_max =
+                this->simJointCommands[m].ref_vel_max
+                / this->motorInfos[i].gearboxes[j].multiplier1;
+            }
           }
         }
       }
@@ -1328,15 +1348,29 @@ void HaptixControlPlugin::GetHandControlFromClient()
           if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
           {
             m = this->motorInfos[i].gearboxes[j].referenceIndex;
-            this->simJointCommands[n].ref_vel_max =
-              this->simJoints[m]->GetVelocity(0)
-              / this->motorInfos[i].gearboxes[j].multiplier2;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
+            {
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel_max =
+                this->simJoints[m]->GetVelocity(0)
+                / this->motorInfos[i].gearboxes[j].multiplier2;
+            }
           }
           else
           {
-            this->simJointCommands[n].ref_vel_max =
-              this->simJointCommands[m].ref_vel_max
-              / this->motorInfos[i].gearboxes[j].multiplier2;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
+            {
+              this->simJointCommands[n].ref_vel_max = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel_max =
+                this->simJointCommands[m].ref_vel_max
+                / this->motorInfos[i].gearboxes[j].multiplier2;
+            }
           }
         }
       }
@@ -1350,39 +1384,40 @@ void HaptixControlPlugin::GetHandControlFromClient()
 }
 
 /////////////////////////////////////////////////
-double HaptixControlPlugin::ApplySimJointPositionPIDCommand(int _m,
+double HaptixControlPlugin::ApplySimJointPositionPIDCommand(int _index,
   double _dt)
 {
   // get joint positions and velocities
-  double position = this->simJoints[_m]->GetAngle(0).Radian();
-  double velocity = this->simJoints[_m]->GetVelocity(0);
+  double position = this->simJoints[_index]->GetAngle(0).Radian();
+  double velocity = this->simJoints[_index]->GetVelocity(0);
 
   // compute target joint position and velocity error in gazebo
-  double errorPos = position - this->simJointCommands[_m].ref_pos;
-  double errorVel = velocity - this->simJointCommands[_m].ref_vel_max;
+  double errorPos = position - this->simJointCommands[_index].ref_pos;
+  double errorVel = velocity - this->simJointCommands[_index].ref_vel_max;
 
   // compute overall error
-  double error = this->simJointCommands[_m].gain_pos * errorPos
-               + this->simJointCommands[_m].gain_vel * errorVel;
+  double error = this->simJointCommands[_index].gain_pos * errorPos
+               + this->simJointCommands[_index].gain_vel * errorVel;
 
   // compute force needed
-  double force = this->pids[_m].Update(error, _dt);
+  double force = this->pids[_index].Update(error, _dt);
 
   return force;
 }
 
 /////////////////////////////////////////////////
-void HaptixControlPlugin::ApplyJointForce(int _m, double _force)
+void HaptixControlPlugin::ApplyJointForce(int _index, double _force)
 {
   // command joint effort
-  if (!this->simJoints[_m]->SetForce(0, _force))
+  if (!this->simJoints[_index]->SetForce(0, _force))
   {
     // not a real gazebo joint, set target directly
-    this->simJoints[_m]->SetPosition(this->simJointCommands[_m].ref_pos);
+    this->simJoints[_index]->SetPosition(
+      this->simJointCommands[_index].ref_pos);
 
     /// \TODO: something about velocity commands
-    // this->simJoints[_m]->SetVelocity(
-    //   this->simJointCommands[_m].ref_vel_max);
+    // this->simJoints[_index]->SetVelocity(
+    //   this->simJointCommands[_index].ref_vel_max);
     /// \TODO: for issue #86 motor velocity will be zero
     /// unless we:  1) compute torque from transmissioned joints, or
     /// 2) implement actual motor joint dynamics and servo the joint.
@@ -1412,16 +1447,6 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 
       if (this->simJoints[m]->HasJoint())
       {
-        // if (m == 5)
-        //   gzdbg << "debug "
-        //         << m
-        //         << " : " << this->clutchEngaged[m]
-        //         << " : " << cmd
-        //         << " : " << pe
-        //         << " : " << ie
-        //         << " : " << de
-        //         << "\n";
-
         double pos = this->simJoints[m]->GetRealJoint()->GetAngle(0).Radian();
 
         // 2 degrees deadband for pos violation detection
