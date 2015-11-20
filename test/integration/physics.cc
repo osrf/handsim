@@ -249,11 +249,11 @@ TEST_F(PhysicsTest, Test1)
     bool result;
     // std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
     haptix::comm::msgs::hxCommand resp;
-    if(!this->ignNode.Request("haptix/gazebo/Grasp",
-                              grasp,
-                              1000,
-                              resp,
-                              result) || !result)
+    if (!this->ignNode.Request("haptix/gazebo/Grasp",
+                               grasp,
+                               1000,
+                               resp,
+                               result) || !result)
     {
       gzerr << "Failed to call gazebo/Grasp service" << std::endl;
     }
@@ -391,6 +391,7 @@ TEST_F(PhysicsTest, Test1)
     world->Step(1);
 
     if (n == 0)
+    {
       gzdbg << "t, "
             << "cmd, "
             << "indexForce, "
@@ -404,8 +405,10 @@ TEST_F(PhysicsTest, Test1)
             << "thumbKp0, "
             << "thumbKp, "
             << "thumbErr\n";
+    }
 
     if (n % 200 == 0)
+    {
       gzdbg << world->GetSimTime().Double()
             << ", " << cmd
             << ", " << indexForce
@@ -420,6 +423,7 @@ TEST_F(PhysicsTest, Test1)
             << ", " << thumbKp
             << ", " << thumbErr
             << ";\n";
+    }
 
     // test at the points where command is changing slowest:
     // i.e. apex and valley of the sine wave.
