@@ -524,9 +524,9 @@
         <pose model="stone_10_2_5_1cm">0.242 -0.34 1.0475 -1.571074 0 -1.14</pose>
       </arrangement>
       <arrangement name="grip_1">
-        <pose model="cup_1"> 0.00 -0.20 1.034 0 0 0</pose>
-        <pose model="cup_2"> 0.217 -0.20 1.034 0 0 0</pose>
-        <pose model="marble">0.217 -0.20 1.034 0 0 0 </pose>
+        <pose model="cup_1"> 0.00 -0.20 1.044 0 0 0</pose>
+        <pose model="cup_2"> 0.217 -0.20 1.044 0 0 0</pose>
+        <pose model="marble">0.217 -0.20 1.054 0 0 0 </pose>
       </arrangement>
       <arrangement name="grip_2">
         <pose model="wooden_peg_board">0.128 -0.08 1.034 0 0 -1.571074</pose>

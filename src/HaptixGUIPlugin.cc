@@ -1149,6 +1149,9 @@ void HaptixGUIPlugin::ResetModels()
       gzerr << "Failed to call gazebo/Grasp service" << std::endl;
     }
   }
+
+  // Reset keyboard control pose
+  this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
 /////////////////////////////////////////////////
