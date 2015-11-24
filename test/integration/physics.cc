@@ -196,7 +196,7 @@ TEST_F(PhysicsTest, Test1)
   gazebo::physics::PhysicsEnginePtr physics = world->GetPhysicsEngine();
 
   // step to make sure the arm loaded correctly
-  world->Step(1000);
+  world->Step(1);
 
   // set arm position
   hxsTransform armT;
@@ -249,11 +249,11 @@ TEST_F(PhysicsTest, Test1)
     bool result;
     // std::cout << "haptix/gazebo/Grasp: " << grasp.DebugString() << std::endl;
     haptix::comm::msgs::hxCommand resp;
-    if(!this->ignNode.Request("haptix/gazebo/Grasp",
-                              grasp,
-                              1000,
-                              resp,
-                              result) || !result)
+    if (!this->ignNode.Request("haptix/gazebo/Grasp",
+                               grasp,
+                               1000,
+                               resp,
+                               result) || !result)
     {
       gzerr << "Failed to call gazebo/Grasp service" << std::endl;
     }
@@ -310,9 +310,155 @@ TEST_F(PhysicsTest, Test1)
 
   gazebo::physics::LinkPtr cube = world->GetModel("wood_cube_5cm")->GetLink();
 
+  // pinch the cube, vary pinch strength and collect data
+  gzdbg << "pinch test\n================================================\n";
+  for (int n = 0; n < 3000; ++n)
+  {
+    // vary grasp strength
+    const double cmd0 = 0.80;
+    const double dCmd = 0.02;
+    double cmd = cmd0 +
+                 dCmd * sin(static_cast<double>(n)/10000.0*M_PI*4.0);
+
+    // set grasp value (between 0 and 1)
+    gv->set_grasp_value(cmd);
+
+    bool result;
+    // std::cout << "haptix/gazebo/Grasp: "
+    //           << grasp.DebugString() << std::endl;
+    haptix::comm::msgs::hxCommand resp;
+    if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                              grasp,
+                              1000,
+                              resp,
+                              result) || !result)
+    {
+      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+    }
+    unsigned int numWristMotors = 3;
+    for (int i = numWristMotors; i < robotInfo.motor_count; ++i)
+    {
+      lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
+    }
+    lastMotorCommand.ref_pos_enabled = 1;
+    lastMotorCommand.ref_vel_max_enabled = 0;
+    lastMotorCommand.gain_pos_enabled = 0;
+    lastMotorCommand.gain_vel_enabled = 0;
+    EXPECT_TRUE(::hx_update(&lastMotorCommand, &lastSensor) == ::hxOK);
+
+    // if (n % 200 == 0)
+    // {
+    //   gzerr << cmd;
+    //   getchar();
+    // }
+
+    // compute surface stiffness by getting the depth info
+    // from contact sensors. Using approximate forces as computed
+    // in the haptix sensor feedback data. Compare results with
+    // stiffness results from more precise forces from physics engine.
+
+    // get contact depth and stiffness from physics engine
+    gazebo::msgs::Contacts indexContacts = indexContactSensor->GetContacts();
+    gazebo::msgs::Contacts thumbContacts = thumbContactSensor->GetContacts();
+    gazebo::physics::LinkPtr indexLink =
+      world->GetModel("mpl_haptix_right_forearm")->GetLink("index3");
+    gazebo::physics::LinkPtr thumbLink =
+      world->GetModel("mpl_haptix_right_forearm")->GetLink("thumb3");
+    double indexDepth, indexKp0;
+    this->GetDepthStiffness(indexContacts, indexLink, indexDepth, indexKp0);
+    double thumbDepth, thumbKp0;
+    this->GetDepthStiffness(thumbContacts, thumbLink, thumbDepth, thumbKp0);
+
+    // get force on the contact sensors from haptix api
+    ::hxSensor sensor;
+    EXPECT_TRUE(::hx_read_sensors(&sensor) == ::hxOK);
+    double thumbForce = sensor.contact[6];
+    double indexForce = sensor.contact[9];
+
+    // compute stiffness based on force and depth
+    double thumbKp = thumbForce / thumbDepth;
+    double indexKp = indexForce / indexDepth;
+
+    // compute percent error against more precise values
+    // indexKp and thumbKp are computed from haptix sensor approximation
+    // and depth information.
+    // indexKp0 and thumbKp0 are more precise kp values obtained from
+    // physics engine.
+    double indexErr = std::abs(indexKp0 - indexKp)/indexKp0;
+    double thumbErr = std::abs(thumbKp0 - thumbKp)/thumbKp0;
+
+    gazebo::math::Pose pose = cube->GetWorldPose();
+    world->Step(1);
+
+    if (n == 0)
+    {
+      gzdbg << "t, "
+            << "cmd, "
+            << "indexForce, "
+            << "thumbForce, "
+            << "cube.pose.z, "
+            << "indexDepth, "
+            << "thumbDepth, "
+            << "indexKp0, "
+            << "indexKp, "
+            << "indexErr, "
+            << "thumbKp0, "
+            << "thumbKp, "
+            << "thumbErr\n";
+    }
+
+    if (n % 200 == 0)
+    {
+      gzdbg << world->GetSimTime().Double()
+            << ", " << cmd
+            << ", " << indexForce
+            << ", " << thumbForce
+            << ", " << pose.pos.z
+            << ", " << indexDepth
+            << ", " << thumbDepth
+            << ", " << indexKp0
+            << ", " << indexKp
+            << ", " << indexErr
+            << ", " << thumbKp0
+            << ", " << thumbKp
+            << ", " << thumbErr
+            << ";\n";
+    }
+
+    // test at the points where command is changing slowest:
+    // i.e. apex and valley of the sine wave.
+    if (cmd > cmd0 + dCmd*(1 - 0.001) || cmd < cmd0 - dCmd*(1 + 0.001))
+    {
+      gzdbg << "  testing: " << world->GetSimTime().Double()
+            << ", " << cmd
+            << ", " << indexForce
+            << ", " << thumbForce
+            << ", " << pose.pos.z
+            << ", " << indexDepth
+            << ", " << thumbDepth
+            << ", " << indexKp0
+            << ", " << indexKp
+            << ", " << indexErr
+            << ", " << thumbKp0
+            << ", " << thumbKp
+            << ", " << thumbErr
+            << ";\n";
+
+      // Check that forces are nearly equal between the two fingertips.
+      // They are not exactly the same because the fingers do not
+      // exactly oppose each other.
+      EXPECT_LT(std::abs(indexForce - thumbForce), 0.2);
+      if (std::abs(indexForce - thumbForce) > 0.02)
+      {
+        gzerr << "fail";
+        getchar();
+      }
+    }
+  }
+
   // pull on the cube
   gzdbg << "pull test\n================================================\n";
-  for (int n = 0; n < 3000; ++n)
+  for (int n = 0; n < 4500; ++n)
   {
     // compute surface stiffness by getting the depth info
     // from contact sensors. Using approximate forces as computed
@@ -386,7 +532,7 @@ TEST_F(PhysicsTest, Test1)
     if (n > 4000)
     {
       // Check that cube is not slipping
-      EXPECT_GT(pose.pos.z, 1.253);
+      EXPECT_GT(pose.pos.z, 1.25);
 
       // Consistency check between using forces generated for haptix API
       // and more precise surface force reconstructed in gazebo.

@@ -94,15 +94,15 @@ TEST_F(Issue86Test, MotorLimits)
   indexMotorLimitMap[7] =
     std::pair<double, double>(-121.44000244140625, 0);
   indexMotorLimitMap[8] =
-    std::pair<double, double>(0, 0.96312499046325684);
+    std::pair<double, double>(0, 378.50812);
   indexMotorLimitMap[9] =
-    std::pair<double, double>(0, 0.96312499046325684);
+    std::pair<double, double>(0, 378.50812);
   indexMotorLimitMap[10] =
-    std::pair<double, double>(0, 0.96312499046325684);
+    std::pair<double, double>(0, 378.50812);
   indexMotorLimitMap[11] =
     std::pair<double, double>(0, 121.44);
   indexMotorLimitMap[12] =
-    std::pair<double, double>(0, 0.96312499046325684);
+    std::pair<double, double>(0, 378.50812);
 
   world->Step(1);
   hxRobotInfo robot_info;

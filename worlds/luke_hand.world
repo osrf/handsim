@@ -1,13 +1,14 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
   <world name="default">
+    <plugin name="HaptixWorldPlugin" filename="libHaptixWorldPlugin.so"/>
     <scene>
-      <shadows>0</shadows>
+      <shadows>1</shadows>
     </scene>
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.7 1.5  0 0.4 1.57</pose>
+        <pose>0 -0.6 1.3  0 0.4 1.57</pose>
       </camera>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
@@ -17,97 +18,74 @@
         <color_no_contact>255 255 255 0</color_no_contact>
         <color_max>255 0 0 255</color_max>
         <color_min>255 227 32 255</color_min>
-        <hand_side>left</hand_side>
-        <timer_topic>~/timer_control</timer_topic> 
+        <hand_side>right</hand_side>
+        <timer_topic>~/timer_control</timer_topic>
 
         <contacts>
-          <contact name="mpl::lPalm0">
-            <pos>125 200</pos>
-            <index>0</index>
-            <size>50 100</size>
-          </contact>
-          <contact name="mpl::lPalm1">
-            <pos>195 200</pos>
-            <index>1</index>
-            <size>50 100</size>
-          </contact>
-
-
-          <contact name="mpl::lHandEdge">
-            <pos>275 235</pos>
-            <index>2</index>
-            <size>40 70</size>
-          </contact>
-          <contact name="mpl::lHandTop">
-            <pos>-2 55</pos>
-            <index>3</index>
-            <size>25 31</size>
-          </contact>
-          <contact name="mpl::lThProximal1">
-            <pos>56 240</pos>
-            <index>4</index>
-          </contact>
-          <contact name="mpl::lThProximal2">
-            <pos>26 195</pos>
-            <index>5</index>
-          </contact>
-          <contact name="mpl::lThDistal">
-            <pos>-4 130</pos>
-            <index>6</index>
-          </contact>
-
-          <contact name="mpl::lIndProximal">
-            <pos>83 116</pos>
-            <index>7</index>
-          </contact>
-          <contact name="mpl::lIndMedial">
-            <pos>68 43</pos>
-            <index>8</index>
-          </contact>
-          <contact name="mpl::lIndDistal">
-            <pos>53 -30</pos>
-            <index>9</index>
-          </contact>
-
-          <contact name="mpl::lMidProximal">
-            <pos>149 98</pos>
-            <index>10</index>
-          </contact>
-          <contact name="mpl::lMidMedial">
-            <pos>146 19</pos>
-            <index>11</index>
-          </contact>
-          <contact name="mpl::lMidDistal">
-            <pos>148 -60</pos>
+          <contact name="Proximal_Thumb">
+            <pos>245 240</pos>
             <index>12</index>
           </contact>
-
-          <contact name="mpl::lRingProximal">
-            <pos>217 101</pos>
+          <contact name="Median_Thumb">
+            <pos>275 195</pos>
             <index>13</index>
           </contact>
-          <contact name="mpl::lRingMedial">
-            <pos>227 41</pos>
-            <index>14</index>
-          </contact>
-          <contact name="mpl::lRingDistal">
-            <pos>237 -19</pos>
-            <index>15</index>
+          <contact name="Distal_Thumb">
+            <pos>302 130</pos>
+            <index>0</index>
           </contact>
 
-          <contact name="mpl::lLittleProximal">
-            <pos>266 156</pos>
-            <index>16</index>
+          <contact name="Index_Proximal-1">
+            <pos>218 80</pos>
+            <size>25 50</size>
+            <index>1</index>
           </contact>
-          <contact name="mpl::lLittleMedial">
-            <pos>287 105</pos>
-            <index>17</index>
-          </contact>
-          <contact name="mpl::lLittleDistal">
-            <pos>308 54</pos>
-            <index>18</index>
+          <contact name="Index_Distal-1">
+            <pos>242 -30</pos>
+            <size>25 50</size>
+            <index>2</index>
           </contact>
 
+          <contact name="Middle_Proximal-1">
+            <pos>152 98</pos>
+            <index>3</index>
+          </contact>
+          <contact name="Middle_Ring_Median-1">
+            <pos>155 19</pos>
+            <index>4</index>
+          </contact>
+          <contact name="Middle_Ring_Distal-1">
+            <pos>153 -60</pos>
+            <index>5</index>
+          </contact>
+
+          <contact name="Ring_Proximal-1">
+            <pos>84 101</pos>
+            <index>6</index>
+          </contact>
+          <contact name="Middle_Ring_Median-2">
+            <pos>74 41</pos>
+            <index>7</index>
+          </contact>
+          <contact name="Middle_Ring_Distal-2">
+            <pos>64 -19</pos>
+            <index>8</index>
+          </contact>
+
+          <contact name="Pinky_Proximal-1">
+            <pos>14 105</pos>
+            <index>9</index>
+          </contact>
+          <contact name="Pinky_Distal-1">
+            <pos>-7 54</pos>
+            <index>10</index>
+          </contact>
+
+          <contact name="Palm-1">
+            <index>11</index>
+            <pos>70 200</pos>
+            <size>150 100</size>
+          </contact>
         </contacts>
 
         <task_group name="Grasp">
@@ -154,7 +132,7 @@
 
           <task id="grasp_6"name="Stone">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/grasp_6.jpg</icon> 
+            <icon>file://media/gui/arat/arat_icons/grasp_6.jpg</icon>
             <instructions>
               Instructions: Pick up the stone and place it on top of the box.
             </instructions>
@@ -212,9 +190,9 @@
             </instructions>
           </task>
         </task_group>
-        
+
         <arm_keys>
-	  <!-- Indices 0-5 are: tx, ty, tz, rx, ry, rz -->
+          <!-- Indices 0-5 are: tx, ty, tz, rx, ry, rz -->
           <arm inc_key="w" dec_key="s" index="0" increment=0.025></arm>
           <arm inc_key="a" dec_key="d" index="1" increment=0.025></arm>
           <arm inc_key="q" dec_key="e" index="2" increment=0.025></arm>
@@ -223,40 +201,41 @@
           <arm inc_key="Q" dec_key="E" index="5" increment=0.025></arm>
         </arm_keys>
 
+        <!-- note I'm having trouble parsing "&" and "&amp;", so I'll just use
+             "amp" and handle it in the code. -->
         <motor_keys>
-          <motor inc_key="z" dec_key="Z" index=0 increment=5></motor>
-          <motor inc_key="x" dec_key="X" index=1 increment=5></motor>
-          <motor inc_key="c" dec_key="C" index=2 increment=5></motor>
-          <motor inc_key="1" dec_key="!" index=3 increment=5></motor>
-          <motor inc_key="2" dec_key="@" index=4 increment=5></motor>
-          <motor inc_key="3" dec_key="#" index=5 increment=5></motor>
-          <motor inc_key="4" dec_key="$" index=6 increment=5></motor>
-          <motor inc_key="5" dec_key="%" index=7 increment=5></motor>
-          <motor inc_key="6" dec_key="^" index=8 increment=5></motor>
-	  <!-- I'm having trouble parsing "&" and "&amp;", so I'll just use
-	       "amp" and handle it in the code. -->
-          <motor inc_key="7" dec_key="amp" index=9 increment=5></motor>
-          <motor inc_key="8" dec_key="*" index=10 increment=5></motor>
-          <motor inc_key="9" dec_key="(" index=11 increment=5></motor>
-          <motor inc_key="0" dec_key=")" index=12 increment=5></motor>
+          <motor inc_key="z" dec_key="Z"   index=0  increment=5></motor>
+          <motor inc_key="x" dec_key="X"   index=1  increment=5></motor>
+          <motor inc_key="1" dec_key="!"   index=2  increment=5></motor>
+          <motor inc_key="2" dec_key="@"   index=3  increment=5></motor>
+          <motor inc_key="3" dec_key="#"   index=4  increment=5></motor>
+          <motor inc_key="4" dec_key="$"   index=5  increment=5></motor>
+          <motor inc_key="5" dec_key="%"   index=6  increment=5></motor>
+          <motor inc_key="6" dec_key="^"   index=7  increment=5></motor>
+          <motor inc_key="7" dec_key="amp" index=9  increment=5></motor>
+          <motor inc_key="8" dec_key="*"   index=10 increment=5></motor>
+          <motor inc_key="9" dec_key="("   index=11 increment=5></motor>
+          <motor inc_key="0" dec_key=")"   index=12 increment=5></motor>
         </motor_keys>
 
         <grasp_keys>
-          <grasp inc_key="1" dec_key="!" name="Spherical" increment="0.015"></grasp>
-          <grasp inc_key="2" dec_key="@" name="Cylindrical" increment="0.015"></grasp>
-          <grasp inc_key="3" dec_key="#" name="FinePinch(British)" increment="0.015"></grasp>
-          <grasp inc_key="4" dec_key="$" name="FinePinch(American)" increment="0.015"></grasp>
-          <grasp inc_key="5" dec_key="%" name="ThreeFingerPinch" increment="0.015"></grasp>
-          <grasp inc_key="6" dec_key="^" name="Palmar(Tray)" increment="0.015"></grasp>
-          <grasp inc_key="7" dec_key="amp" name="Hook" increment="0.015"></grasp>
+          <grasp inc_key="1" dec_key="!" name="PowerGrip" increment="0.015"></grasp>
+          <grasp inc_key="2" dec_key="@" name="Tool" increment="0.015"></grasp>
+          <grasp inc_key="3" dec_key="#" name="FinePinchClosed" increment="0.015"></grasp>
+          <grasp inc_key="4" dec_key="$" name="FinePinchOpen" increment="0.015"></grasp>
+          <grasp inc_key="5" dec_key="%" name="LateralPinch" increment="0.015"></grasp>
+          <grasp inc_key="6" dec_key="^" name="Chuck" increment="0.015"></grasp>
+          <grasp inc_key="7" dec_key="amp" name="Spherical" increment="0.015"></grasp>
+          <grasp inc_key="8" dec_key="*" name="Cylindrical" increment="0.015"></grasp>
+          <grasp inc_key="9" dec_key="(" name="2Pinch" increment="0.015"></grasp>
         </grasp_keys>
 
       </plugin>
 
       <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
-        <size>155 30</size>
-        <pos>10 10</pos>
-        <topic>~/timer_control</topic> 
+        <size>155 80</size>
+        <start_stop_button>1</start_stop_button>
+        <topic>~/timer_control</topic>
       </plugin>
 
     </gui>
@@ -272,8 +251,8 @@
         </solver>
         <constraints>
           <cfm>0.000000</cfm>
-          <erp>0.200000</erp>
-          <contact_max_correcting_vel>0.000000</contact_max_correcting_vel>
+          <erp>0.500000</erp>
+          <contact_max_correcting_vel>1000.000000</contact_max_correcting_vel>
           <contact_surface_layer>0.00000</contact_surface_layer>
         </constraints>
       </ode>
@@ -305,6 +284,25 @@
       <real_time_update_rate>1000</real_time_update_rate>
       <max_step_size>0.001000</max_step_size>
     </physics>
+    <!-- debug model for assumed screen
+         model in simulation frame,
+         used for debugging pose transforms
+         to check alignment of movement.
+    <model name="screen">
+      <pose>0 -0.65 1.5 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <pose>-0.25 -0.005 -0.1 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>0.5 0.01 0.2</size>
+            </box>
+          </geometry>
+        </visual>
+      </link>
+      <static>true</static>
+    </model>
+    -->
 
     <!-- A global light source -->
     <include>
@@ -327,8 +325,8 @@
     </include>
 
     <include>
-     <uri>model://mpl_haptix_left_forearm</uri>
-     <pose>-0.4 -0.7 1.2 0 0 0</pose>
+     <uri>model://luke_hand_description</uri>
+     <pose>0.3 -0.6 1.3 1.5708 1.5708 3.1416</pose>
     </include>
 
     <model name="polhemus_source">
@@ -403,28 +401,28 @@
       <name>cup_2</name>
       <uri>model://plastic_cup</uri>
       <pose>-1.0 250 1.015 0 0 0</pose>
-    </include> 
- 
+    </include>
+
     <include>
       <uri>model://wooden_peg_board</uri>
       <pose>-1.2 250 1.015 0 0 0</pose>
-    </include> 
+    </include>
 
     <include>
       <uri>model://metal_peg_board</uri>
       <pose>-1.4 250 1.015 0 0 0</pose>
-    </include> 
+    </include>
 
     <include>
       <uri>model://tube_2_25cm</uri>
       <pose>-1.6 250 1.015 0 0 0</pose>
-    </include> 
+    </include>
 
     <include>
       <uri>model://tube_9_5mm</uri>
       <pose>-1.8 250 1.015 0 0 0</pose>
-    </include> 
- 
+    </include>
+
     <include>
       <uri>model://washer</uri>
       <pose>-2.0 250 1.015 0 0 0</pose>
@@ -446,6 +444,13 @@
       <uri>model://marble_1_5cm</uri>
       <pose>-2.0 250 1.115 0 0 0</pose>
     </include>
+
+    <!--
+    <include>
+      <uri>model://round_tin_base</uri>
+      <pose>-2.2 250 1.015 0 0 0</pose>
+    </include>
+-->
 
     <include>
       <uri>model://round_tin_top</uri>
@@ -491,61 +496,60 @@
 
       <initial_arrangement>grasp_3</initial_arrangement>
       <arrangement name="demo_practice">
-        <pose model="wood_cube_10cm">  0.500 -0.265 1.020 0 0 0</pose>
-        <pose model="round_tin_base">-0.500 -0.274 1.036 0 0 0</pose>
-        <pose model="round_tin_top"> -0.217  0.040 1.393 0 0 0 </pose>
-        <pose model="marble">        -0.500 -0.274 1.036 0 0 0</pose>
-        <pose model="marble2">       -0.217 -0.274 1.036 0 0 0</pose>
-        <pose model="cup_1">           0.100 -0.274 1.034 0 0 0</pose>
+        <pose model="wood_cube_10cm">-0.500 -0.265 1.020 0 0 0</pose>
+        <pose model="round_tin_base"> 0.500 -0.274 1.036 0 0 0</pose>
+        <pose model="round_tin_top">  0.217  0.040 1.393 0 0 0 </pose>
+        <pose model="marble">         0.500 -0.274 1.036 0 0 0</pose>
+        <pose model="marble2">        0.217 -0.274 1.036 0 0 0</pose>
+        <pose model="cup_1">         -0.100 -0.274 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_1">
-        <pose model="wood_cube_10cm">-0.217 -0.265 1.04 0 0 0</pose>
+        <pose model="wood_cube_10cm"> 0.217 -0.265 1.04 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_2">
-        <pose model="wood_cube_2_5cm">-0.217 -0.298 1.04 0 0 0</pose>
+        <pose model="wood_cube_2_5cm"> 0.217 -0.298 1.04 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_3">
-        <pose model="wood_cube_5cm">-0.217 -0.284 1.034 0 0 0</pose>
+        <pose model="wood_cube_5cm"> 0.217 -0.284 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_4">
-        <pose model="wood_cube_7_5cm">-0.217 -0.268 1.034 0 0 0</pose>
+        <pose model="wood_cube_7_5cm"> 0.217 -0.268 1.034 0 0 0</pose>
       </arrangement>
-      <arrangement name="grasp_5"> 
+      <arrangement name="grasp_5">
         <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
-        <pose model="round_tin_top">-0.217  0.04 1.393 0 0 0 </pose>
-        <pose model="cricket_ball">-0.217 -0.274 1.038 0 0 0</pose>
+        <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
+        <pose model="cricket_ball"> 0.217 -0.274 1.038 0 0 0</pose>
       </arrangement>
       <arrangement name="grasp_6">
-        <pose model="stone_10_2_5_1cm">-0.242 -0.34 1.0475 -1.571074 0 -1.14</pose>
+        <pose model="stone_10_2_5_1cm">0.242 -0.34 1.0475 -1.571074 0 -1.14</pose>
       </arrangement>
       <arrangement name="grip_1">
-        <pose model="cup_1"> 0.00 -0.20 1.034 0 0 0</pose>
-        <pose model="cup_2"> -0.217 -0.20 1.034 0 0 0</pose>
-        <pose model="marble">-0.217 -0.20 1.034 0 0 0 </pose>
+        <pose model="cup_1"> 0.00 -0.20 1.044 0 0 0</pose>
+        <pose model="cup_2"> 0.217 -0.20 1.044 0 0 0</pose>
+        <pose model="marble">0.217 -0.20 1.054 0 0 0 </pose>
       </arrangement>
-
       <arrangement name="grip_2">
-        <pose model="wooden_peg_board">-0.128 -0.08 1.034 0 0 -1.571074</pose>
-        <pose model="tube_2_25cm">-0.216 -0.328 1.034 0 0 0</pose>
+        <pose model="wooden_peg_board">0.128 -0.08 1.034 0 0 -1.571074</pose>
+        <pose model="tube_2_25cm">0.216 -0.328 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grip_3">
-        <pose model="metal_peg_board">-0.128 -0.08 1.034 0 0 -1.571074</pose>
-        <pose model="tube_9_5mm">-0.216 -0.328 1.034 0 0 0</pose>
+        <pose model="metal_peg_board">0.128 -0.08 1.034 0 0 -1.571074</pose>
+        <pose model="tube_9_5mm">0.216 -0.328 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="grip_4">
-        <pose model="round_tin_top">-0.244 -0.281 1.033 0 0 0</pose>
-        <pose model="washer">-0.244 -0.281 1.036 0 0 0</pose>
-        <pose model="metal_peg_board">-0.128 -0.08 1.034 0 0 -1.571074</pose>
+        <pose model="round_tin_top">0.244 -0.281 1.033 0 0 0</pose>
+        <pose model="washer">0.244 -0.281 1.036 0 0 0</pose>
+        <pose model="metal_peg_board">0.128 -0.08 1.034 0 0 -1.571074</pose>
       </arrangement>
       <arrangement name="pinch_1">
         <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
-        <pose model="round_tin_top">-0.217  0.04 1.393 0 0 0 </pose>
-        <pose model="ball_bearing">-0.217 -0.270 1.038 0 0 0</pose>
+        <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
+        <pose model="ball_bearing">0.217 -0.270 1.038 0 0 0</pose>
       </arrangement>
       <arrangement name="pinch_2">
         <!--<pose model="round_tin_base">0.217 -0.274 1.036 0 0 0</pose>-->
-        <pose model="round_tin_top">-0.217  0.04 1.393 0 0 0 </pose>
-        <pose model="marble">-0.217 -0.274 1.036 0 0 0</pose>
+        <pose model="round_tin_top">0.217  0.04 1.393 0 0 0 </pose>
+        <pose model="marble">0.217 -0.274 1.036 0 0 0</pose>
       </arrangement>
 
     </plugin>

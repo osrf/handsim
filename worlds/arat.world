@@ -225,21 +225,21 @@
         </arm_keys>
 
         <motor_keys>
-          <motor inc_key="z" dec_key="Z" index=0 increment=0.05></motor>
-          <motor inc_key="x" dec_key="X" index=1 increment=0.05></motor>
-          <motor inc_key="c" dec_key="C" index=2 increment=0.05></motor>
-          <motor inc_key="1" dec_key="!" index=3 increment=0.05></motor>
-          <motor inc_key="2" dec_key="@" index=4 increment=0.05></motor>
-          <motor inc_key="3" dec_key="#" index=5 increment=0.05></motor>
-          <motor inc_key="4" dec_key="$" index=6 increment=0.05></motor>
-          <motor inc_key="5" dec_key="%" index=7 increment=0.05></motor>
-          <motor inc_key="6" dec_key="^" index=8 increment=0.05></motor>
+          <motor inc_key="z" dec_key="Z" index=0 increment=5></motor>
+          <motor inc_key="x" dec_key="X" index=1 increment=5></motor>
+          <motor inc_key="c" dec_key="C" index=2 increment=5></motor>
+          <motor inc_key="1" dec_key="!" index=3 increment=5></motor>
+          <motor inc_key="2" dec_key="@" index=4 increment=5></motor>
+          <motor inc_key="3" dec_key="#" index=5 increment=5></motor>
+          <motor inc_key="4" dec_key="$" index=6 increment=5></motor>
+          <motor inc_key="5" dec_key="%" index=7 increment=5></motor>
+          <motor inc_key="6" dec_key="^" index=8 increment=5></motor>
 	  <!-- I'm having trouble parsing "&" and "&amp;", so I'll just use
 	       "amp" and handle it in the code. -->
-          <motor inc_key="7" dec_key="amp" index=9 increment=0.05></motor>
-          <motor inc_key="8" dec_key="*" index=10 increment=0.05></motor>
-          <motor inc_key="9" dec_key="(" index=11 increment=0.05></motor>
-          <motor inc_key="0" dec_key=")" index=12 increment=0.05></motor>
+          <motor inc_key="7" dec_key="amp" index=9 increment=5></motor>
+          <motor inc_key="8" dec_key="*" index=10 increment=5></motor>
+          <motor inc_key="9" dec_key="(" index=11 increment=5></motor>
+          <motor inc_key="0" dec_key=")" index=12 increment=5></motor>
         </motor_keys>
 
         <grasp_keys>
@@ -274,8 +274,8 @@
         </solver>
         <constraints>
           <cfm>0.000000</cfm>
-          <erp>0.200000</erp>
-          <contact_max_correcting_vel>0.000000</contact_max_correcting_vel>
+          <erp>0.500000</erp>
+          <contact_max_correcting_vel>1000.000000</contact_max_correcting_vel>
           <contact_surface_layer>0.00000</contact_surface_layer>
         </constraints>
       </ode>
@@ -486,7 +486,7 @@
 
       <initial_arrangement>no_polhemus</initial_arrangement>
       <arrangement name="no_polhemus">
-        <pose model="polhemus_source">-.5 260 1.3 0 3.1416 1.57</pose>
+        <pose model="polhemus_source">0.5 0 1.0 3.1416 0 3.1416</pose>
       </arrangement>
       <arrangement name="have_polhemus">
         <pose model="polhemus_source">-.5 0 1.3 0 3.1416 1.57</pose>
