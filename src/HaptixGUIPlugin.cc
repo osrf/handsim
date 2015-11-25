@@ -755,8 +755,14 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
 
   float forceRange = this->forceMax - this->forceMin;
 
+  // Limit here because of infinity values
+  if (std::abs(_value) > this->forceMax)
+  {
+    for (int i = 0; i < 3; ++i)
+      colorArray[i] = this->colorMax[i];
+  }
   // stay white if below forceMin
-  if (std::abs(_value) >= forceMin)
+  else if (std::abs(_value) >= this->forceMin)
   {
     for (int i = 0; i < 3; ++i)
     {
@@ -776,8 +782,8 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
           this->colorMax[i], this->colorMin[i]);
       }
     }
-    colorArray[3] = 255;
   }
+  colorArray[3] = 255;
 
   // debug
   // if (std::abs(_value) > this->forceMin)
@@ -1236,7 +1242,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
           -poseIncArgs[3], poseIncArgs[5]);
       position = gazebo::math::Vector3(-poseIncArgs[0],
           -poseIncArgs[1], poseIncArgs[2]);
- 
+
        position = this->armStartPose.rot.RotateVector(position);
        rot = this->armStartPose.rot.RotateVector(rot);
      }
