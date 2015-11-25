@@ -368,12 +368,19 @@ void HaptixControlPlugin::LoadHandControl()
   boost::mutex::scoped_lock lock(this->updateMutex);
 
   int id;
+  std::map<unsigned int, int> simOnly;
 
   // Get joint names and insert id/name pair into map
   sdf::ElementPtr jointName = this->sdf->GetElement("joint");
   while (jointName)
   {
     jointName->GetAttribute("id")->Get(id);
+    int so = 0;
+    if (jointName->HasAttribute("sim_only"))
+    {
+      jointName->GetAttribute("sim_only")->Get(so);
+    }
+    simOnly[id] = so;
     this->jointNames[id] = jointName->Get<std::string>();
     // get next sdf
     // gzdbg << "getting joint name [" << this->jointNames[id] << "]\n";
@@ -394,6 +401,7 @@ void HaptixControlPlugin::LoadHandControl()
       this->simJoints[i] = new JointHelper();
       this->simJoints[i]->SetJoint(joint);
       this->simJoints[i]->SetJointName(this->jointNames[i]);
+      this->simJoints[i]->simOnly = simOnly[i];
     }
     else
       gzerr << "jointName [" << this->jointNames[i] << "] not found.\n";
@@ -899,8 +907,11 @@ void HaptixControlPlugin::LoadHandControl()
   {
     if (this->simJoints[i]->HasJoint())
     {
-      this->robotState.add_joint_pos(0);
-      this->robotState.add_joint_vel(0);
+      if (!this->simJoints[i]->simOnly)
+      {
+        this->robotState.add_joint_pos(0);
+        this->robotState.add_joint_vel(0);
+      }
 
       // internal command of all joints controller here (not just motors)
       SimRobotCommand c;
@@ -1843,7 +1854,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
   unsigned int count = 0;
   for (unsigned int i = 0; i < this->simJoints.size(); ++i)
   {
-    if (this->simJoints[i]->HasJoint())
+    if (this->simJoints[i]->HasJoint() && !this->simJoints[i]->simOnly)
     {
       this->robotState.set_joint_pos(count,
         this->simJoints[i]->GetAngle(0).Radian());
@@ -1992,13 +2003,13 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
   //   _result = false;
 
   _rep.set_motor_count(this->motorInfos.size());
-  _rep.set_joint_count(this->jointNames.size());
+  _rep.set_joint_count(this->robotState.joint_pos().size());
   _rep.set_contact_sensor_count(this->contactSensorInfos.size());
   _rep.set_imu_count(this->imuSensors.size());
 
   for (unsigned int i = 0; i < this->simJoints.size(); ++i)
   {
-    if (this->simJoints[i]->HasJoint())
+    if (this->simJoints[i]->HasJoint() && !this->simJoints[i]->simOnly)
     {
       haptix::comm::msgs::hxRobot::hxLimit *joint = _rep.add_joint_limit();
       joint->set_minimum(this->simJoints[i]->GetLowerLimit(0).Radian());
