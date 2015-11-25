@@ -751,7 +751,7 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
   float colorArray[4] = {this->colorNoContact[0],
                          this->colorNoContact[1],
                          this->colorNoContact[2],
-                         this->colorNoContact[3]};
+                         255};
 
   float forceRange = this->forceMax - this->forceMin;
 
@@ -783,7 +783,6 @@ void HaptixGUIPlugin::OnSetContactForce(QString _contactName, double _value)
       }
     }
   }
-  colorArray[3] = 255;
 
   // debug
   // if (std::abs(_value) > this->forceMin)
