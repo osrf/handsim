@@ -38,7 +38,6 @@
             <size>20 20</size>
           </contact>
 
-<!--
           <contact name="Proximal_Thumb">
             <pos>245 240</pos>
             <index>10</index>
@@ -47,26 +46,22 @@
             <pos>275 195</pos>
             <index>11</index>
           </contact>
--->
           <contact name="Distal_Thumb">
             <pos>302 130</pos>
             <index>3</index>
           </contact>
 
-<!--
           <contact name="Index_Proximal-1">
             <pos>218 80</pos>
             <size>25 50</size>
             <index>12</index>
           </contact>
--->
           <contact name="Index_Distal-1">
             <pos>242 -30</pos>
             <size>25 50</size>
             <index>4</index>
           </contact>
 
-<!--
           <contact name="Middle_Proximal-1">
             <pos>152 98</pos>
             <index>13</index>
@@ -75,13 +70,11 @@
             <pos>155 19</pos>
             <index>14</index>
           </contact>
--->
           <contact name="Middle_Ring_Distal-1">
             <pos>153 -60</pos>
             <index>5</index>
           </contact>
 
-<!--
           <contact name="ring_proximal">
             <pos>84 101</pos>
             <index>15</index>
@@ -90,18 +83,15 @@
             <pos>74 41</pos>
             <index>16</index>
           </contact>
--->
           <contact name="ring_distal">
             <pos>64 -19</pos>
             <index>6</index>
           </contact>
 
-<!--
           <contact name="Pinky_Proximal-1">
             <pos>14 105</pos>
             <index>17</index>
           </contact>
--->
           <contact name="Pinky_Distal-1">
             <pos>-7 54</pos>
             <index>7</index>
