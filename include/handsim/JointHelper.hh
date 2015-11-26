@@ -120,6 +120,11 @@ namespace gazebo
     /// \return gazebo joint if one exsits
     public: physics::JointPtr GetRealJoint();
 
+    /// \brief If simOnly is set to true, do not create
+    /// corresponding robot state element for haptix api
+    /// for joint_pos and joint_vel.
+    public: bool simOnly;
+
     private: math::Angle fakePosition;
 
     private: double fakeVelocity;
