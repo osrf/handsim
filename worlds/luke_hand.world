@@ -34,8 +34,8 @@
           </contact>
           <contact name="Palm-Back">
             <index>2</index>
-            <pos>70 330</pos>
-            <size>150 20</size>
+            <pos>303 58</pos>
+            <size>20 20</size>
           </contact>
 
 <!--
