@@ -22,69 +22,89 @@
         <timer_topic>~/timer_control</timer_topic>
 
         <contacts>
-          <contact name="Palm-1">
+          <contact name="Palm-Front">
             <index>0</index>
             <pos>70 200</pos>
             <size>150 100</size>
           </contact>
+          <contact name="Palm-Side">
+            <index>1</index>
+            <pos>0 200</pos>
+            <size>40 100</size>
+          </contact>
+          <contact name="Palm-Back">
+            <index>2</index>
+            <pos>70 330</pos>
+            <size>150 20</size>
+          </contact>
 
+<!--
           <contact name="Proximal_Thumb">
             <pos>245 240</pos>
-            <index>1</index>
+            <index>10</index>
           </contact>
           <contact name="Median_Thumb">
             <pos>275 195</pos>
-            <index>2</index>
+            <index>11</index>
           </contact>
+-->
           <contact name="Distal_Thumb">
             <pos>302 130</pos>
             <index>3</index>
           </contact>
 
+<!--
           <contact name="Index_Proximal-1">
             <pos>218 80</pos>
             <size>25 50</size>
-            <index>4</index>
+            <index>12</index>
           </contact>
+-->
           <contact name="Index_Distal-1">
             <pos>242 -30</pos>
             <size>25 50</size>
-            <index>5</index>
+            <index>4</index>
           </contact>
 
+<!--
           <contact name="Middle_Proximal-1">
             <pos>152 98</pos>
-            <index>6</index>
+            <index>13</index>
           </contact>
           <contact name="Middle_Ring_Median-1">
             <pos>155 19</pos>
-            <index>7</index>
+            <index>14</index>
           </contact>
+-->
           <contact name="Middle_Ring_Distal-1">
             <pos>153 -60</pos>
-            <index>8</index>
+            <index>5</index>
           </contact>
 
+<!--
           <contact name="ring_proximal">
             <pos>84 101</pos>
-            <index>9</index>
+            <index>15</index>
           </contact>
           <contact name="ring_median">
             <pos>74 41</pos>
-            <index>10</index>
+            <index>16</index>
           </contact>
+-->
           <contact name="ring_distal">
             <pos>64 -19</pos>
-            <index>11</index>
+            <index>6</index>
           </contact>
 
+<!--
           <contact name="Pinky_Proximal-1">
             <pos>14 105</pos>
-            <index>12</index>
+            <index>17</index>
           </contact>
+-->
           <contact name="Pinky_Distal-1">
             <pos>-7 54</pos>
-            <index>13</index>
+            <index>7</index>
           </contact>
         </contacts>
 
