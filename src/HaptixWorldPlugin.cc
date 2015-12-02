@@ -303,7 +303,7 @@ void HaptixWorldPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 }
 
 /////////////////////////////////////////////////
-void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
+void HaptixWorldPlugin::HaptixSimInfoCallback(
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxSimInfo &_rep, bool &_result)
 {
@@ -344,7 +344,6 @@ void HaptixWorldPlugin::HaptixSimInfoCallback(const std::string &/*_service*/,
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixCameraTransformCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxTransform &_rep, bool &_result)
 {
@@ -363,7 +362,6 @@ void HaptixWorldPlugin::HaptixCameraTransformCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxTransform &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -380,7 +378,6 @@ void HaptixWorldPlugin::HaptixSetCameraTransformCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixContactsCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result)
 {
@@ -518,7 +515,6 @@ void HaptixWorldPlugin::HaptixContactsCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixModelJointStateCallback(
-    const std::string &/*_service*/,
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxModel &_rep, bool &_result)
 {
@@ -577,7 +573,6 @@ void HaptixWorldPlugin::HaptixModelJointStateCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxModel &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -639,7 +634,6 @@ void HaptixWorldPlugin::HaptixSetModelJointStateCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixAddModelCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxModel &_rep, bool &_result)
 {
@@ -751,7 +745,6 @@ void HaptixWorldPlugin::HaptixAddModelCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixRemoveModelCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -781,7 +774,6 @@ void HaptixWorldPlugin::HaptixRemoveModelCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixModelTransformCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxTransform &_rep, bool &_result)
 {
@@ -816,7 +808,6 @@ void HaptixWorldPlugin::HaptixModelTransformCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetModelTransformCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -864,7 +855,6 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixLinearVelocityCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxVector3 &_rep, bool &_result)
 {
@@ -889,7 +879,6 @@ void HaptixWorldPlugin::HaptixLinearVelocityCallback(
 }
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -929,7 +918,6 @@ void HaptixWorldPlugin::HaptixSetLinearVelocityCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixAngularVelocityCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxVector3 &_rep, bool &_result)
 {
@@ -955,7 +943,6 @@ void HaptixWorldPlugin::HaptixAngularVelocityCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetAngularVelocityCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -996,7 +983,6 @@ void HaptixWorldPlugin::HaptixSetAngularVelocityCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixApplyForceCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1056,7 +1042,6 @@ void HaptixWorldPlugin::HaptixApplyForceCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixApplyTorqueCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1115,7 +1100,6 @@ void HaptixWorldPlugin::HaptixApplyTorqueCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixApplyWrenchCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1181,7 +1165,6 @@ void HaptixWorldPlugin::HaptixApplyWrenchCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixResetCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxInt &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1244,7 +1227,6 @@ void HaptixWorldPlugin::HaptixResetCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixStartLoggingCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1266,7 +1248,6 @@ void HaptixWorldPlugin::HaptixStartLoggingCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixIsLoggingCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxInt &_rep, bool &_result)
 {
@@ -1282,7 +1263,6 @@ void HaptixWorldPlugin::HaptixIsLoggingCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixStopLoggingCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxEmpty &/*_req*/,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1298,7 +1278,6 @@ void HaptixWorldPlugin::HaptixStopLoggingCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixModelGravityCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxString &_req,
       haptix::comm::msgs::hxInt &_rep, bool &_result)
 {
@@ -1332,7 +1311,6 @@ void HaptixWorldPlugin::HaptixModelGravityCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetModelGravityCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1377,7 +1355,6 @@ void HaptixWorldPlugin::HaptixSetModelGravityCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetModelColorCallback(
-    const std::string &/*_service*/,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1463,7 +1440,6 @@ void HaptixWorldPlugin::HaptixSetModelColorCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixModelColorCallback(
-    const std::string &/*_service*/,
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxColor &_rep, bool &_result)
 {
@@ -1502,7 +1478,6 @@ void HaptixWorldPlugin::HaptixModelColorCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
-    const std::string &/*_service*/,
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1589,7 +1564,6 @@ void HaptixWorldPlugin::HaptixSetModelCollideModeCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixModelCollideModeCallback(
-    const std::string &/*_service*/,
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxCollideMode &_rep, bool &_result)
 {
@@ -1648,7 +1622,6 @@ void HaptixWorldPlugin::HaptixModelCollideModeCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixAddConstraintCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {
@@ -1756,7 +1729,6 @@ void HaptixWorldPlugin::HaptixAddConstraintCallback(
 
 /////////////////////////////////////////////////
 void HaptixWorldPlugin::HaptixRemoveConstraintCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxParam &_req,
       haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result)
 {

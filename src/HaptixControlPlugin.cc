@@ -985,8 +985,7 @@ void HaptixControlPlugin::Reset()
 
 /////////////////////////////////////////////////
 // Allow users to set model pose directly
-void HaptixControlPlugin::SetWorldPose(const std::string &/*_topic*/,
-                     const msgs::Pose &_pose)
+void HaptixControlPlugin::SetWorldPose(const msgs::Pose &_pose)
 {
   boost::mutex::scoped_lock lock(this->baseLinkMutex);
   math::Pose inputPose(msgs::ConvertIgn(_pose));
@@ -996,8 +995,7 @@ void HaptixControlPlugin::SetWorldPose(const std::string &/*_topic*/,
 
 /////////////////////////////////////////////////
 // Open keyboard commands
-void HaptixControlPlugin::SetKeyboardPose(const std::string &/*_topic*/,
-                     const msgs::Pose &_pose)
+void HaptixControlPlugin::SetKeyboardPose(const msgs::Pose &_pose)
 {
   math::Pose inputPose(msgs::ConvertIgn(_pose));
 
@@ -1491,7 +1489,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
             this->clutchEngaged[m] = -1;
           }
         }
-        
+
         // check if we should disengage lo
 
         // debug:
@@ -1554,7 +1552,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
             this->clutchEngaged[m] = 1;
           }
         }
-        
+
         // check if we should disengage hi
         if (this->clutchEngaged[m] == 1 && !handPushedClose)
         {
@@ -1994,14 +1992,9 @@ math::Pose HaptixControlPlugin::convertPolhemusToPose(
 
 //////////////////////////////////////////////////
 void HaptixControlPlugin::HaptixGetRobotInfoCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxRobot &/*_req*/,
       haptix::comm::msgs::hxRobot &_rep, bool &_result)
 {
-  // is this needed?
-  // if (_service != deviceInfoTopic)
-  //   _result = false;
-
   _rep.set_motor_count(this->motorInfos.size());
   _rep.set_joint_count(this->robotState.joint_pos().size());
   _rep.set_contact_sensor_count(this->contactSensorInfos.size());
@@ -2072,7 +2065,7 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
         // motor high limit is limited by the encoder offset
         motor1Hi = std::min(motor1Hi,
           this->motorInfos[i].gearboxes[j].encoderOffset);
-        // take the segment 
+        // take the segment
         // double m1Lo = lo * this->motorInfos[i].gearboxes[j].multiplier1;
         // double m1Hi = this->motorInfos[i].gearboxes[j].encoderOffset
         //   * this->motorInfos[i].gearboxes[j].multiplier1;
@@ -2152,7 +2145,6 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
 //////////////////////////////////////////////////
 /// using haptix-comm service callback
 void HaptixControlPlugin::HaptixUpdateCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxCommand &_req,
       haptix::comm::msgs::hxSensor &_rep, bool &_result)
 {
@@ -2202,7 +2194,6 @@ void HaptixControlPlugin::OnUserCameraPose(ConstPosePtr &_msg)
 //////////////////////////////////////////////////
 /// using ign-transport service, out of band from haptix_comm
 void HaptixControlPlugin::HaptixGraspCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
@@ -2293,7 +2284,6 @@ void HaptixControlPlugin::HaptixGraspCallback(
 
 //////////////////////////////////////////////////
 void HaptixControlPlugin::HaptixReadCallback(
-      const std::string &/*_service*/,
       const haptix::comm::msgs::hxSensor &/*_req*/,
       haptix::comm::msgs::hxSensor &_rep, bool &_result)
 {

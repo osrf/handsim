@@ -163,287 +163,258 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
 
   /// \brief hxs_sim_info callback. Iterate through all Gazebo models in the
   /// world and pack the relevant information in the reply.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request (empty).
   /// \param[out] _rep The reply: an hxSimInfo message containing model and
   /// camera information.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSimInfoCallback(const std::string &_service,
-    const haptix::comm::msgs::hxEmpty &_req,
+  private: void HaptixSimInfoCallback(const haptix::comm::msgs::hxEmpty &_req,
     haptix::comm::msgs::hxSimInfo &_rep, bool &_result);
 
   /// \brief hxs_camera_transform callback. Get the UserCameraPose cached from
   /// the OnUserCameraPose callback.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request (empty).
   /// \param[out] _rep The reply: a transform representing the current
   /// camera pose.
   /// \return _result True if no errors were encountered.
-  private: void HaptixCameraTransformCallback(const std::string &_service,
+  private: void HaptixCameraTransformCallback(
     const haptix::comm::msgs::hxEmpty &_req,
     haptix::comm::msgs::hxTransform &_rep, bool &_result);
 
   /// \brief hxs_set_camera_transform callback. Publishes to the camera pose
   /// topic.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: desired camera transform.
   /// \param[out] _rep The reply (empty).
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetCameraTransformCallback(const std::string &_service,
+  private: void HaptixSetCameraTransformCallback(
     const haptix::comm::msgs::hxTransform &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_contacts callback. Get contact information from the Gazebo
   /// CollisionManager.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: name of the model to check contact points.
   /// \param[out] _rep The reply: a vector of contact points representing where
   /// the model is contacting other objects.
   /// \return _result True if no errors were encountered.
-  private: void HaptixContactsCallback(const std::string &_service,
+  private: void HaptixContactsCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxContactPoint_V &_rep, bool &_result);
 
   /// \brief hxs_model_joint_state callback. Get the state of a joint.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: the name of the model to query.
   /// \param[out] _rep The reply: joint states
   /// \param[out] _result True if no errors were encountered.
-  private: void HaptixModelJointStateCallback(const std::string &_service,
+  private: void HaptixModelJointStateCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxModel &_rep, bool &_result);
 
   /// \brief hxs_set_model_joint_state callback. Set the state of a joint.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: hxModel message containing the name of the
   /// model to set and the desired joint state.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetModelJointStateCallback(const std::string &_service,
+  private: void HaptixSetModelJointStateCallback(
     const haptix::comm::msgs::hxModel &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_add_model callback. Add a model during runtime given its SDF
   /// and its initial position.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model to add, its SDF representation, its initial transform, and its
   /// gravity mode.
   /// \param[out] _rep The reply: the sim API representation of the model as
   /// an hxModel message.
   /// \param[out] _result True if no errors were encountered.
-  private: void HaptixAddModelCallback(const std::string &_service,
+  private: void HaptixAddModelCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxModel &_rep, bool &_result);
 
   /// \brief hxs_remove_model callback. Remove a model from the world.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: the name of the model to remove.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixRemoveModelCallback(const std::string &_service,
+  private: void HaptixRemoveModelCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_set_model_transform callback. Set the pose of a model.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model to set and the desired transform.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetModelTransformCallback(const std::string &_service,
+  private: void HaptixSetModelTransformCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_model_transform callback. Get the pose of a model.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: the name of the model to query.
   /// \param[out] _rep The reply: the model's current pose.
   /// \return _result True if no errors were encountered.
-  private: void HaptixModelTransformCallback(const std::string &_service,
+  private: void HaptixModelTransformCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxTransform &_rep, bool &_result);
 
   /// \brief hxs_linear_velocity callback. Get the linear velocity of a model.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: the name of the model to query.
   /// \param[out] _rep The reply: The current linear velocity of the model.
   /// \return _result True if no errors were encountered.
-  private: void HaptixLinearVelocityCallback(const std::string &_service,
+  private: void HaptixLinearVelocityCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxVector3 &_rep, bool &_result);
 
   /// \brief hxs_set_linear_velocity callback. Instantaneously set the linear
   /// velocity of a model and all its links.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: An hxParam message containing the name of
   /// the model and a Vector3 representing the desired linear velocity.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetLinearVelocityCallback(const std::string &_service,
+  private: void HaptixSetLinearVelocityCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_angular_velocity callback. Get the angular velocity of the
   /// canonical link of a model.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: name of the model to query.
   /// \param[out] _rep The reply: Vector3 representing the angular velocity of
   /// the model.
   /// \return _result True if no errors were encountered.
-  private: void HaptixAngularVelocityCallback(const std::string &_service,
+  private: void HaptixAngularVelocityCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxVector3 &_rep, bool &_result);
 
   /// \brief hxs_set_angular_velocity callback. Instantaneously set the angular
   /// velocity of a model and all its links.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: An hxParam message containing the name of
   /// the model and a Vector3 representing the desired angular velocity in the
   /// world frame.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetAngularVelocityCallback(const std::string &_service,
+  private: void HaptixSetAngularVelocityCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_apply_force callback. Apply a force to a model over a duration.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the force, a Vector3 representing the force
   /// to apply, and a duration in seconds.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixApplyForceCallback(const std::string &_service,
+  private: void HaptixApplyForceCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_apply_torque callback. Apply a torque to a model over a
   /// duration.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, a Vector3 representing the torque
   /// to apply, and a duration in seconds.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixApplyTorqueCallback(const std::string &_service,
+  private: void HaptixApplyTorqueCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_apply_wrench callback. Apply a wrench to a model over a
   /// duration.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model which will receive the torque, the wrench to apply, and a
   /// duration in seconds.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixApplyWrenchCallback(const std::string &_service,
+  private: void HaptixApplyWrenchCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_reset callback. Reset the scene. Simulates the "Reset" button
   /// in the HAPTIX GUI.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an integer. If 0, do not reset the pose
   /// of the limb. Else, reset the pose of the limb.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixResetCallback(const std::string &_service,
+  private: void HaptixResetCallback(
     const haptix::comm::msgs::hxInt &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_start_logging callback.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: filename to save the log to.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixStartLoggingCallback(const std::string &_service,
+  private: void HaptixStartLoggingCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_is_logging callback.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: empty.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixIsLoggingCallback(const std::string &_service,
+  private: void HaptixIsLoggingCallback(
     const haptix::comm::msgs::hxEmpty &_req,
     haptix::comm::msgs::hxInt &_rep, bool &_result);
 
   /// \brief hxs_stop_logging callback.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: empty.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixStopLoggingCallback(const std::string &_service,
+  private: void HaptixStopLoggingCallback(
     const haptix::comm::msgs::hxEmpty &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_model_gravity callback. Get the gravity mode of the model.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: name of the model to query.
   /// \param[out] _rep The reply: 1 if gravity on, 0 if gravity off.
   /// \return _result True if no errors were encountered.
-  private: void HaptixModelGravityCallback(const std::string &_service,
+  private: void HaptixModelGravityCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxInt &_rep, bool &_result);
 
   /// \brief hxs_set_model_gravity callback.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the model and the desired gravity mode (1 if gravity on, 0 if off).
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetModelGravityCallback(const std::string &_service,
+  private: void HaptixSetModelGravityCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_set_model_color callback. Set the color of the model. The
   /// diffuse and ambient components of each link material will be set.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: hxParam message containing the name of the
   /// model and the desired color.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetModelColorCallback(const std::string &_service,
+  private: void HaptixSetModelColorCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_model_color callback. Get the color of the model averaged over
   /// the diffuse and ambient components of each link material.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: name of the model to query.
   /// \param[out] _rep The reply: average color of the model.
   /// \return _result True if no errors were encountered.
-  private: void HaptixModelColorCallback(const std::string &_service,
+  private: void HaptixModelColorCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxColor &_rep, bool &_result);
 
   /// \brief hxs_set_model_collide_mode callback. Set the collide mode of the
   /// model: COLLIDE, NO_COLLIDE, or DETECTION_ONLY (collide without contact).
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: hxParam message containing the name of the
   /// model and the desired collide mode.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
-  private: void HaptixSetModelCollideModeCallback(const std::string &_service,
+  private: void HaptixSetModelCollideModeCallback(
     const haptix::comm::msgs::hxParam &_req,
     haptix::comm::msgs::hxEmpty &_rep, bool &_result);
 
   /// \brief hxs_model_collide_mode callback. Get the collide mode of the
   /// model: COLLIDE, NO_COLLIDE, or DETECTION_ONLY (collide without contact).
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: name of the model.
   /// \param[out] _rep The reply: collide mode of the model.
   /// \return _result True if no errors were encountered.
-  private: void HaptixModelCollideModeCallback(const std::string &_service,
+  private: void HaptixModelCollideModeCallback(
     const haptix::comm::msgs::hxString &_req,
     haptix::comm::msgs::hxCollideMode &_rep, bool &_result);
 
   /// \brief hxs_add_constraint callback. Add a constraint during runtime
   /// given its SDF.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: an hxParam message containing the name of
   /// the constraint to add, a SDF constaining constraint
   /// gravity mode.
@@ -451,17 +422,14 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// an hxModel message.
   /// \param[out] _result True if no errors were encountered.
   private: void HaptixAddConstraintCallback(
-        const std::string &/*_service*/,
         const haptix::comm::msgs::hxParam &_req,
         haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result);
 
   /// \brief hxs_remove_model callback. Remove a model from the world.
-  /// \param[in] _service The service this callback is advertised on.
   /// \param[in] _req The request: the name of the model to remove.
   /// \param[out] _rep The reply: empty.
   /// \return _result True if no errors were encountered.
   private: void HaptixRemoveConstraintCallback(
-        const std::string &/*_service*/,
         const haptix::comm::msgs::hxParam &_req,
         haptix::comm::msgs::hxEmpty &/*_rep*/, bool &_result);
 
