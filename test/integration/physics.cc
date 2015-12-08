@@ -263,6 +263,7 @@ TEST_F(PhysicsTest, Test1)
       lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
     }
     lastMotorCommand.ref_pos_enabled = 1;
+    lastMotorCommand.ref_vel_enabled = 0;
     lastMotorCommand.ref_vel_max_enabled = 0;
     lastMotorCommand.gain_pos_enabled = 0;
     lastMotorCommand.gain_vel_enabled = 0;
@@ -341,6 +342,7 @@ TEST_F(PhysicsTest, Test1)
       lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
     }
     lastMotorCommand.ref_pos_enabled = 1;
+    lastMotorCommand.ref_vel_enabled = 0;
     lastMotorCommand.ref_vel_max_enabled = 0;
     lastMotorCommand.gain_pos_enabled = 0;
     lastMotorCommand.gain_vel_enabled = 0;

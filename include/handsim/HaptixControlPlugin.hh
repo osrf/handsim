@@ -386,6 +386,7 @@ namespace gazebo
     private: class SimRobotCommand
     {
       public: double ref_pos;
+      public: double ref_vel;
       public: double ref_vel_max;
       public: double gain_pos;
       public: double gain_vel;
