@@ -185,6 +185,7 @@ TEST_F(Issue86Test, MotorPositions)
         command.ref_pos[i] = 0.8*indexMotorLimitMap[i].second;
     }
     command.ref_pos_enabled = 1;
+    command.ref_vel_enabled = 0;
     command.ref_vel_max_enabled = 0;
     command.gain_pos_enabled = 0;
     command.gain_vel_enabled = 0;

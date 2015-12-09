@@ -891,6 +891,7 @@ void HaptixControlPlugin::LoadHandControl()
 
     // initialize position command.
     this->robotCommand.add_ref_pos(0.0);
+    this->robotCommand.add_ref_vel(0.0);
     this->robotCommand.add_ref_vel_max(0.0);
 
     // default position and velocity gains
@@ -899,6 +900,7 @@ void HaptixControlPlugin::LoadHandControl()
   }
   // initialize to control mode, not gain mode
   this->robotCommand.set_ref_pos_enabled(true);
+  this->robotCommand.set_ref_vel_enabled(false);
   this->robotCommand.set_ref_vel_max_enabled(false);
   this->robotCommand.set_gain_pos_enabled(false);
   this->robotCommand.set_gain_vel_enabled(false);
@@ -916,6 +918,7 @@ void HaptixControlPlugin::LoadHandControl()
       // internal command of all joints controller here (not just motors)
       SimRobotCommand c;
       c.ref_pos = 0.0;
+      c.ref_vel = 0.0;
       c.ref_vel_max = 0.0;
       c.gain_pos = 1.0;
       c.gain_vel = 0.0;
@@ -979,6 +982,7 @@ void HaptixControlPlugin::Reset()
       iter != this->simJointCommands.end(); ++iter)
   {
     iter->ref_pos = 0.0;
+    iter->ref_vel = 0.0;
     iter->ref_vel_max = 0.0;
   }
 }
@@ -1232,6 +1236,10 @@ void HaptixControlPlugin::GetHandControlFromClient()
           (this->graspPositions[i] + this->motorInfos[i].encoderOffset)
           / this->motorInfos[i].gearRatio;
       }
+      if (this->robotCommand.ref_vel_enabled())
+      {
+        this->simJointCommands[m].ref_vel = 0.0;
+      }
       if (this->robotCommand.ref_vel_max_enabled())
       {
         this->simJointCommands[m].ref_vel_max = 0.0;
@@ -1246,6 +1254,13 @@ void HaptixControlPlugin::GetHandControlFromClient()
         this->ConvertMotorPositionToJointPosition(
           this->motorInfos[i], this->robotCommand.ref_pos(i),
           this->simJointCommands[m].ref_pos);
+      }
+      if (this->robotCommand.ref_vel_enabled())
+      {
+        // convert motor velocity to joint velocity
+        this->ConvertMotorVelocityToJointVelocity(
+          this->motorInfos[i], this->robotCommand.ref_vel(i),
+          this->simJointCommands[m].ref_vel);
       }
       if (this->robotCommand.ref_vel_max_enabled())
       {
@@ -1297,6 +1312,36 @@ void HaptixControlPlugin::GetHandControlFromClient()
             this->simJointCommands[n].ref_pos =
               this->simJointCommands[m].ref_pos
               * this->motorInfos[i].gearboxes[j].multiplier1;
+          }
+        }
+        if (this->robotCommand.ref_vel_enabled())
+        {
+          if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
+          {
+            m = this->motorInfos[i].gearboxes[j].referenceIndex;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
+            {
+              this->simJointCommands[n].ref_vel = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel =
+                this->simJoints[m]->GetVelocity(0)
+                / this->motorInfos[i].gearboxes[j].multiplier1;
+            }
+          }
+          else
+          {
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier1, 0.0))
+            {
+              this->simJointCommands[n].ref_vel = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel =
+                this->simJointCommands[m].ref_vel
+                / this->motorInfos[i].gearboxes[j].multiplier1;
+            }
           }
         }
         if (this->robotCommand.ref_vel_max_enabled())
@@ -1354,6 +1399,36 @@ void HaptixControlPlugin::GetHandControlFromClient()
               * this->motorInfos[i].gearboxes[j].multiplier2;
           }
         }
+        if (this->robotCommand.ref_vel_enabled())
+        {
+          if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
+          {
+            m = this->motorInfos[i].gearboxes[j].referenceIndex;
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
+            {
+              this->simJointCommands[n].ref_vel = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel =
+                this->simJoints[m]->GetVelocity(0)
+                / this->motorInfos[i].gearboxes[j].multiplier2;
+            }
+          }
+          else
+          {
+            if (math::equal(this->motorInfos[i].gearboxes[j].multiplier2, 0.0))
+            {
+              this->simJointCommands[n].ref_vel = 0.0;
+            }
+            else
+            {
+              this->simJointCommands[n].ref_vel =
+                this->simJointCommands[m].ref_vel
+                / this->motorInfos[i].gearboxes[j].multiplier2;
+            }
+          }
+        }
         if (this->robotCommand.ref_vel_max_enabled())
         {
           if (this->motorInfos[i].gearboxes[j].referenceIndex >= 0)
@@ -1404,11 +1479,13 @@ double HaptixControlPlugin::ApplySimJointPositionPIDCommand(int _index,
 
   // compute target joint position and velocity error in gazebo
   double errorPos = position - this->simJointCommands[_index].ref_pos;
-  double errorVel = velocity - this->simJointCommands[_index].ref_vel_max;
+  double errorVel = velocity - this->simJointCommands[_index].ref_vel;
+  double errorVelMax = velocity - this->simJointCommands[_index].ref_vel_max;
 
   // compute overall error
   double error = this->simJointCommands[_index].gain_pos * errorPos
-               + this->simJointCommands[_index].gain_vel * errorVel;
+               + this->simJointCommands[_index].gain_vel * errorVel
+               + this->simJointCommands[_index].gain_vel * errorVelMax;
 
   // compute force needed
   double force = this->pids[_index].Update(error, _dt);
@@ -1427,6 +1504,8 @@ void HaptixControlPlugin::ApplyJointForce(int _index, double _force)
       this->simJointCommands[_index].ref_pos);
 
     /// \TODO: something about velocity commands
+    // this->simJoints[_index]->SetVelocity(
+    //   this->simJointCommands[_index].ref_vel);
     // this->simJoints[_index]->SetVelocity(
     //   this->simJointCommands[_index].ref_vel_max);
     /// \TODO: for issue #86 motor velocity will be zero
@@ -1829,7 +1908,15 @@ void HaptixControlPlugin::ConvertMotorVelocityToJointVelocity(
   const MotorInfo &_motorInfo, const double _motorVelocity,
   double &_jointVelocity)
 {
-  _jointVelocity = _motorVelocity * _motorInfo.gearRatio;
+  if (!math::equal(_motorInfo.gearRatio, 0.0))
+  {
+    _jointVelocity = _motorVelocity / _motorInfo.gearRatio;
+  }
+  else
+  {
+    gzwarn << "zero motor gear ratio, not right. Setting joint vel to 0.\n";
+    _jointVelocity = 0;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -2165,12 +2252,15 @@ void HaptixControlPlugin::HaptixUpdateCallback(
   {
     std::cout << "\tMotor " << i << ":" << std::endl;
     std::cout << "\t\t" << _req.ref_pos(i) << std::endl;
+    std::cout << "\t\t" << _req.ref_vel(i) << std::endl;
     std::cout << "\t\t" << _req.ref_vel_max(i) << std::endl;
     std::cout << "\t\t" << _req.gain_pos(i) << std::endl;
     std::cout << "\t\t" << _req.gain_vel(i) << std::endl;
   }
   std::cout << "\tref_pos_enabled\t"
             << _req.ref_pos_enabled()     << std::endl;
+  std::cout << "\tref_vel_enabled\t"
+            << _req.ref_vel_enabled() << std::endl;
   std::cout << "\tref_vel_max_enabled\t"
             << _req.ref_vel_max_enabled() << std::endl;
   std::cout << "\tgain_pos_enabled\t"
@@ -2224,6 +2314,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
   //       << this->robotCommand.ref_pos_enabled() << "\n";
 
   _rep.set_ref_pos_enabled(this->robotCommand.ref_pos_enabled());
+  _rep.set_ref_vel_enabled(this->robotCommand.ref_vel_enabled());
   _rep.set_ref_vel_max_enabled(this->robotCommand.ref_vel_max_enabled());
   _rep.set_gain_pos_enabled(this->robotCommand.gain_pos_enabled());
   _rep.set_gain_vel_enabled(this->robotCommand.gain_vel_enabled());
