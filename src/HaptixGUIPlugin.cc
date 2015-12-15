@@ -1172,7 +1172,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
   char key = _event.text[0];
 
-  if (key == 'p' || key == ' ')
+  if (key == 'p' || key == 'v' || key == 'b' || key == 'n')
   {
     gazebo::msgs::Int pauseState;
     bool oldPauseState = this->trackingPaused;
