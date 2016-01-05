@@ -21,6 +21,7 @@
 #include <gazebo/rendering/UserCamera.hh>
 #include <gazebo/gui/GuiEvents.hh>
 #include <gazebo/gui/GuiIface.hh>
+#include <ignition/math/Angle.hh>
 
 #include "handsim/config.hh"
 #include "handsim/TaskButton.hh"
@@ -424,9 +425,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
                                             gazebo::gui::get_active_camera();
   if (userCamera)
   {
-    userCamera->SetHFOV(GZ_DTOR(120));
+    userCamera->SetHFOV(ignition::math::Angle(IGN_DTOR(120)));
     userCamera->SetClipDist(0.001, 500);
-    this->initialCameraPose = userCamera->GetWorldPose();
+    this->initialCameraPose = userCamera->WorldPose();
   }
 
 
