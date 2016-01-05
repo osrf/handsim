@@ -37,9 +37,10 @@ namespace gazebo
     public: double motorTorque;
 
     /// \brief: gear_ratio = motor_angle / joint_angle
-    /// assuming the _hxCommand::ref_pos and _hxCommand::ref_vel are
-    /// motor position and motor velocities, use gear_ratio to
-    /// compute simulation joint torques.
+    /// assuming the _hxCommand::ref_pos and _hxCommand::ref_vel
+    /// (or _hxCommand::ref_vel_max) are joint position
+    /// and velocities commands, use gear_ratio to
+    /// convert them into motor_pos and motor_vel.
     public: double gearRatio;
 
     /// \brief: joint_offset
