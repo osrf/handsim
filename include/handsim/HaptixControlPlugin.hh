@@ -122,42 +122,34 @@ namespace gazebo
     private: void PublishHaptixControlStatus();
 
     /// \brief: Provide robot info through haptix_comm
-    /// \param[in] _service service name
     /// \param[in] _req request data, not used here.
     /// \param[out] _rep respond data, returns info in haptix::comm::hxRobot.
     /// \param[out] _result returns true if request was successful
     private: void HaptixGetRobotInfoCallback(
-      const std::string &_service,
       const haptix::comm::msgs::hxRobot &_req,
       haptix::comm::msgs::hxRobot &_rep, bool &_result);
 
     /// \brief: Simulation responder to team controller client nodes
-    /// \param[in] _service service name
     /// \param[in] _req request data, contains robot control commands.
     /// \param[out] _rep respond data, returns robot states in hxSensor struct.
     /// \param[out] _result returns true if request was successful
     private: void HaptixUpdateCallback(
-      const std::string &_service,
       const haptix::comm::msgs::hxCommand &_req,
       haptix::comm::msgs::hxSensor &_rep, bool &_result);
 
     /// \brief: Simulation responder to execute predefined grasps
-    /// \param[in] _service Service name
     /// \param[in] _req Requested grasp
     /// \param[out] _rep Reply in the form of commanded joint angles
     /// \param[out] _result True if the command was successful
     private: void HaptixGraspCallback(
-      const std::string &_service,
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result);
 
     /// \brief Simulation responder to sensor read command
-    /// \param[in] _service Service name
     /// \param[in] _req Request sensor (unused)
     /// \param[out] _rep Reply sensor
     /// \param[out] _result True if command was successful
     private: void HaptixReadCallback(
-      const std::string &_service,
       const haptix::comm::msgs::hxSensor &_req,
       haptix::comm::msgs::hxSensor &_rep, bool &_result);
 
@@ -181,16 +173,12 @@ namespace gazebo
     private: void UpdateKeyboard(double _dt);
 
     /// \brief Callback to set the saved keyboard pose based on user input.
-    /// \param[in] _topic Topic for message transport: /haptix/arm_pose_inc.
     /// \param[in] _pose The input pose.
-    private: void SetKeyboardPose(const std::string &/*_topic*/,
-                                  const msgs::Pose &_pose);
+    private: void SetKeyboardPose(const msgs::Pose &_pose);
 
     /// \brief Callback to set the model pose directly. Also update controller.
-    /// \param[in] _topic Topic for message transport: /haptix/arm_model_pose.
     /// \param[in] _pose The input model pose in world frame.
-    private: void SetWorldPose(const std::string &/*_topic*/,
-                               const msgs::Pose &_pose);
+    private: void SetWorldPose(const msgs::Pose &_pose);
 
     /// \brief Callback on Optitrack head tracker update
     private: void OnUpdateOptitrackHead(ConstPosePtr &_pose);
