@@ -1172,7 +1172,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
 
   char key = _event.text[0];
 
-  if (key == 'p' || key == ' ')
+  if (key == 'p' || key == 'v' || key == 'b' || key == 'n')
   {
     gazebo::msgs::Int pauseState;
     bool oldPauseState = this->trackingPaused;
@@ -1314,6 +1314,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
     }
     this->lastMotorCommand.ref_pos_enabled = 1;
+    this->lastMotorCommand.ref_vel_enabled = 0;
     this->lastMotorCommand.ref_vel_max_enabled = 0;
     this->lastMotorCommand.gain_pos_enabled = 0;
     this->lastMotorCommand.gain_vel_enabled = 0;
@@ -1343,6 +1344,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
       // Now add in the new diff
       cmd.ref_pos[index] += inc;
       cmd.ref_pos_enabled = 1;
+      cmd.ref_vel_enabled = 0;
       cmd.ref_vel_max_enabled = 0;
       cmd.gain_pos_enabled = 0;
       cmd.gain_vel_enabled = 0;
@@ -1388,6 +1390,7 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
         }
       }
       this->lastMotorCommand.ref_pos_enabled = 1;
+      this->lastMotorCommand.ref_vel_enabled = 0;
       this->lastMotorCommand.ref_vel_max_enabled = 0;
       this->lastMotorCommand.gain_pos_enabled = 0;
       this->lastMotorCommand.gain_vel_enabled = 0;
@@ -1482,6 +1485,7 @@ void HaptixGUIPlugin::OnHydra(ConstHydraPtr &_msg)
     this->lastMotorCommand.ref_pos[i] = resp.ref_pos(i);
   }
   this->lastMotorCommand.ref_pos_enabled = 1;
+  this->lastMotorCommand.ref_vel_enabled = 0;
   this->lastMotorCommand.ref_vel_max_enabled = 0;
   this->lastMotorCommand.gain_pos_enabled = 0;
   this->lastMotorCommand.gain_vel_enabled = 0;
