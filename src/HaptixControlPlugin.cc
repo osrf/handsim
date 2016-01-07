@@ -755,7 +755,7 @@ void HaptixControlPlugin::LoadHandControl()
     sensors::SensorPtr sensor = mgr->GetSensor(this->contactSensorNames[id]);
 
     sensors::ContactSensorPtr contactSensor =
-      boost::dynamic_pointer_cast<sensors::ContactSensor>(sensor);
+      std::dynamic_pointer_cast<sensors::ContactSensor>(sensor);
 
     if (contactSensor)
     {
@@ -791,7 +791,7 @@ void HaptixControlPlugin::LoadHandControl()
 
     // Get a pointer to the imu sensor
     sensors::ImuSensorPtr sensor =
-        boost::dynamic_pointer_cast<sensors::ImuSensor>
+        std::dynamic_pointer_cast<sensors::ImuSensor>
         (mgr->GetSensor(this->imuSensorNames[id]));
     if (sensor)
     {
@@ -1710,7 +1710,7 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
     return;
   }
   sensors::ContactSensorPtr contactSensor =
-    boost::dynamic_pointer_cast<sensors::ContactSensor>(
+    std::dynamic_pointer_cast<sensors::ContactSensor>(
     this->contactSensorInfos[_i].sensor);
 
   if (!contactSensor)
