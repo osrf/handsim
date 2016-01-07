@@ -321,7 +321,7 @@ TEST_F(SimApiTest, HxsSetCameraTransform)
   gazebo::common::Time::Sleep(2);
 
   gazebo::math::Pose outputPose =
-      gazebo::gui::get_active_camera()->WorldPose();
+      gazebo::gui::get_active_camera()->GetWorldPose();
   EXPECT_EQ(outputPose.pos, gazebo::math::Vector3(1, 2, 3));
 
   EXPECT_FLOAT_EQ(outputPose.rot.w, q.w);
@@ -940,7 +940,7 @@ TEST_F(SimApiTest, HxsReset)
     EXPECT_NEAR(modelPose.rot.z, initialPoses[model->GetName()].rot.z, 5e-2);
   }
   // Expect that the camera pose was set back to its initial value
-  gazebo::math::Pose currentCameraPose = camera->WorldPose();
+  gazebo::math::Pose currentCameraPose = camera->GetWorldPose();
   EXPECT_NEAR(currentCameraPose.pos.x, 1, 1e-6);
   EXPECT_NEAR(currentCameraPose.pos.y, 2, 1e-6);
   EXPECT_NEAR(currentCameraPose.pos.z, 3, 1e-6);

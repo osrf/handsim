@@ -155,7 +155,7 @@ void HaptixWorldPlugin::Load(gazebo::physics::WorldPtr _world,
       std::bind(&HaptixWorldPlugin::OnWorldUpdate, this));
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
-  this->ignNode.Advertise("haptix/arm_model_pose");
+  this->ignNode.Advertise<gazebo::msgs::Pose>("haptix/arm_model_pose");
 
   // Advertise haptix sim services.
   this->ignNode.Advertise("/haptix/gazebo/hxs_sim_info",

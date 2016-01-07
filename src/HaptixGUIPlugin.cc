@@ -408,7 +408,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->currentTaskId = 0;
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
-  this->ignNode.Advertise("haptix/arm_pose_inc");
+  this->ignNode.Advertise<gazebo::msgs::Pose>("haptix/arm_pose_inc");
 }
 
 /////////////////////////////////////////////////
@@ -427,7 +427,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   {
     userCamera->SetHFOV(ignition::math::Angle(IGN_DTOR(120)));
     userCamera->SetClipDist(0.001, 500);
-    this->initialCameraPose = userCamera->WorldPose();
+    this->initialCameraPose = userCamera->GetWorldPose();
   }
 
 

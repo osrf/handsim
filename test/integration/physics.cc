@@ -214,8 +214,8 @@ TEST_F(PhysicsTest, Test1)
   // send same command to arm base pose controller
   gazebo::msgs::Pose msg =
     gazebo::msgs::Convert(ignition::math::Pose3<double>(p, q));
-  this->ignNode.Advertise("/haptix/arm_pose_inc");
-  this->ignNode.Advertise("/haptix/arm_model_pose");
+  this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_pose_inc");
+  this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_model_pose");
   this->ignNode.Publish("/haptix/arm_model_pose", msg);
 
   hxsTransform woodT;
