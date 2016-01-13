@@ -755,7 +755,7 @@ void HaptixControlPlugin::LoadHandControl()
     sensors::SensorPtr sensor = mgr->GetSensor(this->contactSensorNames[id]);
 
     sensors::ContactSensorPtr contactSensor =
-      boost::dynamic_pointer_cast<sensors::ContactSensor>(sensor);
+      std::dynamic_pointer_cast<sensors::ContactSensor>(sensor);
 
     if (contactSensor)
     {
@@ -791,7 +791,7 @@ void HaptixControlPlugin::LoadHandControl()
 
     // Get a pointer to the imu sensor
     sensors::ImuSensorPtr sensor =
-        boost::dynamic_pointer_cast<sensors::ImuSensor>
+        std::dynamic_pointer_cast<sensors::ImuSensor>
         (mgr->GetSensor(this->imuSensorNames[id]));
     if (sensor)
     {
@@ -1710,7 +1710,7 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
     return;
   }
   sensors::ContactSensorPtr contactSensor =
-    boost::dynamic_pointer_cast<sensors::ContactSensor>(
+    std::dynamic_pointer_cast<sensors::ContactSensor>(
     this->contactSensorInfos[_i].sensor);
 
   if (!contactSensor)
@@ -1931,8 +1931,17 @@ void HaptixControlPlugin::GetRobotStateFromSim()
       motorPosition, motorVelocity, motorTorque);
     // write to struct
     this->robotState.set_motor_pos(i, motorPosition);
-    this->robotState.set_motor_vel(i, motorVelocity);
-    this->robotState.set_motor_torque(i, motorTorque);
+    if (this->model->GetName() == "luke_hand_description")
+    {
+      // HACK: mimic special case when using luke hand
+      this->robotState.set_motor_vel(i, 0);
+      this->robotState.set_motor_torque(i, 0);
+    }
+    else
+    {
+      this->robotState.set_motor_vel(i, motorVelocity);
+      this->robotState.set_motor_torque(i, motorTorque);
+    }
   }
 
   // fill robot state joint_pos and joint_vel
@@ -1943,8 +1952,16 @@ void HaptixControlPlugin::GetRobotStateFromSim()
     {
       this->robotState.set_joint_pos(count,
         this->simJoints[i]->GetAngle(0).Radian());
-      this->robotState.set_joint_vel(count,
-        this->simJoints[i]->GetVelocity(0));
+      if (this->model->GetName() == "luke_hand_description")
+      {
+        // HACK: mimic special case when using luke hand
+        this->robotState.set_joint_vel(count, 0);
+      }
+      else
+      {
+        this->robotState.set_joint_vel(count,
+          this->simJoints[i]->GetVelocity(0));
+      }
       ++count;
     }
   }
