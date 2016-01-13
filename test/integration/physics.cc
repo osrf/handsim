@@ -214,8 +214,8 @@ TEST_F(PhysicsTest, Test1)
   // send same command to arm base pose controller
   gazebo::msgs::Pose msg =
     gazebo::msgs::Convert(ignition::math::Pose3<double>(p, q));
-  this->ignNode.Advertise("/haptix/arm_pose_inc");
-  this->ignNode.Advertise("/haptix/arm_model_pose");
+  this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_pose_inc");
+  this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_model_pose");
   this->ignNode.Publish("/haptix/arm_model_pose", msg);
 
   hxsTransform woodT;
@@ -305,9 +305,9 @@ TEST_F(PhysicsTest, Test1)
   gazebo::sensors::SensorPtr thumbSensor =
     mgr->GetSensor("thumb3_contact_sensor");
   gazebo::sensors::ContactSensorPtr indexContactSensor =
-    boost::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(indexSensor);
+    std::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(indexSensor);
   gazebo::sensors::ContactSensorPtr thumbContactSensor =
-    boost::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(thumbSensor);
+    std::dynamic_pointer_cast<gazebo::sensors::ContactSensor>(thumbSensor);
 
   gazebo::physics::LinkPtr cube = world->GetModel("wood_cube_5cm")->GetLink();
 
