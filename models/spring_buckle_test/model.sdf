@@ -1,0 +1,92 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="spring_plates">
+    <link name="plate_bottom">
+      <inertial>
+        <mass>0.1</mass>
+        <ixx>0.0001</ixx>
+        <ixy>0.0000</ixy>
+        <ixz>0.0000</ixz>
+        <iyy>0.0001</iyy>
+        <iyz>0.0000</iyz>
+        <izz>0.0001</izz>
+      </inertial>
+      <visual name="plate_bottom_vis">
+        <pose>0 0 0.001 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.002</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="plate_bottom_col">
+        <pose>0 0 0.001 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.002</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+    <link name="plate_top">
+      <inertial>
+        <mass>0.1</mass>
+        <ixx>0.0001</ixx>
+        <ixy>0.0000</ixy>
+        <ixz>0.0000</ixz>
+        <iyy>0.0001</iyy>
+        <iyz>0.0000</iyz>
+        <izz>0.0001</izz>
+      </inertial>
+      <visual name="plate_top_vis">
+        <pose>0 0 0.051 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.002</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="plate_top_col">
+        <pose>0 0 0.051 0 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.02</radius>
+            <length>0.002</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="joint_1" type="slider">
+      <parent>plate_bottom</parent>
+      <child>plate_top</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+    <!-- pin joint for lower link, at origin of child link -->
+    <joint name="lower_joint" type="revolute">
+      <parent>upper_link</parent>
+      <child>lower_link</child>
+      <axis>
+        <xyz>1.0 0 0</xyz>
+        <use_parent_model_frame>true</use_parent_model_frame>
+      </axis>
+    </joint>
+  </model>
+</sdf>
