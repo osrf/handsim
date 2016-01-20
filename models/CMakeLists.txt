@@ -3,6 +3,7 @@ set (folders
   mpl_haptix_left_forearm
   spring_buckle_test
   spring_buckle_test_2
+  spring_buckle_test_3
 )
 
 foreach (folder ${folders})
