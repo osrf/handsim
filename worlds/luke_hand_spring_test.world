@@ -69,21 +69,21 @@
           <task id="dexterity_1" name="Spring 1">
             <enabled>1</enabled>
             <initial>1</initial>
-            <icon>file://media/gui/arat/arat_icons/grasp_1.jpg</icon>
+            <icon>file://media/gui/arat/arat_icons/spring.jpg</icon>
             <instructions>
               Instructions: compress the spring.
             </instructions>
           </task>
           <task id="dexterity_2" name="Spring 2">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/grasp_1.jpg</icon>
+            <icon>file://media/gui/arat/arat_icons/spring.jpg</icon>
             <instructions>
               Instructions: compress the spring.
             </instructions>
           </task>
           <task id="dexterity_3" name="Spring 3">
             <enabled>1</enabled>
-            <icon>file://media/gui/arat/arat_icons/grasp_1.jpg</icon>
+            <icon>file://media/gui/arat/arat_icons/spring.jpg</icon>
             <instructions>
               Instructions: compress the spring.
             </instructions>
