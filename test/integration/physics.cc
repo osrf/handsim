@@ -360,8 +360,8 @@ TEST_F(PhysicsTest, Test1)
     // stiffness results from more precise forces from physics engine.
 
     // get contact depth and stiffness from physics engine
-    gazebo::msgs::Contacts indexContacts = indexContactSensor->GetContacts();
-    gazebo::msgs::Contacts thumbContacts = thumbContactSensor->GetContacts();
+    gazebo::msgs::Contacts indexContacts = indexContactSensor->Contacts();
+    gazebo::msgs::Contacts thumbContacts = thumbContactSensor->Contacts();
     gazebo::physics::LinkPtr indexLink =
       world->GetModel("mpl_haptix_right_forearm")->GetLink("index3");
     gazebo::physics::LinkPtr thumbLink =
@@ -468,8 +468,8 @@ TEST_F(PhysicsTest, Test1)
     // stiffness results from more precise forces from physics engine.
 
     // get contact depth and stiffness from physics engine
-    gazebo::msgs::Contacts indexContacts = indexContactSensor->GetContacts();
-    gazebo::msgs::Contacts thumbContacts = thumbContactSensor->GetContacts();
+    gazebo::msgs::Contacts indexContacts = indexContactSensor->Contacts();
+    gazebo::msgs::Contacts thumbContacts = thumbContactSensor->Contacts();
     gazebo::physics::LinkPtr indexLink =
       world->GetModel("mpl_haptix_right_forearm")->GetLink("index3");
     gazebo::physics::LinkPtr thumbLink =
