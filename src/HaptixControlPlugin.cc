@@ -1714,11 +1714,11 @@ void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 
   if (!contactSensor)
   {
-    gzerr << "sensor [" << this->contactSensorInfos[_i].sensor->GetName()
+    gzerr << "sensor [" << this->contactSensorInfos[_i].sensor->Name()
           << "] is not a ContactSensor.\n";
     return;
   }
-  msgs::Contacts contacts = contactSensor->GetContacts();
+  msgs::Contacts contacts = contactSensor->Contacts();
   // contact sensor report contact between pairs of bodies
 
   // we must start at the end of the contacts.contact() array,

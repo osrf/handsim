@@ -1674,7 +1674,7 @@ void HaptixWorldPlugin::HaptixAddConstraintCallback(
         std::string jointName;
         std::string parentName;
         std::string childName;
-        std::string type;
+        std::string jointType;
 
         if (jointSDF->HasAttribute("name"))
           jointName = jointSDF->GetAttribute("name")->GetAsString();
@@ -1692,7 +1692,7 @@ void HaptixWorldPlugin::HaptixAddConstraintCallback(
           return hxERROR;
 
         if (jointSDF->HasAttribute("type"))
-          type = jointSDF->GetAttribute("type")->GetAsString();
+          jointType = jointSDF->GetAttribute("type")->GetAsString();
         else
           return hxERROR;
 
@@ -1714,7 +1714,7 @@ void HaptixWorldPlugin::HaptixAddConstraintCallback(
           return hxERROR;
 
         gazebo::physics::JointPtr joint =
-          model->CreateJoint(jointName, type, parentLink, childLink);
+          model->CreateJoint(jointName, jointType, parentLink, childLink);
         joint->Load(jointSDF);
         joint->Init();
         return hxOK;
