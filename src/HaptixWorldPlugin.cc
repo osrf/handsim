@@ -1257,7 +1257,7 @@ void HaptixWorldPlugin::HaptixIsLoggingCallback(
     gzerr << "Log recorder was NULL" << std::endl;
     return;
   }
-  _rep.set_data(gazebo::util::LogRecord::Instance()->GetRunning());
+  _rep.set_data(gazebo::util::LogRecord::Instance()->Running());
   _result = true;
 }
 
