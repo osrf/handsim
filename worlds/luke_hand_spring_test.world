@@ -515,9 +515,9 @@
 
       <initial_arrangement>dexterity_1</initial_arrangement>
       <arrangement name="demo_practice">
-        <pose model="spring_buckle_test">   0.000 -0.265 1.020 0 0 0</pose>
-        <pose model="spring_buckle_test_2"> 0.000 -0.265 1.020 0 0 0</pose>
-        <pose model="spring_buckle_test_3"> 0.000 -0.265 1.020 0 0 0</pose>
+        <pose model="spring_buckle_test">   0.079 -0.421 1.200 -0.707 -0.586 -0.831</pose>
+        <pose model="spring_buckle_test_2"> 0.079 -0.371 1.200 -0.707 -0.586 -0.831</pose>
+        <pose model="spring_buckle_test_3"> 0.079 -0.321 1.200 -0.707 -0.586 -0.831</pose>
         <pose model="wood_cube_10cm">      -0.500 -0.265 1.020 0 0 0</pose>
         <pose model="round_tin_base">       0.500 -0.274 1.036 0 0 0</pose>
         <pose model="round_tin_top">        0.217  0.040 1.393 0 0 0 </pose>
@@ -526,13 +526,13 @@
         <pose model="cup_1">               -0.100 -0.274 1.034 0 0 0</pose>
       </arrangement>
       <arrangement name="dexterity_1">
-        <pose model="spring_buckle_test">   0.217 -0.235 1.24 0 0 0</pose>
+        <pose model="spring_buckle_test">   0.079 -0.421 1.200 -0.707 -0.586 -0.831</pose>
       </arrangement>
       <arrangement name="dexterity_2">
-        <pose model="spring_buckle_test_2"> 0.217 -0.235 1.24 0 0 0</pose>
+        <pose model="spring_buckle_test_2"> 0.079 -0.421 1.200 -0.707 -0.586 -0.831</pose>
       </arrangement>
       <arrangement name="dexterity_3">
-        <pose model="spring_buckle_test_3"> 0.217 -0.235 1.24 0 0 0</pose>
+        <pose model="spring_buckle_test_3"> 0.079 -0.421 1.200 -0.707 -0.586 -0.831</pose>
       </arrangement>
       <arrangement name="grasp_1">
         <pose model="wood_cube_10cm"> 0.217 -0.265 1.04 0 0 0</pose>
