@@ -45,6 +45,12 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
   this->maxHeight = 850;
+  this->springCompressed = false;
+  this->springBuckled = false;
+  this->springCompressedStartTime = gazebo::common::Time(0);
+
+  // HACK: default duration for successful trial hardcoded to 3 seconds
+  this->springCompressedPassDuration = gazebo::common::Time(3);
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -416,6 +422,7 @@ HaptixGUIPlugin::~HaptixGUIPlugin()
 {
   this->quit = true;
   this->pollSensorsThread.join();
+  this->scoringThread.join();
 }
 
 /////////////////////////////////////////////////
@@ -452,6 +459,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->pauseSub =
     this->node->Subscribe("~/motion_tracking/pause_response",
       &HaptixGUIPlugin::OnPauseRequest, this);
+
+  this->simEventsSub =
+    this->node->Subscribe("~/sim_events",
+      &HaptixGUIPlugin::OnSimEvents, this);
 
   this->defaultContactSize = _elem->Get<gazebo::math::Vector2d>("default_size");
 
@@ -696,6 +707,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 
   this->pollSensorsThread = boost::thread(
       std::bind(&HaptixGUIPlugin::PollSensors, this));
+
+  this->scoringThread = boost::thread(
+      std::bind(&HaptixGUIPlugin::ScoringUpdate, this));
 
   this->optitrackUpdateTime = gazebo::common::Time::GetWallTime();
 
@@ -1020,6 +1034,34 @@ void HaptixGUIPlugin::PollSensors()
         gzerr << "hx_read_sensors(): Request error." << std::endl;
       }
       this->UpdateSensorContact();
+    }
+    usleep(1000);  // 1kHz max
+  }
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::ScoringUpdate()
+{
+  while(!quit)
+  {
+    if (this->hxInitialized)
+    {
+      if (this->springCompressed && !this->springBuckled)
+      {
+        if ((gazebo::common::Time::GetWallTime() - this->springCompressedStartTime)
+           > this->springCompressedPassDuration)
+        {
+          gzerr << "Green!\n";
+        }
+        else
+        {
+          gzerr << "Yellow!\n";
+        }
+      }
+      else
+      {
+        gzerr << "Red!\n";
+      }
     }
     usleep(1000);  // 1kHz max
   }
@@ -1442,6 +1484,61 @@ void HaptixGUIPlugin::OnPauseRequest(ConstIntPtr &_msg)
   else
   {
     gzwarn << "Got unexpected message data in OnPauseRequest";
+  }
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnSimEvents(ConstSimEventPtr &_msg)
+{
+  if (_msg->name() == "compressed_bottom")
+  {
+    if (_msg->data().find("out_of_range") != std::string::npos)
+    {
+      this->springCompressed = false;
+    }
+    else if (_msg->data().find("in_range") != std::string::npos)
+    {
+      this->springCompressed = true;
+    }
+    else
+    {
+      gzerr << "invalid message from sim event:\n" << _msg->data() << "\n";
+    }
+  }
+  else if (_msg->name() == "buckled_x")
+  {
+    if (_msg->data().find("out_of_range") != std::string::npos)
+    {
+      this->springBuckled = true;
+    }
+    else if (_msg->data().find("in_range") != std::string::npos)
+    {
+      this->springBuckled = false;
+    }
+    else
+    {
+      gzerr << "invalid message from sim event:\n" << _msg->data() << "\n";
+    }
+  }
+  else if (_msg->name() == "buckled_y")
+  {
+    if (_msg->data().find("out_of_range") != std::string::npos)
+    {
+      this->springBuckled = true;
+    }
+    else if (_msg->data().find("in_range") != std::string::npos)
+    {
+      this->springBuckled = false;
+    }
+    else
+    {
+      gzerr << "invalid message from sim event:\n" << _msg->data() << "\n";
+    }
+  }
+
+  if (this->springCompressed && !this->springBuckled)
+  {
+    this->springCompressedStartTime = gazebo::common::Time::GetWallTime();
   }
 }
 

@@ -148,8 +148,15 @@ namespace haptix_gazebo_plugins
     /// \param[in] _msg pause state
     private: void OnPauseRequest(ConstIntPtr &_msg);
 
+    /// \brief Callback for subscriber to pause response
+    /// \param[in] _msg sim events
+    private: void OnSimEvents(ConstSimEventPtr &_msg);
+
     /// \brief start a thread to poll contact sensor data
     private: void PollSensors();
+
+    /// \brief check and update scoring stuff
+    private: void ScoringUpdate();
 
     /// \brief Poll network for OptitrackBridge status
     private: void PollTracking();
@@ -306,6 +313,9 @@ namespace haptix_gazebo_plugins
     /// \brief Subscriber to pause status
     private: gazebo::transport::SubscriberPtr pauseSub;
 
+    /// \brief Subscriber to sim events for scoring
+    private: gazebo::transport::SubscriberPtr simEventsSub;
+
     /// \brief was pausing motion tracking successful?
     private: bool trackingPaused;
 
@@ -314,6 +324,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief start a thread to poll contact sensor data
     private: boost::thread pollSensorsThread;
+
+    /// \brief start a thread to poll contact sensor data
+    private: boost::thread scoringThread;
 
     /// \brief Motion capture status indicator.
     private: QLabel *mocapStatusIndicator;
@@ -350,6 +363,12 @@ namespace haptix_gazebo_plugins
 
     /// \brief GUI maximum height.
     private: int maxHeight;
+
+    /// \brief spring buckling test
+    private: bool springCompressed;
+    private: bool springBuckled;
+    private: gazebo::common::Time springCompressedStartTime;
+    private: gazebo::common::Time springCompressedPassDuration;
   };
 }
 #endif
