@@ -55,7 +55,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
   {
-    this->renderWidget = mainWindow->GetRenderWidget();
+    this->renderWidget = mainWindow->RenderWidget();
     this->renderWidget->installEventFilter(this);
   }
   this->move(0, 0);
