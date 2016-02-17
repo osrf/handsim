@@ -1048,40 +1048,43 @@ void HaptixGUIPlugin::ScoringUpdate()
     {
       if (this->springCompressed && !this->springBuckled)
       {
-        if ((gazebo::common::Time::GetWallTime() -
-             this->springCompressedStartTime)
-           > this->springCompressedPassDuration)
+        gazebo::common::Time compressDuration =
+          gazebo::common::Time::GetWallTime() - this->springCompressedStartTime;
+        if (compressDuration > this->springCompressedPassDuration)
         {
           // success! spring compressed correctly for 3 seconds.
           gzdbg << "task completed!\n";
         }
         else
         {
-          if (!this->springCompressed)
-          {
-            gzdbg << "spring not compressed, try squeezing it [some more]!\n";
-          }
-          else if (this->springBuckled)
-          {
-            gzdbg << "spring buckled, try to keep it straight!\n";
-          }
-          else
-          {
-            // spring compressed correctly, just a few more seconds...
-            gzdbg << "great work, please hold it for a few more seconds!\n";
-          }
+          // spring compressed correctly, just a few more seconds...
+          gzdbg << "compressed, great work! Please hold it for"
+                << " [" << (this->springCompressedPassDuration -
+                            compressDuration).Double()
+                << "] more seconds!\n";
         }
       }
       else
       {
-        // user has not started compressing the spring
-        // or the spring has bucked beyond tolerance.
-        // gzerr << "Red!\n";
-        // gzerr << "compressed [" << this->springCompressed
-        //       << "] buckled [" << this->springBuckled << "]\n";
+        if (!this->springCompressed)
+        {
+          gzdbg << "spring not compressed, try squeezing it [some more]!\n";
+        }
+        else if (this->springBuckled)
+        {
+          gzdbg << "spring buckled, try to keep it straight!\n";
+        }
+        else
+        {
+          // user has not started compressing the spring
+          // or the spring has bucked beyond tolerance.
+          // gzerr << "Red!\n";
+          // gzerr << "compressed [" << this->springCompressed
+          //       << "] buckled [" << this->springBuckled << "]\n";
+        }
       }
     }
-    usleep(1000);  // 1kHz max
+    usleep(100000);  // 10Hz max on scoring check
   }
 }
 

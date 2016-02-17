@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.5">
-  <model name="spring_buckle_test">
+  <model name="spring_buckle_test_1">
     <link name="plate_bottom">
       <gravity>0</gravity>
       <velocity_decay>
