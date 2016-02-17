@@ -461,7 +461,7 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       &HaptixGUIPlugin::OnPauseRequest, this);
 
   this->simEventsSub =
-    this->node->Subscribe("~/sim_events",
+    this->node->Subscribe("/gazebo/sim_events",
       &HaptixGUIPlugin::OnSimEvents, this);
 
   this->defaultContactSize = _elem->Get<gazebo::math::Vector2d>("default_size");
@@ -1048,19 +1048,37 @@ void HaptixGUIPlugin::ScoringUpdate()
     {
       if (this->springCompressed && !this->springBuckled)
       {
-        if ((gazebo::common::Time::GetWallTime() - this->springCompressedStartTime)
+        if ((gazebo::common::Time::GetWallTime() -
+             this->springCompressedStartTime)
            > this->springCompressedPassDuration)
         {
-          gzerr << "Green!\n";
+          // success! spring compressed correctly for 3 seconds.
+          gzdbg << "task completed!\n";
         }
         else
         {
-          gzerr << "Yellow!\n";
+          if (!this->springCompressed)
+          {
+            gzdbg << "spring not compressed, try squeezing it [some more]!\n";
+          }
+          else if (this->springBuckled)
+          {
+            gzdbg << "spring buckled, try to keep it straight!\n";
+          }
+          else
+          {
+            // spring compressed correctly, just a few more seconds...
+            gzdbg << "great work, please hold it for a few more seconds!\n";
+          }
         }
       }
       else
       {
-        gzerr << "Red!\n";
+        // user has not started compressing the spring
+        // or the spring has bucked beyond tolerance.
+        // gzerr << "Red!\n";
+        // gzerr << "compressed [" << this->springCompressed
+        //       << "] buckled [" << this->springBuckled << "]\n";
       }
     }
     usleep(1000);  // 1kHz max
@@ -1490,6 +1508,9 @@ void HaptixGUIPlugin::OnPauseRequest(ConstIntPtr &_msg)
 //////////////////////////////////////////////////
 void HaptixGUIPlugin::OnSimEvents(ConstSimEventPtr &_msg)
 {
+  gzdbg << "sim event name [" << _msg->name()
+        << "] data [" << _msg->data()
+        << "]\n";
   if (_msg->name() == "compressed_bottom")
   {
     if (_msg->data().find("out_of_range") != std::string::npos)
