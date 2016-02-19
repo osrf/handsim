@@ -533,6 +533,13 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
     }
   }
 
+  this->springScoreItem[0] = new QGraphicsEllipseItem(270, 370, 20, 20);
+  this->springScoreItem[1] = new QGraphicsEllipseItem(300, 370, 20, 20);
+  this->springScoreItem[2] = new QGraphicsEllipseItem(330, 370, 20, 20);
+  this->handScene->addItem(this->springScoreItem[0]);
+  this->handScene->addItem(this->springScoreItem[1]);
+  this->handScene->addItem(this->springScoreItem[2]);
+
   // Draw contact pads and force gauge
   {
     float scaleXPos = 365;
@@ -1046,41 +1053,82 @@ void HaptixGUIPlugin::ScoringUpdate()
   {
     if (this->hxInitialized)
     {
-      if (this->springCompressed && !this->springBuckled)
+      // hardcoded, tasks 0, 1, 2 are the spring tests
+      // hide if task id is greater than 2
+      if (this->currentTaskId > 2)
       {
-        gazebo::common::Time compressDuration =
-          gazebo::common::Time::GetWallTime() - this->springCompressedStartTime;
-        if (compressDuration > this->springCompressedPassDuration)
-        {
-          // success! spring compressed correctly for 3 seconds.
-          gzdbg << "task completed!\n";
-        }
-        else
-        {
-          // spring compressed correctly, just a few more seconds...
-          gzdbg << "compressed, great work! Please hold it for"
-                << " [" << (this->springCompressedPassDuration -
-                            compressDuration).Double()
-                << "] more seconds!\n";
-        }
+        this->springScoreItem[0]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+        this->springScoreItem[1]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+        this->springScoreItem[2]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+        this->springScoreItem[0]->setPen(QPen(QColor(153, 255, 0, 0)));
+        this->springScoreItem[1]->setPen(QPen(QColor(153, 255, 0, 0)));
+        this->springScoreItem[2]->setPen(QPen(QColor(153, 255, 0, 0)));
       }
       else
       {
-        if (!this->springCompressed)
+        if (this->springCompressed && !this->springBuckled)
         {
-          gzdbg << "spring not compressed, try squeezing it [some more]!\n";
-        }
-        else if (this->springBuckled)
-        {
-          gzdbg << "spring buckled, try to keep it straight!\n";
+          gazebo::common::Time compressDuration =
+            gazebo::common::Time::GetWallTime() -
+            this->springCompressedStartTime;
+          if (compressDuration > this->springCompressedPassDuration)
+          {
+            // success! spring compressed correctly for 3 seconds.
+            gzdbg << "task completed!\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+          }
+          else
+          {
+            double timeLeft = (this->springCompressedPassDuration -
+                               compressDuration).Double();
+            // spring compressed correctly, just a few more seconds...
+            gzdbg << "compressed, great work! Please hold it for"
+                  << " [" << timeLeft
+                  << "] more seconds!\n";
+            this->springScoreItem[0]->setBrush(
+                QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[1]->setBrush(
+                QBrush(QColor(static_cast<int>(
+                255*(timeLeft/this->springCompressedPassDuration.Double())),
+                255, 0, 255)));
+            this->springScoreItem[2]->setBrush(
+                QBrush(QColor(static_cast<int>(
+                255*(timeLeft/this->springCompressedPassDuration.Double())),
+                255, 0, 0)));
+          }
         }
         else
         {
-          // user has not started compressing the spring
-          // or the spring has bucked beyond tolerance.
-          // gzerr << "Red!\n";
-          // gzerr << "compressed [" << this->springCompressed
-          //       << "] buckled [" << this->springBuckled << "]\n";
+          if (!this->springCompressed)
+          {
+            gzdbg << "spring not compressed, try squeezing it [some more]!\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(255, 0, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+          }
+          else if (this->springBuckled)
+          {
+            gzdbg << "spring buckled, try to keep it straight!\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(0, 0, 255, 255)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(0, 0, 255, 0)));
+          }
+          else
+          {
+            // user has not started compressing the spring
+            // or the spring has bucked beyond tolerance.
+            // gzerr << "Red!\n";
+            // gzerr << "compressed [" << this->springCompressed
+            //       << "] buckled [" << this->springBuckled << "]\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(255, 0, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+            this->springScoreItem[0]->setPen(QPen(QColor(153, 255, 0, 255)));
+            this->springScoreItem[1]->setPen(QPen(QColor(153, 255, 0, 255)));
+            this->springScoreItem[2]->setPen(QPen(QColor(153, 255, 0, 255)));
+          }
         }
       }
     }

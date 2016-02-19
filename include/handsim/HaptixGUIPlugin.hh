@@ -218,6 +218,9 @@ namespace haptix_gazebo_plugins
     private: std::map<std::string, QGraphicsRectItem*>
              contactGraphicsItems;
 
+    /// \brief Contact force visualization items.
+    private: QGraphicsEllipseItem *springScoreItem[3];
+
     /// \brief initial camera pose
     private: gazebo::math::Pose initialCameraPose;
 
