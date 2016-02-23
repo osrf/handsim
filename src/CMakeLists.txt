@@ -52,6 +52,16 @@ add_library(HaptixControlPlugin SHARED HaptixControlPlugin.cc
 
 add_library(HaptixWorldPlugin SHARED HaptixWorldPlugin.cc WrenchHelper.cc)
 
+add_library(TactorsPlugin SHARED TactorsPlugin.cc)
+target_link_libraries(TactorsPlugin ${HAPTIX-COMM_LIBRARIES}
+    ${IGNITION-TRANSPORT_LIBRARIES} ${PROTOBUF_LIBRARY})
+
+# OLD CODE?
+# additional library dependencies
+# add_dependencies(HaptixControlPlugin
+#   gazebo_msgs
+# )
+
 # library dependencies
 target_link_libraries(HaptixControlPlugin
   ${GAZEBO_LIBRARIES}
@@ -68,10 +78,10 @@ target_link_libraries(HaptixWorldPlugin
 )
 
 # below adds -std=c++11, needed to compile against ign-transport
-set_target_properties(HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin PROPERTIES
+set_target_properties(HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin TactorsPlugin PROPERTIES
   COMPILE_FLAGS ${IGNITION-TRANSPORT_CXX_FLAGS})
 
-install (TARGETS HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin DESTINATION
+install (TARGETS HaptixControlPlugin HaptixGUIPlugin HaptixWorldPlugin TactorsPlugin DESTINATION
   ${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR})
 
 handsim_build_tests(${gtest_sources})

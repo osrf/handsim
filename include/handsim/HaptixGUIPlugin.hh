@@ -29,6 +29,7 @@
 
 #include <ignition/transport.hh>
 #include <haptix/comm/haptix.h>
+#include <haptix/comm/haptix_sim.h>
 #include <haptix/comm/msg/hxCommand.pb.h>
 #include <haptix/comm/msg/hxGrasp.pb.h>
 
@@ -105,7 +106,7 @@ namespace haptix_gazebo_plugins
     private: void PublishTimerMessage(const std::string &_msg) const;
 
     /// \brief Callback triggered when the next button is clicked
-    private slots: void OnNextClicked();
+    private slots: void OnResetArmClicked();
 
     /// \brief Callback triggered when the reset all button is clicked
     private slots: void OnResetClicked();
@@ -128,6 +129,12 @@ namespace haptix_gazebo_plugins
     /// \brief Callback motion capture status has changed.
     /// \param[in] _status 0: No data; 1: On; 2: Paused.
     private slots: void OnMocapStatusChanged(int _status);
+
+    /// \brief Callback when reset models has been triggered by the user.
+    private slots: void OnResetModels();
+
+    /// \brief Callback when restart timer has been triggered by the user.
+    private slots: void OnRestartTimer();
 
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
@@ -259,8 +266,10 @@ namespace haptix_gazebo_plugins
     /// \brief Publisher that controls the clock
     private: gazebo::transport::PublisherPtr timerPub;
 
-    /// \brief Next task button
-    private: QPushButton *nextButton;
+    private: gazebo::transport::PublisherPtr tactorsPub;
+
+    /// \brief Reset arm button
+    private: QPushButton *resetArmButton;
 
     /// \brief Reset scene button
     private: QPushButton *resetSceneButton;
@@ -301,7 +310,10 @@ namespace haptix_gazebo_plugins
     /// \brief The number of initial degrees of freedom that are in the wrist
     private: unsigned int numWristMotors;
 
-    /// \brief Starting pose of the arm.
+    /// \brief actual starting pose of the arm.
+    private: gazebo::math::Pose initialArmPose;
+
+    /// \brief fake starting pose of the arm.
     private: gazebo::math::Pose armStartPose;
 
     /// \brief When true, move in the arm's local coordinate frame.

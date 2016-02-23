@@ -243,6 +243,20 @@ namespace gazebo
     /// \brief: target position for the arm base link in world frame.
     private: math::Pose targetBaseLinkPose;
 
+    /// \brief: Demo finger control with Polhemus
+    /// \brief: target normalized grasp for the fingers (TODO: better name)
+    private: double targetHandDist;
+
+    /// \brief: Demo finger control with Polhemus
+    /// \brief: Previous distance which was actually used.
+    private: double previousHandDist;
+
+    /// \brief: Demo finger control with Polhemus
+    private: std::string currentPolhemusGrasp;
+    private: transport::SubscriberPtr arrangeSub;
+    private: void OnArrange(ConstGzStringPtr &_arrangement);
+    private: std::string arrangement;
+
     /// \brief: from spacenav target pose to the arm base link
     private: math::Pose baseLinktoSpacenavPose;
 
@@ -346,11 +360,18 @@ namespace gazebo
     /// \brief Pose of the polhemus source in the world frame.
     private: math::Pose sourceWorldPose;
 
+    /// rotation from polhemus source to arm marker
+    // private: math::Quaternion polhemusArmOffsetRotation;   // OLD CODE?
+
     /// \brief used to offset polhemus source for arm sensor during calibration
     private: math::Pose sourceWorldPoseArmOffset;
 
     /// \brief used to offset polhemus source for head sensor during calibration
     private: math::Pose sourceWorldPoseHeadOffset;
+
+    /// \brief: Demo finger control with Polhemus
+    /// \brief used to offset polhemus source for hand sensor during calibration
+    private: double sourceDistHandOffset;
 
     /// \brief Transform from polhemus sensor orientation to base link frame.
     private: math::Pose baseLinkToArmSensor;
@@ -624,6 +645,9 @@ namespace gazebo
 
     /// \brief Low-pass filter for head orientation (reduces jitter)
     private: gazebo::math::OnePoleQuaternion headOriFilter;
+
+    /// \brief Low-pass filter for tower demo with polhemus finger grasp
+    private: gazebo::math::OnePole<double> polhemusGraspFilter;
 
     /// \brief Low-pass filter for torque transmission
     private: gazebo::math::OnePole<double> torqueFilter;

@@ -83,6 +83,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       gazebo::gui::getINIProperty<int>("rendering.stereo", 0));
   connect(stereoCheck, SIGNAL(stateChanged(int)), this,
       SLOT(OnStereoCheck(int)));
+  // OLD CODE?
+  // gazebo::gui::get_active_camera()->EnableStereo(0);
 
   // Separator
   QFrame *settingsSeparator = new QFrame(this);
@@ -191,8 +193,12 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Top bar layout
   QHBoxLayout *topBarLayout = new QHBoxLayout();
   topBarLayout->setContentsMargins(10, 0, 0, 0);
+  // DISABLE FOR DEMO?
   topBarLayout->addWidget(this->mocapStatusIndicator);
   topBarLayout->addWidget(this->settingsButton);
+
+  // DEMO HACK?
+  // topBarLayout->setAlignment(this->settingsButton, Qt::AlignRight);
 
   // Top bar widget
   this->topBarFrame = new QFrame();
@@ -310,7 +316,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   resetButton->installEventFilter(this);
   resetButton->setFocusPolicy(Qt::NoFocus);
   resetButton->setText(QString("Reset All"));
-  resetButton->setToolTip("Reset the view, arm and models");
+  resetButton->setShortcut(tr("F"));
+  resetButton->setToolTip("Reset the view, arm and models (F)");
   resetButton->setStyleSheet(buttonsStyle);
   resetButton->setMaximumWidth(120);
   connect(resetButton, SIGNAL(clicked()), this, SLOT(OnResetClicked()));
@@ -320,7 +327,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->resetSceneButton->installEventFilter(this);
   this->resetSceneButton->setFocusPolicy(Qt::NoFocus);
   this->resetSceneButton->setText(QString("Reset Scene"));
-  this->resetSceneButton->setToolTip("Reset all models in the scene");
+  this->resetSceneButton->setToolTip("Reset all models in the scene (G)");
+  this->resetSceneButton->setShortcut(tr("G"));
   this->resetSceneButton->setStyleSheet(buttonsStyle);
   this->resetSceneButton->setMaximumWidth(120);
   connect(this->resetSceneButton, SIGNAL(clicked()), this,
@@ -331,7 +339,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->nextButton->installEventFilter(this);
   this->nextButton->setFocusPolicy(Qt::NoFocus);
   this->nextButton->setText(QString("Next Test"));
-  this->nextButton->setToolTip("Next test");
+  this->nextButton->setToolTip("Next test (H)");
+  this->nextButton->setShortcut(tr("H"));
   this->nextButton->setStyleSheet(buttonsStyle);
   this->nextButton->setMaximumWidth(120);
   connect(this->nextButton, SIGNAL(clicked()), this, SLOT(OnNextClicked()));
@@ -406,6 +415,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       this->node->Advertise<gazebo::msgs::Int>(
       "~/motion_tracking/viewpoint_rotations");
 
+  this->tactorsPub = this->node->Advertise<gazebo::msgs::Int>("~/tactors_running");
+
   // Connect to the PreRender Gazebo signal
   this->connections.push_back(gazebo::event::Events::ConnectPreRender(
                               boost::bind(&HaptixGUIPlugin::PreRender, this)));
@@ -415,6 +426,12 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
   this->ignNode.Advertise<gazebo::msgs::Pose>("haptix/arm_pose_inc");
+
+  // Add shortcuts
+  QShortcut *restartTimer = new QShortcut(QKeySequence("F1"), this);
+  QObject::connect(restartTimer, SIGNAL(activated()), this,
+      SLOT(OnRestartTimer()));
+  this->ignNode.Advertise("haptix/arm_model_pose");
 }
 
 /////////////////////////////////////////////////
@@ -437,6 +454,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
     this->initialCameraPose = userCamera->WorldPose();
   }
 
+  // Start in full screen
+  // gazebo::gui::Events::fullScreen(true);
+  // gazebo::gui::Events::showToolbars(false);
 
   // Hide the scene tree.
   gazebo::gui::Events::leftPaneVisibility(false);
@@ -754,9 +774,29 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     this->lastMotorCommand.ref_pos_enabled = 1;
     //::hxSensor sensor;
-    if(::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
+    if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
+      return;
+    }
+
+    // initialArmPose - DEMO ONLY or OLD CODE?
+    hxsTransform armPose;
+    // Get the initial arm pose
+    std::string modelName = "mpl_haptix_" + handSide + "_forearm";
+    if (::hxs_model_transform(modelName.c_str(), &armPose) == ::hxOK)
+    {
+      this->initialArmPose.pos.x = armPose.pos.x;
+      this->initialArmPose.pos.y = armPose.pos.y;
+      this->initialArmPose.pos.z = armPose.pos.z;
+      this->initialArmPose.rot.w = armPose.orient.w;
+      this->initialArmPose.rot.y = armPose.orient.y;
+      this->initialArmPose.rot.z = armPose.orient.z;
+      this->initialArmPose.rot.x = armPose.orient.x;
+    }
+    else
+    {
+      gzerr << "hxs_model_transform(): Request error.\n" << std::endl;
       return;
     }
 
@@ -884,6 +924,18 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       bool enabled = task->Get<bool>("enabled");
 
       // Create a new button for the task
+      // FIXME: Hack to divide long names in 2 lines, tailored for current names
+      bool longName = false;
+      if (name.length() > 8)
+      {
+        int idx = name.find(" ");
+        if (idx)
+        {
+          name = name.substr(0, idx) + "\n" + name.substr(idx + 1);
+          longName = true;
+        }
+      }
+
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
       taskButton->installEventFilter(this);
       taskButton->setFocusPolicy(Qt::NoFocus);
@@ -910,8 +962,16 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
         taskButton->setIcon(QIcon(iconPixmap));
         taskButton->setIconSize(QSize(60, 54));
-        taskButton->setMinimumSize(80, 80);
-        taskButton->setMaximumSize(100, 80);
+        if (longName)
+        {
+          taskButton->setMinimumSize(80, 100);
+          taskButton->setMaximumSize(100, 100);
+        }
+        else
+        {
+          taskButton->setMinimumSize(80, 80);
+          taskButton->setMaximumSize(100, 80);
+        }
       }
 
       this->taskList[taskIndex] = taskButton;
@@ -944,6 +1004,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 void HaptixGUIPlugin::OnTaskSent(const int _id)
 {
   // reset the clock when a new task is selected
+  // Might need to comment out below for Towers of Hanoi demo
   this->PublishTimerMessage("reset");
 
   // Show the instructions to the user
@@ -957,6 +1018,37 @@ void HaptixGUIPlugin::OnTaskSent(const int _id)
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
 }
+
+/* not used any more, check PRs
+////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetArmClicked()
+{
+  gazebo::msgs::Pose msg = gazebo::msgs::Convert(this->initialArmPose);
+  this->ignNode.Publish("haptix/arm_model_pose", msg);
+
+  // Also reset wrist and finger posture
+  memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
+  this->lastMotorCommand.ref_pos_enabled = 1;
+  //::hxSensor sensor;
+  if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
+    gzerr << "hx_update(): Request error.\n" << std::endl;
+
+  // And zero the grasp, if any.
+  if (this->lastGraspRequest.grasps_size() > 0)
+  {
+    this->lastGraspRequest.mutable_grasps(0)->set_grasp_value(0.0);
+    haptix::comm::msgs::hxCommand resp;
+    bool result;
+    if(!this->ignNode.Request("haptix/gazebo/Grasp",
+                              this->lastGraspRequest,
+                              1000,
+                              resp,
+                              result) || !result)
+    {
+      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
+    }
+  }
+}*/
 
 ////////////////////////////////////////////////
 void HaptixGUIPlugin::OnNextClicked()
@@ -1003,6 +1095,7 @@ void HaptixGUIPlugin::PublishTaskMessage(const std::string &_taskId) const
 void HaptixGUIPlugin::OnResetClicked()
 {
   // Signal to the TimerPlugin to reset the clock
+  // DEMO Might need to comment out for demo
   this->PublishTimerMessage("reset");
 
   // Reset models
@@ -1019,12 +1112,14 @@ void HaptixGUIPlugin::OnResetClicked()
 void HaptixGUIPlugin::OnResetSceneClicked()
 {
   // Signal to the TimerPlugin to reset the clock
+  // DEMO Might need to comment out for demo
   this->PublishTimerMessage("reset");
 
   // place scene objects back
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 
   // Reset keyboard control pose
+  // DEMO Might need to comment out for demo
   this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
@@ -1542,18 +1637,25 @@ void HaptixGUIPlugin::OnScalingSlider(int _state)
 //////////////////////////////////////////////////
 void HaptixGUIPlugin::OnPauseRequest(ConstIntPtr &_msg)
 {
+  gazebo::msgs::Int tactorsMsg;
+
   if (_msg->data() == 0)
   {
     this->trackingPaused = false;
+    tactorsMsg.set_data(1);
   }
   else if (_msg->data() == 1)
   {
     this->trackingPaused = true;
+    tactorsMsg.set_data(0);
   }
   else
   {
     gzwarn << "Got unexpected message data in OnPauseRequest";
+    return;
   }
+
+  this->tactorsPub->Publish(tactorsMsg);
 }
 
 //////////////////////////////////////////////////
@@ -1796,5 +1898,18 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
         std::min(this->maxHeight, (this->renderWidget->height()-90)));
   }
   return QObject::eventFilter(_obj, _event);
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnResetModels()
+{
+  this->ResetModels();
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::OnRestartTimer()
+{
+  this->PublishTimerMessage("reset");
+  this->PublishTimerMessage("start");
 }
 

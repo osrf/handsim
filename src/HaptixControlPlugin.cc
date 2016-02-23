@@ -17,7 +17,6 @@
 
 #include <gazebo/util/Diagnostics.hh>
 #include <gazebo/common/Assert.hh>
-#include <gazebo/gui/KeyEventHandler.hh>
 
 #include "handsim/HaptixControlPlugin.hh"
 
@@ -290,6 +289,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
   this->headOriFilter.SetFc(0.002, 0.3);
   this->torqueFilter.SetFc(1.0, 1000.0);
 
+  this->polhemusGraspFilter.SetFc(0.01, 4);
+
   // Subscribe to Optitrack update topics: head, arm and origin
   this->optitrackHeadSub = this->gazeboNode->Subscribe
               ("~/optitrack/" + haptix::tracking::Optitrack::headTrackerName,
@@ -330,13 +331,17 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     }
   }
 
+  this->currentPolhemusGrasp = "FinePinch(British)";
+  this->arrangeSub = this->gazeboNode->Subscribe("~/arrange",
+      &HaptixControlPlugin::OnArrange, this);
+
   // spin up a separate thread to get polhemus sensor data
   // update target pose if using polhemus
   if (this->havePolhemus)
+  {
     this->polhemusThread = boost::thread(
       boost::bind(&HaptixControlPlugin::UpdatePolhemus, this));
-  else
-    gzwarn << "No usable polhemus setup detected.\n";
+  }
 
   this->haveKeyboard = false;
 
@@ -984,6 +989,9 @@ void HaptixControlPlugin::Reset()
     iter->ref_vel = 0.0;
     iter->ref_vel_max = 0.0;
   }
+
+  this->targetHandDist = 0;
+  this->previousHandDist = 0;
 }
 
 /////////////////////////////////////////////////
@@ -994,6 +1002,10 @@ void HaptixControlPlugin::SetWorldPose(const msgs::Pose &_pose)
   math::Pose inputPose(msgs::ConvertIgn(_pose));
   this->model->SetWorldPose(inputPose);
   this->targetBaseLinkPose = this->baseLink->GetRelativePose() + inputPose;
+
+  // complete hack
+  this->targetHandDist = 0;
+  this->previousHandDist = 0;
 }
 
 /////////////////////////////////////////////////
@@ -1104,16 +1116,33 @@ void HaptixControlPlugin::UpdatePolhemus()
         if (this->pauseTracking)
         {
           // calibration mode, update offset
-          this->sourceWorldPoseArmOffset =
+          /*this->sourceWorldPoseArmOffset =
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
-             this->targetBaseLinkPose) - this->sourceWorldPose;
+             this->targetBaseLinkPose) - this->sourceWorldPose;*/
+          // from "polhemus arm" to "calibrated arm"
+          this->polhemusArmOffsetRotation = (this->baseLinkToArmSensor +
+              this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
+                  armSensorPose.GetInverse()).rot;
+          armSensorPose.rot.SetToIdentity();
+          this->sourceWorldPoseArmOffset = this->baseLinkToArmSensor +
+              this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
+                  armSensorPose.GetInverse();
         }
         else
         {
           boost::mutex::scoped_lock lock(this->baseLinkMutex);
-          this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
+          // set rot
+          math::Quaternion tmp = this->sourceWorldPoseArmOffset.rot;
+          this->sourceWorldPoseArmOffset.rot = this->polhemusArmOffsetRotation;
+          this->targetBaseLinkPose.rot = (this->baseLinkToArmSensor.GetInverse() +
+              this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).rot;
+          armSensorPose.rot.SetToIdentity();
+          this->sourceWorldPoseArmOffset.rot = tmp;
+          this->targetBaseLinkPose.pos = (this->baseLinkToArmSensor.GetInverse() +
+              this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).pos;
+          /*this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
             + armSensorPose
-            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
+            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);*/
         }
       }
 
@@ -1137,6 +1166,48 @@ void HaptixControlPlugin::UpdatePolhemus()
 
           gazebo::msgs::Set(&this->joyMsg, targetCameraPose.Ign());
           this->viewpointJoyPub->Publish(this->joyMsg);
+        }
+      }
+
+      int thumbId = 2;
+      math::Pose thumbSensorPose;
+      if (thumbId < numPoses)
+      {
+        thumbSensorPose = this->convertPolhemusToPose(poses[thumbId]);
+      }
+
+      int fingersId = 3;
+      math::Pose fingersSensorPose;
+      if (fingersId < numPoses)
+      {
+        fingersSensorPose = this->convertPolhemusToPose(poses[fingersId]);
+      }
+
+      if (thumbSensorPose != math::Pose::Zero &&
+          fingersSensorPose != math::Pose::Zero)
+      {
+        // distance between fingers
+        double dist = (fingersSensorPose.pos - thumbSensorPose.pos).GetLength();
+        // subtract the distance in which hand considered completely closed
+        dist -= 0.04;
+        if (dist < 0)
+        {
+          dist = 1e-3;
+        }
+        if (this->pauseTracking)
+        {
+          // calibration mode, update offset which represents hand fully open
+          this->sourceDistHandOffset = dist / (1 - this->previousHandDist);
+        }
+        else
+        {
+          // Normalized distance: 0 fully open, 1 fully closed
+          if (dist > this->sourceDistHandOffset)
+          {
+            dist = this->sourceDistHandOffset;
+          }
+          dist = this->polhemusGraspFilter.Process(dist);
+          this->targetHandDist = 1 - dist / this->sourceDistHandOffset;
         }
       }
     }
@@ -1183,12 +1254,29 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 }
 
 /////////////////////////////////////////////////
+void HaptixControlPlugin::OnArrange(ConstGzStringPtr &_arrangement)
+{
+  this->arrangement = _arrangement->data();
+  if (this->arrangement == "pyramid")
+  {
+    this->currentPolhemusGrasp = "Spherical";
+  }
+  else if (this->arrangement == "hanoi")
+  {
+    this->currentPolhemusGrasp = "FinePinch(British)";
+  }
+}
+
+/////////////////////////////////////////////////
 void HaptixControlPlugin::UpdateBaseLink(double _dt)
 {
   math::Pose pose;
+  double dist;
   {
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
     pose = this->targetBaseLinkPose;
+    dist = this->targetHandDist;
+    this->previousHandDist = dist;
   }
 
   math::Pose baseLinkPose = this->baseLink->GetWorldPose();
@@ -1198,18 +1286,55 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   math::Vector3 errorRot =
     (baseLinkPose.rot * pose.rot.GetInverse()).GetAsEuler();
 
-  this->wrench.force.x = this->posPid.Update(errorPos.x, _dt);
-  this->wrench.force.y = this->posPid.Update(errorPos.y, _dt);
-  this->wrench.force.z = this->posPid.Update(errorPos.z, _dt);
-  this->wrench.torque.x = this->rotPid.Update(errorRot.x, _dt);
-  this->wrench.torque.y = this->rotPid.Update(errorRot.y, _dt);
-  this->wrench.torque.z = this->rotPid.Update(errorRot.z, _dt);
+  double maxForce = 40;
+  double maxTorque = 80;
+  if (this->arrangement == "hanoi" || this->arrangement == "")
+  {
+    maxForce = 13.0;
+    maxTorque = 30.0;
+  }
+
+  this->wrench.force.x =
+    gazebo::math::clamp(this->posPid.Update(errorPos.x, _dt),
+      -maxForce, maxForce);
+  this->wrench.force.y =
+    gazebo::math::clamp(this->posPid.Update(errorPos.y, _dt),
+      -maxForce, maxForce);
+  this->wrench.force.z =
+    gazebo::math::clamp(this->posPid.Update(errorPos.z, _dt),
+      -maxForce, maxForce);
+  this->wrench.torque.x =
+    gazebo::math::clamp(this->rotPid.Update(errorRot.x, _dt),
+      -maxTorque, maxTorque);
+  this->wrench.torque.y =
+    gazebo::math::clamp(this->rotPid.Update(errorRot.y, _dt),
+      -maxTorque, maxTorque);
+  this->wrench.torque.z =
+    gazebo::math::clamp(this->rotPid.Update(errorRot.z, _dt),
+      -maxTorque, maxTorque);
+
+  //std::cout << "Apply wrench to arm: " << this->wrench.force << ", " << this->wrench.torque << std::endl;
+
   this->baseLink->SetForce(this->wrench.force);
   this->baseLink->SetTorque(this->wrench.torque);
   // std::cout << "current pose: " << baseLinkPose << std::endl;
   // std::cout << "target pose: " << pose << std::endl;
   // std::cout << "wrench pos: " << this->wrench.force
   //           << " rot: " << this->wrench.torque << std::endl;
+
+  // This is probably a horrible way and place to be doing this, especially
+  // since I had to turn off a mutex :)
+  haptix::comm::msgs::hxGrasp graspTmp;
+  haptix::comm::msgs::hxGrasp::hxGraspValue* gv = graspTmp.add_grasps();
+  gv->set_grasp_name(currentPolhemusGrasp);
+  gv->set_grasp_value(dist);
+  haptix::comm::msgs::hxCommand resp;
+  bool result;
+  this->HaptixGraspCallback("", graspTmp, resp, result);
+  if (!result)
+  {
+    gzerr << "ERROR: HaptixGraspCallback could not call grasp service" << std::endl;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -2303,7 +2428,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
-  boost::mutex::scoped_lock lock(this->updateMutex);
+  //boost::mutex::scoped_lock lock(this->updateMutex);
 
   // for clutch timing
   this->robotCommandTime = this->world->GetSimTime();
