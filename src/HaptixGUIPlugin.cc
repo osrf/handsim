@@ -427,11 +427,13 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Advertise the Ignition topic on which we'll publish arm pose changes
   this->ignNode.Advertise<gazebo::msgs::Pose>("haptix/arm_pose_inc");
 
+  /*
   // Add shortcuts
   QShortcut *restartTimer = new QShortcut(QKeySequence("F1"), this);
   QObject::connect(restartTimer, SIGNAL(activated()), this,
       SLOT(OnRestartTimer()));
-  this->ignNode.Advertise("haptix/arm_model_pose");
+  this->ignNode.Advertise<gazebo::msgs::Pose>("haptix/arm_model_pose");
+  */
 }
 
 /////////////////////////////////////////////////

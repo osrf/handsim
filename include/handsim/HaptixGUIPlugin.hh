@@ -106,6 +106,7 @@ namespace haptix_gazebo_plugins
     private: void PublishTimerMessage(const std::string &_msg) const;
 
     /// \brief Callback triggered when the next button is clicked
+    private slots: void OnNextClicked();
     private slots: void OnResetArmClicked();
 
     /// \brief Callback triggered when the reset all button is clicked
@@ -266,6 +267,10 @@ namespace haptix_gazebo_plugins
     /// \brief Publisher that controls the clock
     private: gazebo::transport::PublisherPtr timerPub;
 
+    /// \brief next button
+    private: QPushButton *nextButton;
+
+    /// \brief tactors publisher
     private: gazebo::transport::PublisherPtr tactorsPub;
 
     /// \brief Reset arm button
@@ -310,7 +315,7 @@ namespace haptix_gazebo_plugins
     /// \brief The number of initial degrees of freedom that are in the wrist
     private: unsigned int numWristMotors;
 
-    /// \brief actual starting pose of the arm.
+    /// \brief Starting pose of the arm.
     private: gazebo::math::Pose initialArmPose;
 
     /// \brief fake starting pose of the arm.

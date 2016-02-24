@@ -1116,22 +1116,26 @@ void HaptixControlPlugin::UpdatePolhemus()
         if (this->pauseTracking)
         {
           // calibration mode, update offset
-          /*this->sourceWorldPoseArmOffset =
+          this->sourceWorldPoseArmOffset =
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
-             this->targetBaseLinkPose) - this->sourceWorldPose;*/
+             this->targetBaseLinkPose) - this->sourceWorldPose;
           // from "polhemus arm" to "calibrated arm"
-          this->polhemusArmOffsetRotation = (this->baseLinkToArmSensor +
+          /* this->polhemusArmOffsetRotation = (this->baseLinkToArmSensor +
               this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
                   armSensorPose.GetInverse()).rot;
           armSensorPose.rot.SetToIdentity();
           this->sourceWorldPoseArmOffset = this->baseLinkToArmSensor +
               this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
-                  armSensorPose.GetInverse();
+                  armSensorPose.GetInverse();*/
         }
         else
         {
           boost::mutex::scoped_lock lock(this->baseLinkMutex);
-          // set rot
+          this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
+            + armSensorPose
+            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
+
+          /*// set rot
           math::Quaternion tmp = this->sourceWorldPoseArmOffset.rot;
           this->sourceWorldPoseArmOffset.rot = this->polhemusArmOffsetRotation;
           this->targetBaseLinkPose.rot = (this->baseLinkToArmSensor.GetInverse() +
@@ -1140,7 +1144,7 @@ void HaptixControlPlugin::UpdatePolhemus()
           this->sourceWorldPoseArmOffset.rot = tmp;
           this->targetBaseLinkPose.pos = (this->baseLinkToArmSensor.GetInverse() +
               this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).pos;
-          /*this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
+          this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
             + armSensorPose
             + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);*/
         }
@@ -1330,7 +1334,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   gv->set_grasp_value(dist);
   haptix::comm::msgs::hxCommand resp;
   bool result;
-  this->HaptixGraspCallback("", graspTmp, resp, result);
+  this->HaptixGraspCallback(graspTmp, resp, result);
   if (!result)
   {
     gzerr << "ERROR: HaptixGraspCallback could not call grasp service" << std::endl;
