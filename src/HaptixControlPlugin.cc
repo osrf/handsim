@@ -332,6 +332,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     }
   }
 
+  // DEMO hard coded
   this->currentPolhemusGrasp = "FinePinchOpen";
   this->arrangeSub = this->gazeboNode->Subscribe("~/arrange",
       &HaptixControlPlugin::OnArrange, this);
@@ -1240,6 +1241,7 @@ void HaptixControlPlugin::UpdateKeyboard(double /*_dt*/)
 }
 
 /////////////////////////////////////////////////
+// DEMO hard coded
 void HaptixControlPlugin::OnArrange(ConstGzStringPtr &_arrangement)
 {
   this->arrangement = _arrangement->data();
@@ -1320,7 +1322,8 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   //           << " rot: " << this->wrench.torque << std::endl;
 
 
-  // demo hardcode grasp call
+/*
+  // DEMO hardcode grasp call
   // This is probably a horrible way and place to be doing this, especially
   // since I had to turn off a mutex :)
   haptix::comm::msgs::hxGrasp graspTmp;
@@ -1334,11 +1337,30 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   {
     gzerr << "ERROR: HaptixGraspCallback could not call grasp service" << std::endl;
   }
+*/
 }
 
 /////////////////////////////////////////////////
 void HaptixControlPlugin::GetHandControlFromClient()
 {
+  // demo hard code to send to CAN bus driver
+  bool result;
+  haptix::comm::msgs::hxCommand demoReq;
+  haptix::comm::msgs::hxSensor demoRep;
+  demoReq.set_ref_pos_enabled(true);
+  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+  {
+    demoReq.add_ref_pos(this->graspPositions[i]);
+  }
+  if(!this->ignNode.Request("haptix/luke/Update",
+                            demoReq,
+                            1000,
+                            demoRep,
+                            result) || !result)
+  {
+    gzerr << "Failed to call demo request" << std::endl;
+  }
+
   // copy command from hxCommand for motors to list of all joints
   // commanded by this plugin.
   // also account for joint coupling here based on <gearbox> params

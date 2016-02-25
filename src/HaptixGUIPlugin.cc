@@ -932,6 +932,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       bool enabled = task->Get<bool>("enabled");
 
       // Create a new button for the task
+      /* DEMO only
       // FIXME: Hack to divide long names in 2 lines, tailored for current names
       bool longName = false;
       if (name.length() > 8)
@@ -942,7 +943,7 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
           name = name.substr(0, idx) + "\n" + name.substr(idx + 1);
           longName = true;
         }
-      }
+      } */
 
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
       taskButton->installEventFilter(this);
@@ -970,16 +971,16 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
         taskButton->setIcon(QIcon(iconPixmap));
         taskButton->setIconSize(QSize(60, 54));
-        if (longName)
-        {
-          taskButton->setMinimumSize(80, 100);
-          taskButton->setMaximumSize(100, 100);
-        }
-        else
-        {
+        // if (longName)
+        // {
+        //   taskButton->setMinimumSize(80, 100);
+        //   taskButton->setMaximumSize(100, 100);
+        // }
+        // else
+        // {
           taskButton->setMinimumSize(80, 80);
           taskButton->setMaximumSize(100, 80);
-        }
+        // }
       }
 
       this->taskList[taskIndex] = taskButton;

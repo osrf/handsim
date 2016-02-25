@@ -316,7 +316,7 @@ namespace haptix_gazebo_plugins
     private: unsigned int numWristMotors;
 
     /// \brief Starting pose of the arm.
-    private: gazebo::math::Pose initialArmPose;
+    // private: gazebo::math::Pose initialArmPose;
 
     /// \brief fake starting pose of the arm.
     private: gazebo::math::Pose armStartPose;

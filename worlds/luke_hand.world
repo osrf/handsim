@@ -536,7 +536,9 @@
       <grab>0.12 0 0</grab>
     </plugin>
 
+    <!-- hardcoded for mpl, breaks luke hand integration
     <plugin name="tactors" filename="libTactorsPlugin.so"/>
+    -->
 
   </world>
 </sdf>
