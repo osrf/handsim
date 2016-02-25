@@ -1344,21 +1344,25 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
 void HaptixControlPlugin::GetHandControlFromClient()
 {
   // demo hard code to send to CAN bus driver
-  bool result;
-  haptix::comm::msgs::hxCommand demoReq;
-  haptix::comm::msgs::hxSensor demoRep;
-  demoReq.set_ref_pos_enabled(true);
-  for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+  if (this->graspMode &&
+      this->graspPositions.size() == this->motorInfos.size())
   {
-    demoReq.add_ref_pos(this->graspPositions[i]);
-  }
-  if(!this->ignNode.Request("haptix/luke/Update",
-                            demoReq,
-                            1000,
-                            demoRep,
-                            result) || !result)
-  {
-    gzerr << "Failed to call demo request" << std::endl;
+    bool result;
+    haptix::comm::msgs::hxCommand demoReq;
+    haptix::comm::msgs::hxSensor demoRep;
+    demoReq.set_ref_pos_enabled(true);
+    for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+    {
+      demoReq.add_ref_pos(this->graspPositions[i]);
+    }
+    if (!this->ignNode.Request("haptix/luke/Update",
+                              demoReq,
+                              1000,
+                              demoRep,
+                              result) || !result)
+    {
+      gzerr << "Failed to call demo request" << std::endl;
+    }
   }
 
   // copy command from hxCommand for motors to list of all joints
@@ -2155,8 +2159,6 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 // Play the trajectory, update states
 void HaptixControlPlugin::GazeboUpdateStates()
 {
-  gzerr << "updating plugin.\n";
-
   DIAG_TIMER_START("HaptixControlPlugin::GazeboUpdateStates");
   boost::mutex::scoped_lock lock(this->updateMutex);
 
