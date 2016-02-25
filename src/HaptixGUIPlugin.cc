@@ -782,10 +782,13 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
       return;
     }
 
+    /*
     // initialArmPose - DEMO ONLY or OLD CODE?
     hxsTransform armPose;
     // Get the initial arm pose
-    std::string modelName = "mpl_haptix_" + handSide + "_forearm";
+    // DEMO - hardcoded, make this a parameter
+    // std::string modelName = "mpl_haptix_" + handSide + "_forearm";
+    std::string modelName = "luke_hand_description";
     if (::hxs_model_transform(modelName.c_str(), &armPose) == ::hxOK)
     {
       this->initialArmPose.pos.x = armPose.pos.x;
@@ -798,9 +801,12 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
     }
     else
     {
-      gzerr << "hxs_model_transform(): Request error.\n" << std::endl;
+      gzerr << "hxs_model_transform(): Request error."
+            << " Check if model [" << modelName
+            << "] exists.\n" << std::endl;
       return;
     }
+    */
 
     this->hxInitialized = true;
   }
@@ -1902,6 +1908,7 @@ bool HaptixGUIPlugin::eventFilter(QObject *_obj, QEvent *_event)
   return QObject::eventFilter(_obj, _event);
 }
 
+/* demo only
 /////////////////////////////////////////////////
 void HaptixGUIPlugin::OnResetModels()
 {
@@ -1914,4 +1921,4 @@ void HaptixGUIPlugin::OnRestartTimer()
   this->PublishTimerMessage("reset");
   this->PublishTimerMessage("start");
 }
-
+*/

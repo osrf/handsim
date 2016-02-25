@@ -107,7 +107,7 @@ namespace haptix_gazebo_plugins
 
     /// \brief Callback triggered when the next button is clicked
     private slots: void OnNextClicked();
-    private slots: void OnResetArmClicked();
+    // private slots: void OnResetArmClicked();
 
     /// \brief Callback triggered when the reset all button is clicked
     private slots: void OnResetClicked();
@@ -132,10 +132,10 @@ namespace haptix_gazebo_plugins
     private slots: void OnMocapStatusChanged(int _status);
 
     /// \brief Callback when reset models has been triggered by the user.
-    private slots: void OnResetModels();
+    // private slots: void OnResetModels();
 
     /// \brief Callback when restart timer has been triggered by the user.
-    private slots: void OnRestartTimer();
+    // private slots: void OnRestartTimer();
 
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task

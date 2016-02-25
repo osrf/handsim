@@ -360,9 +360,6 @@ namespace gazebo
     /// \brief Pose of the polhemus source in the world frame.
     private: math::Pose sourceWorldPose;
 
-    /// rotation from polhemus source to arm marker
-    // private: math::Quaternion polhemusArmOffsetRotation;   // OLD CODE?
-
     /// \brief used to offset polhemus source for arm sensor during calibration
     private: math::Pose sourceWorldPoseArmOffset;
 

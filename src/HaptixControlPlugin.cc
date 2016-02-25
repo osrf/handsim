@@ -17,6 +17,7 @@
 
 #include <gazebo/util/Diagnostics.hh>
 #include <gazebo/common/Assert.hh>
+#include <gazebo/gui/KeyEventHandler.hh>
 
 #include "handsim/HaptixControlPlugin.hh"
 
@@ -331,7 +332,7 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     }
   }
 
-  this->currentPolhemusGrasp = "FinePinch(British)";
+  this->currentPolhemusGrasp = "FinePinchOpen";
   this->arrangeSub = this->gazeboNode->Subscribe("~/arrange",
       &HaptixControlPlugin::OnArrange, this);
 
@@ -342,6 +343,8 @@ void HaptixControlPlugin::Load(physics::ModelPtr _parent,
     this->polhemusThread = boost::thread(
       boost::bind(&HaptixControlPlugin::UpdatePolhemus, this));
   }
+  else
+    gzwarn << "No usable polhemus setup detected.\n";
 
   this->haveKeyboard = false;
 
@@ -1119,14 +1122,6 @@ void HaptixControlPlugin::UpdatePolhemus()
           this->sourceWorldPoseArmOffset =
             (armSensorPose.GetInverse() + this->baseLinkToArmSensor +
              this->targetBaseLinkPose) - this->sourceWorldPose;
-          // from "polhemus arm" to "calibrated arm"
-          /* this->polhemusArmOffsetRotation = (this->baseLinkToArmSensor +
-              this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
-                  armSensorPose.GetInverse()).rot;
-          armSensorPose.rot.SetToIdentity();
-          this->sourceWorldPoseArmOffset = this->baseLinkToArmSensor +
-              this->targetBaseLinkPose + this->sourceWorldPose.GetInverse() +
-                  armSensorPose.GetInverse();*/
         }
         else
         {
@@ -1134,19 +1129,6 @@ void HaptixControlPlugin::UpdatePolhemus()
           this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
             + armSensorPose
             + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);
-
-          /*// set rot
-          math::Quaternion tmp = this->sourceWorldPoseArmOffset.rot;
-          this->sourceWorldPoseArmOffset.rot = this->polhemusArmOffsetRotation;
-          this->targetBaseLinkPose.rot = (this->baseLinkToArmSensor.GetInverse() +
-              this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).rot;
-          armSensorPose.rot.SetToIdentity();
-          this->sourceWorldPoseArmOffset.rot = tmp;
-          this->targetBaseLinkPose.pos = (this->baseLinkToArmSensor.GetInverse() +
-              this->sourceWorldPoseArmOffset + armSensorPose + this->sourceWorldPose).pos;
-          this->targetBaseLinkPose = this->baseLinkToArmSensor.GetInverse()
-            + armSensorPose
-            + (this->sourceWorldPoseArmOffset + this->sourceWorldPose);*/
         }
       }
 
@@ -1263,11 +1245,13 @@ void HaptixControlPlugin::OnArrange(ConstGzStringPtr &_arrangement)
   this->arrangement = _arrangement->data();
   if (this->arrangement == "pyramid")
   {
-    this->currentPolhemusGrasp = "Spherical";
+    // demo hardcoded for luke hand
+    this->currentPolhemusGrasp = "Chuck";
   }
   else if (this->arrangement == "hanoi")
   {
-    this->currentPolhemusGrasp = "FinePinch(British)";
+    // demo hardcoded for luke hand
+    this->currentPolhemusGrasp = "FinePinchOpen";
   }
 }
 
@@ -1290,6 +1274,14 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   math::Vector3 errorRot =
     (baseLinkPose.rot * pose.rot.GetInverse()).GetAsEuler();
 
+  this->wrench.force.x = this->posPid.Update(errorPos.x, _dt);
+  this->wrench.force.y = this->posPid.Update(errorPos.y, _dt);
+  this->wrench.force.z = this->posPid.Update(errorPos.z, _dt);
+  this->wrench.torque.x = this->rotPid.Update(errorRot.x, _dt);
+  this->wrench.torque.y = this->rotPid.Update(errorRot.y, _dt);
+  this->wrench.torque.z = this->rotPid.Update(errorRot.z, _dt);
+
+/* old code hack for demo
   double maxForce = 40;
   double maxTorque = 80;
   if (this->arrangement == "hanoi" || this->arrangement == "")
@@ -1318,6 +1310,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
       -maxTorque, maxTorque);
 
   //std::cout << "Apply wrench to arm: " << this->wrench.force << ", " << this->wrench.torque << std::endl;
+*/
 
   this->baseLink->SetForce(this->wrench.force);
   this->baseLink->SetTorque(this->wrench.torque);
@@ -1326,6 +1319,8 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   // std::cout << "wrench pos: " << this->wrench.force
   //           << " rot: " << this->wrench.torque << std::endl;
 
+
+  // demo hardcode grasp call
   // This is probably a horrible way and place to be doing this, especially
   // since I had to turn off a mutex :)
   haptix::comm::msgs::hxGrasp graspTmp;
@@ -2138,6 +2133,8 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 // Play the trajectory, update states
 void HaptixControlPlugin::GazeboUpdateStates()
 {
+  gzerr << "updating plugin.\n";
+
   DIAG_TIMER_START("HaptixControlPlugin::GazeboUpdateStates");
   boost::mutex::scoped_lock lock(this->updateMutex);
 
@@ -2432,7 +2429,7 @@ void HaptixControlPlugin::HaptixGraspCallback(
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
-  //boost::mutex::scoped_lock lock(this->updateMutex);
+  boost::mutex::scoped_lock lock(this->updateMutex);
 
   // for clutch timing
   this->robotCommandTime = this->world->GetSimTime();

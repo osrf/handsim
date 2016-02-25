@@ -835,8 +835,10 @@ void HaptixWorldPlugin::HaptixSetModelTransformCallback(
   gazebo::math::Pose pose;
   ConvertTransform(_req.transform(), pose);
 
+  /// HACK, FIXME
   if (model->GetName() == "mpl_haptix_right_forearm" ||
-      model->GetName() == "mpl_haptix_left_forearm")
+      model->GetName() == "mpl_haptix_left_forearm" ||
+      model->GetName() == "luke_hand_description")
   {
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(pose.Ign());
     this->ignNode.Publish("haptix/arm_model_pose", msg);
@@ -1215,7 +1217,10 @@ void HaptixWorldPlugin::HaptixResetCallback(
   {
     for (auto model : world->GetModels())
     {
-      if (model->GetName() != "mpl_haptix_right_forearm")
+      /// HACK, FIXME
+      if (model->GetName() != "mpl_haptix_right_forearm" &&
+          model->GetName() != "mpl_haptix_left_forearm" &&
+          model->GetName() != "luke_hand_description")
       {
         model->Reset();
       }
