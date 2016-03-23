@@ -1066,6 +1066,9 @@ void HaptixGUIPlugin::ScoringUpdate()
       }
       else
       {
+        this->springScoreItem[0]->setPen(QPen(QColor(0, 0, 0, 255)));
+        this->springScoreItem[1]->setPen(QPen(QColor(0, 0, 0, 255)));
+        this->springScoreItem[2]->setPen(QPen(QColor(0, 0, 0, 255)));
         if (this->springCompressed && !this->springBuckled)
         {
           gazebo::common::Time compressDuration =
@@ -1125,9 +1128,6 @@ void HaptixGUIPlugin::ScoringUpdate()
             this->springScoreItem[0]->setBrush(QBrush(QColor(255, 0, 0, 255)));
             this->springScoreItem[1]->setBrush(QBrush(QColor(255, 0, 0, 0)));
             this->springScoreItem[2]->setBrush(QBrush(QColor(255, 0, 0, 0)));
-            this->springScoreItem[0]->setPen(QPen(QColor(153, 255, 0, 255)));
-            this->springScoreItem[1]->setPen(QPen(QColor(153, 255, 0, 255)));
-            this->springScoreItem[2]->setPen(QPen(QColor(153, 255, 0, 255)));
           }
         }
       }
