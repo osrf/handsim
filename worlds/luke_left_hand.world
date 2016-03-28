@@ -129,44 +129,62 @@
         <contacts>
           <contact name="Palm-Front">
             <index>0</index>
-            <pos>70 200</pos>
-            <size>150 100</size>
-          </contact>
-          <contact name="Palm-Side">
-            <index>1</index>
-            <pos>0 200</pos>
-            <size>40 100</size>
+            <pos>70 160</pos>
+            <size>150 140</size>
           </contact>
           <contact name="Palm-Back">
-            <index>2</index>
+            <index>1</index>
             <pos>303 58</pos>
             <size>20 20</size>
           </contact>
+          <contact name="Palm-Inside">
+            <index>2</index>
+            <pos>230 160</pos>
+            <size>25 50</size>
+          </contact>
+          <contact name="Palm-Outside">
+            <index>3</index>
+            <pos>0 160</pos>
+            <size>40 140</size>
+          </contact>
 
           <contact name="Distal_Thumb">
-            <pos>302 130</pos>
-            <index>3</index>
+            <pos>282 125</pos>
+            <size>15 30</size>
+            <index>4</index>
+          </contact>
+
+          <contact name="Distal_Thumb_side">
+            <pos>292 170</pos>
+            <size>25 25</size>
+            <index>5</index>
           </contact>
 
           <contact name="Index_Distal-1">
             <pos>242 -30</pos>
             <size>25 50</size>
-            <index>4</index>
+            <index>6</index>
+          </contact>
+
+          <contact name="Index_Distal-1_side">
+            <pos>272 -20</pos>
+            <size>10 40</size>
+            <index>7</index>
           </contact>
 
           <contact name="Middle_Ring_Distal-1">
             <pos>153 -60</pos>
-            <index>5</index>
+            <index>8</index>
           </contact>
 
           <contact name="ring_distal">
             <pos>64 -19</pos>
-            <index>6</index>
+            <index>9</index>
           </contact>
 
           <contact name="Pinky_Distal-1">
             <pos>-7 54</pos>
-            <index>7</index>
+            <index>10</index>
           </contact>
         </contacts>
 
