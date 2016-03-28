@@ -1141,6 +1141,8 @@ void HaptixGUIPlugin::ScoringUpdate()
       }
     }
     usleep(100000);  // 10Hz max on scoring check
+    this->move(static_cast<QWidget*>(this->parent())->width() -
+        this->width() - 10, 10);
   }
 }
 
