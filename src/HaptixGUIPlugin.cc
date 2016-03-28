@@ -510,10 +510,18 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         {
           contactSize = contact->Get<gazebo::math::Vector2d>("size");
         }
+        double contactTilt = 0;
+        if (contact->HasElement("tilt"))
+        {
+          contactTilt = contact->Get<double>("tilt");
+        }
 
         this->contactGraphicsItems[contactName] =
           new QGraphicsRectItem(contactPos.x,
               contactPos.y, contactSize.x, contactSize.y);
+        this->contactGraphicsItems[contactName]->setTransformOriginPoint(
+              QPoint(contactPos.x, contactPos.y));
+        this->contactGraphicsItems[contactName]->setRotation(contactTilt);
         this->handScene->addItem(this->contactGraphicsItems[contactName]);
 
         this->contactGraphicsItems[contactName]->setBrush(
