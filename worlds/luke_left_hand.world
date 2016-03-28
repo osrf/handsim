@@ -129,8 +129,9 @@
         <contacts>
           <contact name="Palm-Front">
             <index>0</index>
-            <pos>70 160</pos>
-            <size>150 140</size>
+            <pos>70 170</pos>
+            <size>130 110</size>
+            <tilt>-5</tilt>
           </contact>
           <contact name="Palm-Back">
             <index>1</index>
@@ -139,20 +140,21 @@
           </contact>
           <contact name="Palm-Inside">
             <index>2</index>
-            <pos>230 160</pos>
-            <size>25 50</size>
+            <pos>232 160</pos>
+            <size>15 50</size>
+            <tilt>5</tilt>
           </contact>
           <contact name="Palm-Outside">
             <index>3</index>
-            <pos>0 160</pos>
-            <size>40 140</size>
+            <pos>24 180</pos>
+            <size>15 120</size>
           </contact>
 
           <contact name="Distal_Thumb">
             <pos>297 125</pos>
             <size>10 30</size>
             <index>4</index>
-            <tilt>40.0</tilt>
+            <tilt>43.0</tilt>
           </contact>
 
           <contact name="Distal_Thumb_side">
@@ -163,15 +165,17 @@
           </contact>
 
           <contact name="Index_Distal-1">
-            <pos>242 -30</pos>
+            <pos>245 -30</pos>
             <size>25 50</size>
             <index>6</index>
+            <tilt>10.0</tilt>
           </contact>
 
           <contact name="Index_Distal-1_side">
-            <pos>272 -20</pos>
+            <pos>275 -20</pos>
             <size>10 40</size>
             <index>7</index>
+            <tilt>10.0</tilt>
           </contact>
 
           <contact name="Middle_Ring_Distal-1">
@@ -180,13 +184,15 @@
           </contact>
 
           <contact name="ring_distal">
-            <pos>64 -19</pos>
+            <pos>57 -27</pos>
             <index>9</index>
+            <tilt>-12.0</tilt>
           </contact>
 
           <contact name="Pinky_Distal-1">
-            <pos>-7 54</pos>
+            <pos>-15 52</pos>
             <index>10</index>
+            <tilt>-30.0</tilt>
           </contact>
         </contacts>
 

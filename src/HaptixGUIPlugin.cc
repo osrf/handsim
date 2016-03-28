@@ -516,6 +516,12 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
           contactTilt = contact->Get<double>("tilt");
         }
 
+        if (this->handSide == "left")
+        {
+          contactPos.x = 323 - contactPos.x - contactSize.x;
+          contactTilt = -1.0 * contactTilt;
+        }
+
         this->contactGraphicsItems[contactName] =
           new QGraphicsRectItem(contactPos.x,
               contactPos.y, contactSize.x, contactSize.y);
@@ -1141,8 +1147,13 @@ void HaptixGUIPlugin::ScoringUpdate()
       }
     }
     usleep(100000);  // 10Hz max on scoring check
-    this->move(static_cast<QWidget*>(this->parent())->width() -
-        this->width() - 10, 10);
+
+    // GUI window follow Gazebo window resize
+    if (this->handSide == "left")
+    {
+      this->move(static_cast<QWidget*>(this->parent())->width() -
+          this->width() - 10, 10);
+    }
   }
 }
 
