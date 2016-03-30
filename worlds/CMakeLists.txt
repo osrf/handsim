@@ -3,7 +3,6 @@ set (files
   arat_left.world
   handsim_empty.world
   luke_hand.world
-  luke_hands.world
   luke_left_hand.world
   primitive_hand.world
 )
