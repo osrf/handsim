@@ -45,6 +45,12 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
   this->maxHeight = 850;
+  this->springCompressed = false;
+  this->springBuckled = false;
+  this->springCompressedStartTime = gazebo::common::Time(0);
+
+  // HACK: default duration for successful trial hardcoded to 3 seconds
+  this->springCompressedPassDuration = gazebo::common::Time(3);
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -416,6 +422,7 @@ HaptixGUIPlugin::~HaptixGUIPlugin()
 {
   this->quit = true;
   this->pollSensorsThread.join();
+  this->scoringThread.join();
 }
 
 /////////////////////////////////////////////////
@@ -452,6 +459,10 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->pauseSub =
     this->node->Subscribe("~/motion_tracking/pause_response",
       &HaptixGUIPlugin::OnPauseRequest, this);
+
+  this->simEventsSub =
+    this->node->Subscribe("/gazebo/sim_events",
+      &HaptixGUIPlugin::OnSimEvents, this);
 
   this->defaultContactSize = _elem->Get<gazebo::math::Vector2d>("default_size");
 
@@ -521,6 +532,13 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
       }
     }
   }
+
+  this->springScoreItem[0] = new QGraphicsEllipseItem(270, 370, 20, 20);
+  this->springScoreItem[1] = new QGraphicsEllipseItem(300, 370, 20, 20);
+  this->springScoreItem[2] = new QGraphicsEllipseItem(330, 370, 20, 20);
+  this->handScene->addItem(this->springScoreItem[0]);
+  this->handScene->addItem(this->springScoreItem[1]);
+  this->handScene->addItem(this->springScoreItem[2]);
 
   // Draw contact pads and force gauge
   {
@@ -696,6 +714,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
 
   this->pollSensorsThread = boost::thread(
       std::bind(&HaptixGUIPlugin::PollSensors, this));
+
+  this->scoringThread = boost::thread(
+      std::bind(&HaptixGUIPlugin::ScoringUpdate, this));
 
   this->optitrackUpdateTime = gazebo::common::Time::GetWallTime();
 
@@ -1022,6 +1043,96 @@ void HaptixGUIPlugin::PollSensors()
       this->UpdateSensorContact();
     }
     usleep(1000);  // 1kHz max
+  }
+}
+
+/////////////////////////////////////////////////
+void HaptixGUIPlugin::ScoringUpdate()
+{
+  while(!quit)
+  {
+    if (this->hxInitialized)
+    {
+      // hardcoded, tasks 0, 1, 2 are the spring tests
+      // hide if task id is greater than 2
+      if (this->currentTaskId > 2)
+      {
+        this->springScoreItem[0]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+        this->springScoreItem[1]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+        this->springScoreItem[2]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+        this->springScoreItem[0]->setPen(QPen(QColor(153, 255, 0, 0)));
+        this->springScoreItem[1]->setPen(QPen(QColor(153, 255, 0, 0)));
+        this->springScoreItem[2]->setPen(QPen(QColor(153, 255, 0, 0)));
+      }
+      else
+      {
+        this->springScoreItem[0]->setPen(QPen(QColor(0, 0, 0, 255)));
+        this->springScoreItem[1]->setPen(QPen(QColor(0, 0, 0, 255)));
+        this->springScoreItem[2]->setPen(QPen(QColor(0, 0, 0, 255)));
+        if (this->springCompressed && !this->springBuckled)
+        {
+          gazebo::common::Time compressDuration =
+            gazebo::common::Time::GetWallTime() -
+            this->springCompressedStartTime;
+          if (compressDuration > this->springCompressedPassDuration)
+          {
+            // success! spring compressed correctly for 3 seconds.
+            // gzdbg << "task completed!\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+          }
+          else
+          {
+            double timeLeft = (this->springCompressedPassDuration -
+                               compressDuration).Double();
+            // spring compressed correctly, just a few more seconds...
+            // gzdbg << "compressed, great work! Please hold it for"
+            //       << " [" << timeLeft
+            //       << "] more seconds!\n";
+            this->springScoreItem[0]->setBrush(
+                QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[1]->setBrush(
+                QBrush(QColor(static_cast<int>(
+                255*(timeLeft/this->springCompressedPassDuration.Double())),
+                255, 0, 255)));
+            this->springScoreItem[2]->setBrush(
+                QBrush(QColor(static_cast<int>(
+                255*(timeLeft/this->springCompressedPassDuration.Double())),
+                255, 0, 0)));
+          }
+        }
+        else
+        {
+          if (!this->springCompressed)
+          {
+            // gzdbg << "spring not compressed, squeeze it [some more]!\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(255, 0, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+          }
+          else if (this->springBuckled)
+          {
+            //gzdbg << "spring buckled, try to keep it straight!\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(0, 255, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(0, 0, 255, 255)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(0, 0, 255, 0)));
+          }
+          else
+          {
+            // user has not started compressing the spring
+            // or the spring has bucked beyond tolerance.
+            // gzerr << "Red!\n";
+            // gzerr << "compressed [" << this->springCompressed
+            //       << "] buckled [" << this->springBuckled << "]\n";
+            this->springScoreItem[0]->setBrush(QBrush(QColor(255, 0, 0, 255)));
+            this->springScoreItem[1]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+            this->springScoreItem[2]->setBrush(QBrush(QColor(255, 0, 0, 0)));
+          }
+        }
+      }
+    }
+    usleep(100000);  // 10Hz max on scoring check
   }
 }
 
@@ -1442,6 +1553,64 @@ void HaptixGUIPlugin::OnPauseRequest(ConstIntPtr &_msg)
   else
   {
     gzwarn << "Got unexpected message data in OnPauseRequest";
+  }
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnSimEvents(ConstSimEventPtr &_msg)
+{
+  gzdbg << "sim event name [" << _msg->name()
+        << "] data [" << _msg->data()
+        << "]\n";
+  if (_msg->name() == "compressed_bottom")
+  {
+    if (_msg->data().find("out_of_range") != std::string::npos)
+    {
+      this->springCompressed = false;
+    }
+    else if (_msg->data().find("in_range") != std::string::npos)
+    {
+      this->springCompressed = true;
+    }
+    else
+    {
+      gzerr << "invalid message from sim event:\n" << _msg->data() << "\n";
+    }
+  }
+  else if (_msg->name() == "buckled_x")
+  {
+    if (_msg->data().find("out_of_range") != std::string::npos)
+    {
+      this->springBuckled = true;
+    }
+    else if (_msg->data().find("in_range") != std::string::npos)
+    {
+      this->springBuckled = false;
+    }
+    else
+    {
+      gzerr << "invalid message from sim event:\n" << _msg->data() << "\n";
+    }
+  }
+  else if (_msg->name() == "buckled_y")
+  {
+    if (_msg->data().find("out_of_range") != std::string::npos)
+    {
+      this->springBuckled = true;
+    }
+    else if (_msg->data().find("in_range") != std::string::npos)
+    {
+      this->springBuckled = false;
+    }
+    else
+    {
+      gzerr << "invalid message from sim event:\n" << _msg->data() << "\n";
+    }
+  }
+
+  if (this->springCompressed && !this->springBuckled)
+  {
+    this->springCompressedStartTime = gazebo::common::Time::GetWallTime();
   }
 }
 
