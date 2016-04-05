@@ -44,13 +44,15 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
-  this->maxHeight = 850;
+  this->maxHeight = 890;
   this->springCompressed = false;
   this->springBuckled = false;
   this->springCompressedStartTime = gazebo::common::Time(0);
 
   // HACK: default duration for successful trial hardcoded to 3 seconds
   this->springCompressedPassDuration = gazebo::common::Time(3);
+
+  this->handDetected = false;
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -160,6 +162,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(this, SIGNAL(MocapStatusChanged(int)), this,
       SLOT(OnMocapStatusChanged(int)));
 
+  // Surrogate status
+  this->surrogateStatusIndicator = new QLabel(QString("Surrogate mode: Off"));
+
   // Settings button
   std::string settingsImgFilename =
       gazebo::common::SystemPaths::Instance()->FindFileURI(
@@ -194,11 +199,27 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   topBarLayout->addWidget(this->mocapStatusIndicator);
   topBarLayout->addWidget(this->settingsButton);
 
+  // Surrogate bar layout
+  QHBoxLayout *surrogateBarLayout = new QHBoxLayout();
+  surrogateBarLayout->setContentsMargins(10, 0, 0, 0);
+  surrogateBarLayout->addWidget(this->surrogateStatusIndicator);
+
   // Top bar widget
   this->topBarFrame = new QFrame();
   this->topBarFrame->setLayout(topBarLayout);
   this->topBarFrame->setMaximumHeight(35);
   this->topBarFrame->setStyleSheet("\
+      QFrame{\
+        background-color: #fc8b03;\
+        color: #eeeeee;\
+      }");
+
+  // Surrogate bar widget
+  this->surrogateBarFrame = new QFrame();
+  this->surrogateBarFrame->setLayout(surrogateBarLayout);
+  this->surrogateBarFrame->setMinimumHeight(30);
+  this->surrogateBarFrame->setMaximumHeight(30);
+  this->surrogateBarFrame->setStyleSheet("\
       QFrame{\
         background-color: #fc8b03;\
         color: #eeeeee;\
@@ -347,6 +368,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QVBoxLayout *scrollableFrameLayout = new QVBoxLayout;
   scrollableFrameLayout->setContentsMargins(0, 0, 0, 0);
   scrollableFrameLayout->addWidget(this->topBarFrame);
+  scrollableFrameLayout->addWidget(this->surrogateBarFrame);
   scrollableFrameLayout->addWidget(handView, 1.0);
   scrollableFrameLayout->addLayout(mainSeparatorLayout);
   scrollableFrameLayout->addWidget(this->tabFrame);
@@ -844,6 +866,32 @@ void HaptixGUIPlugin::PreRender()
     brush.setColor(color);
 
     iter->second->setBrush(brush);
+  }
+
+  // Update the surrogate bar.
+  std::vector<std::string> services;
+  this->ignNode.ServiceList(services);
+
+  if (std::find(services.begin(), services.end(), "/haptix/luke/Update") !=
+        services.end())
+  {
+    // The real hand has been detected.
+    if (!this->handDetected)
+    {
+      // Transition from hand not detected to hand detected.
+      this->OnSurrogateStatusChanged(1);
+    }
+
+    this->handDetected = true;
+  }
+  else
+  {
+    if (this->handDetected)
+    {
+      // Transition from hand detected to hand not detected.
+      this->OnSurrogateStatusChanged(0);
+    }
+    this->handDetected = false;
   }
 }
 
@@ -1742,6 +1790,52 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
           }\
           QToolButton:hover, QToolButton:pressed {\
             background-color: #868686;\
+            border: none;\
+          }");
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnSurrogateStatusChanged(int _status)
+{
+  switch(_status)
+  {
+    case 0:
+    {
+      this->surrogateStatusIndicator->setText("Surrogate mode: Off");
+      this->surrogateBarFrame->setStyleSheet("\
+          QFrame{\
+            background-color: #fc8b03;\
+            color: #eeeeee;\
+          }");
+      this->settingsButton->setStyleSheet("\
+          QToolButton::menu-indicator {\
+            image: none;\
+          }\
+          QToolButton:hover, QToolButton:pressed {\
+            background-color: #d47402;\
+            border: none;\
+          }");
+      break;
+    }
+    case 1:
+    {
+      this->surrogateStatusIndicator->setText("Surrogate mode: On");
+      this->surrogateBarFrame->setStyleSheet("\
+          QFrame{\
+            background-color: #4a8dbf;\
+            color: #eeeeee;\
+          }");
+      this->settingsButton->setStyleSheet("\
+          QToolButton::menu-indicator {\
+            image: none;\
+          }\
+          QToolButton:hover, QToolButton:pressed {\
+            background-color: #356c95;\
             border: none;\
           }");
       break;

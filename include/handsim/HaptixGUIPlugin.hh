@@ -129,6 +129,10 @@ namespace haptix_gazebo_plugins
     /// \param[in] _status 0: No data; 1: On; 2: Paused.
     private slots: void OnMocapStatusChanged(int _status);
 
+    /// \brief Callback surrogate status has changed.
+    /// \param[in] _status 0: Off; 1: On.
+    private slots: void OnSurrogateStatusChanged(int _status);
+
     /// \brief Helper function to initialize the task view
     /// \param[in] _elem SDF element pointer that contains HAPTIX task
     /// parameters.
@@ -334,8 +338,14 @@ namespace haptix_gazebo_plugins
     /// \brief Motion capture status indicator.
     private: QLabel *mocapStatusIndicator;
 
+    /// \brief Surrogate status indicator.
+    private: QLabel *surrogateStatusIndicator;
+
     /// \brief Top bar widget.
     private: QFrame *topBarFrame;
+
+    /// \brief Surrogate bar widget.
+    private: QFrame *surrogateBarFrame;
 
     /// \brief Settings button.
     private: QToolButton *settingsButton;
@@ -372,6 +382,9 @@ namespace haptix_gazebo_plugins
     private: bool springBuckled;
     private: gazebo::common::Time springCompressedStartTime;
     private: gazebo::common::Time springCompressedPassDuration;
+
+    /// \brief True when the real hand has been detected.
+    private: bool handDetected;
   };
 }
 #endif
