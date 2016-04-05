@@ -789,14 +789,15 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     this->lastMotorCommand.ref_pos_enabled = 1;
+
+    this->hxInitialized = true;
+
     //::hxSensor sensor;
     if(::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return;
     }
-
-    this->hxInitialized = true;
   }
 }
 
