@@ -44,13 +44,15 @@ HaptixGUIPlugin::HaptixGUIPlugin()
 
   // Adjust GUI size to fit render widget
   this->maxWidth = 480;
-  this->maxHeight = 850;
+  this->maxHeight = 890;
   this->springCompressed = false;
   this->springBuckled = false;
   this->springCompressedStartTime = gazebo::common::Time(0);
 
   // HACK: default duration for successful trial hardcoded to 3 seconds
   this->springCompressedPassDuration = gazebo::common::Time(3);
+
+  this->handDetected = false;
 
   gazebo::gui::MainWindow *mainWindow = gazebo::gui::get_main_window();
   if (mainWindow)
@@ -83,8 +85,6 @@ HaptixGUIPlugin::HaptixGUIPlugin()
       gazebo::gui::getINIProperty<int>("rendering.stereo", 0));
   connect(stereoCheck, SIGNAL(stateChanged(int)), this,
       SLOT(OnStereoCheck(int)));
-  // OLD CODE?
-  // gazebo::gui::get_active_camera()->EnableStereo(0);
 
   // Separator
   QFrame *settingsSeparator = new QFrame(this);
@@ -162,6 +162,9 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   connect(this, SIGNAL(MocapStatusChanged(int)), this,
       SLOT(OnMocapStatusChanged(int)));
 
+  // Surrogate status
+  this->surrogateStatusIndicator = new QLabel(QString("Surrogate mode: Off"));
+
   // Settings button
   std::string settingsImgFilename =
       gazebo::common::SystemPaths::Instance()->FindFileURI(
@@ -193,18 +196,30 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   // Top bar layout
   QHBoxLayout *topBarLayout = new QHBoxLayout();
   topBarLayout->setContentsMargins(10, 0, 0, 0);
-  // DISABLE FOR DEMO?
   topBarLayout->addWidget(this->mocapStatusIndicator);
   topBarLayout->addWidget(this->settingsButton);
 
-  // DEMO HACK?
-  // topBarLayout->setAlignment(this->settingsButton, Qt::AlignRight);
+  // Surrogate bar layout
+  QHBoxLayout *surrogateBarLayout = new QHBoxLayout();
+  surrogateBarLayout->setContentsMargins(10, 0, 0, 0);
+  surrogateBarLayout->addWidget(this->surrogateStatusIndicator);
 
   // Top bar widget
   this->topBarFrame = new QFrame();
   this->topBarFrame->setLayout(topBarLayout);
   this->topBarFrame->setMaximumHeight(35);
   this->topBarFrame->setStyleSheet("\
+      QFrame{\
+        background-color: #fc8b03;\
+        color: #eeeeee;\
+      }");
+
+  // Surrogate bar widget
+  this->surrogateBarFrame = new QFrame();
+  this->surrogateBarFrame->setLayout(surrogateBarLayout);
+  this->surrogateBarFrame->setMinimumHeight(30);
+  this->surrogateBarFrame->setMaximumHeight(30);
+  this->surrogateBarFrame->setStyleSheet("\
       QFrame{\
         background-color: #fc8b03;\
         color: #eeeeee;\
@@ -327,8 +342,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->resetSceneButton->installEventFilter(this);
   this->resetSceneButton->setFocusPolicy(Qt::NoFocus);
   this->resetSceneButton->setText(QString("Reset Scene"));
-  this->resetSceneButton->setToolTip("Reset all models in the scene (G)");
   this->resetSceneButton->setShortcut(tr("G"));
+  this->resetSceneButton->setToolTip("Reset all models in the scene (G)");
   this->resetSceneButton->setStyleSheet(buttonsStyle);
   this->resetSceneButton->setMaximumWidth(120);
   connect(this->resetSceneButton, SIGNAL(clicked()), this,
@@ -356,6 +371,7 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   QVBoxLayout *scrollableFrameLayout = new QVBoxLayout;
   scrollableFrameLayout->setContentsMargins(0, 0, 0, 0);
   scrollableFrameLayout->addWidget(this->topBarFrame);
+  scrollableFrameLayout->addWidget(this->surrogateBarFrame);
   scrollableFrameLayout->addWidget(handView, 1.0);
   scrollableFrameLayout->addLayout(mainSeparatorLayout);
   scrollableFrameLayout->addWidget(this->tabFrame);
@@ -532,10 +548,24 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
         {
           contactSize = contact->Get<gazebo::math::Vector2d>("size");
         }
+        double contactTilt = 0;
+        if (contact->HasElement("tilt"))
+        {
+          contactTilt = contact->Get<double>("tilt");
+        }
+
+        if (this->handSide == "left")
+        {
+          contactPos.x = 323 - contactPos.x - contactSize.x;
+          contactTilt = -1.0 * contactTilt;
+        }
 
         this->contactGraphicsItems[contactName] =
           new QGraphicsRectItem(contactPos.x,
               contactPos.y, contactSize.x, contactSize.y);
+        this->contactGraphicsItems[contactName]->setTransformOriginPoint(
+              QPoint(contactPos.x, contactPos.y));
+        this->contactGraphicsItems[contactName]->setRotation(contactTilt);
         this->handScene->addItem(this->contactGraphicsItems[contactName]);
 
         this->contactGraphicsItems[contactName]->setBrush(
@@ -775,40 +805,15 @@ void HaptixGUIPlugin::OnInitialize(ConstIntPtr &/*_msg*/)
     }
     memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
     this->lastMotorCommand.ref_pos_enabled = 1;
+
+    this->hxInitialized = true;
+
     //::hxSensor sensor;
     if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
     {
       gzerr << "hx_update(): Request error.\n" << std::endl;
       return;
     }
-
-    /*
-    // initialArmPose - DEMO ONLY or OLD CODE?
-    hxsTransform armPose;
-    // Get the initial arm pose
-    // DEMO - hardcoded, make this a parameter
-    // std::string modelName = "mpl_haptix_" + handSide + "_forearm";
-    std::string modelName = "luke_hand_description";
-    if (::hxs_model_transform(modelName.c_str(), &armPose) == ::hxOK)
-    {
-      this->initialArmPose.pos.x = armPose.pos.x;
-      this->initialArmPose.pos.y = armPose.pos.y;
-      this->initialArmPose.pos.z = armPose.pos.z;
-      this->initialArmPose.rot.w = armPose.orient.w;
-      this->initialArmPose.rot.y = armPose.orient.y;
-      this->initialArmPose.rot.z = armPose.orient.z;
-      this->initialArmPose.rot.x = armPose.orient.x;
-    }
-    else
-    {
-      gzerr << "hxs_model_transform(): Request error."
-            << " Check if model [" << modelName
-            << "] exists.\n" << std::endl;
-      return;
-    }
-    */
-
-    this->hxInitialized = true;
   }
 }
 
@@ -879,6 +884,32 @@ void HaptixGUIPlugin::PreRender()
 
     iter->second->setBrush(brush);
   }
+
+  // Update the surrogate bar.
+  std::vector<std::string> services;
+  this->ignNode.ServiceList(services);
+
+  if (std::find(services.begin(), services.end(), "/haptix/luke/Update") !=
+        services.end())
+  {
+    // The real hand has been detected.
+    if (!this->handDetected)
+    {
+      // Transition from hand not detected to hand detected.
+      this->OnSurrogateStatusChanged(1);
+    }
+
+    this->handDetected = true;
+  }
+  else
+  {
+    if (this->handDetected)
+    {
+      // Transition from hand detected to hand not detected.
+      this->OnSurrogateStatusChanged(0);
+    }
+    this->handDetected = false;
+  }
 }
 
 /////////////////////////////////////////////////
@@ -932,19 +963,6 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
       bool enabled = task->Get<bool>("enabled");
 
       // Create a new button for the task
-      /* DEMO only
-      // FIXME: Hack to divide long names in 2 lines, tailored for current names
-      bool longName = false;
-      if (name.length() > 8)
-      {
-        int idx = name.find(" ");
-        if (idx)
-        {
-          name = name.substr(0, idx) + "\n" + name.substr(idx + 1);
-          longName = true;
-        }
-      } */
-
       TaskButton *taskButton = new TaskButton(name, id, taskIndex, groupIndex);
       taskButton->installEventFilter(this);
       taskButton->setFocusPolicy(Qt::NoFocus);
@@ -971,16 +989,8 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 
         taskButton->setIcon(QIcon(iconPixmap));
         taskButton->setIconSize(QSize(60, 54));
-        // if (longName)
-        // {
-        //   taskButton->setMinimumSize(80, 100);
-        //   taskButton->setMaximumSize(100, 100);
-        // }
-        // else
-        // {
-          taskButton->setMinimumSize(80, 80);
-          taskButton->setMaximumSize(100, 80);
-        // }
+        taskButton->setMinimumSize(80, 80);
+        taskButton->setMaximumSize(100, 80);
       }
 
       this->taskList[taskIndex] = taskButton;
@@ -1013,7 +1023,6 @@ void HaptixGUIPlugin::InitializeTaskView(sdf::ElementPtr _elem)
 void HaptixGUIPlugin::OnTaskSent(const int _id)
 {
   // reset the clock when a new task is selected
-  // Might need to comment out below for Towers of Hanoi demo
   this->PublishTimerMessage("reset");
 
   // Show the instructions to the user
@@ -1027,37 +1036,6 @@ void HaptixGUIPlugin::OnTaskSent(const int _id)
   // Reset the camera
   gazebo::gui::get_active_camera()->SetWorldPose(this->initialCameraPose);
 }
-
-/* not used any more, check PRs
-////////////////////////////////////////////////
-void HaptixGUIPlugin::OnResetArmClicked()
-{
-  gazebo::msgs::Pose msg = gazebo::msgs::Convert(this->initialArmPose);
-  this->ignNode.Publish("haptix/arm_model_pose", msg);
-
-  // Also reset wrist and finger posture
-  memset(&this->lastMotorCommand, 0, sizeof(this->lastMotorCommand));
-  this->lastMotorCommand.ref_pos_enabled = 1;
-  //::hxSensor sensor;
-  if (::hx_update(&this->lastMotorCommand, &this->lastSensor) != ::hxOK)
-    gzerr << "hx_update(): Request error.\n" << std::endl;
-
-  // And zero the grasp, if any.
-  if (this->lastGraspRequest.grasps_size() > 0)
-  {
-    this->lastGraspRequest.mutable_grasps(0)->set_grasp_value(0.0);
-    haptix::comm::msgs::hxCommand resp;
-    bool result;
-    if(!this->ignNode.Request("haptix/gazebo/Grasp",
-                              this->lastGraspRequest,
-                              1000,
-                              resp,
-                              result) || !result)
-    {
-      gzerr << "Failed to call gazebo/Grasp service" << std::endl;
-    }
-  }
-}*/
 
 ////////////////////////////////////////////////
 void HaptixGUIPlugin::OnNextClicked()
@@ -1104,7 +1082,6 @@ void HaptixGUIPlugin::PublishTaskMessage(const std::string &_taskId) const
 void HaptixGUIPlugin::OnResetClicked()
 {
   // Signal to the TimerPlugin to reset the clock
-  // DEMO Might need to comment out for demo
   this->PublishTimerMessage("reset");
 
   // Reset models
@@ -1121,14 +1098,12 @@ void HaptixGUIPlugin::OnResetClicked()
 void HaptixGUIPlugin::OnResetSceneClicked()
 {
   // Signal to the TimerPlugin to reset the clock
-  // DEMO Might need to comment out for demo
   this->PublishTimerMessage("reset");
 
   // place scene objects back
   this->PublishTaskMessage(this->taskList[this->currentTaskId]->Id());
 
   // Reset keyboard control pose
-  // DEMO Might need to comment out for demo
   this->armStartPose.rot = gazebo::math::Quaternion(0, 0, -1.5707);
 }
 
@@ -1237,6 +1212,13 @@ void HaptixGUIPlugin::ScoringUpdate()
       }
     }
     usleep(100000);  // 10Hz max on scoring check
+
+    // GUI window follow Gazebo window resize
+    if (this->handSide == "left")
+    {
+      this->move(static_cast<QWidget*>(this->parent())->width() -
+          this->width() - 10, 10);
+    }
   }
 }
 
@@ -1832,6 +1814,52 @@ void HaptixGUIPlugin::OnMocapStatusChanged(int _status)
           }\
           QToolButton:hover, QToolButton:pressed {\
             background-color: #868686;\
+            border: none;\
+          }");
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+//////////////////////////////////////////////////
+void HaptixGUIPlugin::OnSurrogateStatusChanged(int _status)
+{
+  switch(_status)
+  {
+    case 0:
+    {
+      this->surrogateStatusIndicator->setText("Surrogate mode: Off");
+      this->surrogateBarFrame->setStyleSheet("\
+          QFrame{\
+            background-color: #fc8b03;\
+            color: #eeeeee;\
+          }");
+      this->settingsButton->setStyleSheet("\
+          QToolButton::menu-indicator {\
+            image: none;\
+          }\
+          QToolButton:hover, QToolButton:pressed {\
+            background-color: #d47402;\
+            border: none;\
+          }");
+      break;
+    }
+    case 1:
+    {
+      this->surrogateStatusIndicator->setText("Surrogate mode: On");
+      this->surrogateBarFrame->setStyleSheet("\
+          QFrame{\
+            background-color: #4a8dbf;\
+            color: #eeeeee;\
+          }");
+      this->settingsButton->setStyleSheet("\
+          QToolButton::menu-indicator {\
+            image: none;\
+          }\
+          QToolButton:hover, QToolButton:pressed {\
+            background-color: #356c95;\
             border: none;\
           }");
       break;

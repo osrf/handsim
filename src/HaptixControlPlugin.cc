@@ -2192,6 +2192,36 @@ void HaptixControlPlugin::GazeboUpdateStates()
     this->lastSimTimeForControlThrottling = curTime;
   }
   DIAG_TIMER_STOP("HaptixControlPlugin::GazeboUpdateStates");
+
+  std::vector<std::string> services;
+  this->ignNode.ServiceList(services);
+
+  if (std::find(services.begin(), services.end(), "/haptix/luke/Update") !=
+        services.end())
+  {
+    // Forward the current command to the real hand.
+    haptix::comm::msgs::hxCommand cmd;
+    cmd.set_ref_pos_enabled(true);
+    cmd.set_ref_vel_enabled(false);
+    cmd.set_ref_vel_max_enabled(false);
+    cmd.set_gain_pos_enabled(false);
+    cmd.set_gain_vel_enabled(false);
+
+    if (this->graspMode &&
+        this->graspPositions.size() == this->motorInfos.size())
+    {
+      for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+        cmd.add_ref_pos(this->graspPositions[i]);
+    }
+    else
+    {
+      for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+        cmd.add_ref_pos(this->robotCommand.ref_pos(i));
+    }
+    haptix::comm::msgs::hxSensor rep;
+    bool res;
+    this->ignNode.Request("/haptix/luke/Update", cmd, 10, rep, res);
+  }
 }
 
   // demo hard code to send to CAN bus driver

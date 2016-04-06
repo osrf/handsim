@@ -4,6 +4,7 @@ set (files
   wood_stack.world
   handsim_empty.world
   luke_hand.world
+  luke_left_hand.world
   primitive_hand.world
 )
 

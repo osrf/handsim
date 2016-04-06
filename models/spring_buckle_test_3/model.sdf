@@ -251,22 +251,10 @@
           <damping>0.5</damping>
           <friction>0</friction>
         </dynamics>
-        <!--
-        <limit>
-          <lower>0.0</lower>
-          <upper>0.0</upper>
-        </limit>
-        -->
       </axis>
       <physics>
         <ode>
           <implicit_spring_damper>1</implicit_spring_damper>
-          <!--
-          <limit>
-            <cfm>3.0</cfm>
-            <erp>1.0</erp>
-          </limit>
-          -->
         </ode>
       </physics>
     </joint>
@@ -290,14 +278,6 @@
       <physics>
         <ode>
           <implicit_spring_damper>1</implicit_spring_damper>
-<!--
-          <cfm>100.0</cfm>
-          <erp>1.0</erp>
-          <limit>
-            <cfm>100.0</cfm>
-            <erp>1.0</erp>
-          </limit>
--->
         </ode>
       </physics>
     </joint>
@@ -321,14 +301,6 @@
       <physics>
         <ode>
           <implicit_spring_damper>1</implicit_spring_damper>
-<!--
-          <cfm>100.0</cfm>
-          <erp>1.0</erp>
-          <limit>
-            <cfm>100.0</cfm>
-            <erp>1.0</erp>
-          </limit>
--->
         </ode>
       </physics>
     </joint>
@@ -344,22 +316,10 @@
           <damping>0.5</damping>
           <friction>0</friction>
         </dynamics>
-        <!--
-        <limit>
-          <lower>0.0</lower>
-          <upper>0.0</upper>
-        </limit>
-        -->
       </axis>
       <physics>
         <ode>
           <implicit_spring_damper>1</implicit_spring_damper>
-          <!--
-          <limit>
-            <cfm>3.0</cfm>
-            <erp>1.0</erp>
-          </limit>
-          -->
         </ode>
       </physics>
     </joint>
