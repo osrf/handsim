@@ -55,7 +55,7 @@ void TactorsPlugin::Load(physics::WorldPtr _parent,
   }
 
   this->minContactForce = 0;
-  this->maxContactForce = 7;
+  this->maxContactForce = 25;
 
   // Initialize sensor index to Lilypad motor index mapping
   // These sensor indices correspond to the JHU APL MPL arm
@@ -65,30 +65,35 @@ void TactorsPlugin::Load(physics::WorldPtr _parent,
     // Uninitialized
     this->sensorMotorIndexMapping[i] = 5;
   }
-  for (unsigned int i = 4; i <= 6; i++)
+  // for (unsigned int i = 4; i <= 6; i++)  // MPL
+  for (unsigned int i = 3; i <= 3; i++)  // Luke
   {
     // thumb
     this->sensorMotorIndexMapping[i] = 0;
   }
-  for (unsigned int i = 10; i <= 12; i++)
+  // for (unsigned int i = 10; i <= 12; i++) // MPL
+  for (unsigned int i = 5; i <= 5; i++) // MPL
   {
     // Middle
     this->sensorMotorIndexMapping[i] = 1;
   }
-  for (unsigned int i = 16; i <= 18; i++)
+  // for (unsigned int i = 16; i <= 18; i++) // MPL
+  for (unsigned int i = 7; i <= 7; i++)
   {
     // pinky
     this->sensorMotorIndexMapping[i] = 2;
   }
-  for (unsigned int i = 7; i <= 9; i++)
+  // for (unsigned int i = 7; i <= 9; i++) // MPL
+  for (unsigned int i = 4; i <= 4; i++)
   {
     // index
-    this->sensorMotorIndexMapping[i] = 3;
+    this->sensorMotorIndexMapping[i] = 4;
   }
-  for (unsigned int i = 13; i <= 15; i++)
+  // for (unsigned int i = 13; i <= 15; i++) // MPL
+  for (unsigned int i = 6; i <= 6; i++)
   {
     // Ring
-    this->sensorMotorIndexMapping[i] = 4;
+    this->sensorMotorIndexMapping[i] = 3;
   }
 
   // Listen to the update event. This event is broadcast every
@@ -132,8 +137,9 @@ void TactorsPlugin::OnUpdate(const common::UpdateInfo &/*_info*/)
     return;
   }
 
-  // hack: skip the first 4 contact sensors because they are palm sensors
-  for (int i = 4; i < this->robotInfo.contact_sensor_count; i++)
+  // hack: skip the first 4 contact sensors because they are palm sensors // MPL
+  // hack: skip the first 2 contact sensors because they are palm sensors
+  for (int i = 3; i < this->robotInfo.contact_sensor_count; i++)
   {
     char j = this->sensorMotorIndexMapping[i];
     if (sensor.contact[i] > minContactForce)

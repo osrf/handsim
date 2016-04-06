@@ -1284,6 +1284,7 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   this->wrench.torque.z = this->rotPid.Update(errorRot.z, _dt);
 
 /* old code hack for demo
+  // limit wrench values for hanoi case
   double maxForce = 40;
   double maxTorque = 80;
   if (this->arrangement == "hanoi" || this->arrangement == "")
@@ -1321,8 +1322,6 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   // std::cout << "wrench pos: " << this->wrench.force
   //           << " rot: " << this->wrench.torque << std::endl;
 
-
-/*
   // DEMO hardcode grasp call
   // This is probably a horrible way and place to be doing this, especially
   // since I had to turn off a mutex :)
@@ -1337,34 +1336,11 @@ void HaptixControlPlugin::UpdateBaseLink(double _dt)
   {
     gzerr << "ERROR: HaptixGraspCallback could not call grasp service" << std::endl;
   }
-*/
 }
 
 /////////////////////////////////////////////////
 void HaptixControlPlugin::GetHandControlFromClient()
 {
-  // demo hard code to send to CAN bus driver
-  if (this->graspMode &&
-      this->graspPositions.size() == this->motorInfos.size())
-  {
-    bool result;
-    haptix::comm::msgs::hxCommand demoReq;
-    haptix::comm::msgs::hxSensor demoRep;
-    demoReq.set_ref_pos_enabled(true);
-    for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
-    {
-      demoReq.add_ref_pos(this->graspPositions[i]);
-    }
-    if (!this->ignNode.Request("haptix/luke/Update",
-                              demoReq,
-                              1000,
-                              demoRep,
-                              result) || !result)
-    {
-      gzerr << "Failed to call demo request" << std::endl;
-    }
-  }
-
   // copy command from hxCommand for motors to list of all joints
   // commanded by this plugin.
   // also account for joint coupling here based on <gearbox> params
@@ -2159,6 +2135,7 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 // Play the trajectory, update states
 void HaptixControlPlugin::GazeboUpdateStates()
 {
+{
   DIAG_TIMER_START("HaptixControlPlugin::GazeboUpdateStates");
   boost::mutex::scoped_lock lock(this->updateMutex);
 
@@ -2215,6 +2192,59 @@ void HaptixControlPlugin::GazeboUpdateStates()
     this->lastSimTimeForControlThrottling = curTime;
   }
   DIAG_TIMER_STOP("HaptixControlPlugin::GazeboUpdateStates");
+}
+
+  // demo hard code to send to CAN bus driver
+  if (this->graspMode &&
+      this->graspPositions.size() == this->motorInfos.size())
+  {
+    bool result;
+    haptix::comm::msgs::hxCommand demoReq;
+    haptix::comm::msgs::hxSensor demoRep;
+    demoReq.set_ref_pos_enabled(true);
+    demoReq.set_ref_vel_enabled(false);
+    demoReq.set_ref_vel_max_enabled(false);
+    demoReq.set_gain_pos_enabled(false);
+    demoReq.set_gain_vel_enabled(false);
+    for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+    {
+      // gzerr << i << " : " << this->graspPositions[i] << "\n";
+      demoReq.add_ref_pos(this->graspPositions[i]);
+    }
+    /*if (!this->ignNode.Request("/haptix/luke/Update",
+                              demoReq,
+                              30,
+                              demoRep,
+                              result) || !result)
+    {
+      gzerr << "Failed to call demo request" << std::endl;
+    }*/
+  }
+  else
+  {
+    bool result;
+    haptix::comm::msgs::hxCommand demoReq;
+    haptix::comm::msgs::hxSensor demoRep;
+    demoReq.set_ref_pos_enabled(true);
+    demoReq.set_ref_vel_enabled(false);
+    demoReq.set_ref_vel_max_enabled(false);
+    demoReq.set_gain_pos_enabled(false);
+    demoReq.set_gain_vel_enabled(false);
+    for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
+    {
+      // gzerr << i << " : " << this->robotCommand.ref_pos(i) << "\n";
+      demoReq.add_ref_pos(this->robotCommand.ref_pos(i));
+    }
+    if (!this->ignNode.Request("/haptix/luke/Update",
+                              demoReq,
+                              30,
+                              demoRep,
+                              result) || !result)
+    {
+      gzerr << "Failed to call demo request" << std::endl;
+    }
+  }
+
 }
 
 /////////////////////////////////////////////////
@@ -2453,7 +2483,9 @@ void HaptixControlPlugin::HaptixGraspCallback(
       const haptix::comm::msgs::hxGrasp &_req,
       haptix::comm::msgs::hxCommand &_rep, bool &_result)
 {
-  boost::mutex::scoped_lock lock(this->updateMutex);
+  // unlock for demo because HaptixGraspCallback is called
+  // from UpdateBaseLink to set grasp control using polhemus fingers 
+  // boost::mutex::scoped_lock lock(this->updateMutex);
 
   // for clutch timing
   this->robotCommandTime = this->world->GetSimTime();
