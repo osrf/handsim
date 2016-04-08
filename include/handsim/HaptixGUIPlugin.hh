@@ -157,6 +157,9 @@ namespace haptix_gazebo_plugins
     private: void OnSimEvents(ConstSimEventPtr &_msg);
 
     /// \brief start a thread to poll contact sensor data
+    private: void CheckSurrogate();
+
+    /// \brief start a thread to poll contact sensor data
     private: void PollSensors();
 
     /// \brief check and update scoring stuff
@@ -328,6 +331,9 @@ namespace haptix_gazebo_plugins
 
     /// \brief a lock to hold when commanding wrist/finger positions
     private: boost::mutex motorCommandMutex;
+
+    /// \brief start a thread to poll contact sensor data
+    private: boost::thread checkSurrogateThread;
 
     /// \brief start a thread to poll contact sensor data
     private: boost::thread pollSensorsThread;

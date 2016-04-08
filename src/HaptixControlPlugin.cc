@@ -2080,6 +2080,11 @@ void HaptixControlPlugin::GazeboUpdateStates()
     cmd.set_gain_pos_enabled(false);
     cmd.set_gain_vel_enabled(false);
 
+    std::function<void(const haptix::comm::msgs::hxSensor &, const bool)> cb =
+      [](const haptix::comm::msgs::hxSensor &, const bool &)
+    {
+    };
+
     if (this->graspMode &&
         this->graspPositions.size() == this->motorInfos.size())
     {
@@ -2091,9 +2096,10 @@ void HaptixControlPlugin::GazeboUpdateStates()
       for (unsigned int i = 0; i < this->motorInfos.size(); ++i)
         cmd.add_ref_pos(this->robotCommand.ref_pos(i));
     }
-    haptix::comm::msgs::hxSensor rep;
-    bool res;
-    this->ignNode.Request("/haptix/luke/Update", cmd, 10, rep, res);
+    //haptix::comm::msgs::hxSensor rep;
+    //bool res;
+    //this->ignNode.Request("/haptix/luke/Update", cmd, 10, rep, res);
+    this->ignNode.Request("/haptix/luke/Update", cmd, cb);
   }
 }
 

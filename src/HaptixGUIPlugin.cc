@@ -748,6 +748,9 @@ void HaptixGUIPlugin::Load(sdf::ElementPtr _elem)
   this->worldControlPub = this->node->Advertise<gazebo::msgs::WorldControl>
                                         ("~/world_control");
 
+  this->checkSurrogateThread = boost::thread(
+      std::bind(&HaptixGUIPlugin::CheckSurrogate, this));
+
   this->pollSensorsThread = boost::thread(
       std::bind(&HaptixGUIPlugin::PollSensors, this));
 
@@ -869,30 +872,39 @@ void HaptixGUIPlugin::PreRender()
     iter->second->setBrush(brush);
   }
 
-  // Update the surrogate bar.
-  std::vector<std::string> services;
-  this->ignNode.ServiceList(services);
+}
 
-  if (std::find(services.begin(), services.end(), "/haptix/luke/Update") !=
-        services.end())
+void HaptixGUIPlugin::CheckSurrogate()
+{
+  usleep(3000000);
+  while(!quit)
   {
-    // The real hand has been detected.
-    if (!this->handDetected)
-    {
-      // Transition from hand not detected to hand detected.
-      this->OnSurrogateStatusChanged(1);
-    }
+    // Update the surrogate bar.
+    std::vector<std::string> services;
+    this->ignNode.ServiceList(services);
 
-    this->handDetected = true;
-  }
-  else
-  {
-    if (this->handDetected)
+    if (std::find(services.begin(), services.end(), "/haptix/luke/Update") !=
+          services.end())
     {
-      // Transition from hand detected to hand not detected.
-      this->OnSurrogateStatusChanged(0);
+      // The real hand has been detected.
+      if (!this->handDetected)
+      {
+        // Transition from hand not detected to hand detected.
+        this->OnSurrogateStatusChanged(1);
+      }
+
+      this->handDetected = true;
     }
-    this->handDetected = false;
+    else
+    {
+      if (this->handDetected)
+      {
+        // Transition from hand detected to hand not detected.
+        this->OnSurrogateStatusChanged(0);
+      }
+      this->handDetected = false;
+    }
+    usleep(500000);
   }
 }
 

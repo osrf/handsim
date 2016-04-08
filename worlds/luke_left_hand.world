@@ -113,7 +113,8 @@
 
     <gui>
       <camera name="user_camera">
-        <pose>0 -0.6 1.3  0 0.4 1.57</pose>
+        <!--<pose>0 -0.6 1.3  0 0.4 1.57</pose> -->
+        <pose frame=''>-0.503628 -0.314524 1.4776 0 0.680001 -0.245993</pose>
       </camera>
 
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
@@ -364,11 +365,11 @@
 
       </plugin>
 
-      <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
+      <!--<plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
         <size>155 80</size>
         <start_stop_button>1</start_stop_button>
         <topic>~/timer_control</topic>
-      </plugin>
+      </plugin>-->
 
     </gui>
 
