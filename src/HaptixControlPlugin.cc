@@ -1061,7 +1061,7 @@ void HaptixControlPlugin::UpdateSpacenav(double _dt)
   rotRate = camPose.rot.RotateVector(rotRate);
 
   {
-    const double posScale = 2.0;
+    const double posScale = 1.5;
     const double rotScale = 5.0;
 
     boost::mutex::scoped_lock lock(this->baseLinkMutex);
