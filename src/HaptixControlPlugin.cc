@@ -1697,7 +1697,7 @@ void HaptixControlPlugin::UpdateHandControl(double _dt)
 /////////////////////////////////////////////////
 void HaptixControlPlugin::OnContactSensorUpdate(int _i)
 {
-  boost::mutex::scoped_lock lock(this->updateMutex);
+  boost::mutex::scoped_lock lock(this->contactSensorMutex);
 
   // how do we know which sensor triggered this update?
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
@@ -1967,15 +1967,18 @@ void HaptixControlPlugin::GetRobotStateFromSim()
 
   // copy contact forces
   // gzerr << "contactSensorInfos " << this->contactSensorInfos.size() << "\n";
-  for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
   {
-    // get summed force from contactSensorInfos
-    double force = 0;
-    const double timeout = 0.01;
-    if (curTime.Double() - this->contactSensorInfos[i].timestamp < timeout)
-      force = this->contactSensorInfos[i].contactForce.GetLength();
-    // return summed force
-    this->robotState.set_contact(i, force);
+    boost::mutex::scoped_lock lock(this->contactSensorMutex);
+    for (unsigned int i = 0; i < this->contactSensorInfos.size(); ++i)
+    {
+      // get summed force from contactSensorInfos
+      double force = 0;
+      const double timeout = 0.01;
+      if (curTime.Double() - this->contactSensorInfos[i].timestamp < timeout)
+        force = this->contactSensorInfos[i].contactForce.GetLength();
+      // return summed force
+      this->robotState.set_contact(i, force);
+    }
   }
 
   for (unsigned int i = 0; i < this->imuSensors.size(); ++i)
@@ -2100,7 +2103,10 @@ void HaptixControlPlugin::HaptixGetRobotInfoCallback(
 {
   _rep.set_motor_count(this->motorInfos.size());
   _rep.set_joint_count(this->robotState.joint_pos().size());
-  _rep.set_contact_sensor_count(this->contactSensorInfos.size());
+  {
+    boost::mutex::scoped_lock lock(this->contactSensorMutex);
+    _rep.set_contact_sensor_count(this->contactSensorInfos.size());
+  }
   _rep.set_imu_count(this->imuSensors.size());
 
   for (unsigned int i = 0; i < this->simJoints.size(); ++i)

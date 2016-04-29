@@ -577,6 +577,7 @@ namespace gazebo
     bool staleKeyboardPose;
 
     private: boost::mutex updateMutex;
+    private: boost::mutex contactSensorMutex;
     private: boost::mutex baseLinkMutex;
     private: boost::mutex pauseMutex;
     private: sdf::ElementPtr sdf;
