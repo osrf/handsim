@@ -722,8 +722,8 @@
     </plugin>
 
     <!-- hardcoded for mpl, breaks luke hand integration
-    <plugin name="tactors" filename="libTactorsPlugin.so"/>
     -->
+    <plugin name="tactors" filename="libTactorsPlugin.so"/>
 
   </world>
 </sdf>
