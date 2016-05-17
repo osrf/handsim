@@ -1,6 +1,7 @@
 set (files 
   arat.world
   arat_left.world
+  demo.world
   wood_stack.world
   handsim_empty.world
   luke_hand.world

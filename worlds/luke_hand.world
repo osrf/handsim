@@ -116,6 +116,12 @@
         <pose>0 -0.6 1.3  0 0.4 1.57</pose>
       </camera>
 
+      <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
+        <size>155 80</size>
+        <start_stop_button>1</start_stop_button>
+        <topic>~/timer_control</topic>
+      </plugin>
+
       <plugin name="HaptixGUIPlugin" filename="libHaptixGUIPlugin.so">
         <default_size>25 25</default_size>
         <force_min>0.001</force_min>
@@ -362,12 +368,6 @@
           <grasp inc_key="9" dec_key="(" name="2Pinch" increment="0.015"></grasp>
         </grasp_keys>
 
-      </plugin>
-
-      <plugin name="TimerGUIPlugin" filename="libTimerGUIPlugin.so">
-        <size>155 80</size>
-        <start_stop_button>1</start_stop_button>
-        <topic>~/timer_control</topic>
       </plugin>
 
     </gui>
