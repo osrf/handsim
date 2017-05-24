@@ -17,20 +17,23 @@
 #ifndef _HANDSIM_GUI_ARAT_PLUGIN_HH_
 #define _HANDSIM_GUI_ARAT_PLUGIN_HH_
 
-#include <boost/thread/mutex.hpp>
+// See: https://bugreports.qt-project.org/browse/QTBUG-22829
+#ifndef Q_MOC_RUN
+  #include <boost/thread/mutex.hpp>
 
-#include <gazebo/common/Events.hh>
-#include <gazebo/common/Plugin.hh>
-#include <gazebo/gui/gui.hh>
-#include <gazebo/gui/GuiPlugin.hh>
-#include <gazebo/math/gzmath.hh>
-#include <gazebo/msgs/msgs.hh>
-#include <gazebo/transport/transport.hh>
+  #include <gazebo/common/Events.hh>
+  #include <gazebo/common/Plugin.hh>
+  #include <gazebo/gui/gui.hh>
+  #include <gazebo/gui/GuiPlugin.hh>
+  #include <gazebo/math/gzmath.hh>
+  #include <gazebo/msgs/msgs.hh>
+  #include <gazebo/transport/transport.hh>
 
-#include <ignition/transport.hh>
-#include <haptix/comm/haptix.h>
-#include <haptix/comm/msg/hxCommand.pb.h>
-#include <haptix/comm/msg/hxGrasp.pb.h>
+  #include <ignition/transport.hh>
+  #include <haptix/comm/haptix.h>
+  #include <haptix/comm/msg/hxCommand.pb.h>
+  #include <haptix/comm/msg/hxGrasp.pb.h>
+#endif
 
 namespace haptix_gazebo_plugins
 {

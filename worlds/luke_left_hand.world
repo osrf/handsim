@@ -456,10 +456,69 @@
       <static>true</static>
     </include>
 
-    <include>
-     <uri>model://luke_left_hand_description</uri>
-     <pose>-0.3 -0.6 1.3 1.5708 1.5708 3.1416</pose>
-    </include>
+    <model name="luke_hand_description">
+      <include>
+        <uri>model://luke_left_hand_description</uri>
+        <pose>-0.3 -0.6 1.3 1.5708 1.5708 3.1416</pose>
+      </include>
+
+      <!-- Validation plugin -->
+      <plugin filename="libValidationPlugin.so" name="luke_validation_plugin">
+        <!--<lower_limit>
+          <name>luke_left_hand_description::wrist_rot</name>
+          <min>-2.44346</min> <!-- -140 deg -->
+          <!--<max>-1.74544</max> <!-- -100 deg -->
+          <!--<step>0.0174533</step> <!-- 1 deg -->
+        <!--</lower_limit>
+        <upper_limit>
+          <name>luke_left_hand_description::wrist_rot</name>
+          <min>2.70526</min> <!-- 155 deg -->
+          <!--<max>3.40339</max> <!-- 175 def -->
+          <!--<step>0.0174533</step> <!-- 1 deg -->
+        <!--</upper_limit>-->
+        <!--<damping>
+          <name>luke_left_hand_description::wrist_rot</name>
+          <min>10</min>
+          <max>40</max>
+          <step>5</step>
+        </damping> -->
+
+        <!--<damping>
+          <name>luke_left_hand_description::wrist_flex</name>
+          <min>50</min>
+          <max>100</max>
+          <step>10</step>
+        </damping>-->
+
+        <!--<damping>
+          <name>luke_left_hand_description::thumb_yaw</name>
+          <min>1</min>
+          <max>10</max>
+          <step>1</step>
+        </damping>-->
+
+        <!--<damping>
+          <name>luke_left_hand_description::thumb_pitch</name>
+          <min>0.5</min>
+          <max>1</max>
+          <step>0.1</step>
+        </damping>-->
+
+        <!--<damping>
+          <name>luke_left_hand_description::index_proximal_flex</name>
+          <min>0.1</min>
+          <max>1</max>
+          <step>0.1</step>
+        </damping>-->
+
+        <damping>
+          <name>luke_left_hand_description::mrp_differential_flex</name>
+          <min>0.1</min>
+          <max>1</max>
+          <step>0.1</step>
+        </damping>
+      </plugin>
+    </model>
 
     <model name="polhemus_source">
       <pose>-.5 260 1.3 0 3.1416 1.57</pose>
