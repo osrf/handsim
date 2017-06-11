@@ -436,7 +436,8 @@ HaptixGUIPlugin::HaptixGUIPlugin()
   this->currentTaskId = 0;
 
   // Advertise the Ignition topic on which we'll publish arm pose changes
-  this->ignNode.Advertise<gazebo::msgs::Pose>("haptix/arm_pose_inc");
+  this->ignPoseIncPublisher = 
+    this->ignNode.Advertise<gazebo::msgs::Pose>("haptix/arm_pose_inc");
 }
 
 /////////////////////////////////////////////////
@@ -1455,7 +1456,8 @@ bool HaptixGUIPlugin::OnKeyPress(gazebo::common::KeyEvent _event)
     gazebo::msgs::Pose msg = gazebo::msgs::Convert(increment.Ign());
 
     // std::cout << "haptix/arm_pose_inc: " << msg.DebugString() << std::endl;
-    this->ignNode.Publish("haptix/arm_pose_inc", msg);
+    //this->ignNode.Publish("haptix/arm_pose_inc", msg);
+    this->ignPoseIncPublisher.Publish(msg);
     return true;
   }
 

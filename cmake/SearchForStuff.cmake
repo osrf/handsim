@@ -7,8 +7,8 @@ include (FindBoost)
 
 find_package(gazebo 7.0.0 REQUIRED)
 find_package(haptix-comm REQUIRED)
-find_package(ignition-math2 REQUIRED)
-find_package(ignition-transport1 REQUIRED)
+find_package(ignition-math3 REQUIRED)
+find_package(ignition-transport3 REQUIRED)
 find_package(Boost 1.54.0 COMPONENTS system filesystem thread REQUIRED)
 
 # for haptix GUI plugin

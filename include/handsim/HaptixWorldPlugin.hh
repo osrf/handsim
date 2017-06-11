@@ -460,6 +460,9 @@ class HaptixWorldPlugin : public gazebo::WorldPlugin
   /// \brief ignition transport node for talking to haptix comm
   private: ignition::transport::Node ignNode;
 
+  /// \brief ignition transport publisher for sending pose updates.
+  private: ignition::transport::Node::Publisher ignPosePublisher;
+
   /// \brief For publishing commands to the server
   private: gazebo::transport::PublisherPtr worldControlPub;
 

@@ -35,6 +35,7 @@ macro (handsim_build_tests)
       ${Boost_LIBRARIES}
       ${IGNITION-TRANSPORT_LIBRARIES}
       HaptixWorldPlugin
+      gtest
     )
 
     add_test(${BINARY_NAME} ${CMAKE_CURRENT_BINARY_DIR}/${BINARY_NAME}

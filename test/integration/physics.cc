@@ -36,6 +36,8 @@ class PhysicsTest : public gazebo::ServerFixture
     const gazebo::physics::LinkPtr _link, double &_depth, double &_k);
   public: gazebo::physics::WorldPtr InitWorld(const std::string &_worldFile);
   public: ignition::transport::Node ignNode;
+  public: ignition::transport::Node::Publisher ignPublisherPoseInc;
+  public: ignition::transport::Node::Publisher ignPublisherModelPose;
 };
 
 gazebo::physics::WorldPtr PhysicsTest::InitWorld(const std::string &_worldFile)
@@ -214,9 +216,11 @@ TEST_F(PhysicsTest, Test1)
   // send same command to arm base pose controller
   gazebo::msgs::Pose msg =
     gazebo::msgs::Convert(ignition::math::Pose3<double>(p, q));
-  this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_pose_inc");
-  this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_model_pose");
-  this->ignNode.Publish("/haptix/arm_model_pose", msg);
+  this->ignPublisherPoseInc =
+    this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_pose_inc");
+  this->ignPublisherModelPose =
+    this->ignNode.Advertise<gazebo::msgs::Pose>("/haptix/arm_model_pose");
+  this->ignPublisherModelPose.Publish(msg);
 
   hxsTransform woodT;
   woodT.pos.x    = 0.0;
@@ -278,7 +282,7 @@ TEST_F(PhysicsTest, Test1)
   msg = gazebo::msgs::Convert(ignition::math::Pose3<double>(p, q));
   for (int n = 0; n < 200; ++n)
   {
-    this->ignNode.Publish("/haptix/arm_pose_inc", msg);
+    this->ignPublisherPoseInc.Publish(msg);
     world->Step(10);
   }
 

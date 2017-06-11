@@ -284,6 +284,9 @@ namespace haptix_gazebo_plugins
     /// \brief An ignition node that we'll use for sending messages
     private: ignition::transport::Node ignNode;
 
+    /// \brief An ignition publisher for sending poses.
+    private: ignition::transport::Node::Publisher ignPoseIncPublisher;
+
     /// \brief Are we in grasp mode, or direct motor control mode?
     private: bool graspMode;
 
