@@ -17,6 +17,7 @@
 #ifndef _HANDSIM_GUI_ARAT_PLUGIN_HH_
 #define _HANDSIM_GUI_ARAT_PLUGIN_HH_
 
+#ifndef Q_MOC_RUN
 #include <boost/thread/mutex.hpp>
 
 #include <gazebo/common/Events.hh>
@@ -31,6 +32,7 @@
 #include <haptix/comm/haptix.h>
 #include <haptix/comm/msg/hxCommand.pb.h>
 #include <haptix/comm/msg/hxGrasp.pb.h>
+#endif
 
 namespace haptix_gazebo_plugins
 {

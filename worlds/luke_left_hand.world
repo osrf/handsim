@@ -127,41 +127,58 @@
         <timer_topic>~/timer_control</timer_topic>
 
         <contacts>
-          <contact name="Palm-Front">
+          <contact name="Palm-distal-Front">
             <index>0</index>
-            <pos>70 170</pos>
-            <size>130 110</size>
-            <tilt>-5</tilt>
+            <pos>50 200</pos>
+            <size>180 80</size>
+            <tilt>0</tilt>
           </contact>
+
           <contact name="Palm-Back">
             <index>1</index>
             <pos>303 58</pos>
             <size>20 20</size>
           </contact>
-          <contact name="Palm-Inside">
+
+          <contact name="Palm-proximal-Front">
             <index>2</index>
-            <pos>232 160</pos>
-            <size>15 50</size>
-            <tilt>5</tilt>
+            <pos>50 285</pos>
+            <size>180 50</size>
+            <tilt>0</tilt>
           </contact>
+          
           <contact name="Palm-Outside">
             <index>3</index>
             <pos>24 180</pos>
             <size>15 120</size>
           </contact>
 
-          <contact name="Distal_Thumb">
+          <contact name="Distal_Thumb_Volar">
             <pos>297 125</pos>
             <size>10 30</size>
             <index>4</index>
             <tilt>43.0</tilt>
           </contact>
 
-          <contact name="Distal_Thumb_side">
+          <contact name="Distal_Thumb_Radial">
             <pos>297 155</pos>
             <size>25 30</size>
             <index>5</index>
             <tilt>30.0</tilt>
+          </contact>
+
+          <contact name="Distal_Thumb_Ulnar">
+            <pos>281 48</pos>
+            <size>4 7</size>
+            <index>11</index>
+            <tilt>-20.0</tilt>
+          </contact>
+
+          <contact name="Distal_Thumb_Dorsal">
+            <pos>276 48</pos>
+            <size>3 9</size>
+            <index>12</index>
+            <tilt>-20.0</tilt>
           </contact>
 
           <contact name="Index_Distal-1">
